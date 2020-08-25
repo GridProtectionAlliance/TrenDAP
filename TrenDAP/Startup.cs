@@ -35,7 +35,7 @@ using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 
-namespace TrenDAP.WebApp
+namespace TrenDAP
 {
     public class Startup
     {

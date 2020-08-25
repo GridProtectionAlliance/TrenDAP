@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TrenDAP.WebApp.Model
+namespace TrenDAP.Model
 {
     public class SystemSettings
     {

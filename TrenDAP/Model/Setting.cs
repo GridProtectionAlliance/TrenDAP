@@ -23,7 +23,7 @@
 
 using Gemstone.Data.Model;
 
-namespace TrenDAP.WebApp.Models
+namespace TrenDAP.Models
 {
     public class Setting
     {

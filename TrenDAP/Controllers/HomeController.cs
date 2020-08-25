@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using TrenDAP.WebApp.Model;
+using TrenDAP.Model;
 
-namespace TrenDAP.WebApp.Controllers
+namespace TrenDAP.Controllers
 {
     public class HomeController : Controller
     {

@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -32,9 +33,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using TrenDAP.WebApp.Model;
+using Serilog.Enrichers;
+using Serilog.Events;
+using Serilog.Sinks.SystemConsole.Themes;
+using TrenDAP.Model;
 
-namespace TrenDAP.WebApp
+namespace TrenDAP
 {
     public class Program
     {
@@ -46,21 +50,37 @@ namespace TrenDAP.WebApp
 
         public static void Main(string[] args)
         {
+            const string loggerTemplate = @"{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u4}]<{ThreadId}> [{SourceContext:l}] {Message:lj}{NewLine}{Exception}";
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var logfile = Path.Combine(baseDir, "logs", "log.txt");
             Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(Configuration)
-            .CreateLogger();
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .Enrich.With(new ThreadIdEnricher())
+                .Enrich.FromLogContext()
+                .WriteTo.Console(LogEventLevel.Information, loggerTemplate, theme: AnsiConsoleTheme.Literate)
+                .WriteTo.File(logfile, LogEventLevel.Information, loggerTemplate,
+                    rollingInterval: RollingInterval.Day, retainedFileCountLimit: 90)
+                .CreateLogger();
+
+            //Log.Logger = new LoggerConfiguration()
+            //.ReadFrom.Configuration(Configuration)
+            //.CreateLogger();
 
             try
             {
-                Log.Information("Testing ...");
+                Log.Information("====================================================================");
+                Log.Information($"Application: {System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name}");
+                Log.Information($"Application Starts. Version: {System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version}");
+                Log.Information($"Application Directory: {AppDomain.CurrentDomain.BaseDirectory}");
                 CreateHostBuilder(args).Build().Run();
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Log.Fatal(ex, "Host terminated unexpectedly");
+                Log.Fatal(e, "Application terminated unexpectedly");
             }
             finally
             {
+                Log.Information("====================================================================\r\n");
                 Log.CloseAndFlush();
             }
         }
@@ -69,13 +89,16 @@ namespace TrenDAP.WebApp
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.UseUrls("https://localhost:8980");
                     webBuilder.UseStartup<Startup>();
                 })
+                .UseWindowsService()
                 .ConfigureServices((hostContext, services) =>
                 {
                     // load settings from config file
                     services.Configure<SystemSettings>(hostContext.Configuration.GetSection("systemSettings"));
                 })
-                .UseSerilog();
+                .UseSerilog()
+            ;
     }
 }

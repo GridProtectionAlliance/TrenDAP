@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrenDAP-WebApp", "TrenDAP-WebApp\TrenDAP-WebApp.csproj", "{47E7157A-B69C-4F6D-896D-4FC4CE42822A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrenDAP", "TrenDAP\TrenDAP.csproj", "{47E7157A-B69C-4F6D-896D-4FC4CE42822A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{D8E29E84-4B17-4C30-B70C-3809E4165009}"
 	ProjectSection(SolutionItems) = preProject
