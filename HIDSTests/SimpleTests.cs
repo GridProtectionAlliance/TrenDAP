@@ -1,14 +1,17 @@
 using HIDS;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Threading.Tasks;
 
 namespace HIDSTests
 {
     [TestClass]
     public class SimpleTests
     {
-        private static string TestURL = "http://localhost:8086/";
+        private static string TestURL = "http://localhost:9999/";
         private static string TestTag = "GPA.TestDevice.TestTrend";
+
+        public TestContext TestContext { get; set; }
 
         [TestMethod]
         public void WriteTest()
@@ -17,10 +20,15 @@ namespace HIDSTests
         }
 
         [TestMethod]
-        public async void ReadTest()
+        public void ReadTest()
         {
-            await foreach (Point point in API.ReadPoints(TestURL, new[] { TestTag }, "-1m"))
-                Console.WriteLine($"Point = {point.Tag} with Max = {point.Maximum}, Min = {point.Maximum}, Avg = {point.Average} @ {point.Timestamp}");
+            ReadTestAsync().Wait();
+        }
+
+        private async Task ReadTestAsync()
+        {
+            await foreach (Point point in API.ReadPoints(TestURL, new[] { TestTag }, "-1h"))
+                TestContext?.WriteLine($"Point = {point.Tag} with Max = {point.Maximum}, Min = {point.Maximum}, Avg = {point.Average} @ {point.Timestamp}");
         }
     }
 }

@@ -44,7 +44,7 @@ namespace HIDS
 
     public class API
     {
-        private static readonly char[] s_token = "".ToCharArray();
+        private static readonly char[] s_token = "_bCLIS0SM1un_xg-XHH6pFHZZ__A9uab9bm6q0c1-NGuCnT07QwvuQh3_v8jT7mnyQthruFqmZzLtbXGif8xvQ==".ToCharArray();
 
         public static string PointBucket = "point_bucket";
         public static string OrganizationID = "gpa";
@@ -63,11 +63,17 @@ namespace HIDS
             return ReadPoints(influxDBHost, tags, FormatTimestamp(startTime), FormatTimestamp(stopTime));
         }
 
-        public static IAsyncEnumerable<Point> ReadPoints(string influxDBHost, IEnumerable<string> tags, string start, string stop = "now")
+        public static IAsyncEnumerable<Point> ReadPoints(string influxDBHost, IEnumerable<string> tags, string start, string stop = null)
         {
             StringBuilder fluxQuery = new StringBuilder();
 
-            fluxQuery.Append($"|> range(start:{start}, stop:{stop})");
+            fluxQuery.Append($"|> range(start:{start}");
+
+            if (!string.IsNullOrWhiteSpace(stop))
+                fluxQuery.Append($", stop:{stop}");
+
+            fluxQuery.Append(") ");
+
             fluxQuery.Append($"|> filter(fn: (r) => {string.Join(" or ", tags.Select(tag => $"r.tag==\"{tag}\")"))}");
 
             return ReadPoints(influxDBHost, fluxQuery.ToString());
