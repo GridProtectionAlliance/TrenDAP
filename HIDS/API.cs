@@ -35,35 +35,82 @@ namespace HIDS
     public class Point
     {
         [Column("tag", IsTag = true)] public string Tag { get; set; }
-        [Column(IsTimestamp = true)] public DateTime Timestamp;
         [Column("min")] public double Minimum { get; set; }
         [Column("max")] public double Maximum { get; set; }
         [Column("avg")] public double Average { get; set; }
         [Column("flags")] public uint QualityFlags { get; set; }
+        [Column(IsTimestamp = true)] public DateTime Timestamp;
     }
 
-    public class API
+    public class API : IDisposable
     {
-        private static readonly char[] s_token = "_bCLIS0SM1un_xg-XHH6pFHZZ__A9uab9bm6q0c1-NGuCnT07QwvuQh3_v8jT7mnyQthruFqmZzLtbXGif8xvQ==".ToCharArray();
+        public static string DefaultPointBucket = "point_bucket";
+        public static string DefaultOrganizationID = "gpa";
 
-        public static string PointBucket = "point_bucket";
-        public static string OrganizationID = "gpa";
+        private InfluxDBClient m_client;
+        private char[] m_token = Array.Empty<char>();
+        private bool m_disposed;
 
-        public static void WritePoints(string influxDBHost, IEnumerable<Point> points)
+        public string PointBucket { get; set; } = DefaultPointBucket;
+
+        public string OrganizationID { get; set; } = DefaultOrganizationID;
+
+        public string TokenID
         {
-            using InfluxDBClient influxDBClient = InfluxDBClientFactory.Create(influxDBHost, s_token);
-            using WriteApi writeApi = influxDBClient.GetWriteApi();
+            get => new string(m_token);
+            set => m_token = value.ToCharArray();
+        }
+
+        public void Connect(string influxDBHost)
+        {
+            m_client = InfluxDBClientFactory.Create(influxDBHost, m_token);
+        }
+
+        public void Disconnect()
+        {
+            m_client.Dispose();
+            m_client = null;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (m_disposed)
+                return;
+
+            try
+            {
+                if (disposing)
+                {
+                    Disconnect();
+                }
+            }
+            finally
+            {
+                m_disposed = true;
+            }
+        }
+
+        public void WritePoints(IEnumerable<Point> points)
+        {
+            if (m_client is null)
+                throw new InvalidOperationException("Cannot write points: not connected to InfluxDB.");
+
+            using WriteApi writeApi = m_client.GetWriteApi();
 
             foreach (Point point in points)
                 writeApi.WriteMeasurement(PointBucket, OrganizationID, WritePrecision.Ns, point);
         }
 
-        public static IAsyncEnumerable<Point> ReadPoints(string influxDBHost, IEnumerable<string> tags, DateTime startTime, DateTime stopTime)
-        {
-            return ReadPoints(influxDBHost, tags, FormatTimestamp(startTime), FormatTimestamp(stopTime));
-        }
+        public IAsyncEnumerable<Point> ReadPoints(IEnumerable<string> tags, DateTime startTime, DateTime stopTime) =>
+            ReadPoints(tags, FormatTimestamp(startTime), FormatTimestamp(stopTime));
 
-        public static IAsyncEnumerable<Point> ReadPoints(string influxDBHost, IEnumerable<string> tags, string start, string stop = null)
+        public IAsyncEnumerable<Point> ReadPoints(IEnumerable<string> tags, string start, string stop = null)
         {
             StringBuilder fluxQuery = new StringBuilder();
 
@@ -76,14 +123,15 @@ namespace HIDS
 
             fluxQuery.Append($"|> filter(fn: (r) => {string.Join(" or ", tags.Select(tag => $"r.tag==\"{tag}\")"))}");
 
-            return ReadPoints(influxDBHost, fluxQuery.ToString());
+            return ReadPoints(fluxQuery.ToString());
         }
 
-        public static async IAsyncEnumerable<Point> ReadPoints(string influxDBHost, string fluxQuery)
+        public async IAsyncEnumerable<Point> ReadPoints(string fluxQuery)
         {
-            using InfluxDBClient influxDBClient = InfluxDBClientFactory.Create(influxDBHost, s_token);
-            QueryApi queryAPI = influxDBClient.GetQueryApi();
+            if (m_client is null)
+                throw new InvalidOperationException("Cannot read points: not connected to InfluxDB.");
 
+            QueryApi queryAPI = m_client.GetQueryApi();
             List<Point> points = await queryAPI.QueryAsync<Point>($"from(bucket:\"{PointBucket}\"){fluxQuery}", OrganizationID);
 
             foreach (Point point in points)
