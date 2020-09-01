@@ -39,7 +39,7 @@ namespace HIDS
         [Column("max")] public double Maximum { get; set; }
         [Column("avg")] public double Average { get; set; }
         [Column("flags")] public uint QualityFlags { get; set; }
-        [Column(IsTimestamp = true)] public DateTime Timestamp;
+        [Column(IsTimestamp = true)] public DateTime Timestamp { get; set; }
     }
 
     public class API : IDisposable
