@@ -2,3 +2,5 @@
 <br/><br/><br/>
 
 ### Trending Data Analytics Platform
+
+![CodeQL](https://github.com/GridProtectionAlliance/TrenDAP/workflows/CodeQL/badge.svg)
