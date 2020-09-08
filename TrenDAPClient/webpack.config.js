@@ -9,13 +9,13 @@ module.exports = env => {
         context: path.resolve(__dirname, 'wwwroot'),
         cache: true,
         entry: {
-            TrenDAP: "./tsx/TrenDAP.tsx"
+            TrenDAP: "./TypeScript/TrenDAP.tsx"
 
         },
 
         output: {
-            path: path.resolve(__dirname, 'wwwroot', 'js'),
-            publicPath: 'js/',
+            path: path.resolve(__dirname, 'wwwroot', 'Scripts'),
+            publicPath: 'Scripts/',
             filename: "[name].js",
             //chunkFilename: '[name].bundle.js'
         },
@@ -51,7 +51,7 @@ module.exports = env => {
             moment: 'moment',
             //ace: 'ace',
             d3: 'd3',
-            'react-router-dom': 'ReactRouterDOM',
+            'react-router-dom': 'ReactRouterDOM'
         },
         optimization: {
             //splitChunks: {

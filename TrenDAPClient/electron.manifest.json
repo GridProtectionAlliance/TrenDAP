@@ -1,10 +1,10 @@
 {
   "executable": "TrenDAPClient",
   "splashscreen": {
-    "imageFile": ""
+    "imageFile": "/wwwroot/Image/trendaplogo.png"
   },
   "name": "TrenDAPClient",
-  "author": "",
+  "author": "Grid Protection Alliance",
   "singleInstance": false,
   "environment": "Production",
   "build": {

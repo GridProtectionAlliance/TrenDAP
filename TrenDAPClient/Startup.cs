@@ -28,6 +28,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ElectronNET.API;
 using ElectronNET.API.Entities;
 using Microsoft.Extensions.Hosting;
+using Gemstone.Web;
 
 namespace TrenDAPClient
 {
@@ -60,6 +61,7 @@ namespace TrenDAPClient
                 app.UseHsts();
             }
             app.UseHttpsRedirection();
+            app.UseStaticFiles(WebExtensions.StaticFileEmbeddedResources());
             app.UseStaticFiles();
 
             app.UseRouting();
@@ -83,7 +85,10 @@ namespace TrenDAPClient
             {
                 Width = 1152,
                 Height = 940,
-                Show = false
+                Show = false,
+                WebPreferences = new WebPreferences() { 
+                    NodeIntegration = false,
+                }
             });
 
             await browserWindow.WebContents.Session.ClearCacheAsync();
