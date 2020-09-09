@@ -23,6 +23,9 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
+import store from './Store/Store';
+
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
 import queryString from "querystring";
@@ -49,4 +52,4 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
     );
 }
 
-ReactDOM.render(<TrenDAP />, document.getElementById('window'));
+ReactDOM.render(<Provider store={store}><TrenDAP/></Provider>, document.getElementById('window'));

@@ -8,7 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\TypeScript\Feature\Workspace\Workspace.tsx" />
+    <Content Remove="wwwroot\TypeScript\Feature\Workspace\WorkspaceSlice.ts" />
     <Content Remove="wwwroot\TypeScript\global.d.ts" />
+    <Content Remove="wwwroot\TypeScript\Store\Store.ts" />
     <Content Remove="wwwroot\TypeScript\TrenDAP.tsx" />
   </ItemGroup>
 
@@ -51,6 +54,12 @@
 
   <ItemGroup>
     <None Include="wwwroot\TypeScript\global.d.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Feature\Workspace\Workspace.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Feature\Workspace\WorkspaceSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Store\Store.ts" />
   </ItemGroup>
 
 </Project>
