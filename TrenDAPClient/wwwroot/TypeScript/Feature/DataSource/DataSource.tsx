@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  WorkspaceSlice.ts - Gbtc
+//  DataSource.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,27 +16,16 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  09/11/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-import { createSlice } from '@reduxjs/toolkit';
 
-export const WorkspaceSlice = createSlice({
-    name: 'Workspace',
-    initialState: {
-        value: 0
-    },
-    reducers: {
-        New: state => {
+import * as React from 'react';
 
-        },
-        Delete: state => {
+const DataSource: React.FunctionComponent = (props: {}) => {
 
-        }
-    }
+    return null;
+}
 
-});
-
-export const { New, Delete } = WorkspaceSlice.actions;
-export default WorkspaceSlice.reducer;
+export default DataSource;

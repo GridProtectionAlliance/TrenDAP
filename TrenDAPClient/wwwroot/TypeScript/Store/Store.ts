@@ -23,8 +23,11 @@
 
 import { configureStore } from '@reduxjs/toolkit';
 import WorkspaceReducer from '../Feature/Workspace/WorkspaceSlice';
+import DataSourcesReducuer from '../Feature/DataSources/DataSourcesSlice';
+
 export default configureStore({
     reducer: {
         Workspace: WorkspaceReducer,
+        DataSources: DataSourcesReducuer
     }
 });

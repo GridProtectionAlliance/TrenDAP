@@ -22,21 +22,22 @@
 //******************************************************************************************************
 import { createSlice } from '@reduxjs/toolkit';
 
-export const WorkspaceSlice = createSlice({
-    name: 'Workspace',
-    initialState: {
-        value: 0
-    },
+export const WorkspacesSlice = createSlice({
+    name: 'Workspaces',
+    initialState: [],
     reducers: {
-        New: state => {
-
+        Add: (state, action) => {
+            state.push(action.payload);
         },
-        Delete: state => {
+        AddRange: (state, action) => {
+            state = action.payload;
+        },
+        Remove: state => {
 
         }
     }
 
 });
 
-export const { New, Delete } = WorkspaceSlice.actions;
-export default WorkspaceSlice.reducer;
+export const { Add, Remove } = WorkspacesSlice.actions;
+export default WorkspacesSlice.reducer;

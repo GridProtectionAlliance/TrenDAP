@@ -69,8 +69,15 @@ namespace TrenDAPClient
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                name: "default",
+                pattern: "{newaction?}/{id?}",
+                defaults: new
+                {
+                    controller = "Home",
+                    action = "Index"
+                });
+
+                endpoints.MapControllers();
             });
 
             if (HybridSupport.IsElectronActive)

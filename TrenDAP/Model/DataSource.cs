@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  WorkspaceSlice.ts - Gbtc
+//  DataSource.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,27 +16,37 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  09/10/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-import { createSlice } from '@reduxjs/toolkit';
 
-export const WorkspaceSlice = createSlice({
-    name: 'Workspace',
-    initialState: {
-        value: 0
-    },
-    reducers: {
-        New: state => {
+using Gemstone.Data.Model;
+using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Configuration;
+using System.Security;
+using TrenDAP.Controllers;
 
-        },
-        Delete: state => {
+namespace TrenDAP.Model
+{
+
+    public class DataSource
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        public string Name { get; set; }
+        public int DataSourceTypeID { get; set; }
+        public string URL { get; set; }
+        public string Credential { get; set; }
+        public SecureString Password { get; set; }
+    }
+
+
+    public class DataSourceController: ModelController<DataSource>
+    {
+        public DataSourceController(IConfiguration configuration) : base(configuration)
+        {
 
         }
     }
-
-});
-
-export const { New, Delete } = WorkspaceSlice.actions;
-export default WorkspaceSlice.reducer;
+}

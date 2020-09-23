@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  WorkspaceSlice.ts - Gbtc
+//  DataSourceSlice.ts - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,16 +16,23 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  09/11/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+
+
 import { createSlice } from '@reduxjs/toolkit';
 
-export const WorkspaceSlice = createSlice({
-    name: 'Workspace',
+export const DataSourceSlice = createSlice({
+    name: 'DataSource',
     initialState: {
-        value: 0
+        ID: 0,
+        Name: '',
+        Type: 'OpenXDA',
+        URL: '',
+        Credential: '',
+        Password: ''
     },
     reducers: {
         New: state => {
@@ -38,5 +45,5 @@ export const WorkspaceSlice = createSlice({
 
 });
 
-export const { New, Delete } = WorkspaceSlice.actions;
-export default WorkspaceSlice.reducer;
+export const { New, Delete } = DataSourceSlice.actions;
+export default DataSourceSlice.reducer;

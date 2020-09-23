@@ -89,15 +89,15 @@ namespace TrenDAP
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseUrls("https://localhost:8980");
+                    //webBuilder.UseUrls("https://localhost:8980");
                     webBuilder.UseStartup<Startup>();
                 })
-                .UseWindowsService()
-                .ConfigureServices((hostContext, services) =>
-                {
-                    // load settings from config file
-                    services.Configure<SystemSettings>(hostContext.Configuration.GetSection("systemSettings"));
-                })
+                //.UseWindowsService()
+                //.ConfigureServices((hostContext, services) =>
+                //{
+                //    // load settings from config file
+                //    services.Configure<SystemSettings>(hostContext.Configuration.GetSection("systemSettings"));
+                //})
                 .UseSerilog()
             ;
     }

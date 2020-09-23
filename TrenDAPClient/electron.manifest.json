@@ -5,7 +5,7 @@
   },
   "name": "TrenDAPClient",
   "author": "Grid Protection Alliance",
-  "singleInstance": false,
+  "singleInstance": true,
   "environment": "Production",
   "build": {
     "appId": "com.TrenDAPClient.app",

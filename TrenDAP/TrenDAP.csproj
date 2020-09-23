@@ -12,11 +12,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\Images\trendaplogo.png" />
     <Content Remove="wwwroot\tsx\TrenDAP.tsx" />
+    <Content Remove="wwwroot\TypeScript\declarations.d.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSources.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSourcesSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\global.d.ts" />
+    <Content Remove="wwwroot\TypeScript\Store\Store.ts" />
+    <Content Remove="wwwroot\TypeScript\TrenDAP.tsx" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\lib\" />
+    <Folder Include="wwwroot\Scripts\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,7 +44,31 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\Images\trendaplogo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="wwwroot\tsx\TrenDAP.tsx" />
+    <None Include="wwwroot\TypeScript\global.d.ts">
+      <SubType>Code</SubType>
+    </None>
+    <None Include="wwwroot\TypeScript\TrenDAP.tsx">
+      <SubType>Code</SubType>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\TypeScript\declarations.d.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\DataSources.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\DataSourcesSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Store\Store.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
   </ItemGroup>
 
   <ItemGroup>
@@ -54,9 +85,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Update="wwwroot\css\TrenDAP.css">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\js\PQDigest.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Update="wwwroot\js\TrenDAP.js">

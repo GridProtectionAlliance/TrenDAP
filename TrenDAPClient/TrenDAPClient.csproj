@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\TypeScript\declarations.d.ts" />
+    <Content Remove="wwwroot\TypeScript\Feature\DataSources\DataSources.tsx" />
+    <Content Remove="wwwroot\TypeScript\Feature\DataSources\DataSourcesSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Feature\DataSource\DataSource.tsx" />
+    <Content Remove="wwwroot\TypeScript\Feature\DataSource\DataSourceSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Feature\Workspaces\WorkspacesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Feature\Workspace\Workspace.tsx" />
     <Content Remove="wwwroot\TypeScript\Feature\Workspace\WorkspaceSlice.ts" />
     <Content Remove="wwwroot\TypeScript\global.d.ts" />
@@ -40,6 +46,8 @@
     <PackageReference Include="Gemstone.Data" Version="1.0.59" />
     <PackageReference Include="Gemstone.Web" Version="1.0.59" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.8" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 
@@ -57,9 +65,31 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\TypeScript\declarations.d.ts" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Feature\DataSources\DataSources.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Feature\DataSources\DataSourcesSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Feature\DataSource\DataSource.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Feature\DataSource\DataSourceSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Feature\Workspaces\WorkspacesSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Feature\Workspace\Workspace.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Feature\Workspace\WorkspaceSlice.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Store\Store.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

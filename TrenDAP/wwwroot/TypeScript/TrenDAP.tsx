@@ -31,9 +31,10 @@ import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-d
 
 import queryString from "querystring";
 import { createBrowserHistory } from "history"
+import DataSources from './Features/DataSources/DataSources';
 
 const TrenDAP: React.FunctionComponent = (props: {}) => {
-    const DataSources = React.lazy(() => import(/* webpackChunkName: "DataSources" */ './Feature/DataSources/DataSources'));
+    const DataSources = React.lazy(() => import(/* webpackChunkName: "DataSources" */ './Features/DataSources/DataSources'));
 
     return (
         <Router>
@@ -59,7 +60,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                             </a>
                         </li>
                         <li className="nav-item">
-                            <a className="nav-link" href="#">
+                                <a className="nav-link" href={ `${homePath}DataSources`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-file">
                                     <path d="M 3,4.5 a 9,4.5 0,0,0 18 3 a 9,4.5 0,0,0 -18 0 l 0,11 a 9,4.5 0,0,0 18 0 l 0,-11" />
                                 </svg>

@@ -61,11 +61,6 @@ namespace TrenDAP
             }
             );
 
-            if (Env.IsDevelopment())
-            {
-                builder.AddRazorRuntimeCompilation();
-            }
-
 
         }
 
@@ -88,6 +83,7 @@ namespace TrenDAP
             app.UseEndpoints(endpoints =>
             {
                 //endpoints.MapRazorPages();
+                //endpoints.MapControllers();
 
                 endpoints.MapControllerRoute(
                 name: "default",
@@ -98,7 +94,6 @@ namespace TrenDAP
                     action = "Index"
                 });
 
-                endpoints.MapControllers();
             });
         }
     }

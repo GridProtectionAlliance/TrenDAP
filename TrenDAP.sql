@@ -51,3 +51,24 @@ CREATE TABLE Setting
 )
 GO
 
+CREATE TABLE DataSourceType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+)
+GO
+
+INSERT INTO DataSourceType (Name) VALUES ('OpenXDA')
+GO
+
+CREATE TABLE DataSource
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NULL,
+    DataSourceTypeID INT NOT NULL REFERENCES DataSourceType(ID),
+    URL VARCHAR(MAX) NULL,
+    Credential varchar(max) NULL,
+    Password varchar(max) NULL
+
+)
+GO

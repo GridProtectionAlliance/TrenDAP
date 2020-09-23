@@ -14,7 +14,7 @@
     "module": "ESNext",
     "moduleResolution": "Node"
   },
-  "include": [ "wwwroot/tsx", "wwwroot/ts" ],
+  "include": [ "wwwroot/**/*" ],
   "exclude": [
     "node_modules"
   ]

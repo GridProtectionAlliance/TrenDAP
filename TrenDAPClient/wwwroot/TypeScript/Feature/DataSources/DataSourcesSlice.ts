@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  WorkspaceSlice.ts - Gbtc
+//  DataSourcesSlice.ts - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,27 +16,30 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  09/11/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 import { createSlice } from '@reduxjs/toolkit';
+import { TrenDAP } from '../../global';
 
-export const WorkspaceSlice = createSlice({
-    name: 'Workspace',
-    initialState: {
-        value: 0
-    },
+export const DataSourcesSlice = createSlice({
+    name: 'DataSources',
+    initialState: [] as TrenDAP.iDataSouce[],
     reducers: {
-        New: state => {
-
+        Add: (state, action) => {
+            state.push(action.payload);
         },
-        Delete: state => {
+        AddRange: (state, action) => {
+            state = action.payload;
+        },
+        Remove: state => {
 
         }
     }
 
 });
 
-export const { New, Delete } = WorkspaceSlice.actions;
-export default WorkspaceSlice.reducer;
+export const { Add, AddRange } = DataSourcesSlice.actions;
+export default DataSourcesSlice.reducer;
+export const SelectDataSources = state => state

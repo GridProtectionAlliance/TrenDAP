@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  WorkspaceSlice.ts - Gbtc
+//  DataSource.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,27 +16,46 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  09/10/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-import { createSlice } from '@reduxjs/toolkit';
 
-export const WorkspaceSlice = createSlice({
-    name: 'Workspace',
-    initialState: {
-        value: 0
-    },
-    reducers: {
-        New: state => {
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Security;
+using System.Threading.Tasks;
 
-        },
-        Delete: state => {
+namespace TrenDAPClient.Model
+{
 
+    public class DataSourceContext : DbContext {
+        private IConfiguration m_configuration;
+        public DataSourceContext(IConfiguration configuration) {
+            m_configuration = configuration;        
         }
+        public DbSet<DataSource> DataSources { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder options) => options.UseSqlite(m_configuration["SystemSettings:DataSource"]);
     }
 
-});
+    public class DataSource
+    {
+        public enum DataSourceType
+        {
+            OpenXDA
+        }
 
-export const { New, Delete } = WorkspaceSlice.actions;
-export default WorkspaceSlice.reducer;
+        [Key]
+        public int ID { get; set; }
+        public string Name { get; set; }
+        public DataSourceType Type { get; set; }
+        public string URL { get; set; }
+        public string Credential { get; set; }
+        public SecureString Password { get; set; }
+    }
+}

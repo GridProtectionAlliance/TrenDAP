@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  WorkspaceSlice.ts - Gbtc
+//  app.module.scss - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,27 +16,36 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  09/10/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-import { createSlice } from '@reduxjs/toolkit';
 
-export const WorkspaceSlice = createSlice({
-    name: 'Workspace',
-    initialState: {
-        value: 0
-    },
-    reducers: {
-        New: state => {
+.red {
+	color: red;
+	background-color: aqua;
+}
 
-        },
-        Delete: state => {
+.sidebar {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 100;
+	padding: 48px 0 0;
+	box-shadow:inset -1px 0 0 rgba(0,0,0,.1);
+}
 
-        }
-    }
+.sidebar a {
+	color: #78828d;
+}
 
-});
+.sidebar-sticky {
+	position: -webkit-sticky;
+	position: sticky;
+}
 
-export const { New, Delete } = WorkspaceSlice.actions;
-export default WorkspaceSlice.reducer;
+.sidebar-heading {
+	font-size: .75em;
+	text-transform: uppercase;
+}

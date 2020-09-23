@@ -24,6 +24,13 @@
 @using Newtonsoft.Json
 @{
     Layout = "";
+
+#if DEBUG
+    bool debug = true;
+#else
+    bool debug = false;
+#endif
+
 }
 
 <!DOCTYPE html>
@@ -33,7 +40,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="@Url.Content("~/@Gemstone/Content/bootstrap4.css")" rel="stylesheet">
     <link href="@Url.Content("~/@Gemstone/Content/font-awesome.css")" rel="stylesheet">
-    @*<link rel="stylesheet" href="~/css/site.css" />*@
+    @*<link rel="stylesheet" href="~/Styles/site.css" />*@
 
     <link rel="import" href="menus">
 
@@ -50,9 +57,17 @@
     </script>
     <script src="@Url.Content("~/@Gemstone/Scripts/jquery.js")"></script>
     <script src="@Url.Content("~/@Gemstone/Scripts/moment.js")"></script>
-    <script src="@Url.Content("~/@Gemstone/Scripts/react.production.min.js")"></script>
-    <script src="@Url.Content("~/@Gemstone/Scripts/react-dom.production.min.js")"></script>
-    @*<script src="@Url.Content("~/@Gemstone/Scripts/react-router-dom.min.js")"></script>*@
+    @if (debug)
+    {
+        <script src="@Url.Content("~/@Gemstone/Scripts/react.development.js")"></script>
+        <script src="@Url.Content("~/@Gemstone/Scripts/react-dom.development.js")"></script> 
+    }
+    else
+    {
+        <script src="@Url.Content("~/@Gemstone/Scripts/react.production.min.js")"></script>
+        <script src="@Url.Content("~/@Gemstone/Scripts/react-dom.production.min.js")"></script>
+    }
+    <script src="@Url.Content("~/@Gemstone/Scripts/react-router-dom.min.js")"></script>
     <script src="@Url.Content("~/@Gemstone/Scripts/d3.v4.min.js")"></script>
     <script src="@Url.Content("~/@Gemstone/Scripts/bootstrap4.js")"></script>
     <script src="@Url.Content("~/@Gemstone/Scripts/gsf.web.client.js")"></script>
