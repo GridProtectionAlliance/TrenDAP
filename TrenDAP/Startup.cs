@@ -34,6 +34,8 @@ using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using System.Security.Principal;
+using TrenDAP.WebApp;
 
 namespace TrenDAP
 {
@@ -79,6 +81,28 @@ namespace TrenDAP
 
             app.UseAuthentication();
             //app.UseAuthorization();
+
+            app.Use((context, next) =>
+            {
+                //string username = context.Request.HttpContext.User?.Identity.Name;
+
+                //if ((object)username == null)
+                //    return null;
+
+                //// Get the principal used for verifying the user's pass-through authentication
+                //IPrincipal passthroughPrincipal = context.Request.HttpContext.User;
+
+                //// Create the security provider that will verify the user's pass-through authentication
+                //ISecurityProvider securityProvider = SecurityProviderCache.CreateProvider(username, passthroughPrincipal, false);
+                //securityProvider.Authenticate();
+
+                //// Return the security principal that will be used for role-based authorization
+                //SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
+                context.Request.HttpContext.User = new GemstoneSecurityPrincipal(context.Request.HttpContext.User, Configuration["SecurityProvider:ConnectionString"], Configuration["SecurityProvider:DataProviderString"]);
+
+                return next.Invoke();
+            });
+
 
             app.UseEndpoints(endpoints =>
             {

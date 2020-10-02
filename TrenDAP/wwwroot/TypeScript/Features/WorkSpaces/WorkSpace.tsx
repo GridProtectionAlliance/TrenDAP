@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Store.ts - Gbtc
+//  WorkSpace.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,20 +16,30 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  09/25/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-import { configureStore } from '@reduxjs/toolkit';
-import DataSourcesReducuer from '../Features/DataSources/DataSourcesSlice';
-import DataSourceTypesReducer from '../Features/DataSourceTypes/DataSourceTypesSlice';
-import WorkSpaceReducer from '../Features/WorkSpaces/WorkSpacesSlice';
+import * as React from 'react';
+import { TrenDAP } from '../../global';
+import { Input, CheckBox } from '@gpa-gemstone/react-forms/lib';
 
-export default configureStore({
-    reducer: {
-        WorkSpaces: WorkSpaceReducer,
-        DataSources: DataSourcesReducuer,
-        DataSourceTypes: DataSourceTypesReducer
+
+const WorkSpace: React.FunctionComponent<{ Record: TrenDAP.iWorkSpace, SetWorkSpace: (ws: TrenDAP.iWorkSpace) => void }> = (props) => {
+    function valid(field: keyof (TrenDAP.iWorkSpace)): boolean {
+        if (field == 'Name')
+            return props.Record.Name != null && props.Record.Name.length > 0 && props.Record.Name.length <= 200;
+        else 
+            return true;
     }
-});
+
+    return (
+           <form>
+                <Input<TrenDAP.iWorkSpace> Record={props.Record} Field="Name" Setter={(record) => props.SetWorkSpace(record)} Valid={valid} />
+                <CheckBox<TrenDAP.iWorkSpace> Record={props.Record} Field="Public" Setter={(record) => props.SetWorkSpace(record)}/>
+           </form>
+    );
+}
+
+export default WorkSpace;

@@ -215,7 +215,7 @@ namespace TrenDAP.Controllers
         }
 
 
-        [HttpPost, Route("Add")]
+        [HttpPost]
         public virtual ActionResult Post([FromBody] JObject record)
         {
             try
@@ -253,7 +253,7 @@ namespace TrenDAP.Controllers
             }
         }
 
-        [HttpPatch, Route("Update")]
+        [HttpPatch]
         public virtual ActionResult Patch([FromBody] T record)
         {
             try
@@ -280,7 +280,7 @@ namespace TrenDAP.Controllers
             }
         }
 
-        [HttpDelete, Route("Delete")]
+        [HttpDelete]
         public virtual ActionResult Delete(T record)
         {
             try

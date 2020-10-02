@@ -13,11 +13,21 @@
 
   <ItemGroup>
     <Content Remove="wwwroot\Images\trendaplogo.png" />
-    <Content Remove="wwwroot\tsx\TrenDAP.tsx" />
+    <Content Remove="wwwroot\TypeScript\Constants.ts" />
     <Content Remove="wwwroot\TypeScript\declarations.d.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSources\AddNewDataSource.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSources.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSourcesSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSourceTypes\DataSourceTypesSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\AddNewWorkSpace.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\EditWorkSpace.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpace.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpaces.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpacesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\global.d.ts" />
+    <Content Remove="wwwroot\TypeScript\SideNavBar.tsx" />
     <Content Remove="wwwroot\TypeScript\Store\Store.ts" />
     <Content Remove="wwwroot\TypeScript\TrenDAP.tsx" />
   </ItemGroup>
@@ -47,8 +57,10 @@
     <None Include="wwwroot\Images\trendaplogo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="wwwroot\tsx\TrenDAP.tsx" />
     <None Include="wwwroot\TypeScript\global.d.ts">
+      <SubType>Code</SubType>
+    </None>
+    <None Include="wwwroot\TypeScript\SideNavBar.tsx">
       <SubType>Code</SubType>
     </None>
     <None Include="wwwroot\TypeScript\TrenDAP.tsx">
@@ -57,13 +69,41 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Constants.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\declarations.d.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\AddNewDataSource.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\DataSource.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\DataSources.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\DataSourcesSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSourceTypes\DataSourceTypesSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\AddNewWorkSpace.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\EditWorkSpace.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\WorkSpace.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\WorkSpaces.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\WorkSpacesSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Store\Store.ts">

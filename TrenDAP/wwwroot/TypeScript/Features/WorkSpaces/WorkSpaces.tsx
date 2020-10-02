@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataSources.tsx - Gbtc
+//  WorkSpaces.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,65 +16,52 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/11/2020 - Billy Ernest
+//  09/25/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
+
 import * as React from 'react';
 import { TrenDAP } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
-import { Sort, SelectDataSourcesForUser, FetchDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSourcesAllPublicNotUser, SelectDataSourcesSortField, SelectDataSourcesAscending } from './DataSourcesSlice'
 import Table from '@gpa-gemstone/react-table/lib/index'
-import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
-import EditDataSource from './EditDataSource';
+import { Sort, FetchWorkSpaces, SelectWorkSpacesStatus, RemoveWorkSpace, SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, SelectWorkSpacesSortField, SelectWorkSpacesAscending } from './WorkSpacesSlice';
+import EditWorkSpace from './EditWorkSpace';
 import { TrashCan, HeavyCheckMark } from './../../Constants'
 
-const DataSources: React.FunctionComponent = (props: {}) => {
+const WorkSpaces: React.FunctionComponent = (props: {}) => {
     const dispatch = useDispatch();
-    const dataSources = useSelector(state => SelectDataSourcesForUser(state, userName));
-    const publicDataSources = useSelector(state => SelectDataSourcesAllPublicNotUser(state,userName));
+    const workSpaces = useSelector(state => SelectWorkSpacesForUser(state, userName));
+    const publicWorkSpaces = useSelector(state => SelectWorkSpacesAllPublicNotUser(state, userName));
 
-    const dsStatus = useSelector(SelectDataSourcesStatus);
-    const dataSourceTypes = useSelector(SelectDataSourceTypes);
-    const dstStatus = useSelector(SelectDataSourceTypesStatus);
+    const wsStatus = useSelector(SelectWorkSpacesStatus);
 
-    const sortField = useSelector(SelectDataSourcesSortField);
-    const ascending = useSelector(SelectDataSourcesAscending);
+    const sortField = useSelector(SelectWorkSpacesSortField);
+    const ascending = useSelector(SelectWorkSpacesAscending);
 
     React.useEffect(() => {
-        if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
-        let promise = dispatch(FetchDataSources());
+        if (wsStatus != 'unitiated' && wsStatus != 'changed') return;
+        let promise = dispatch(FetchWorkSpaces());
 
         return function () {
-            if (dsStatus === 'loading')
+            if (wsStatus === 'loading')
                 promise.abort();
         }
-    }, [dispatch, dsStatus]);
-
-    React.useEffect(() => {
-        if (dstStatus != 'unitiated') return;
-
-        let promise = dispatch(FetchDataSourceTypes());
-        return function () {
-            if(dstStatus === 'loading')
-                promise.abort();
-        }
-    }, [dispatch, dstStatus]);
+    }, [dispatch, wsStatus]);
 
     return (
-    <div className="row" style={{ margin: 10}}>
-        <div className="col-6">
-            <div className="card">
-                <div className="card-header">My DataSources</div>
-                <div className="card-body">
-                    <Table<TrenDAP.iDataSource>
+        <div className="row" style={{ margin: 10 }}>
+            <div className="col-8">
+                <div className="card">
+                    <div className="card-header">My Workspaces</div>
+                    <div className="card-body">
+                        <Table<TrenDAP.iWorkSpace>
                         cols={[
                             { key: 'Name', label: 'Name' },
-                            { key: 'DataSourceTypeID', label: 'Type', content: (item, key, style) => dataSourceTypes.find(dst => item.DataSourceTypeID === dst.ID)?.Name },
-                            { key: 'URL', label: 'Url' },
                             { key: 'Public', label: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
-                            { key: null, label: '', content: (item, key, style) => <span><EditDataSource DataSource={item} /><button className="btn" onClick={() => dispatch(RemoveDataSource(item))}>{TrashCan}</button></span> }
+                            { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item[key]).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
+                            { key: null, label: '', content: (item, key, style) => <span><EditWorkSpace WorkSpace={item}/><button className="btn" onClick={() => dispatch(RemoveWorkSpace(item)) }>{TrashCan}</button></span>}
 
                         ]}
                         tableClass="table table-hover"
@@ -83,25 +70,23 @@ const DataSources: React.FunctionComponent = (props: {}) => {
                         rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                         sortField={sortField}
                         onClick={() => { }}
-                        onSort={data => dispatch(Sort({SortField: data.col, Ascending: data.ascending}))}
-                        data={dataSources}
+                        onSort={data => dispatch(Sort({ SortField: data.col, Ascending: data.ascending }))}
+                        data={workSpaces}
                         ascending={ascending}
-                    />
-
+                            />
+                    </div>
                 </div>
             </div>
-        </div>
-            <div className="col-6">
+            <div className="col-4">
                 <div className="card">
-                    <div className="card-header">Public DataSources</div>
+                    <div className="card-header">Public Workspaces</div>
                     <div className="card-body">
-                        <Table<TrenDAP.iDataSource>
+                        <Table<TrenDAP.iWorkSpace>
                             cols={[
                                 { key: 'Name', label: 'Name' },
-                                { key: 'DataSourceTypeID', label: 'Type', content: (item, key, style) => dataSourceTypes.find(dst => item.DataSourceTypeID === dst.ID)?.Name },
-                                { key: 'URL', label: 'Url' },
-                                //{ key: 'Public', label: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
-                                //{ key: null, label: '', content: (item, key, style) => <span><EditDataSource DataSource={item} /><button className="btn" onClick={() => dispatch(RemoveDataSource(item))}>{TrashCan}</button></span> }
+                                { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item[key]).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
+
+                                //{ key: null, label: '', content: (item, key, style) => <span><EditWorkSpace WorkSpace={item} /><button className="btn" onClick={() => dispatch(RemoveWorkSpace(item))}>{TrashCan}</button></span> }
 
                             ]}
                             tableClass="table table-hover"
@@ -111,16 +96,17 @@ const DataSources: React.FunctionComponent = (props: {}) => {
                             sortField={sortField}
                             onClick={() => { }}
                             onSort={data => dispatch(Sort({ SortField: data.col, Ascending: data.ascending }))}
-                            data={publicDataSources}
+                            data={publicWorkSpaces}
                             ascending={ascending}
                         />
 
                     </div>
                 </div>
+            </div>
 
         </div>
-    </div>
+
     );
 }
 
-export default DataSources;
+export default WorkSpaces;

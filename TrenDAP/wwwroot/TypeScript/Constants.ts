@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Store.ts - Gbtc
+//  Constants.ts - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,20 +16,14 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  09/30/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-import { configureStore } from '@reduxjs/toolkit';
-import DataSourcesReducuer from '../Features/DataSources/DataSourcesSlice';
-import DataSourceTypesReducer from '../Features/DataSourceTypes/DataSourceTypesSlice';
-import WorkSpaceReducer from '../Features/WorkSpaces/WorkSpacesSlice';
-
-export default configureStore({
-    reducer: {
-        WorkSpaces: WorkSpaceReducer,
-        DataSources: DataSourcesReducuer,
-        DataSourceTypes: DataSourceTypesReducer
-    }
-});
+// emojis
+const HeavyCheckMark = '✔️';
+const Pencil = '✏️';
+const TrashCan = '🗑️';
+const CrossMark = '❌';
+export { HeavyCheckMark, Pencil, TrashCan, CrossMark };

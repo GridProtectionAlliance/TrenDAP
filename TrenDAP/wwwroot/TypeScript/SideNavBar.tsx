@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  TrenDAP.tsx - Gbtc
+//  SideNavBar.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,63 +16,66 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/08/2020 - Billy Ernest
+//  09/25/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
+
+
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { Provider } from 'react-redux';
-import store from './Store/Store';
 import styles from '../Styles/app.scss';
+import { useSelector, useDispatch } from 'react-redux';
 
-import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import AddNewDataSource from './Features/DataSources/AddNewDataSource';
+import AddNewWorkSpace from './Features/WorkSpaces/AddNewWorkSpace';
+import { SelectWorkSpacesForUser, SelectWorkSpacesStatus, FetchWorkSpaces } from './Features/WorkSpaces/WorkSpacesSlice';
 
-import queryString from "querystring";
-import { createBrowserHistory } from "history"
+const SideNavBar: React.FunctionComponent = (props: {}) => {
+    const location = useLocation();
+    const dispatch = useDispatch();
+    const workSpaces = useSelector(state => SelectWorkSpacesForUser(state, userName));
+    const wsStatus = useSelector(SelectWorkSpacesStatus);
 
-const TrenDAP: React.FunctionComponent = (props: {}) => {
-    const DataSources = React.lazy(() => import(/* webpackChunkName: "DataSources" */ './Feature/DataSources/DataSources'));
+    React.useEffect(() => {
+        if (wsStatus != 'unitiated' && wsStatus != 'changed') return;
+        let promise = dispatch(FetchWorkSpaces());
+
+        return function () {
+            if (wsStatus === 'loading')
+                promise.abort();
+        }
+    }, [dispatch, wsStatus]);
+
 
     return (
-        <Router>
-
-        <div style={{ width: window.innerWidth, height: window.innerHeight }}>
-            <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
-                <a className="navbar-brand col-sm-3 col-md-2 mr-0" href={homePath}>TrenDAP</a>
-                    <ul className="navbar-nav px-3">
-                        <li className="nav-item text-nowrap">
-                        </li>
-                    </ul>
-            </nav>
-            <nav className={"col-md-2 d-none d-md-block bg-light " + styles.sidebar}>
+            <nav className={"bg-light " + styles.sidebar}>
                 <div className={styles["sidebar-sticky"]}>
                     <ul className="nav flex-column">
                         <li className="nav-item">
-                            <a className="nav-link active" href={homePath}>
+                            <Link className="nav-link" to={homePath}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-home">
                                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
                                 </svg>
                                 Home <span className="sr-only">(current)</span>
-                            </a>
+                            </Link>
                         </li>
-                        <li className="nav-item">
-                            <a className="nav-link" href="#">
+                            <li className="nav-item" style={{position: 'relative'}}>
+                                <Link className="nav-link" to={ `${homePath}DataSources`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-file">
                                     <path d="M 3,4.5 a 9,4.5 0,0,0 18 3 a 9,4.5 0,0,0 -18 0 l 0,11 a 9,4.5 0,0,0 18 0 l 0,-11" />
                                 </svg>
-                              Data Sources
-                            </a>
+                                <span>Data Sources</span>
+
+                                </Link>
+                                {location.pathname === `${homePath}DataSources` ? <AddNewDataSource /> : null}
                         </li>
                     </ul>
-
                     <h6 className={styles["sidebar-heading"] + " d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted"}>
                         <span>Saved Workspaces</span>
-                        <a className="d-flex align-items-center text-muted" href="#">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-plus-circle"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                        </a>
+                        <AddNewWorkSpace />
                     </h6>
                     <ul className="nav flex-column mb-2">
                         <li className="nav-item">
@@ -102,25 +105,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                     </ul>
                 </div>
             </nav>
-            <div className="container-fluid" style={{ top: 75, position: 'absolute', width: '100%', height: 'calc(100% - 75px)', overflow: 'hidden' }}>
-                <div className="row" style={{ height: '100%' }}>
-                    <div className="col" style={{ width: '100%', height: 'inherit', padding: '0 0 0 0', overflow: 'hidden' }}>
-                            <React.Suspense fallback={<div>Loading...</div>}>
-                                <Switch>
-                                    <Route exact path={`${homePath}`}><WorkSpaces /></Route>
-                                    <Route path={`${homePath}DataSources`}><DataSources /></Route>
-                                    <Redirect to={homePath} />
-                                </Switch>
-                            </React.Suspense>
-
-
-                    </div>
-
-                </div>
-            </div>
-            </div>
-        </Router>
     );
 }
 
-ReactDOM.render(<Provider store={store}><TrenDAP/></Provider>, document.getElementById('window'));
+export default SideNavBar;

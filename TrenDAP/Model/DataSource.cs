@@ -38,15 +38,30 @@ namespace TrenDAP.Model
         public int DataSourceTypeID { get; set; }
         public string URL { get; set; }
         public string Credential { get; set; }
-        public SecureString Password { get; set; }
+        public string Password { get; set; }
+        [UseEscapedName]
+        public bool Public { get; set; }
+        [UseEscapedName]
+        public string User { get; set; }
     }
 
 
     public class DataSourceController: ModelController<DataSource>
     {
-        public DataSourceController(IConfiguration configuration) : base(configuration)
-        {
-
-        }
+        public DataSourceController(IConfiguration configuration) : base(configuration){}
     }
+
+    public class DataSourceType
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        public string Name { get; set; }
+    }
+
+
+    public class DataSourceTypeController : ModelController<DataSourceType>
+    {
+        public DataSourceTypeController(IConfiguration configuration) : base(configuration) {} 
+    }
+
 }

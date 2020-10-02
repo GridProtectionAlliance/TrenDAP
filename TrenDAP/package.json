@@ -20,7 +20,7 @@
     "ts-loader": "4.5.0",
     "ts-node": "^8.6.2",
     "tsconfig-paths": "^3.9.0",
-    "typescript": "3.6.2",
+    "typescript": "3.7.2",
     "url-loader": "1.0.1",
     "webpack": "4.28.4",
     "webpack-cli": "3.3.0",
@@ -31,6 +31,8 @@
     "css-modules-typescript-loader": "4.0.0"
   },
   "dependencies": {
+    "@gpa-gemstone/react-table": "^1.0.2",
+    "@gpa-gemstone/react-forms": "^1.0.1",
     "@types/d3": "^4.13.2",
     "@types/jquery": "3.3.1",
     "@types/lodash": "^4.14.149",

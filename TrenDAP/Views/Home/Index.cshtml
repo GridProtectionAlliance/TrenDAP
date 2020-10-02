@@ -53,6 +53,7 @@
     <div id="window"></div>
     <script>
         var homePath = '@Html.Raw(Url.Content("~/"))';
+        var userName = '@User.Identity.Name.Replace("\\", "\\\\")'
     </script>
     <script src="@Url.Content("~/@Gemstone/Scripts/jquery.js")"></script>
     @if (DetectIE(Context.Request.Headers["User-Agent"].ToString())) {

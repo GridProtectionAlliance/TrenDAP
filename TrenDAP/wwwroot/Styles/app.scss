@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+
 .red {
 	color: red;
 	background-color: aqua;
@@ -34,6 +35,7 @@
 	z-index: 100;
 	padding: 48px 0 0;
 	box-shadow:inset -1px 0 0 rgba(0,0,0,.1);
+	width: 200px;
 }
 
 .sidebar a {
@@ -48,4 +50,14 @@
 .sidebar-heading {
 	font-size: .75em;
 	text-transform: uppercase;
+	position: relative;
+}
+
+.main-window {
+	top: 40px;
+	position: absolute;
+	width: calc(100% - 200px);
+	height: calc(100% - 40px);
+	overflow: hidden;
+	right: 0px;
 }

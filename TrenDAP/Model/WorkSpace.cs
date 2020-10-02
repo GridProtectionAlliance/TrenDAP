@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Store.ts - Gbtc
+//  WorkSpace.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,20 +16,46 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  09/25/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-import { configureStore } from '@reduxjs/toolkit';
-import DataSourcesReducuer from '../Features/DataSources/DataSourcesSlice';
-import DataSourceTypesReducer from '../Features/DataSourceTypes/DataSourceTypesSlice';
-import WorkSpaceReducer from '../Features/WorkSpaces/WorkSpacesSlice';
 
-export default configureStore({
-    reducer: {
-        WorkSpaces: WorkSpaceReducer,
-        DataSources: DataSourcesReducuer,
-        DataSourceTypes: DataSourceTypesReducer
+using Gemstone.Data.Model;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Security;
+using TrenDAP.Controllers;
+
+namespace TrenDAP.Model
+{
+
+    public class WorkSpace
+    {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
+        public string Name { get; set; }
+        [UseEscapedName]
+        public string User { get; set; }
+        public string JSON { get; set; }
+        [UseEscapedName]
+        public bool Public { get; set; }
+        public DateTime UpdatedOn { get; set; }
     }
-});
+
+
+    public class WorkSpaceController : ModelController<WorkSpace>
+    {
+        public WorkSpaceController(IConfiguration configuration) : base(configuration){}
+
+        public override ActionResult Post([FromBody] JObject record)
+        {
+            record["User"] = Request.HttpContext.User.Identity.Name;
+            return base.Post(record);
+        }
+    }
+}

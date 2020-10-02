@@ -26,6 +26,7 @@ declare module '*.scss';
 declare global {
     var homePath: string;
     var controllerViewPath: string;
+    var userName: string;
 
     interface String {
         countOccurrences: (chars: string) => number
@@ -41,6 +42,10 @@ declare global {
 }
 
 export namespace TrenDAP{
+    type Status = 'loading' | 'idle' | 'error' | 'changed' |'unitiated';
     type DataSourceType = 'OpenXDA';
-    interface iDataSouce { ID: number, Name: string, Type: DataSourceType, URL: string, Credential: string, Password: string }    
+    interface iDataSourceType { ID: number, Name: DataSourceType }
+    interface iDataSource { ID: number, Name: string, DataSourceTypeID: number, URL: string, Credential: string, Password: string, Public: boolean }    
+    interface iWorkSpace { ID: number, Name: string, User: string, JSON: string, Public: boolean, UpdatedOn: string }    
+
 }

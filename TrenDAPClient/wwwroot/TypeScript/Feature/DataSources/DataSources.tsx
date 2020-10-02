@@ -25,6 +25,8 @@ import * as React from 'react';
 import { TrenDAP } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
 import { Add, AddRange, SelectDataSources } from './DataSourcesSlice'
+import Table from '@gpa-gemstone/react-table';
+
 const DataSources: React.FunctionComponent = (props: {}) => {
 
     React.useEffect(() => {
@@ -52,7 +54,7 @@ const DataSources: React.FunctionComponent = (props: {}) => {
         });
     }
 
-    return <div>Hello World!</div>;
+    return <Table />;
 }
 
 export default DataSources;
