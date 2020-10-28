@@ -25,7 +25,7 @@ namespace HIDSTests
         public void WriteTest()
         {
             TestContext.WriteLine("Starting write...");
-            m_api.WritePoints(new[] { new Point { Tag = TestTag, Minimum = -1.0D, Maximum = 1.0D, Average = 0.0D, Timestamp = DateTime.UtcNow } });
+            m_api.WritePoints(new[] { new Point { Tag = TestTag, Minimum = 1.0D, Maximum = 10.0D, Average = 5.0D, QualityFlags = 7u, Timestamp = DateTime.UtcNow } });
             TestContext.WriteLine("Write complete.");
         }
 
@@ -39,8 +39,8 @@ namespace HIDSTests
 
         private async Task ReadTestAsync()
         {
-            await foreach (Point point in m_api.ReadPoints(new[] { TestTag }, "-48h"))
-                TestContext.WriteLine($"Point = {point.Tag} with Max = {point.Maximum}, Min = {point.Maximum}, Avg = {point.Average} @ {point.Timestamp}");
+            await foreach (Point point in m_api.ReadPointsAsync(new[] { TestTag }, "-48h"))
+                TestContext.WriteLine($"Point = {point.Tag} with Max = {point.Maximum}, Min = {point.Minimum}, Avg = {point.Average} @ {point.Timestamp}");
         }
     }
 }

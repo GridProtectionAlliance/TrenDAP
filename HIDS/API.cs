@@ -24,10 +24,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using InfluxDB.Client;
 using InfluxDB.Client.Api.Domain;
 using InfluxDB.Client.Core;
+using InfluxDB.Client.Core.Flux.Domain;
 
 namespace HIDS
 {
@@ -107,35 +111,110 @@ namespace HIDS
                 writeApi.WriteMeasurement(PointBucket, OrganizationID, WritePrecision.Ns, point);
         }
 
-        public IAsyncEnumerable<Point> ReadPoints(IEnumerable<string> tags, DateTime startTime, DateTime stopTime) =>
-            ReadPoints(tags, FormatTimestamp(startTime), FormatTimestamp(stopTime));
+        public IAsyncEnumerable<Point> ReadPointsAsync(IEnumerable<string> tags, DateTime startTime, DateTime stopTime, CancellationToken cancellationToken = default) =>
+            ReadPointsAsync(tags, FormatTimestamp(startTime), FormatTimestamp(stopTime), cancellationToken);
 
-        public IAsyncEnumerable<Point> ReadPoints(IEnumerable<string> tags, string start, string stop = null)
+        public IAsyncEnumerable<Point> ReadPointsAsync(IEnumerable<string> tags, string start, string stop = "-0s", CancellationToken cancellationToken = default)
         {
-            StringBuilder fluxQuery = new StringBuilder();
+            IEnumerable<string> tagConditions = tags.Select(tag => $"r.tag==\"{tag}\"");
+            string tagFilter = string.Join(" or ", tagConditions);
 
-            fluxQuery.Append($"|> range(start:{start}");
+            string fluxQuery =
+                $"|> range(start: {start}, stop: {stop}) " +
+                $"|> filter(fn: (r) => {tagFilter})";
 
-            if (!string.IsNullOrWhiteSpace(stop))
-                fluxQuery.Append($", stop:{stop}");
-
-            fluxQuery.Append(") ");
-
-            fluxQuery.Append($"|> filter(fn: (r) => {string.Join(" or ", tags.Select(tag => $"r.tag==\"{tag}\")"))}");
-
-            return ReadPoints(fluxQuery.ToString());
+            return ReadPointsAsync(fluxQuery.ToString(), cancellationToken);
         }
 
-        public async IAsyncEnumerable<Point> ReadPoints(string fluxQuery)
+        public IAsyncEnumerable<Point> ReadPointsAsync(string fluxQuery, CancellationToken cancellationToken = default)
         {
             if (m_client is null)
                 throw new InvalidOperationException("Cannot read points: not connected to InfluxDB.");
 
-            QueryApi queryAPI = m_client.GetQueryApi();
-            List<Point> points = await queryAPI.QueryAsync<Point>($"from(bucket:\"{PointBucket}\"){fluxQuery}", OrganizationID);
+            IAsyncEnumerable<FluxRecord> fluxRecords = ReadFluxRecordsAsync(fluxQuery, cancellationToken);
 
-            foreach (Point point in points)
-                yield return point;
+            return fluxRecords
+                .GroupBy(record => new
+                {
+                    Tag = record.GetValueByKey("tag").ToString(),
+                    Time = record.GetTimeInDateTime().GetValueOrDefault()
+                })
+                .SelectAwaitWithCancellation(async (grouping, token) => new Point()
+                {
+                    Tag = grouping.Key.Tag,
+                    Timestamp = grouping.Key.Time,
+
+                    QualityFlags = await grouping
+                        .Where(record => record.GetField() == "flags")
+                        .Select(record => Convert.ToUInt32(record.GetValue()))
+                        .FirstOrDefaultAsync(token),
+
+                    Minimum = await grouping
+                        .Where(record => record.GetField() == "min")
+                        .Select(record => Convert.ToDouble(record.GetValue()))
+                        .FirstOrDefaultAsync(token),
+
+                    Maximum = await grouping
+                        .Where(record => record.GetField() == "max")
+                        .Select(record => Convert.ToDouble(record.GetValue()))
+                        .FirstOrDefaultAsync(token),
+
+                    Average = await grouping
+                        .Where(record => record.GetField() == "avg")
+                        .Select(record => Convert.ToDouble(record.GetValue()))
+                        .FirstOrDefaultAsync(token)
+                });
+        }
+
+        private async IAsyncEnumerable<FluxRecord> ReadFluxRecordsAsync(string fluxQuery, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            TaskCompletionSource<TaskCompletionSource<FluxRecord>> readyTaskSource = new TaskCompletionSource<TaskCompletionSource<FluxRecord>>();
+
+            void HandleRecord(ICancellable cancellable, FluxRecord record)
+            {
+                TaskCompletionSource<FluxRecord> recordTaskSource = readyTaskSource.Task.Result;
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    recordTaskSource.SetCanceled();
+                    cancellable.Cancel();
+                    return;
+                }
+
+                // Order of events is important here; control cannot be returned
+                // to the main loop until the new readyTaskSource is created
+                readyTaskSource = new TaskCompletionSource<TaskCompletionSource<FluxRecord>>();
+                recordTaskSource.SetResult(record);
+            }
+
+            void HandleException(Exception ex)
+            {
+                TaskCompletionSource<FluxRecord> recordTaskSource = readyTaskSource.Task.Result;
+                recordTaskSource.SetException(ex);
+            }
+
+            void HandleComplete()
+            {
+                TaskCompletionSource<FluxRecord> recordTaskSource = readyTaskSource.Task.Result;
+                recordTaskSource.SetCanceled();
+            }
+
+            QueryApi queryAPI = m_client.GetQueryApi();
+
+            // Do not await the query! HandleComplete will tell us when the query is finished
+            _ = queryAPI.QueryAsync($"from(bucket:\"{PointBucket}\") {fluxQuery}", OrganizationID, HandleRecord, HandleException, HandleComplete);
+
+            while (true)
+            {
+                TaskCompletionSource<FluxRecord> recordTaskSource = new TaskCompletionSource<FluxRecord>();
+                readyTaskSource.SetResult(recordTaskSource);
+
+                FluxRecord record;
+                try { record = await recordTaskSource.Task; }
+                catch (TaskCanceledException) { break; }
+
+                yield return record;
+            }
         }
 
         public static string FormatTimestamp(DateTime timestamp) => timestamp.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
