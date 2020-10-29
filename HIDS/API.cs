@@ -168,11 +168,13 @@ namespace HIDS
 
         private async IAsyncEnumerable<FluxRecord> ReadFluxRecordsAsync(string fluxQuery, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            TaskCompletionSource<TaskCompletionSource<FluxRecord>> readyTaskSource = new TaskCompletionSource<TaskCompletionSource<FluxRecord>>();
+            TaskCreationOptions taskCreationOptions = TaskCreationOptions.RunContinuationsAsynchronously;
+            TaskCompletionSource<TaskCompletionSource<FluxRecord>> readyTaskSource = new TaskCompletionSource<TaskCompletionSource<FluxRecord>>(taskCreationOptions);
 
             void HandleRecord(ICancellable cancellable, FluxRecord record)
             {
-                TaskCompletionSource<FluxRecord> recordTaskSource = readyTaskSource.Task.Result;
+                Task<TaskCompletionSource<FluxRecord>> readyTask = readyTaskSource.Task;
+                TaskCompletionSource<FluxRecord> recordTaskSource = readyTask.GetAwaiter().GetResult();
 
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -183,19 +185,21 @@ namespace HIDS
 
                 // Order of events is important here; control cannot be returned
                 // to the main loop until the new readyTaskSource is created
-                readyTaskSource = new TaskCompletionSource<TaskCompletionSource<FluxRecord>>();
+                readyTaskSource = new TaskCompletionSource<TaskCompletionSource<FluxRecord>>(taskCreationOptions);
                 recordTaskSource.SetResult(record);
             }
 
             void HandleException(Exception ex)
             {
-                TaskCompletionSource<FluxRecord> recordTaskSource = readyTaskSource.Task.Result;
+                Task<TaskCompletionSource<FluxRecord>> readyTask = readyTaskSource.Task;
+                TaskCompletionSource<FluxRecord> recordTaskSource = readyTask.GetAwaiter().GetResult();
                 recordTaskSource.SetException(ex);
             }
 
             void HandleComplete()
             {
-                TaskCompletionSource<FluxRecord> recordTaskSource = readyTaskSource.Task.Result;
+                Task<TaskCompletionSource<FluxRecord>> readyTask = readyTaskSource.Task;
+                TaskCompletionSource<FluxRecord> recordTaskSource = readyTask.GetAwaiter().GetResult();
                 recordTaskSource.SetCanceled();
             }
 
@@ -206,7 +210,7 @@ namespace HIDS
 
             while (true)
             {
-                TaskCompletionSource<FluxRecord> recordTaskSource = new TaskCompletionSource<FluxRecord>();
+                TaskCompletionSource<FluxRecord> recordTaskSource = new TaskCompletionSource<FluxRecord>(taskCreationOptions);
                 readyTaskSource.SetResult(recordTaskSource);
 
                 FluxRecord record;
