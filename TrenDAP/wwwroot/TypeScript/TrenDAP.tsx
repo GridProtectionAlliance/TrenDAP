@@ -21,6 +21,8 @@
 //
 //******************************************************************************************************
 
+import 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
@@ -30,8 +32,23 @@ import { BrowserRouter as Router, Route, Switch, Redirect} from 'react-router-do
 import SideNavBar from './SideNavBar';
 
 const TrenDAP: React.FunctionComponent = (props: {}) => {
+
     const DataSources = React.lazy(() => import(/* webpackChunkName: "DataSources" */ './Features/DataSources/DataSources'));
+    const DataSets = React.lazy(() => import(/* webpackChunkName: "DataSets" */ './Features/DataSets/DataSets'));
     const WorkSpaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/WorkSpaces/WorkSpaces'));
+    const EditDataSet = React.lazy(() => import(/* webpackChunkName: "EditDataSet" */ './Features/DataSets/EditDataSet'));
+    const AddNewDataSet = React.lazy(() => import(/* webpackChunkName: "AddNewDataSet" */ './Features/DataSets/AddNewDataSet'));
+
+
+    const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
+
+    React.useEffect(() => {
+        window.addEventListener('resize', (evt) => forceUpdate());
+
+        return () => {
+            window.removeEventListener('resize', (evt) => { });
+        }
+    }, [])
 
     return (
         <Router>
@@ -50,9 +67,13 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                     <div className="col" style={{ width: '100%', height: 'inherit', padding: '0 0 0 0', overflow: 'hidden' }}>
                             <React.Suspense fallback={<div>Loading...</div>}>
                                 <Switch>
-                                    <Route exact path={`${homePath}`}><WorkSpaces /></Route>
+                                    <Route exact path={`${homePath}WorkSpaces`}><WorkSpaces /></Route>
                                     <Route path={`${homePath}DataSources`}><DataSources /></Route>
-                                    <Redirect to={homePath} />
+                                    <Route path={`${homePath}DataSets`}><DataSets /></Route>
+                                    <Route path={`${homePath}AddNewDataSet`}><AddNewDataSet /></Route>
+                                    <Route path={`${homePath}EditDataSet/:id`}><EditDataSet /></Route>
+
+                                    <Redirect to={`${homePath}WorkSpaces`} />
                                 </Switch>
                             </React.Suspense>
                     </div>

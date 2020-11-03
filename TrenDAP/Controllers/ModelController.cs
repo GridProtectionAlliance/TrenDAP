@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataSourceController.cs - Gbtc
+//  ModelController.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -133,7 +133,7 @@ namespace TrenDAP.Controllers
         }
 
         [HttpGet, Route("{parentID?}")]
-        public virtual ActionResult Get(string parentID = null)
+        public virtual ActionResult<IEnumerable<T>> Get(string parentID = null)
         {
             if (GetRoles == string.Empty || User.IsInRole(GetRoles))
             {
@@ -254,7 +254,7 @@ namespace TrenDAP.Controllers
         }
 
         [HttpPatch]
-        public virtual ActionResult Patch([FromBody] T record)
+        public virtual ActionResult Patch([FromBody] JObject record)
         {
             try
             {
@@ -263,7 +263,9 @@ namespace TrenDAP.Controllers
 
                     using (AdoDataConnection connection = new AdoDataConnection(Configuration[SettingCategory + ":ConnectionString"], Configuration[SettingCategory + ":DataProviderString"]))
                     {
-                        int result = new TableOperations<T>(connection).AddNewOrUpdateRecord(record);
+                        T newRecord = record.ToObject<T>();
+
+                        int result = new TableOperations<T>(connection).AddNewOrUpdateRecord(newRecord);
                         return Ok(result);
                     }
                 }

@@ -157,7 +157,7 @@ function PostWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWor
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
-        data: JSON.stringify(workSpace),
+        data: JSON.stringify({ ...workSpace, UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss') }),
         cache: false,
         async: true
     });
@@ -181,7 +181,7 @@ function PatchWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWo
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
-        data: JSON.stringify(workSpace),
+        data: JSON.stringify({ ...workSpace, UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss') }),
         cache: false,
         async: true
     });

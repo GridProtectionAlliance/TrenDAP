@@ -82,10 +82,26 @@ CREATE TABLE WorkSpace
     [User] VARCHAR(MAX) NOT NULL,
     [Public] bit NULL DEFAULT 0,
     UpdatedOn DATETIME NULL DEFAULT GETUTCDATE(),
-    [JSON] varchar(max) NULL
+    [JSON] varbinary(max) NULL
 )
 GO
 
+CREATE TABLE DataSet
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    [From] Date NOT NULL,
+    [To] Date NOT NULL,
+    [Hours] INT NOT NULL,
+    [Days] INT NOT NULL,
+    [Weeks] BIGINT NOT NULL,
+    [Months] INT NOT NULL,
+    [Name] VARCHAR(200) NOT NULL,
+    [User] VARCHAR(MAX) NOT NULL,
+    [Public] bit NULL DEFAULT 0,
+    UpdatedOn DATETIME NULL DEFAULT GETUTCDATE(),
+    [JSON] varbinary(max) NULL
+)
+GO
 
 CREATE TABLE ApplicationRole
 (

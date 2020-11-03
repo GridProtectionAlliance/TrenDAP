@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  WorkSpace.cs - Gbtc
+//  DataSet.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,58 +16,77 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/25/2020 - Billy Ernest
+//  10/05/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 
+
 using Gemstone.Data.Model;
+using Gemstone.Expressions.Model;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Security;
+using System.Text;
 using TrenDAP.Controllers;
 
 namespace TrenDAP.Model
 {
 
-    public class WorkSpace
+    public class DataSet
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
+        [UseEscapedName]
         public string Name { get; set; }
         [UseEscapedName]
-        public string User { get; set; }
-        public byte[] JSON { get; set; }
+        public DateTime From { get; set; }
+        [UseEscapedName]
+        public DateTime To { get; set; }
+        [UseEscapedName]
+        public int Hours { get; set; }
+        [UseEscapedName]
+        public int Days { get; set; }
+        [UseEscapedName]
+        public long Weeks { get; set; }
+        [UseEscapedName]
+        public int Months  { get; set; }
 
+        [UseEscapedName]
+        public string User { get; set; }
+        [UseEscapedName]
+        public byte[] JSON { get; set; }
         [NonRecordField]
-        public string JSONString => Convert.ToBase64String(this.JSON);
+        public string JSONString => Encoding.ASCII.GetString(JSON);
+
         [UseEscapedName]
         public bool Public { get; set; }
+
         public DateTime UpdatedOn { get; set; }
     }
 
 
-    public class WorkSpaceController : ModelController<WorkSpace>
+    public class DataSetController : ModelController<DataSet>
     {
-        public WorkSpaceController(IConfiguration configuration) : base(configuration){}
+        public DataSetController(IConfiguration configuration) : base(configuration){}
+
         public override ActionResult Post([FromBody] JObject record)
         {
             record["User"] = Request.HttpContext.User.Identity.Name;
-            record["JSON"] = Convert.FromBase64String(record["JSON"].ToString());
+            record["JSON"] = Encoding.ASCII.GetBytes(record["JSONString"].ToString());
             return base.Post(record);
         }
         public override ActionResult Patch([FromBody] JObject record)
         {
-            record["JSON"] = Convert.FromBase64String(record["JSON"].ToString());
-            return base.Post(record);
+            record["JSON"] = Encoding.ASCII.GetBytes(record["JSONString"].ToString());
+            return base.Patch(record);
         }
-
 
     }
 }

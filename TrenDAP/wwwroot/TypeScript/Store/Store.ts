@@ -25,11 +25,15 @@ import { configureStore } from '@reduxjs/toolkit';
 import DataSourcesReducuer from '../Features/DataSources/DataSourcesSlice';
 import DataSourceTypesReducer from '../Features/DataSourceTypes/DataSourceTypesSlice';
 import WorkSpaceReducer from '../Features/WorkSpaces/WorkSpacesSlice';
+import DataSetReducer from '../Features/DataSets/DataSetsSlice';
+import OpenXDAReducer from '../Features/OpenXDA/OpenXDASlice';
 
 export default configureStore({
     reducer: {
+        DataSets: DataSetReducer,
         WorkSpaces: WorkSpaceReducer,
         DataSources: DataSourcesReducuer,
-        DataSourceTypes: DataSourceTypesReducer
+        DataSourceTypes: DataSourceTypesReducer,
+        OpenXDA: OpenXDAReducer
     }
 });

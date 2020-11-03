@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Constants.ts - Gbtc
+//  CirclePlusSVG.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,15 +16,17 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/30/2020 - Billy Ernest
+//  10/05/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-// emojis
-const HeavyCheckMark = '✔️';
-const Pencil = '✏️';
-const TrashCan = '🗑️';
-const CrossMark = '❌';
-const Plus = '➕';
-export { HeavyCheckMark, Pencil, TrashCan, CrossMark,Plus };
+import * as React from 'react';
+
+const CirclePlusSVG = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-plus-circle">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="16"></line>
+        <line x1="8" y1="12" x2="16" y2="12"></line>
+    </svg>);
+export default CirclePlusSVG;

@@ -13,14 +13,21 @@
 
   <ItemGroup>
     <Content Remove="wwwroot\Images\trendaplogo.png" />
+    <Content Remove="wwwroot\TypeScript\CirclePlusSVG.tsx" />
     <Content Remove="wwwroot\TypeScript\Constants.ts" />
     <Content Remove="wwwroot\TypeScript\declarations.d.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\AddNewDataSet.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\DataSet.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\DataSets.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\DataSetsSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\EditDataSet.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\AddNewDataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSources.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSourcesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSourceTypes\DataSourceTypesSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\AddNewWorkSpace.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\EditWorkSpace.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpace.tsx" />
@@ -69,6 +76,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\TypeScript\CirclePlusSVG.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Constants.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\declarations.d.ts">
       <SubType>Code</SubType>
@@ -89,6 +97,24 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSourceTypes\DataSourceTypesSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\AddNewDataSet.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\EditDataSet.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\DataSet.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\DataSets.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\DataSetsSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\AddNewWorkSpace.tsx">

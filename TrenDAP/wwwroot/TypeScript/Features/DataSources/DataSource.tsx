@@ -24,7 +24,7 @@
 import * as React from 'react';
 import { TrenDAP } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
-import { Input, Select, CheckBox } from '@gpa-gemstone/react-forms/lib';
+import { Input, Select, CheckBox } from '@gpa-gemstone/react-forms';
 
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  WorkSpace.tsx - Gbtc
+//  AddNewDataSet.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -23,23 +23,38 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../global';
-import { Input, CheckBox } from '@gpa-gemstone/react-forms';
+import { useDispatch, useSelector } from 'react-redux';
+import { AddDataSet, SelectRecord, New, Update } from './DataSetsSlice'
+import DataSet from './DataSet';
+import { Link } from 'react-router-dom';
 
+const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
+    const dispatch = useDispatch();
 
-const WorkSpace: React.FunctionComponent<{ Record: TrenDAP.iWorkSpace, SetWorkSpace: (ws: TrenDAP.iWorkSpace) => void }> = (props) => {
-    function valid(field: keyof (TrenDAP.iWorkSpace)): boolean {
-        if (field == 'Name')
-            return props.Record.Name != null && props.Record.Name.length > 0 && props.Record.Name.length <= 200;
-        else 
-            return true;
-    }
+    const dataSet = useSelector(SelectRecord);
+
+    React.useEffect(() => {
+        dispatch(New);
+    }, []);
 
     return (
-           <form>
-                <Input<TrenDAP.iWorkSpace> Record={props.Record} Field="Name" Setter={(record) => props.SetWorkSpace(record)} Valid={valid} />
-                <CheckBox<TrenDAP.iWorkSpace> Record={props.Record} Field="Public" Setter={(record) => props.SetWorkSpace(record)}/>
-           </form>
+        <div className="row" style={{margin: 10}}>
+            <div className="card" style={{ width: '100%', height: window.innerHeight - 60 }}>
+                <div className="card-header">
+                    New Data Set
+                </div>
+                <div className="card-body" style={{ overflowY: 'auto' }}>
+                    <DataSet Record={dataSet} SetDataSet={(record) => dispatch(Update(record))} />
+                </div>
+                <div className="card-footer">
+                    <Link to={`${homePath}DataSets` } type="button" className="btn btn-primary" onClick={() => {
+                        dispatch(AddDataSet(dataSet));
+                    }}>Save</Link>
+
+                </div>
+            </div>
+        </div>
     );
 }
 
-export default WorkSpace;
+export default AddNewDataSet;

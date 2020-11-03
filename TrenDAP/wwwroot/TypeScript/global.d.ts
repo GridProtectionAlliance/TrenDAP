@@ -46,6 +46,9 @@ export namespace TrenDAP{
     type DataSourceType = 'OpenXDA';
     interface iDataSourceType { ID: number, Name: DataSourceType }
     interface iDataSource { ID: number, Name: string, DataSourceTypeID: number, URL: string, Credential: string, Password: string, Public: boolean }    
-    interface iWorkSpace { ID: number, Name: string, User: string, JSON: string, Public: boolean, UpdatedOn: string }    
+    interface iWorkSpace { ID: number, Name: string, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string }    
+    interface iDataSet { ID: number, Name: string, From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, JSON:string, JSONString: string , Public: boolean, UpdatedOn: string }    
+    interface iDataSetSource { ID: number, Name: string, DataSourceTypeID: number, JSON: object}
+    interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], Types:number[] }
 
 }
