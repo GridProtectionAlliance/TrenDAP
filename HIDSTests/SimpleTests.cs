@@ -8,14 +8,15 @@ namespace HIDSTests
     [TestClass]
     public class SimpleTests
     {
-        private static string TestURL = "http://localhost:8086/";
+        private static string TestURL = "http://vmhidsdev:8086/";
         private static string TestTag = "GPA.TestDevice.TestTrend";
 
         private readonly API m_api = new API();
 
         public SimpleTests()
         {
-            m_api.TokenID = "1Qv02-4lG5GqqR2SC5jU91PWhz_l1hSfRPjRTNc8GUrXqEbpQWToArsVwjvdLAnsxsvH-HFitGYdIHP-VjeLDw==";
+            m_api.PointBucket = "test_bucket";
+            m_api.TokenID = "28ExEMkCA8qZEyvrQEK4cnPC0cxrJo2iM2tAI8HIjwst504yq-3HSkjDZYCVO0zOrfmmzEbvQzOgiYLqEP9QnA==";
             m_api.Connect(TestURL);
         }
 
@@ -39,7 +40,11 @@ namespace HIDSTests
 
         private async Task ReadTestAsync()
         {
-            await foreach (Point point in m_api.ReadPointsAsync(new[] { TestTag }, "-48h"))
+            void BuildQuery(IQueryBuilder queryBuilder) => queryBuilder
+                .Range("-48h")
+                .FilterTags(new[] { TestTag });
+
+            await foreach (Point point in m_api.ReadPointsAsync(BuildQuery))
                 TestContext.WriteLine($"Point = {point.Tag} with Max = {point.Maximum}, Min = {point.Minimum}, Avg = {point.Average} @ {point.Timestamp}");
         }
     }
