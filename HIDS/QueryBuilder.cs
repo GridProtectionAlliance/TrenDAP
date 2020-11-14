@@ -127,5 +127,47 @@ namespace HIDS
 
             return string.Join("\n  |> ", clauses);
         }
+
+        public string Count()
+        {
+            List<string> clauses = new List<string>(16);
+
+            clauses.Add(FromClause);
+            clauses.Add(RangeClause);
+            clauses.Add($"filter(fn: (r) => r._measurement == \"point\")");
+            clauses.Add($"filter(fn: (r) => r._field == \"flags\")");
+
+            IEnumerable<string> tagConditionals = IncludedTags.Select(tag => $"r.tag == \"{tag}\"");
+            string tagExpression = string.Join(" or ", tagConditionals);
+
+            if (tagExpression.Length > 0)
+                clauses.Add($"filter(fn: (r) => {tagExpression})");
+
+            if (InvalidFlags == ~0u)
+            {
+                clauses.Add("filter(fn: (r) => r._value == 0)");
+            }
+            else if (InvalidFlags != 0u)
+            {
+                IEnumerable<string> flagConditionals = Enumerable
+                    .Range(0, 32)
+                    .Where(exp => (InvalidFlags & (1u << exp)) > 0)
+                    .Select(exp => $"(((r._value / (2 ^ {exp})) % 2) == 0)");
+
+                string flagExpression = string.Join(" and ", flagConditionals);
+                clauses.Add($"filter(fn: (r) => {flagExpression})");
+            }
+
+            if (!string.IsNullOrEmpty(AggregationDuration))
+            {
+                clauses.Add($"window(every: {AggregationDuration}, createEmpty: true)");
+                clauses.Add("count()");
+                clauses.Add("duplicate(column: \"_start\", as: \"_time\")");
+                clauses.Add("window(every: inf, createEmpty: true)");
+                clauses.Add("drop(columns: [\"_measurement\", \"_field\", \"_start\", \"_stop\"])");
+            }
+
+            return string.Join("\n  |> ", clauses);
+        }
     }
 }

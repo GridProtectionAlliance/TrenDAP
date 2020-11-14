@@ -124,6 +124,15 @@ namespace HIDS
             return ReadPointsAsync(query, cancellationToken);
         }
 
+        public IAsyncEnumerable<PointCount> ReadPointCountAsync(Action<IQueryBuilder> configureQuery, CancellationToken cancellationToken = default)
+        {
+            QueryBuilder queryBuilder = new QueryBuilder(PointBucket);
+            configureQuery(queryBuilder);
+
+            string query = queryBuilder.Count();
+            return ReadPointCountAsync(query, cancellationToken);
+        }
+
         private IAsyncEnumerable<Point> ReadPointsAsync(string fluxQuery, CancellationToken cancellationToken = default)
         {
             IAsyncEnumerable<FluxRecord> fluxRecords = ReadFluxRecordsAsync(fluxQuery, cancellationToken);
@@ -136,6 +145,18 @@ namespace HIDS
                 Minimum = Convert.ToDouble(record.GetValueByKey("min") ?? double.NaN),
                 Maximum = Convert.ToDouble(record.GetValueByKey("max") ?? double.NaN),
                 Average = Convert.ToDouble(record.GetValueByKey("avg") ?? double.NaN)
+            });
+        }
+
+        private IAsyncEnumerable<PointCount> ReadPointCountAsync(string fluxQuery, CancellationToken cancellationToken = default)
+        {
+            IAsyncEnumerable<FluxRecord> fluxRecords = ReadFluxRecordsAsync(fluxQuery, cancellationToken);
+
+            return fluxRecords.Select(record => new PointCount()
+            {
+                Tag = record.GetValueByKey("tag")?.ToString(),
+                Timestamp = record.GetTimeInDateTime().GetValueOrDefault(),
+                Count = Convert.ToUInt64(record.GetValue())
             });
         }
 
@@ -190,7 +211,7 @@ namespace HIDS
                 readyTaskSource.SetResult(recordTaskSource);
 
                 FluxRecord record;
-                try { record = await recordTaskSource.Task; }
+                try { record = await recordTaskSource.Task.ConfigureAwait(false); }
                 catch (TaskCanceledException) { break; }
 
                 yield return record;
