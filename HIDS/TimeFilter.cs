@@ -42,7 +42,7 @@ namespace HIDS
         Week20, Week21, Week22, Week23, Week24, Week25, Week26, Week27, Week28, Week29,
         Week30, Week31, Week32, Week33, Week34, Week35, Week36, Week37, Week38, Week39,
         Week40, Week41, Week42, Week43, Week44, Week45, Week46, Week47, Week48, Week49,
-        Week50, Week51,
+        Week50, Week51, Week52,
 
         January,
         February,
