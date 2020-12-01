@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  IQueryBuilder.cs - Gbtc
+//  TimeFilter.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,27 +16,45 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  11/12/2020 - Stephen C. Wills
+//  12/01/2020 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-
 namespace HIDS
 {
-    public interface IQueryBuilder
+    public enum TimeFilter
     {
-        IQueryBuilder Range(DateTime startTime);
-        IQueryBuilder Range(DateTime startTime, DateTime stopTime);
-        IQueryBuilder Range(string start);
-        IQueryBuilder Range(string start, string stop);
-        IQueryBuilder FilterTags(params string[] includedTags);
-        IQueryBuilder FilterTags(IEnumerable<string> includedTags);
-        IQueryBuilder FilterTime(params TimeFilter[] filters);
-        IQueryBuilder FilterTime(IEnumerable<TimeFilter> filters);
-        IQueryBuilder TestQuality(uint invalidFlags);
-        IQueryBuilder Aggregate(string duration);
+        Hour00, Hour01, Hour02, Hour03, Hour04, Hour05, Hour06, Hour07, Hour08, Hour09,
+        Hour10, Hour11, Hour12, Hour13, Hour14, Hour15, Hour16, Hour17, Hour18, Hour19,
+        Hour20, Hour21, Hour22, Hour23,
+
+        Sunday,
+        Monday,
+        Tuesday,
+        Wednesday,
+        Thursday,
+        Friday,
+        Saturday,
+
+        Week00, Week01, Week02, Week03, Week04, Week05, Week06, Week07, Week08, Week09,
+        Week10, Week11, Week12, Week13, Week14, Week15, Week16, Week17, Week18, Week19,
+        Week20, Week21, Week22, Week23, Week24, Week25, Week26, Week27, Week28, Week29,
+        Week30, Week31, Week32, Week33, Week34, Week35, Week36, Week37, Week38, Week39,
+        Week40, Week41, Week42, Week43, Week44, Week45, Week46, Week47, Week48, Week49,
+        Week50, Week51,
+
+        January,
+        February,
+        March,
+        April,
+        May,
+        June,
+        July,
+        August,
+        September,
+        October,
+        November,
+        December
     }
 }

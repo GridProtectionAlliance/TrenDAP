@@ -32,6 +32,7 @@ namespace HIDS
         private string FromClause { get; }
         private string RangeClause { get; set; } = string.Empty;
         private IEnumerable<string> IncludedTags { get; set; } = Enumerable.Empty<string>();
+        private IEnumerable<TimeFilter> ExcludedTimes { get; set; } = Enumerable.Empty<TimeFilter>();
         private uint InvalidFlags { get; set; }
         private string AggregationDuration { get; set; } = string.Empty;
 
@@ -56,9 +57,21 @@ namespace HIDS
             return this;
         }
 
+        public IQueryBuilder FilterTags(params string[] includedTags) =>
+            FilterTags(includedTags.AsEnumerable());
+
         public IQueryBuilder FilterTags(IEnumerable<string> includedTags)
         {
             IncludedTags = includedTags;
+            return this;
+        }
+
+        public IQueryBuilder FilterTime(params TimeFilter[] excludedTimes) =>
+            FilterTime(excludedTimes.AsEnumerable());
+
+        public IQueryBuilder FilterTime(IEnumerable<TimeFilter> excludedTimes)
+        {
+            ExcludedTimes = excludedTimes;
             return this;
         }
 
@@ -76,6 +89,7 @@ namespace HIDS
 
         public string Build()
         {
+            List<string> imports = new List<string>(4);
             List<string> clauses = new List<string>(16);
 
             clauses.Add(FromClause);
@@ -87,6 +101,18 @@ namespace HIDS
 
             if (tagExpression.Length > 0)
                 clauses.Add($"filter(fn: (r) => {tagExpression})");
+
+            IEnumerable<string> timeConditionals = ExcludedTimes
+                .Select(ToConditional)
+                .Where(conditional => !string.IsNullOrEmpty(conditional));
+
+            string timeFilter = string.Join(" and ", timeConditionals);
+
+            if (timeFilter.Length > 0)
+            {
+                imports.Add("import \"date\"");
+                clauses.Add($"filter(fn: (r) => {timeFilter})");
+            }
 
             clauses.Add("pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")");
 
@@ -125,11 +151,14 @@ namespace HIDS
                 clauses.Add("drop(columns: [\"_measurement\", \"_start\", \"_stop\", \"maxset\", \"minset\", \"total\", \"count\"])");
             }
 
-            return string.Join("\n  |> ", clauses);
+            string importSection = string.Join("\n", imports);
+            string querySection = string.Join("\n  |> ", clauses);
+            return $"{importSection}\n{querySection}".Trim();
         }
 
         public string Count()
         {
+            List<string> imports = new List<string>(4);
             List<string> clauses = new List<string>(16);
 
             clauses.Add(FromClause);
@@ -142,6 +171,18 @@ namespace HIDS
 
             if (tagExpression.Length > 0)
                 clauses.Add($"filter(fn: (r) => {tagExpression})");
+
+            IEnumerable<string> timeConditionals = ExcludedTimes
+                .Select(ToConditional)
+                .Where(conditional => !string.IsNullOrEmpty(conditional));
+
+            string timeExpression = string.Join(" and ", timeConditionals);
+
+            if (timeExpression.Length > 0)
+            {
+                imports.Add("import \"date\"");
+                clauses.Add($"filter(fn: (r) => {timeExpression})");
+            }
 
             if (InvalidFlags == ~0u)
             {
@@ -167,7 +208,73 @@ namespace HIDS
                 clauses.Add("drop(columns: [\"_measurement\", \"_field\", \"_start\", \"_stop\"])");
             }
 
-            return string.Join("\n  |> ", clauses);
+            string importSection = string.Join("\n", imports);
+            string querySection = string.Join("\n  |> ", clauses);
+            return $"{importSection}\n{querySection}".Trim();
+        }
+
+        private string ToConditional(TimeFilter filter)
+        {
+            switch (filter)
+            {
+                case TimeFilter.Hour00: case TimeFilter.Hour01: case TimeFilter.Hour02:
+                case TimeFilter.Hour03: case TimeFilter.Hour04: case TimeFilter.Hour05:
+                case TimeFilter.Hour06: case TimeFilter.Hour07: case TimeFilter.Hour08:
+                case TimeFilter.Hour09: case TimeFilter.Hour10: case TimeFilter.Hour11:
+                case TimeFilter.Hour12: case TimeFilter.Hour13: case TimeFilter.Hour14:
+                case TimeFilter.Hour15: case TimeFilter.Hour16: case TimeFilter.Hour17:
+                case TimeFilter.Hour18: case TimeFilter.Hour19: case TimeFilter.Hour20:
+                case TimeFilter.Hour21: case TimeFilter.Hour22: case TimeFilter.Hour23:
+                    int hour = filter - TimeFilter.Hour00;
+                    return $"date.hour(t: r._time) != {hour}";
+
+                case TimeFilter.Sunday:
+                case TimeFilter.Monday:
+                case TimeFilter.Tuesday:
+                case TimeFilter.Wednesday:
+                case TimeFilter.Thursday:
+                case TimeFilter.Friday:
+                case TimeFilter.Saturday:
+                    return $"date.weekDay(t: r._time) != date.{filter}";
+
+                case TimeFilter.Week00: case TimeFilter.Week01: case TimeFilter.Week02:
+                case TimeFilter.Week03: case TimeFilter.Week04: case TimeFilter.Week05:
+                case TimeFilter.Week06: case TimeFilter.Week07: case TimeFilter.Week08:
+                case TimeFilter.Week09: case TimeFilter.Week10: case TimeFilter.Week11:
+                case TimeFilter.Week12: case TimeFilter.Week13: case TimeFilter.Week14:
+                case TimeFilter.Week15: case TimeFilter.Week16: case TimeFilter.Week17:
+                case TimeFilter.Week18: case TimeFilter.Week19: case TimeFilter.Week20:
+                case TimeFilter.Week21: case TimeFilter.Week22: case TimeFilter.Week23:
+                case TimeFilter.Week24: case TimeFilter.Week25: case TimeFilter.Week26:
+                case TimeFilter.Week27: case TimeFilter.Week28: case TimeFilter.Week29:
+                case TimeFilter.Week30: case TimeFilter.Week31: case TimeFilter.Week32:
+                case TimeFilter.Week33: case TimeFilter.Week34: case TimeFilter.Week35:
+                case TimeFilter.Week36: case TimeFilter.Week37: case TimeFilter.Week38:
+                case TimeFilter.Week39: case TimeFilter.Week40: case TimeFilter.Week41:
+                case TimeFilter.Week42: case TimeFilter.Week43: case TimeFilter.Week44:
+                case TimeFilter.Week45: case TimeFilter.Week46: case TimeFilter.Week47:
+                case TimeFilter.Week48: case TimeFilter.Week49: case TimeFilter.Week50:
+                case TimeFilter.Week51:
+                    int week = filter - TimeFilter.Week00 + 1;
+                    return $"date.week(t: r._time) != {week}";
+
+                case TimeFilter.January:
+                case TimeFilter.February:
+                case TimeFilter.March:
+                case TimeFilter.April:
+                case TimeFilter.May:
+                case TimeFilter.June:
+                case TimeFilter.July:
+                case TimeFilter.August:
+                case TimeFilter.September:
+                case TimeFilter.October:
+                case TimeFilter.November:
+                case TimeFilter.December:
+                    return $"date.month(t: r._time) != date.{filter}";
+
+                default:
+                    return string.Empty;
+            }
         }
     }
 }
