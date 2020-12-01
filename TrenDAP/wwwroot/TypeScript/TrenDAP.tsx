@@ -38,6 +38,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
     const WorkSpaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/WorkSpaces/WorkSpaces'));
     const EditDataSet = React.lazy(() => import(/* webpackChunkName: "EditDataSet" */ './Features/DataSets/EditDataSet'));
     const AddNewDataSet = React.lazy(() => import(/* webpackChunkName: "AddNewDataSet" */ './Features/DataSets/AddNewDataSet'));
+    const WorkSpaceEditor = React.lazy(() => import(/* webpackChunkName: "WorkSpaceEditor" */ './Features/WorkSpaces/WorkSpaceEditor'));
 
 
     const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
@@ -72,7 +73,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                                     <Route path={`${homePath}DataSets`}><DataSets /></Route>
                                     <Route path={`${homePath}AddNewDataSet`}><AddNewDataSet /></Route>
                                     <Route path={`${homePath}EditDataSet/:id`}><EditDataSet /></Route>
-
+                                    <Route path={`${homePath}WorkSpaceEditor/:id`}><WorkSpaceEditor /></Route>
                                     <Redirect to={`${homePath}WorkSpaces`} />
                                 </Switch>
                             </React.Suspense>

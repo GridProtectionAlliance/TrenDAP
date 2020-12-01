@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  app.module.scss - Gbtc
+//  Stats.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,72 +16,15 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/10/2020 - Billy Ernest
+//  11/16/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
+import * as React from 'react';
+import { TrenDAP } from '../../global';
+import styles from '../../../Styles/app.scss';
 
-.red {
-	color: red;
-	background-color: aqua;
-}
-
-.sidebar {
-	position: fixed;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	z-index: 100;
-	padding: 48px 0 0;
-	box-shadow:inset -1px 0 0 rgba(0,0,0,.1);
-	width: 200px;
-}
-
-.sidebar a {
-	color: #78828d;
-}
-
-.sidebar-sticky {
-	position: -webkit-sticky;
-	position: sticky;
-}
-
-.sidebar-heading {
-	font-size: .75em;
-	text-transform: uppercase;
-	position: relative;
-}
-
-.main-window {
-	top: 40px;
-	position: absolute;
-	width: calc(100% - 200px);
-	height: calc(100% - 40px);
-	overflow: hidden;
-	right: 0px;
-}
-
-.tab-bar {
-	position: absolute;
-	width: 100%;
-	height: 50px;
-	box-shadow: inset 0px 0px 1px 1px rgba(0,0,0,.1);
-
-}
-
-.close{
-	cursor: pointer;
-	position: absolute;
-	top: 0px;
-	right: 0px;
-	padding: 0px 5px;
-	//transform: translate(0%,-50%);
-}
-
-.relative {
-	position: relative;
-}
-.nav-item li{
-	
+export default function Stats(props: {}) {
+    
 }

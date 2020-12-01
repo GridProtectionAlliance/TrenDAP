@@ -28,12 +28,15 @@ import WorkSpaceReducer from '../Features/WorkSpaces/WorkSpacesSlice';
 import DataSetReducer from '../Features/DataSets/DataSetsSlice';
 import OpenXDAReducer from '../Features/OpenXDA/OpenXDASlice';
 
-export default configureStore({
-    reducer: {
-        DataSets: DataSetReducer,
-        WorkSpaces: WorkSpaceReducer,
-        DataSources: DataSourcesReducuer,
-        DataSourceTypes: DataSourceTypesReducer,
-        OpenXDA: OpenXDAReducer
-    }
-});
+const reducer = {
+    DataSets: DataSetReducer,
+    WorkSpaces: WorkSpaceReducer,
+    DataSources: DataSourcesReducuer,
+    DataSourceTypes: DataSourceTypesReducer,
+    OpenXDA: OpenXDAReducer
+}
+
+const store = configureStore({ reducer });
+export default store;
+
+export type AppStore = ReturnType<typeof store.getState>;

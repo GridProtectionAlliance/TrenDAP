@@ -31,7 +31,7 @@ import { Link, useLocation, NavLink } from 'react-router-dom';
 import AddNewDataSet from './Features/DataSets/AddNewDataSet';
 import AddNewDataSource from './Features/DataSources/AddNewDataSource';
 import AddNewWorkSpace from './Features/WorkSpaces/AddNewWorkSpace';
-import { SelectWorkSpacesForUser, SelectWorkSpacesStatus, FetchWorkSpaces } from './Features/WorkSpaces/WorkSpacesSlice';
+import { SelectWorkSpacesForUser, SelectWorkSpacesStatus, FetchWorkSpaces, OpenWorkSpace } from './Features/WorkSpaces/WorkSpacesSlice';
 import CirclePlusSVG from './CirclePlusSVG';
 
 const SideNavBar: React.FunctionComponent = (props: {}) => {
@@ -95,31 +95,23 @@ const SideNavBar: React.FunctionComponent = (props: {}) => {
                     <h6 className={styles["sidebar-heading"] + " d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted"}>
                         <span>Recent Workspaces</span>
                     </h6>
-                    <ul className="nav flex-column mb-2">
-                        <li className="nav-item">
-                            <a className="nav-link" href="#">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                              Current month
-                            </a>
-                        </li>
-                        <li className="nav-item">
-                            <a className="nav-link" href="#">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                              Last quarter
-                            </a>
-                        </li>
-                        <li className="nav-item">
-                            <a className="nav-link" href="#">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                              Social engagement
-                            </a>
-                        </li>
-                        <li className="nav-item">
-                            <a className="nav-link" href="#">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                              Year-end sale
-                            </a>
-                        </li>
+                <ul className="nav flex-column mb-2">
+                    {workSpaces.map(ws => <a className="nav-link" href="#" key={ws.ID} onClick={(evt) => {
+                        if (location.pathname.indexOf('WorkSpaceEditor') >= 0)
+                            dispatch(OpenWorkSpace(ws.ID));
+                        else
+                            window.location.href = `${homePath}WorkSpaceEditor/${ws.ID}`
+                    }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-file-text">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        { ws.Name}
+                    </a>)
+                    }
+                        
                     </ul>
                 </div>
             </nav>

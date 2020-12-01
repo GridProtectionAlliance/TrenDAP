@@ -64,7 +64,7 @@ const DataSources: React.FunctionComponent = (props: {}) => {
 
     return (
     <div className="row" style={{ margin: 10}}>
-        <div className="col-6">
+            <div className="col-6" style={{ padding: '0 0 0 0' }}>
             <div className="card">
                 <div className="card-header">My DataSources</div>
                 <div className="card-body">
@@ -91,7 +91,7 @@ const DataSources: React.FunctionComponent = (props: {}) => {
                 </div>
             </div>
         </div>
-            <div className="col-6">
+            <div className="col-6" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
                     <div className="card-header">Public DataSources</div>
                     <div className="card-body">

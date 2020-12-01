@@ -23,18 +23,21 @@
 
 
 
+using Gemstone.Data;
 using Gemstone.Data.Model;
-using Gemstone.Expressions.Model;
-using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Security;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using TrenDAP.Controllers;
+using static TrenDAP.Controllers.OpenXDAController;
 
 namespace TrenDAP.Model
 {
@@ -71,6 +74,12 @@ namespace TrenDAP.Model
         public DateTime UpdatedOn { get; set; }
     }
 
+    public class DataSetJson { 
+        public DataSource DataSource { get; set; }
+        public JObject Data { get; set; }
+
+       
+    }
 
     public class DataSetController : ModelController<DataSet>
     {
@@ -88,5 +97,46 @@ namespace TrenDAP.Model
             return base.Patch(record);
         }
 
+        [HttpGet, Route("Query/{dataSetID:int}")]
+        public async Task<ActionResult> GetData(int dataSetID, CancellationToken cancellationToken) {
+            try
+            {
+                using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+                {
+                    List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
+                    DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", dataSetID);
+                    if (dataSet == null) return BadRequest();
+                    List<DataSetJson> json = JsonConvert.DeserializeObject<List<DataSetJson>>(dataSet.JSONString);
+                    IEnumerable<Task<JObject>> tasks = json.Select(ds => Query(dataSet, ds, dataSourceTypes.Find(dst => dst.ID == ds.DataSource.DataSourceTypeID).Name, cancellationToken));
+                    JObject[] result = Task.WhenAll(tasks).Result;
+                    JObject returnjson = new JObject();
+
+                    return Ok(result);
+
+                }
+            }
+            catch (AggregateException ex) {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex);
+            }
+        }
+
+        private Task<JObject> Query(DataSet dataset, DataSetJson json, string type, CancellationToken cancellationToken)
+        {
+            if(type == "OpenXDA")
+                return QueryXDA(dataset, json, cancellationToken);
+            else
+                return Task.FromResult(new JObject());
+        }
+
+        private Task<JObject> QueryXDA(DataSet dataset, DataSetJson json, CancellationToken cancellationToken) {
+            XDADataSetData setData = json.Data.ToObject<XDADataSetData>();
+            return QueryHIDS(json.DataSource.ID, dataset, setData, Configuration, cancellationToken);
+        }
+
     }
+
 }

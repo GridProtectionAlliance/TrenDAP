@@ -164,6 +164,7 @@ const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: 
     const dispatch = useDispatch();
     const phases = useSelector(state => SelectOpenXDA(state, props.Data.DataSource.ID, 'Phase'));
     const meters = useSelector(state => SelectOpenXDA(state, props.Data.DataSource.ID, 'Meter'));
+    const assets = useSelector(state => SelectOpenXDA(state, props.Data.DataSource.ID, 'Asset'));
     const channelGroups = useSelector(state => SelectOpenXDA(state, props.Data.DataSource.ID, 'ChannelGroup'));
     const channelTypes = useSelector(state => SelectOpenXDA(state, props.Data.DataSource.ID, 'ChannelGroupType'));
 
@@ -196,6 +197,16 @@ const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: 
     }, [dispatch, meters?.Status]);
 
     React.useEffect(() => {
+        if (assets != undefined && meters?.Status != 'unitiated' && assets?.Status != 'changed') return;
+        let promise = dispatch(FetchOpenXDA({ dataSourceID: props.Data.DataSource.ID, table: 'Asset' }));
+
+        return function () {
+            if (assets?.Status === 'loading')
+                promise.abort();
+        }
+    }, [dispatch, assets?.Status]);
+
+    React.useEffect(() => {
         if (channelGroups != undefined && channelGroups?.Status != 'unitiated' && channelGroups?.Status != 'changed') return;
         let promise = dispatch(FetchOpenXDA({ dataSourceID: props.Data.DataSource.ID, table: 'ChannelGroup' }));
 
@@ -219,8 +230,8 @@ const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: 
         <form>
             <div className="row">
                 <div className="col">
-                    <Select<TrenDAP.iXDADataSet> Record={props.Data.Data} Field="By" Options={[{ Value: 'Meter', Label: 'Meter' }, { Value: 'Asset', Label: 'Asset' }]} Setter={(record) => UpdateDS({ field: 'By', value: record.By })} />
-                    <ArrayMultiSelect<TrenDAP.iXDADataSet> Style={{ height: window.innerHeight - 410 }} Record={props.Data.Data} Options={meters?.Data.map(m => ({ Value: m.ID, Label: m.Name })) ?? []} Field="IDs" Setter={(record) => UpdateDS({ field: 'IDs', value: record.IDs })} />
+                    <Select<TrenDAP.iXDADataSet> Record={props.Data.Data} Field="By" Options={[{ Value: 'Meter', Label: 'Meter' }, { Value: 'Asset', Label: 'Asset' }]} Setter={(record) => UpdateDS({ field: 'By', value: record.By }, { field: 'IDs', value: [] } )} />
+                    <ArrayMultiSelect<TrenDAP.iXDADataSet> Style={{ height: window.innerHeight - 410 }} Record={props.Data.Data} Options={(props.Data.Data.By == 'Meter' ? meters : assets)?.Data.map(m => ({ Value: m.ID, Label: m.Name })) ?? []} Field="IDs" Setter={(record) => UpdateDS({ field: 'IDs', value: record.IDs })} />
                 </div>
                 <div className="col">
                     <ArrayCheckBoxes<TrenDAP.iXDADataSet> Record={props.Data.Data} Checkboxes={phases?.Data.map(m => ({ ID: m.ID, Label: m.Name })) ?? []} Field="Phases" Setter={(record) => UpdateDS({ field: 'Phases', value: record.Phases })} />

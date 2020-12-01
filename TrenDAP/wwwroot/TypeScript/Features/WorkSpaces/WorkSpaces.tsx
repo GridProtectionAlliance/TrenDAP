@@ -29,6 +29,7 @@ import Table from '@gpa-gemstone/react-table/lib/index'
 import { Sort, FetchWorkSpaces, SelectWorkSpacesStatus, RemoveWorkSpace, SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, SelectWorkSpacesSortField, SelectWorkSpacesAscending } from './WorkSpacesSlice';
 import EditWorkSpace from './EditWorkSpace';
 import { TrashCan, HeavyCheckMark } from './../../Constants'
+import { Link, useParams } from 'react-router-dom';
 
 const WorkSpaces: React.FunctionComponent = (props: {}) => {
     const dispatch = useDispatch();
@@ -52,33 +53,42 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
 
     return (
         <div className="row" style={{ margin: 10 }}>
-            <div className="col-8">
+            <div className="col-8" style={{padding: '0 0 0 0'}}>
                 <div className="card">
                     <div className="card-header">My Workspaces</div>
                     <div className="card-body">
                         <Table<TrenDAP.iWorkSpace>
-                        cols={[
-                            { key: 'Name', label: 'Name' },
-                            { key: 'Public', label: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
-                            { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item[key]).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
-                            { key: null, label: '', content: (item, key, style) => <span><EditWorkSpace WorkSpace={item}/><button className="btn" onClick={() => dispatch(RemoveWorkSpace(item)) }>{TrashCan}</button></span>}
+                            cols={[
+                                { key: 'Name', label: 'Name' },
+                                { key: 'Public', label: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
+                                { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item[key]).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
+                                    {
+                                        key: null, label: '', content: (item, key, style) =>
+                                            <span><EditWorkSpace WorkSpace={item} /><button className="btn" onClick={(evt) => {
+                                                evt.preventDefault();
+                                                dispatch(RemoveWorkSpace(item));
+                                            }}>{TrashCan}</button></span>
+                                    }
 
-                        ]}
-                        tableClass="table table-hover"
-                        theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
-                        tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
-                        rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                        sortField={sortField}
-                        onClick={() => { }}
-                        onSort={data => dispatch(Sort({ SortField: data.col, Ascending: data.ascending }))}
-                        data={workSpaces}
-                        ascending={ascending}
+                            ]}
+                            tableClass="table table-hover"
+                            theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
+                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
+                            rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            sortField={sortField}
+                            onClick={(data, evt) => {
+                                if (!evt.target.classList.contains('btn'))
+                                    window.location.href = `${homePath}WorkSpaceEditor/${data.row.ID}`
+                            }}
+                            onSort={data => dispatch(Sort({ SortField: data.col, Ascending: data.ascending }))}
+                            data={workSpaces}
+                            ascending={ascending}
                             />
                     </div>
                 </div>
             </div>
-            <div className="col-4">
-                <div className="card">
+            <div className="col-4" style={{ padding: '0 0 0 0' }}>
+                <div className="card ">
                     <div className="card-header">Public Workspaces</div>
                     <div className="card-body">
                         <Table<TrenDAP.iWorkSpace>

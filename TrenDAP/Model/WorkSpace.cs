@@ -31,6 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using System.Text;
 using TrenDAP.Controllers;
 
 namespace TrenDAP.Model
@@ -46,7 +47,7 @@ namespace TrenDAP.Model
         public byte[] JSON { get; set; }
 
         [NonRecordField]
-        public string JSONString => Convert.ToBase64String(this.JSON);
+        public string JSONString => Encoding.ASCII.GetString(this.JSON);
         [UseEscapedName]
         public bool Public { get; set; }
         public DateTime UpdatedOn { get; set; }
@@ -59,12 +60,12 @@ namespace TrenDAP.Model
         public override ActionResult Post([FromBody] JObject record)
         {
             record["User"] = Request.HttpContext.User.Identity.Name;
-            record["JSON"] = Convert.FromBase64String(record["JSON"].ToString());
+            record["JSON"] = Encoding.ASCII.GetBytes(record["JSONString"].ToString());
             return base.Post(record);
         }
         public override ActionResult Patch([FromBody] JObject record)
         {
-            record["JSON"] = Convert.FromBase64String(record["JSON"].ToString());
+            record["JSON"] = Encoding.ASCII.GetBytes(record["JSONString"].ToString());
             return base.Post(record);
         }
 

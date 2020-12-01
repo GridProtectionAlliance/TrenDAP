@@ -24,6 +24,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { TrenDAP } from '../../global';
 import _ from 'lodash';
+import { AppStore } from '../../Store/Store';
 
 // #region [ Thunks ]
 export const FetchWorkSpaces = createAsyncThunk('WorkSpaces/FetchWorkSpaces', async (_, { dispatch }) => {
@@ -62,7 +63,14 @@ export const WorkSpacesSlice = createSlice({
 
             const sorted = _.orderBy(state.WorkSpaces, [state.SortField], [state.Ascending ? "asc" : "desc"])
             state.WorkSpaces = sorted as TrenDAP.iWorkSpace[];
+        },
+        OpenWorkSpace: (state, action) => {
+            state.WorkSpaces.find(ws => ws.ID == action.payload).Open = true;
+        },
+        CloseWorkSpace: (state, action) => {
+            state.WorkSpaces.find(ws => ws.ID == action.payload).Open = false;
         }
+
 
     },
     extraReducers: (builder) => {
@@ -126,16 +134,16 @@ export const WorkSpacesSlice = createSlice({
 // #endregion
 
 // #region [ Selectors ]
-export const { Sort } = WorkSpacesSlice.actions;
+export const { Sort, OpenWorkSpace, CloseWorkSpace } = WorkSpacesSlice.actions;
 export default WorkSpacesSlice.reducer; 
-export const SelectWorkSpaces = state => state.WorkSpaces.WorkSpaces as TrenDAP.iWorkSpace[];
-export const SelectWorkSpaceByID = (state, id) => state.WorkSpaces.WorkSpaces.find(ds => ds.ID === id) as TrenDAP.iWorkSpace;
-export const SelectNewWorkSpace = (state) => ({ ID: 0, Name: '', User: '', JSON: '' });
-export const SelectWorkSpacesStatus = state => state.WorkSpaces.Status as TrenDAP.Status;
-export const SelectWorkSpacesForUser = (state, user) => state.WorkSpaces.WorkSpaces.filter(ws => ws.User === user) as TrenDAP.iWorkSpace;
-export const SelectWorkSpacesAllPublicNotUser = (state, user) => state.WorkSpaces.WorkSpaces.filter(ws => ws.Public && ws.User !== user) as TrenDAP.iWorkSpace;
-export const SelectWorkSpacesSortField = state => state.WorkSpaces.SortField as keyof TrenDAP.iWorkSpace;
-export const SelectWorkSpacesAscending = state => state.WorkSpaces.Ascending as boolean;
+export const SelectWorkSpaces = (state: AppStore) => state.WorkSpaces.WorkSpaces as TrenDAP.iWorkSpace[];
+export const SelectWorkSpaceByID = (state: AppStore, id: number) => state.WorkSpaces.WorkSpaces.find(ds => ds.ID === id) as TrenDAP.iWorkSpace;
+export const SelectNewWorkSpace = (state: AppStore) => ({ ID: 0, Name: '', User: '', JSON: '' });
+export const SelectWorkSpacesStatus = (state: AppStore) => state.WorkSpaces.Status as TrenDAP.Status;
+export const SelectWorkSpacesForUser = (state: AppStore, user: string) => state.WorkSpaces.WorkSpaces.filter(ws => ws.User === user) as TrenDAP.iWorkSpace[];
+export const SelectWorkSpacesAllPublicNotUser = (state: AppStore, user: string) => state.WorkSpaces.WorkSpaces.filter(ws => ws.Public && ws.User !== user) as TrenDAP.iWorkSpace[];
+export const SelectWorkSpacesSortField = (state: AppStore) => state.WorkSpaces.SortField as keyof TrenDAP.iWorkSpace;
+export const SelectWorkSpacesAscending = (state: AppStore) => state.WorkSpaces.Ascending as boolean;
 
 // #endregion
 
@@ -157,7 +165,7 @@ function PostWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWor
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
-        data: JSON.stringify({ ...workSpace, UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss') }),
+        data: JSON.stringify({ ...workSpace, JSONString: JSON.stringify({ Rows: [{Height: 500, Widgets:[]}]}), UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss') }),
         cache: false,
         async: true
     });

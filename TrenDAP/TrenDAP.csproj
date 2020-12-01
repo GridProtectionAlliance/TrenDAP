@@ -28,9 +28,17 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSourceTypes\DataSourceTypesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Histogram.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Profile.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Stats.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Table.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Text.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Trend.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\XvsY.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\AddNewWorkSpace.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\EditWorkSpace.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpace.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpaceEditor.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpaces.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpacesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\global.d.ts" />
@@ -58,6 +66,7 @@
     <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="5.5.1" />
+    <PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -117,10 +126,32 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Stats.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Profile.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\XvsY.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Text.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Table.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Histogram.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Trend.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\AddNewWorkSpace.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\EditWorkSpace.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\WorkSpaceEditor.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\WorkSpace.tsx">

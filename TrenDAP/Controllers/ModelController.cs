@@ -91,7 +91,7 @@ namespace TrenDAP.Controllers
         #endregion
 
         #region [ Properties ]
-        private IConfiguration Configuration { get; }
+        protected IConfiguration Configuration { get; }
 
         protected virtual bool HasParent { get; } = false;
         protected virtual string ParentKey { get; } = "";

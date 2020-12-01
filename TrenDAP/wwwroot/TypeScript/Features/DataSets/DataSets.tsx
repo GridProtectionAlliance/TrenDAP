@@ -56,7 +56,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
 
     return (
         <div className="row" style={{ margin: 10 }}>
-            <div className="col-8">
+            <div className="col-8" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
                     <div className="card-header">My DataSets</div>
                     <div className="card-body">
@@ -81,7 +81,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                     </div>
                 </div>
             </div>
-            <div className="col-4">
+            <div className="col-4" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
                     <div className="card-header">Public DataSets</div>
                     <div className="card-body">
