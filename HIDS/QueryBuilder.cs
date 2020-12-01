@@ -254,7 +254,7 @@ namespace HIDS
                 case TimeFilter.Week42: case TimeFilter.Week43: case TimeFilter.Week44:
                 case TimeFilter.Week45: case TimeFilter.Week46: case TimeFilter.Week47:
                 case TimeFilter.Week48: case TimeFilter.Week49: case TimeFilter.Week50:
-                case TimeFilter.Week51:
+                case TimeFilter.Week51: case TimeFilter.Week52:
                     int week = filter - TimeFilter.Week00 + 1;
                     return $"date.week(t: r._time) != {week}";
 
