@@ -106,12 +106,12 @@ namespace HIDS
                 .Select(ToConditional)
                 .Where(conditional => !string.IsNullOrEmpty(conditional));
 
-            string timeFilter = string.Join(" and ", timeConditionals);
+            string timeExpression = string.Join(" and ", timeConditionals);
 
-            if (timeFilter.Length > 0)
+            if (timeExpression.Length > 0)
             {
                 imports.Add("import \"date\"");
-                clauses.Add($"filter(fn: (r) => {timeFilter})");
+                clauses.Add($"filter(fn: (r) => {timeExpression})");
             }
 
             clauses.Add("pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")");
