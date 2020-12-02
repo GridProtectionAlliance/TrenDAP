@@ -55,7 +55,13 @@ namespace HIDS
 
         public void Connect(string influxDBHost)
         {
-            m_client = InfluxDBClientFactory.Create(influxDBHost, m_token);
+            InfluxDBClientOptions options = InfluxDBClientOptions.Builder.CreateNew()
+                .Url(influxDBHost)
+                .AuthenticateToken(m_token)
+                .TimeOut(Timeout.InfiniteTimeSpan)
+                .Build();
+
+            m_client = InfluxDBClientFactory.Create(options);
         }
 
         public void Disconnect()
@@ -173,12 +179,7 @@ namespace HIDS
                 Task<TaskCompletionSource<FluxRecord>> readyTask = readyTaskSource.Task;
                 TaskCompletionSource<FluxRecord> recordTaskSource = readyTask.GetAwaiter().GetResult();
 
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    recordTaskSource.SetCanceled();
-                    cancellable.Cancel();
-                    return;
-                }
+                cancellationToken.ThrowIfCancellationRequested();
 
                 // Order of events is important here; control cannot be returned
                 // to the main loop until the new readyTaskSource is created
