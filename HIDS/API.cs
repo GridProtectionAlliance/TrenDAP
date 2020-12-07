@@ -126,7 +126,7 @@ namespace HIDS
             QueryBuilder queryBuilder = new QueryBuilder(PointBucket);
             configureQuery(queryBuilder);
 
-            string query = queryBuilder.Build();
+            string query = queryBuilder.BuildPointQuery();
             return ReadPointsAsync(query, cancellationToken);
         }
 
@@ -135,7 +135,7 @@ namespace HIDS
             QueryBuilder queryBuilder = new QueryBuilder(PointBucket);
             configureQuery(queryBuilder);
 
-            string query = queryBuilder.Count();
+            string query = queryBuilder.BuildCountQuery();
             return ReadPointCountAsync(query, cancellationToken);
         }
 

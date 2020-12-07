@@ -38,5 +38,7 @@ namespace HIDS
         IQueryBuilder FilterTime(IEnumerable<TimeFilter> filters);
         IQueryBuilder TestQuality(uint invalidFlags);
         IQueryBuilder Aggregate(string duration);
+        string BuildPointQuery();
+        string BuildCountQuery();
     }
 }

@@ -87,7 +87,7 @@ namespace HIDS
             return this;
         }
 
-        public string Build()
+        public string BuildPointQuery()
         {
             List<string> imports = new List<string>(4);
             List<string> clauses = new List<string>(16);
@@ -156,7 +156,7 @@ namespace HIDS
             return $"{importSection}\n{querySection}".Trim();
         }
 
-        public string Count()
+        public string BuildCountQuery()
         {
             List<string> imports = new List<string>(4);
             List<string> clauses = new List<string>(16);
