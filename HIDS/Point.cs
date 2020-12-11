@@ -26,6 +26,7 @@ using InfluxDB.Client.Core;
 
 namespace HIDS
 {
+    [Serializable]
     [Measurement("point")]
     [Serializable]
     public class Point

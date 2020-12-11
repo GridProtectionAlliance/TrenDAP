@@ -25,6 +25,7 @@ using System;
 
 namespace HIDS
 {
+    [Serializable]
     public class PointCount
     {
         public string? Tag { get; set; }
