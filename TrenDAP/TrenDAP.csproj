@@ -85,6 +85,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\HIDS\HIDS.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <TypeScriptCompile Include="wwwroot\TypeScript\CirclePlusSVG.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Constants.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\declarations.d.ts">

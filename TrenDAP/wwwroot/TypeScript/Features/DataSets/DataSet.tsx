@@ -139,7 +139,7 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
             <DateRangePicker<TrenDAP.iDataSet> Record={props.Record} FromField="From" ToField="To" Setter={props.SetDataSet} Label="Date Range" />
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Hours" Label="Hour of Day" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Days" Label="Day of Week" Setter={(record) => props.SetDataSet(record)} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Weeks" Label="Week of Year" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 52 }, (_, i) => i.toString())} />
+            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Weeks" Label="Week of Year" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 53 }, (_, i) => i.toString())} />
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Months" Label="Month of Year" Setter={(record) => props.SetDataSet(record)} Enum={['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']} />
             <CheckBox<TrenDAP.iDataSet> Record={props.Record} Field="Public" Setter={(record) => props.SetDataSet(record)} />
             <div className="form-group">
@@ -197,7 +197,7 @@ const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: 
     }, [dispatch, meters?.Status]);
 
     React.useEffect(() => {
-        if (assets != undefined && meters?.Status != 'unitiated' && assets?.Status != 'changed') return;
+        if (assets != undefined && assets?.Status != 'unitiated' && assets?.Status != 'changed') return;
         let promise = dispatch(FetchOpenXDA({ dataSourceID: props.Data.DataSource.ID, table: 'Asset' }));
 
         return function () {
@@ -230,8 +230,9 @@ const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: 
         <form>
             <div className="row">
                 <div className="col">
+                    <Select<TrenDAP.iXDADataSet> Record={props.Data.Data} Field="Aggregate" Options={[{ Value: '', Label: 'None' },{ Value: '1h', Label: 'Hour' }, { Value: '1d', Label: 'Day' }, {Value: '1w', Label: 'Week'}]} Setter={(record) => UpdateDS({ field: 'Aggregate', value: record.Aggregate })} />
                     <Select<TrenDAP.iXDADataSet> Record={props.Data.Data} Field="By" Options={[{ Value: 'Meter', Label: 'Meter' }, { Value: 'Asset', Label: 'Asset' }]} Setter={(record) => UpdateDS({ field: 'By', value: record.By }, { field: 'IDs', value: [] } )} />
-                    <ArrayMultiSelect<TrenDAP.iXDADataSet> Style={{ height: window.innerHeight - 410 }} Record={props.Data.Data} Options={(props.Data.Data.By == 'Meter' ? meters : assets)?.Data.map(m => ({ Value: m.ID, Label: m.Name })) ?? []} Field="IDs" Setter={(record) => UpdateDS({ field: 'IDs', value: record.IDs })} />
+                    <ArrayMultiSelect<TrenDAP.iXDADataSet> Style={{ height: window.innerHeight - 510 }} Record={props.Data.Data} Options={(props.Data.Data.By == 'Meter' ? meters?.Data.map(m => ({ Value: m.ID, Label: m.Name })) : assets?.Data.map(m => ({ Value: m.ID, Label: m.AssetName }))) ?? []} Field="IDs" Setter={(record) => UpdateDS({ field: 'IDs', value: record.IDs })} />
                 </div>
                 <div className="col">
                     <ArrayCheckBoxes<TrenDAP.iXDADataSet> Record={props.Data.Data} Checkboxes={phases?.Data.map(m => ({ ID: m.ID, Label: m.Name })) ?? []} Field="Phases" Setter={(record) => UpdateDS({ field: 'Phases', value: record.Phases })} />

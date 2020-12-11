@@ -25,6 +25,7 @@
 
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using HIDS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -32,6 +33,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -83,7 +85,13 @@ namespace TrenDAP.Model
 
     public class DataSetController : ModelController<DataSet>
     {
-        public DataSetController(IConfiguration configuration) : base(configuration){}
+        #region [ Properties ]
+        private IConfiguration Configuration { get; }
+        #endregion
+
+        public DataSetController(IConfiguration configuration) : base(configuration){
+            Configuration = configuration;
+        }
 
         public override ActionResult Post([FromBody] JObject record)
         {
@@ -132,9 +140,33 @@ namespace TrenDAP.Model
                 return Task.FromResult(new JObject());
         }
 
-        private Task<JObject> QueryXDA(DataSet dataset, DataSetJson json, CancellationToken cancellationToken) {
-            XDADataSetData setData = json.Data.ToObject<XDADataSetData>();
-            return QueryHIDS(json.DataSource.ID, dataset, setData, Configuration, cancellationToken);
+        private async Task<JObject> QueryXDA(DataSet dataset, DataSetJson json, CancellationToken cancellationToken) {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
+                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", json.DataSource.ID);
+
+                XDADataSetData setData = json.Data.ToObject<XDADataSetData>();
+                DataTable table = GetDataTable(json.DataSource.ID, dataset, setData, Configuration, cancellationToken);
+                IEnumerable<Point> points = QueryHIDS(json.DataSource.ID, dataset, setData, Configuration, cancellationToken);
+
+                JObject jObject = new JObject();
+                jObject["DataSource"] = new JObject();
+                jObject["DataSource"]["Name"] = dataSource.Name;
+                jObject["DataSource"]["Type"] = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
+                jObject["From"] = dataset.From;
+                jObject["To"] = dataset.To;
+                IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
+                var groupjoin = tableJson.GroupJoin(points, row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) =>
+                {
+                    row["Data"] = JArray.FromObject(resultcollection);
+                    return row;
+                });
+
+                jObject["Data"] = JArray.FromObject(groupjoin);
+
+                return jObject;
+            }
         }
 
     }

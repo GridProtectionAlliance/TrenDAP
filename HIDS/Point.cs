@@ -27,6 +27,7 @@ using InfluxDB.Client.Core;
 namespace HIDS
 {
     [Measurement("point")]
+    [Serializable]
     public class Point
     {
         [Column("tag", IsTag = true)] public string? Tag { get; set; }

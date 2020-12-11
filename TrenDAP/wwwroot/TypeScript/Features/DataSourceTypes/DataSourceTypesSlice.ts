@@ -23,7 +23,7 @@
 
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { TrenDAP } from '../../global';
+import { TrenDAP, Redux } from '../../global';
 
 export const FetchDataSourceTypes = createAsyncThunk('DataSources/FetchDataSourceTypes', async (_,{ dispatch }) => {
     return await GetDataSourceTypes()
@@ -31,15 +31,17 @@ export const FetchDataSourceTypes = createAsyncThunk('DataSources/FetchDataSourc
 
 
 export const DataSourceTypesSlice = createSlice({
-    name: 'DataSourceTypess',
+    name: 'DataSourceTypes',
     initialState: {
-        Status: 'unitiated' as TrenDAP.Status,
-        DataSourceTypes: [] as TrenDAP.iDataSourceType[],
+        Status: 'unitiated',
+        Data: [],
+        SortField: 'Name',
+        Ascending: true,
         Error: null
-    },
+    } as Redux.State<TrenDAP.iDataSourceType>,
     reducers: {
         Add: (state, action) => {
-            state.DataSourceTypes.push(action.payload);
+            state.Data.push(action.payload);
         },
         AddRange: (state, action) => {
             state = action.payload;
@@ -53,7 +55,7 @@ export const DataSourceTypesSlice = createSlice({
         builder.addCase(FetchDataSourceTypes.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            state.DataSourceTypes.push(...action.payload);
+            state.Data.push(...action.payload);
             FetchDataSourceTypes();
         });
         builder.addCase(FetchDataSourceTypes.pending, (state, action) => {
@@ -71,8 +73,8 @@ export const DataSourceTypesSlice = createSlice({
 
 export const { Add, AddRange } = DataSourceTypesSlice.actions;
 export default DataSourceTypesSlice.reducer;
-export const SelectDataSourceTypes = state => state.DataSourceTypes.DataSourceTypes as TrenDAP.iDataSourceType[]
-export const SelectDataSourceTypesStatus = state => state.DataSourceTypes.Status as TrenDAP.Status
+export const SelectDataSourceTypes = (state: Redux.StoreState) => state.DataSourceTypes.Data;
+export const SelectDataSourceTypesStatus = (state: Redux.StoreState) => state.DataSourceTypes.Status;
 
 function GetDataSourceTypes(): JQuery.jqXHR<TrenDAP.iDataSourceType[]> {
     return $.ajax({

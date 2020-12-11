@@ -24,6 +24,7 @@
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using Gemstone.Reflection.MemberInfoExtensions;
+using HIDS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -39,6 +40,8 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Net.Security;
 using System.Reflection;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
@@ -78,6 +81,7 @@ namespace TrenDAP.Controllers
             public List<int> Phases { get; set; }
             public List<int> Groups { get; set; }
             public List<int> Types { get; set; }
+            public string Aggregate { get; set; }
         }
 
         public class HIDSPost
@@ -85,10 +89,16 @@ namespace TrenDAP.Controllers
             public DateTime StartTime { get; set; }
             public DateTime EndTime { get; set; }
             public string By { get; set; }
+            public string Aggregate { get; set; }
             public List<int> IDs { get; set; }
             public List<int> Phases { get; set; }
             public List<int> Groups { get; set; }
             public List<int> Types { get; set; }
+            public long Hours { get; set; }
+            public long Days { get; set; }
+            public long Weeks { get; set; }
+            public long Months { get; set; }
+
         }
 
 
@@ -111,7 +121,6 @@ namespace TrenDAP.Controllers
         public virtual ActionResult Get(int dataSourceID, string table)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
-            //using (WebRequestHandler handler = new WebRequestHandler())
             using (HttpClient client = new HttpClient())
             {
 
@@ -186,105 +195,110 @@ namespace TrenDAP.Controllers
             }
         }
 
-
-
-        //[HttpPost, Route("Data/{dataSourceID:int}")]
-        //public ActionResult Post(int dataSourceID, [FromBody] HIDSPost post)
-        //{
-        //    string token = GenerateAntiForgeryToken(dataSourceID, Configuration);
-        //    using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
-        //    using (HttpClient client = new HttpClient())
-        //    {
-        //        try
-        //        {
-        //            DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-        //            client.BaseAddress = new Uri(dataSource.URL);
-        //            client.DefaultRequestHeaders.Accept.Clear();
-        //            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        //            client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
-        //            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-
-        //            HttpContent content = JsonContent.Create(post);
-        //            HttpResponseMessage response = client.PostAsync($"api/HIDS", content).Result;
-
-        //            if (!response.IsSuccessStatusCode)
-        //                return StatusCode((int)response.StatusCode, response.ReasonPhrase);
-
-        //            Task<string> rsp = response.Content.ReadAsStringAsync();
-        //            return Ok(rsp.Result);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            return StatusCode(StatusCodes.Status500InternalServerError, ex);
-        //        }
-        //    }
-
-        //    try
-        //    {
-        //        Task<JObject> rsp = QueryHIDS(dataSourceID, post);
-        //        return Ok(rsp.Result);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError, ex);
-        //    }
-
-        //}
-
-
         #endregion
 
         #region [ Static ]
 
-        public static Task<JObject> QueryHIDS(int dataSourceID, DataSet dataSet, XDADataSetData data,IConfiguration configuration, CancellationToken cancellationToken) 
+        public static IEnumerable<Point> QueryHIDS(int dataSourceID, DataSet dataSet, XDADataSetData data,IConfiguration configuration, CancellationToken cancellationToken) 
         {
             string token = GenerateAntiForgeryToken(dataSourceID, configuration);
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
-            using (HttpClient client = new HttpClient())
             {
-                try
+                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
+                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
+                HIDSPost post = CreatePost(dataSet, data);
+
+                using (HttpClient client = new HttpClient()
                 {
-                    HIDSPost post = new HIDSPost()
-                    {
-                        By = data.By,
-                        IDs = data.IDs,
-                        Phases = data.Phases,
-                        Groups = data.Groups,
-                        Types = data.Types,
-                        StartTime = dataSet.From,
-                        EndTime = dataSet.To
-                    };
-                    List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
-                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    client.BaseAddress = new Uri(dataSource.URL);
+                    Timeout = TimeSpan.FromMinutes(10)
+                }) {
                     client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
                     client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
+                    var response = client.PostAsync(dataSource.URL + "/api/HIDS", JsonContent.Create(post), cancellationToken).Result;
 
-                    HttpContent content = JsonContent.Create(post);
-                    HttpResponseMessage response = client.PostAsync($"api/HIDS", content, cancellationToken).Result;
+                    try
+                    {
+                        if (!response.IsSuccessStatusCode)
+                            throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
 
-                    if (!response.IsSuccessStatusCode)
-                        throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
+                        var stream = response.Content.ReadAsStreamAsync().Result;
+                        IFormatter formatter = new BinaryFormatter();
+                        return (IEnumerable<Point>)formatter.Deserialize(stream);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
 
-                    Task<string> rsp = response.Content.ReadAsStringAsync();
-                    JObject jObject = new JObject();
-                    jObject["DataSource"] = new JObject();
-                    jObject["DataSource"]["Name"] = dataSource.Name;
-                    jObject["DataSource"]["Type"] = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
-                    jObject["From"] = dataSet.From;
-                    jObject["To"] = dataSet.To;
-                    jObject["Data"] = JArray.Parse(rsp.Result);
-                    return Task.FromResult(jObject);
                 }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
+
             }
         }
 
+        public static DataTable GetDataTable(int dataSourceID, DataSet dataSet, XDADataSetData data, IConfiguration configuration, CancellationToken cancellationToken) {
+            string token = GenerateAntiForgeryToken(dataSourceID, configuration);
+            using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
+            {
+                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
+                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
+                HIDSPost post = CreatePost(dataSet, data);
+
+                using (HttpClient client = new HttpClient()
+                {
+                    Timeout = TimeSpan.FromMinutes(10)
+                })
+                {
+                    client.DefaultRequestHeaders.Accept.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
+                    client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
+
+
+                    var response = client.PostAsync(dataSource.URL + "/api/HIDS/Table", JsonContent.Create(post), cancellationToken).Result;
+                   
+
+                    try
+                    {
+
+                        if (!response.IsSuccessStatusCode)
+                            throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
+                        var stream = response.Content.ReadAsStreamAsync().Result;
+                        IFormatter formatter = new BinaryFormatter();
+                        return (DataTable)formatter.Deserialize(stream);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
+
+                }
+
+            }
+
+        }
+
+        private static HIDSPost CreatePost(DataSet dataSet, XDADataSetData data)
+        {
+            return new HIDSPost()
+            {
+                By = data.By,
+                IDs = data.IDs,
+                Phases = data.Phases,
+                Groups = data.Groups,
+                Types = data.Types,
+                StartTime = dataSet.From,
+                EndTime = dataSet.To,
+                Hours = dataSet.Hours,
+                Days = dataSet.Days,
+                Weeks = dataSet.Weeks,
+                Months = dataSet.Months,
+                Aggregate = data.Aggregate
+            };
+
+
+        }
 
         public static string GenerateAntiForgeryToken(int dataSourceID, IConfiguration configuration)
         {

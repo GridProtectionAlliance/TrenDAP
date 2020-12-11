@@ -24,13 +24,13 @@
 
 
 import * as React from 'react';
-import { TrenDAP } from '../../global';
+import { TrenDAP, Redux } from '../../global';
 import { Input, CheckBox } from '@gpa-gemstone/react-forms';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import styles from '../../../Styles/app.scss';
 import { SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, OpenWorkSpace, CloseWorkSpace } from './WorkSpacesSlice';
-import { AppStore } from '../../Store/Store';
+import { style } from 'd3';
 
 interface Widget { Width: number, Type: any, JSON: any }
 interface Row { Height: number, Wigets: Widget[] }
@@ -39,9 +39,10 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
     const dispatch = useDispatch();
     const { id } = useParams();
     const [tab, setTab] = React.useState<number>(id);
-    const usersWorkSpaces: TrenDAP.iWorkSpace[] = useSelector((state: AppStore) => SelectWorkSpacesForUser(state, userName));
-    const publicWorkSpaces: TrenDAP.iWorkSpace[] = useSelector((state: AppStore) => SelectWorkSpacesAllPublicNotUser(state, userName));
-    const [workSpaceJSON, setWorkSpaceJSON] = React.useState<WorkSpaceJSON>({Rows: []});
+    const usersWorkSpaces: TrenDAP.iWorkSpace[] = useSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
+    const publicWorkSpaces: TrenDAP.iWorkSpace[] = useSelector((state: Redux.StoreState) => SelectWorkSpacesAllPublicNotUser(state, userName));
+    const [workSpaceJSON, setWorkSpaceJSON] = React.useState<WorkSpaceJSON>({ Rows: [] });
+    const [toggle, setToggle] = React.useState<boolean>(false);
     React.useEffect(() => {
         const ws = [...usersWorkSpaces, ...publicWorkSpaces].find(ws => ws.ID == tab);
         if (!ws.Open)
@@ -51,18 +52,47 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
 
     return (
         <>
+            <div className={styles.navbarbuttons}>
+                <div className="btn-group">
+                    <button className="btn" title='Export current data...' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-plus" ></i></button>
+                    <div className="dropdown-menu" >
+                        <a className="dropdown-item" href="#">Row</a>
+                        <div className="dropdown-divider"></div>
+                        <a className="dropdown-item" href="#">Histogram</a>
+                        <a className="dropdown-item" href="#">Profile</a>
+                        <a className="dropdown-item" href="#">Stats</a>
+                        <a className="dropdown-item" href="#">Table</a>
+                        <a className="dropdown-item" href="#">Text</a>
+                        <a className="dropdown-item" href="#">Trend</a>
+                        <a className="dropdown-item" href="#">X vs Y</a>
+                    </div>
+                </div>
+
+                <div className="btn-group">
+                    <button className="btn" title='Export current data...' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-download" ></i></button>
+                    <div className="dropdown-menu" >
+                        <a className="dropdown-item" href="#">PDF</a>
+                        <a className="dropdown-item" href="#">CSV</a>
+                    </div>
+                </div>
+                <button className="btn" title='Save current workspace...'><i className="fa fa-save"></i></button>
+                <button className="btn" title='Settings'><i className="fa fa-cog"></i></button>
+
+            </div>
             <ul className="nav nav-tabs">
                 {[...usersWorkSpaces, ...publicWorkSpaces].filter(ws => ws.Open).map(ws =>
-                    <li key={ws.ID} className={"nav-item " + styles.relative} >
-                        <a className={"nav-link" + (tab == ws.ID ? ' active' : '')} href='#' onClick={(evt) => setTab(ws.ID)} style={{paddingRight:30}}>{ws.Name}</a>
-                        <span className={styles.close} onClick={() => dispatch(CloseWorkSpace(ws.ID))}>X</span>
+                    <li key={ws.ID} className={"nav-item " + styles.workspacetab} >
+                        <a className={"nav-link" + (tab == ws.ID ? ' active' : '')} href='#' onClick={(evt) => setTab(ws.ID)} >{ws.Name}</a>
+                        <span  onClick={() => dispatch(CloseWorkSpace(ws.ID))}>X</span>
                     </li>)}
             </ul>
-            <div className="tab-content" style={{ position: 'relative', top: 50, width: '100%', height: 'calc(100% - 50px)' }}>
+            <div className="tab-content" style={{ position: 'relative', width: '100%', height: 'calc(100% - 50px)' }}>
                 {
-                    workSpaceJSON.Rows.map((row, index) => <div className="card"key={index} style={{ height: row.Height }}>
-                        <div className="card-body"></div>
-                    </div>)
+                    workSpaceJSON.Rows.map((row, index) =>
+                        <div className="card" key={index} style={{ height: row.Height }}>
+                            <div className="card-body"></div>
+                        </div>
+                    )
                 }
             </div>
         </>

@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { TrenDAP } from '../../global';
+import { TrenDAP, Redux } from '../../global';
 import _, { result } from 'lodash';
 
 // #region [ Thunks ]
@@ -47,13 +47,13 @@ export const UpdateDataSet = createAsyncThunk('DataSets/UpdateDataSet', async (D
 export const DataSetsSlice = createSlice({
     name: 'DataSets',
     initialState: {
-        Status: 'unitiated' as TrenDAP.Status,
-        DataSets: [] as TrenDAP.iDataSet[],
+        Status: 'unitiated',
+        Data: [],
         Error: null,
         SortField: 'UpdatedOn',
         Ascending: false,
-        Record: { ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 52) - 1, Months: Math.pow(2, 12) - 1 } as TrenDAP.iDataSet
-    },
+        Record: { ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 52) - 1, Months: Math.pow(2, 12) - 1 }
+    } as Redux.State<TrenDAP.iDataSet>,
     reducers: {
         Sort: (state, action) => {
             if (state.SortField === action.payload.SortField)
@@ -61,14 +61,14 @@ export const DataSetsSlice = createSlice({
             else
                 state.SortField = action.payload.SortField;
 
-            const sorted = _.orderBy(state.DataSets, [state.SortField], [state.Ascending ? "asc" : "desc"])
-            state.DataSets = sorted as TrenDAP.iDataSet[];
+            const sorted = _.orderBy(state.Data, [state.SortField], [state.Ascending ? "asc" : "desc"])
+            state.Data = sorted as TrenDAP.iDataSet[];
         },
         New: (state, action) => {
             state.Record = { ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 52) - 1, Months: Math.pow(2, 12) - 1 } as TrenDAP.iDataSet
         },
         SetRecordByID: (state, action) => {
-            const record = state.DataSets.find(ds => ds.ID === action.payload);
+            const record = state.Data.find(ds => ds.ID === action.payload);
             if(record !== undefined)
                 state.Record = record;
         },
@@ -83,7 +83,7 @@ export const DataSetsSlice = createSlice({
             state.Error = null;
             const results = action.payload.map(r => ({ ...r, From: moment(r.From).format('YYYY-MM-DD'), To: moment(r.To).format('YYYY-MM-DD') }));
             const sorted = _.orderBy(results, [state.SortField], [state.Ascending ? "asc" : "desc"])
-            state.DataSets = sorted as TrenDAP.iDataSet[];
+            state.Data = sorted;
 
         });
         builder.addCase(FetchDataSets.pending, (state, action) => {
@@ -139,16 +139,16 @@ export const DataSetsSlice = createSlice({
 // #region [ Selectors ]
 export const { Sort, New, Update, SetRecordByID } = DataSetsSlice.actions;
 export default DataSetsSlice.reducer; 
-export const SelectDataSets = state => state.DataSets.DataSets as TrenDAP.iDataSet[];
-export const SelectDataSetByID = (state, id) => state.DataSets.DataSets.find(ds => ds.ID === id) as TrenDAP.iDataSet;
-export const SelectRecord = (state) => state.DataSets.Record;
-export const SelectNewDataSet = (state) => ({ ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 52) - 1, Months: Math.pow(2, 12) - 1 }) as TrenDAP.iDataSet;
-export const SelectNewXDADataSet = () => ({ By: 'Meter', IDs: [], Phases: [], Groups: [], Types: [] }) as TrenDAP.iXDADataSet;
-export const SelectDataSetsStatus = state => state.DataSets.Status as TrenDAP.Status;
-export const SelectDataSetsForUser = (state, user) => state.DataSets.DataSets.filter(ws => ws.User === user) as TrenDAP.iDataSet;
-export const SelectDataSetsAllPublicNotUser = (state, user) => state.DataSets.DataSets.filter(ws => ws.Public && ws.User !== user) as TrenDAP.iDataSet;
-export const SelectDataSetsSortField = state => state.DataSets.SortField as keyof TrenDAP.iDataSet;
-export const SelectDataSetsAscending = state => state.DataSets.Ascending as boolean;
+export const SelectDataSets = (state: Redux.StoreState) => state.DataSets.Data;
+export const SelectDataSetByID = (state: Redux.StoreState, id: number) => state.DataSets.Data.find(ds => ds.ID === id) as TrenDAP.iDataSet;
+export const SelectRecord = (state: Redux.StoreState) => state.DataSets.Record;
+export const SelectNewDataSet = ()  => ({ ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1 }) as TrenDAP.iDataSet;
+export const SelectNewXDADataSet = ()  => ({ By: 'Meter', IDs: [], Phases: [], Groups: [], Types: [], Aggregate: '' }) as TrenDAP.iXDADataSet;
+export const SelectDataSetsStatus = (state: Redux.StoreState)  => state.DataSets.Status;
+export const SelectDataSetsForUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.User === user);
+export const SelectDataSetsAllPublicNotUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.Public && ws.User !== user);
+export const SelectDataSetsSortField = (state: Redux.StoreState)  => state.DataSets.SortField;
+export const SelectDataSetsAscending = (state: Redux.StoreState)  => state.DataSets.Ascending;
 
 // #endregion
 

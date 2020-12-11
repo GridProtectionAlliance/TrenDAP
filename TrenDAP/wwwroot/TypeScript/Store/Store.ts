@@ -38,5 +38,3 @@ const reducer = {
 
 const store = configureStore({ reducer });
 export default store;
-
-export type AppStore = ReturnType<typeof store.getState>;

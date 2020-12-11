@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { TrenDAP } from '../../global';
+import { TrenDAP, Redux } from '../../global';
 import _ from 'lodash';
 
 // #region [ Thunks ]
@@ -46,12 +46,12 @@ export const UpdateDataSource = createAsyncThunk('DataSources/UpdateDataSource',
 export const DataSourcesSlice = createSlice({
     name: 'DataSources',
     initialState: {
-        Status: 'unitiated' as TrenDAP.Status,
-        DataSources: [] as TrenDAP.iDataSource[],
+        Status: 'unitiated',
+        Data: [],
         Error: null,
         SortField: 'Name',
         Ascending: true
-    },
+    } as Redux.State<TrenDAP.iDataSource>,
     reducers: {
         Sort: (state, action) => {
             if(state.SortField === action.payload.SortField)
@@ -59,8 +59,8 @@ export const DataSourcesSlice = createSlice({
             else 
                 state.SortField = action.payload.SortField;
 
-            const sorted = _.orderBy(state.DataSources, [state.SortField], [state.Ascending ? "asc" : "desc"])
-            state.DataSources = sorted as TrenDAP.iDataSource[] ;
+            const sorted = _.orderBy(state.Data, [state.SortField], [state.Ascending ? "asc" : "desc"])
+            state.Data = sorted;
         }
     },
     extraReducers: (builder) => {
@@ -70,7 +70,7 @@ export const DataSourcesSlice = createSlice({
             state.Error = null;
 
             const sorted = _.orderBy(action.payload, [state.SortField], [state.Ascending ? "asc" : "desc"])
-            state.DataSources = sorted as TrenDAP.iDataSource[];
+            state.Data = sorted;
 
         });
         builder.addCase(FetchDataSources.pending, (state, action) => {
@@ -127,15 +127,15 @@ export default DataSourcesSlice.reducer;
 // #endregion
 
 // #region [ Selectors ]
-export const SelectDataSources = state => state.DataSources.DataSources as TrenDAP.iDataSource[];
-export const SelectDataSourceByID = (state, id) => state.DataSources.DataSources.find(ds => ds.ID === id) as TrenDAP.iDataSource;
-export const SelectDataSourcesForUser = (state, user) => state.DataSources.DataSources.filter(ds => ds.User === user) as TrenDAP.iDataSource;
-export const SelectDataSourcesAllPublicNotUser = (state, user) => state.DataSources.DataSources.filter(ds => ds.Public && ds.User !== user) as TrenDAP.iDataSource;
+export const SelectDataSources = (state: Redux.StoreState) => state.DataSources.Data;
+export const SelectDataSourceByID = (state: Redux.StoreState, id) => state.DataSources.Data.find(ds => ds.ID === id);
+export const SelectDataSourcesForUser = (state: Redux.StoreState, user) => state.DataSources.Data.filter(ds => ds.User === user);
+export const SelectDataSourcesAllPublicNotUser = (state: Redux.StoreState, user) => state.DataSources.Data.filter(ds => ds.Public && ds.User !== user);
 
-export const SelectNewDataSource = (state) => ({ ID: 0, Name: '', DataSourceTypeID: 1, URL: '', Credential: '', Password: '' });
-export const SelectDataSourcesStatus = state => state.DataSources.Status as TrenDAP.Status;
-export const SelectDataSourcesSortField = state => state.DataSources.SortField as keyof TrenDAP.iDataSource;
-export const SelectDataSourcesAscending = state => state.DataSources.Ascending as boolean;
+export const SelectNewDataSource = (state: Redux.StoreState) => ({ ID: 0, Name: '', DataSourceTypeID: 1, URL: '', Credential: '', Password: '' });
+export const SelectDataSourcesStatus = (state: Redux.StoreState) => state.DataSources.Status;
+export const SelectDataSourcesSortField = (state: Redux.StoreState) => state.DataSources.SortField;
+export const SelectDataSourcesAscending = (state: Redux.StoreState) => state.DataSources.Ascending;
 
 // #endregion
 

@@ -22,9 +22,8 @@
 //******************************************************************************************************
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { TrenDAP } from '../../global';
+import { TrenDAP, Redux } from '../../global';
 import _ from 'lodash';
-import { AppStore } from '../../Store/Store';
 
 // #region [ Thunks ]
 export const FetchWorkSpaces = createAsyncThunk('WorkSpaces/FetchWorkSpaces', async (_, { dispatch }) => {
@@ -48,12 +47,12 @@ export const UpdateWorkSpace = createAsyncThunk('WorkSpaces/UpdateWorkSpace', as
 export const WorkSpacesSlice = createSlice({
     name: 'WorkSpaces',
     initialState: {
-        Status: 'unitiated' as TrenDAP.Status,
-        WorkSpaces: [] as TrenDAP.iWorkSpace[],
+        Status: 'unitiated',
+        Data: [],
         Error: null,
         SortField: 'UpdatedOn',
         Ascending: false
-    },
+    } as Redux.State<TrenDAP.iWorkSpace>,
     reducers: {
         Sort: (state, action) => {
             if (state.SortField === action.payload.SortField)
@@ -61,14 +60,14 @@ export const WorkSpacesSlice = createSlice({
             else
                 state.SortField = action.payload.SortField;
 
-            const sorted = _.orderBy(state.WorkSpaces, [state.SortField], [state.Ascending ? "asc" : "desc"])
-            state.WorkSpaces = sorted as TrenDAP.iWorkSpace[];
+            const sorted = _.orderBy(state.Data, [state.SortField], [state.Ascending ? "asc" : "desc"])
+            state.Data = sorted;
         },
         OpenWorkSpace: (state, action) => {
-            state.WorkSpaces.find(ws => ws.ID == action.payload).Open = true;
+            state.Data.find(ws => ws.ID == action.payload).Open = true;
         },
         CloseWorkSpace: (state, action) => {
-            state.WorkSpaces.find(ws => ws.ID == action.payload).Open = false;
+            state.Data.find(ws => ws.ID == action.payload).Open = false;
         }
 
 
@@ -80,7 +79,7 @@ export const WorkSpacesSlice = createSlice({
             state.Error = null;
 
             const sorted = _.orderBy(action.payload, [state.SortField], [state.Ascending ? "asc" : "desc"])
-            state.WorkSpaces = sorted as TrenDAP.iWorkSpace[];
+            state.Data = sorted;
 
         });
         builder.addCase(FetchWorkSpaces.pending, (state, action) => {
@@ -136,14 +135,14 @@ export const WorkSpacesSlice = createSlice({
 // #region [ Selectors ]
 export const { Sort, OpenWorkSpace, CloseWorkSpace } = WorkSpacesSlice.actions;
 export default WorkSpacesSlice.reducer; 
-export const SelectWorkSpaces = (state: AppStore) => state.WorkSpaces.WorkSpaces as TrenDAP.iWorkSpace[];
-export const SelectWorkSpaceByID = (state: AppStore, id: number) => state.WorkSpaces.WorkSpaces.find(ds => ds.ID === id) as TrenDAP.iWorkSpace;
-export const SelectNewWorkSpace = (state: AppStore) => ({ ID: 0, Name: '', User: '', JSON: '' });
-export const SelectWorkSpacesStatus = (state: AppStore) => state.WorkSpaces.Status as TrenDAP.Status;
-export const SelectWorkSpacesForUser = (state: AppStore, user: string) => state.WorkSpaces.WorkSpaces.filter(ws => ws.User === user) as TrenDAP.iWorkSpace[];
-export const SelectWorkSpacesAllPublicNotUser = (state: AppStore, user: string) => state.WorkSpaces.WorkSpaces.filter(ws => ws.Public && ws.User !== user) as TrenDAP.iWorkSpace[];
-export const SelectWorkSpacesSortField = (state: AppStore) => state.WorkSpaces.SortField as keyof TrenDAP.iWorkSpace;
-export const SelectWorkSpacesAscending = (state: AppStore) => state.WorkSpaces.Ascending as boolean;
+export const SelectWorkSpaces = (state: Redux.StoreState) => state.WorkSpaces.Data;
+export const SelectWorkSpaceByID = (state: Redux.StoreState, id: number) => state.WorkSpaces.Data.find(ds => ds.ID === id);
+export const SelectNewWorkSpace = () => ({ ID: 0, Name: '', User: '', JSON: '' });
+export const SelectWorkSpacesStatus = (state: Redux.StoreState) => state.WorkSpaces.Status;
+export const SelectWorkSpacesForUser = (state: Redux.StoreState, user: string) => state.WorkSpaces.Data.filter(ws => ws.User === user);
+export const SelectWorkSpacesAllPublicNotUser = (state: Redux.StoreState, user: string) => state.WorkSpaces.Data.filter(ws => ws.Public && ws.User !== user);
+export const SelectWorkSpacesSortField = (state: Redux.StoreState) => state.WorkSpaces.SortField;
+export const SelectWorkSpacesAscending = (state: Redux.StoreState) => state.WorkSpaces.Ascending;
 
 // #endregion
 

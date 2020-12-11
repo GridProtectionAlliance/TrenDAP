@@ -41,14 +41,33 @@ declare global {
 
 }
 
+export namespace Redux {
+    interface StoreState {
+        DataSets: State<TrenDAP.iDataSet>,
+        DataSources: State<TrenDAP.iDataSource>,
+        DataSourceTypes: State<TrenDAP.iDataSourceType>,
+        WorkSpaces: State<TrenDAP.iWorkSpace>
+    }
+    interface State<T> {
+        Status: TrenDAP.Status,
+        Data: T[],
+        Error: null | string,
+        SortField: keyof T,
+        Ascending: boolean,
+        Record?: T
+    }
+
+
+}
+
 export namespace TrenDAP{
     type Status = 'loading' | 'idle' | 'error' | 'changed' |'unitiated';
     type DataSourceType = 'OpenXDA';
     interface iDataSourceType { ID: number, Name: DataSourceType }
-    interface iDataSource { ID: number, Name: string, DataSourceTypeID: number, URL: string, Credential: string, Password: string, Public: boolean }    
+    interface iDataSource { ID: number, Name: string, DataSourceTypeID: number, URL: string, Credential: string, Password: string, Public: boolean, User: string }    
     interface iWorkSpace { ID: number, Name: string, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Open: boolean }    
     interface iDataSet { ID: number, Name: string, From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, JSON:string, JSONString: string , Public: boolean, UpdatedOn: string }    
     interface iDataSetSource { ID: number, Name: string, DataSourceTypeID: number, JSON: object}
-    interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], Types:number[] }
+    interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], Types:number[], Aggregate : '' | '1h' | '1d' | '1w' }
 
 }
