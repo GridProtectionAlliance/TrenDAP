@@ -23,36 +23,35 @@
 
 
 import * as React from 'react';
-import { TrenDAP } from '../../global';
+import { TrenDAP, Redux } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
 import Table from '@gpa-gemstone/react-table/lib/index'
-import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending } from './DataSetsSlice';
+import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, FetchDataSetData } from './DataSetsSlice';
 import EditDataSet from './EditDataSet';
-import { TrashCan, HeavyCheckMark, Pencil } from './../../Constants'
+import { TrashCan, HeavyCheckMark, Pencil, Warning, CrossMark, Spinner } from './../../Constants'
 import { useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
+import moment from 'moment';
+import DataSetData from './DataSetData';
 
 const DataSets: React.FunctionComponent = (props: {}) => {
-    //const history = useHistory();
-    //const context = React.useContext();
-    const dispatch = useDispatch();
-    const DataSets = useSelector(state => SelectDataSetsForUser(state, userName));
-    const publicDataSets = useSelector(state => SelectDataSetsAllPublicNotUser(state, userName));
 
-    const wsStatus = useSelector(SelectDataSetsStatus);
+    const dispatch = useDispatch();
+    const DataSets = useSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
+    const publicDataSets = useSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
+
+    const dsStatus = useSelector(SelectDataSetsStatus);
 
     const sortField = useSelector(SelectDataSetsSortField);
     const ascending = useSelector(SelectDataSetsAscending);
 
     React.useEffect(() => {
-        if (wsStatus != 'unitiated' && wsStatus != 'changed') return;
-        let promise = dispatch(FetchDataSets());
+        if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
+        dispatch(FetchDataSets());
 
         return function () {
-            if (wsStatus === 'loading')
-                promise.abort();
         }
-    }, [dispatch, wsStatus]);
+    }, [dispatch, dsStatus]);
 
     return (
         <div className="row" style={{ margin: 10 }}>
@@ -64,8 +63,9 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                         cols={[
                             { key: 'Name', label: 'Name' },
                             { key: 'Public', label: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
-                            { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item[key]).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
-                            { key: null, label: '', headerStyle: { width: 125 }, rowStyle: { width: 125 }, content: (item, key, style) => <span><Link to={`${homePath}EditDataSet/${item.ID}`} className='btn'>{Pencil}</Link><a className="btn" onClick={() => dispatch(RemoveDataSet(item)) }>{TrashCan}</a></span>}
+                            { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
+                                {
+                                    key: null, label: '', headerStyle: { width: 200 }, rowStyle: { width: 200 }, content: (item, key, style) => <span><DataSetData {...item}/><Link to={`${homePath}EditDataSet/${item.ID}`} className='btn'>{Pencil}</Link><a className="btn" onClick={() => dispatch(RemoveDataSet(item)) }>{TrashCan}</a></span>}
 
                         ]}
                         tableClass="table table-hover"
@@ -88,7 +88,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                         <Table<TrenDAP.iDataSet>
                             cols={[
                                 { key: 'Name', label: 'Name' },
-                                { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item[key]).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
+                                { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
 
                                 //{ key: null, label: '', content: (item, key, style) => <span><EditDataSet DataSet={item} /><button className="btn" onClick={() => dispatch(RemoveDataSet(item))}>{TrashCan}</button></span> }
 
@@ -112,5 +112,6 @@ const DataSets: React.FunctionComponent = (props: {}) => {
 
     );
 }
+
 
 export default DataSets;

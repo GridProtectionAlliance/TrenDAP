@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Profile.tsx - Gbtc
+//  Widgit.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -26,6 +26,6 @@ import * as React from 'react';
 import { TrenDAP } from '../../global';
 import styles from '../../../Styles/app.scss';
 
-export default function Profile(props: {}) {
-    
+export default function Profile(props: TrenDAP.iWidget) {
+    return <div>Profile</div>;
 }

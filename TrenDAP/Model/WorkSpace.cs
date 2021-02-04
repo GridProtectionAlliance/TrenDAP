@@ -45,12 +45,15 @@ namespace TrenDAP.Model
         [UseEscapedName]
         public string User { get; set; }
         public byte[] JSON { get; set; }
+        public int DataSetID { get; set; }
 
         [NonRecordField]
         public string JSONString => Encoding.ASCII.GetString(this.JSON);
         [UseEscapedName]
         public bool Public { get; set; }
         public DateTime UpdatedOn { get; set; }
+        [UseEscapedName]
+        public bool Open { get; set; }
     }
 
 
@@ -66,7 +69,8 @@ namespace TrenDAP.Model
         public override ActionResult Patch([FromBody] JObject record)
         {
             record["JSON"] = Encoding.ASCII.GetBytes(record["JSONString"].ToString());
-            return base.Post(record);
+
+            return base.Patch(record);
         }
 
 

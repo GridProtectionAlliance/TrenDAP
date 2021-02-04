@@ -35,8 +35,8 @@ const EditDataSource: React.FunctionComponent<{ DataSource: TrenDAP.iDataSource}
 
     return (
         <>
-            <button className="btn" onClick={() => setShow(true)}>{Pencil}</button>
-        <div className="modal" style={{display: show ? 'block' : null}}>
+        <button className="btn" onClick={() => setShow(true)}>{Pencil}</button>
+        <div className="modal" style={{display: show ? 'block' : null, backgroundColor: 'rgba(0,0,0,0.4)' }}>
             <div className="modal-dialog">
                 <div className="modal-content">
 

@@ -82,7 +82,9 @@ CREATE TABLE WorkSpace
     [User] VARCHAR(MAX) NOT NULL,
     [Public] bit NULL DEFAULT 0,
     UpdatedOn DATETIME NULL DEFAULT GETUTCDATE(),
-    [JSON] varbinary(max) NULL
+    [JSON] varbinary(max) NULL,
+    [Open] bit NOT NULL DEFAULT 0,
+    [DataSetID] INT NOT NULL REFERENCES DataSet(ID)
 )
 GO
 

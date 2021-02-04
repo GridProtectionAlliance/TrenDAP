@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP } from '../../global';
+import { TrenDAP, Redux } from '../../global';
 import { Input, CheckBox, EnumCheckBoxes, DateRangePicker, Select, ArrayCheckBoxes, ArrayMultiSelect } from '@gpa-gemstone/react-forms';
 import { Plus } from '../../Constants';
 import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from '../DataSources/DataSourcesSlice';
@@ -40,10 +40,8 @@ const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (
     React.useEffect(() => {
         if (dstStatus != 'unitiated') return;
 
-        let promise = dispatch(FetchDataSourceTypes());
+        dispatch(FetchDataSourceTypes());
         return function () {
-            if (dstStatus === 'loading')
-                promise.abort();
         }
     }, [dispatch, dstStatus]);
 
@@ -85,8 +83,8 @@ const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (
 
 const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
     const dispatch = useDispatch();
-    const dataSources = useSelector(state => SelectDataSourcesForUser(state, userName)) as TrenDAP.iDataSource[];
-    const publicDataSources = useSelector(state => SelectDataSourcesAllPublicNotUser(state, userName)) as TrenDAP.iDataSource[];
+    const dataSources = useSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as TrenDAP.iDataSource[];
+    const publicDataSources = useSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as TrenDAP.iDataSource[];
     const dsStatus = useSelector(SelectDataSourcesStatus);
     const dataSourceTypes = useSelector(SelectDataSourceTypes) as TrenDAP.iDataSourceType[];
     const dstStatus = useSelector(SelectDataSourceTypesStatus);
@@ -94,21 +92,17 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
 
     React.useEffect(() => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
-        let promise = dispatch(FetchDataSources());
+        dispatch(FetchDataSources());
 
         return function () {
-            if (dsStatus === 'loading')
-                promise.abort();
         }
     }, [dispatch, dsStatus]);
 
     React.useEffect(() => {
         if (dstStatus != 'unitiated') return;
 
-        let promise = dispatch(FetchDataSourceTypes());
+        dispatch(FetchDataSourceTypes());
         return function () {
-            if (dstStatus === 'loading')
-                promise.abort();
         }
     }, [dispatch, dstStatus]);
 
@@ -162,11 +156,11 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
 
 const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: {DataSource: TrenDAP.iDataSource, Data: TrenDAP.iXDADataSet}, Index: number, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
     const dispatch = useDispatch();
-    const phases = useSelector(state => SelectOpenXDA(state, props.Data.DataSource.ID, 'Phase'));
-    const meters = useSelector(state => SelectOpenXDA(state, props.Data.DataSource.ID, 'Meter'));
-    const assets = useSelector(state => SelectOpenXDA(state, props.Data.DataSource.ID, 'Asset'));
-    const channelGroups = useSelector(state => SelectOpenXDA(state, props.Data.DataSource.ID, 'ChannelGroup'));
-    const channelTypes = useSelector(state => SelectOpenXDA(state, props.Data.DataSource.ID, 'ChannelGroupType'));
+    const phases = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'Phase'));
+    const meters = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'Meter'));
+    const assets = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'Asset'));
+    const channelGroups = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'ChannelGroup'));
+    const channelTypes = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'ChannelGroupType'));
 
     function UpdateDS(...params: { field: keyof TrenDAP.iXDADataSet, value: any }[] ) {
         let json = JSON.parse(props.Record.JSONString);
@@ -178,51 +172,41 @@ const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: 
 
     React.useEffect(() => {
         if (phases != undefined && phases?.Status != 'unitiated' && phases?.Status != 'changed') return;
-        let promise = dispatch(FetchOpenXDA({dataSourceID: props.Data.DataSource.ID, table: 'Phase'}));
+        dispatch(FetchOpenXDA({dataSourceID: props.Data.DataSource.ID, table: 'Phase'}));
 
         return function () {
-            if (phases?.Status  === 'loading')
-                promise.abort();
         }
     }, [dispatch, phases?.Status ]);
 
     React.useEffect(() => {
         if (meters != undefined && meters?.Status != 'unitiated' && meters?.Status != 'changed') return;
-        let promise = dispatch(FetchOpenXDA({ dataSourceID: props.Data.DataSource.ID, table: 'Meter' }));
+        dispatch(FetchOpenXDA({ dataSourceID: props.Data.DataSource.ID, table: 'Meter' }));
 
         return function () {
-            if (meters?.Status === 'loading')
-                promise.abort();
         }
     }, [dispatch, meters?.Status]);
 
     React.useEffect(() => {
         if (assets != undefined && assets?.Status != 'unitiated' && assets?.Status != 'changed') return;
-        let promise = dispatch(FetchOpenXDA({ dataSourceID: props.Data.DataSource.ID, table: 'Asset' }));
+        dispatch(FetchOpenXDA({ dataSourceID: props.Data.DataSource.ID, table: 'Asset' }));
 
         return function () {
-            if (assets?.Status === 'loading')
-                promise.abort();
         }
     }, [dispatch, assets?.Status]);
 
     React.useEffect(() => {
         if (channelGroups != undefined && channelGroups?.Status != 'unitiated' && channelGroups?.Status != 'changed') return;
-        let promise = dispatch(FetchOpenXDA({ dataSourceID: props.Data.DataSource.ID, table: 'ChannelGroup' }));
+        dispatch(FetchOpenXDA({ dataSourceID: props.Data.DataSource.ID, table: 'ChannelGroup' }));
 
         return function () {
-            if (channelGroups?.Status === 'loading')
-                promise.abort();
         }
     }, [dispatch, channelGroups?.Status]);
 
     React.useEffect(() => {
         if (channelTypes != undefined && channelTypes?.Status != 'unitiated' && channelTypes?.Status != 'changed') return;
-        let promise = dispatch(FetchOpenXDA({ dataSourceID: props.Data.DataSource.ID, table: 'ChannelGroupType' }));
+        dispatch(FetchOpenXDA({ dataSourceID: props.Data.DataSource.ID, table: 'ChannelGroupType' }));
 
         return function () {
-            if (channelTypes?.Status === 'loading')
-                promise.abort();
         }
     }, [dispatch, channelTypes?.Status]);
 

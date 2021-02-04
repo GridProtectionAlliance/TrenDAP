@@ -29,36 +29,43 @@ import WorkSpace from './WorkSpace';
 import { Pencil } from './../../Constants'
 const EditWorkSpace: React.FunctionComponent<{ WorkSpace: TrenDAP.iWorkSpace}> = (props) => {
     const dispatch = useDispatch();
-    const [ws, setWorkSpace] = React.useState<TrenDAP.iWorkSpace>(props.WorkSpace);
+    const [ws, setWorkSpace] = React.useState<TrenDAP.iWorkSpace>({ ...props.WorkSpace });
     const [show, setShow] = React.useState<boolean>(false);
 
+    function Cancel() {
+        setWorkSpace(props.WorkSpace);
+        setShow(false);
+    }
     return (
         <>
-        <button className="btn" onClick={() => setShow(true)}>{Pencil}</button>
-        <div className="modal" style={{display: show ? 'block' : null}}>
-            <div className="modal-dialog">
-                <div className="modal-content">
+            <button className="btn" onClick={(evt) => {
+                evt.preventDefault();
+                setShow(true)
+            }}>{Pencil}</button>
+            <div className="modal" style={{display: show ? 'block' : null, backgroundColor: 'rgba(0,0,0,0.4)'}}>
+                <div className="modal-dialog">
+                    <div className="modal-content">
 
-                  <div className="modal-header">
-                        <h4 className="modal-title">DataSource</h4>
-                        <button type="button" className="close" onClick={() => setShow(false)}>&times;</button>
+                      <div className="modal-header">
+                            <h4 className="modal-title">DataSource</h4>
+                            <button type="button" className="close" onClick={Cancel}>&times;</button>
+                        </div>
+
+                      <div className="modal-body">
+                        <WorkSpace Record={ws} SetWorkSpace={setWorkSpace } />
+                      </div>
+
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-primary" onClick={() => {
+                                    dispatch(UpdateWorkSpace(ws));
+                                setShow(false);
+                            }}>Save</button>
+
+                            <button type="button" className="btn btn-danger" onClick={Cancel}>Close</button>
+                        </div>
+
                     </div>
-
-                  <div className="modal-body">
-                            <WorkSpace Record={ws} SetWorkSpace={setWorkSpace } />
-                  </div>
-
-                    <div className="modal-footer">
-                        <button type="button" className="btn btn-primary" onClick={() => {
-                                dispatch(UpdateWorkSpace(ws));
-                            setShow(false);
-                        }}>Save</button>
-
-                        <button type="button" className="btn btn-danger" onClick={() => setShow(false)}>Close</button>
-                    </div>
-
                 </div>
-            </div>
             </div>
         </>
     );

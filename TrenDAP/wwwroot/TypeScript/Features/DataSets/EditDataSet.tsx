@@ -37,10 +37,8 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
 
     React.useEffect(() => {
         if (wsStatus === 'unitiated' || wsStatus === 'changed') {
-            let promise = dispatch(FetchDataSets());
+            dispatch(FetchDataSets());
             return function () {
-                if (wsStatus === 'loading')
-                    promise.abort();
             }
         }
         

@@ -23,19 +23,21 @@
 
 
 import * as React from 'react';
-import { TrenDAP } from '../../global';
+import { TrenDAP, Redux } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
 import Table from '@gpa-gemstone/react-table/lib/index'
 import { Sort, FetchWorkSpaces, SelectWorkSpacesStatus, RemoveWorkSpace, SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, SelectWorkSpacesSortField, SelectWorkSpacesAscending } from './WorkSpacesSlice';
 import EditWorkSpace from './EditWorkSpace';
 import { TrashCan, HeavyCheckMark } from './../../Constants'
 import { Link, useParams } from 'react-router-dom';
+import moment from 'moment';
+import { SelectDataSets } from '../DataSets/DataSetsSlice';
 
 const WorkSpaces: React.FunctionComponent = (props: {}) => {
     const dispatch = useDispatch();
-    const workSpaces = useSelector(state => SelectWorkSpacesForUser(state, userName));
-    const publicWorkSpaces = useSelector(state => SelectWorkSpacesAllPublicNotUser(state, userName));
-
+    const workSpaces = useSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
+    const publicWorkSpaces = useSelector((state: Redux.StoreState) => SelectWorkSpacesAllPublicNotUser(state, userName));
+    const dataSets = useSelector(SelectDataSets);
     const wsStatus = useSelector(SelectWorkSpacesStatus);
 
     const sortField = useSelector(SelectWorkSpacesSortField);
@@ -43,11 +45,9 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
 
     React.useEffect(() => {
         if (wsStatus != 'unitiated' && wsStatus != 'changed') return;
-        let promise = dispatch(FetchWorkSpaces());
+        dispatch(FetchWorkSpaces());
 
         return function () {
-            if (wsStatus === 'loading')
-                promise.abort();
         }
     }, [dispatch, wsStatus]);
 
@@ -60,8 +60,9 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                         <Table<TrenDAP.iWorkSpace>
                             cols={[
                                 { key: 'Name', label: 'Name' },
+                                { key: 'DataSetID', label: 'Data Set', content: (item, key, style) => dataSets.find(ds => ds.ID === item.ID)?.Name },
                                 { key: 'Public', label: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
-                                { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item[key]).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
+                                { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
                                     {
                                         key: null, label: '', content: (item, key, style) =>
                                             <span><EditWorkSpace WorkSpace={item} /><button className="btn" onClick={(evt) => {
@@ -77,7 +78,7 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             sortField={sortField}
                             onClick={(data, evt) => {
-                                if (!evt.target.classList.contains('btn'))
+                                if (evt.target.tagName.toLowerCase() === 'td')
                                     window.location.href = `${homePath}WorkSpaceEditor/${data.row.ID}`
                             }}
                             onSort={data => dispatch(Sort({ SortField: data.col, Ascending: data.ascending }))}
@@ -94,7 +95,8 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                         <Table<TrenDAP.iWorkSpace>
                             cols={[
                                 { key: 'Name', label: 'Name' },
-                                { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item[key]).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
+                                { key: 'DataSetID', label: 'Data Set', content: (item, key, style) => dataSets.find(ds => ds.ID === item.ID)?.Name },
+                                { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
 
                                 //{ key: null, label: '', content: (item, key, style) => <span><EditWorkSpace WorkSpace={item} /><button className="btn" onClick={() => dispatch(RemoveWorkSpace(item))}>{TrashCan}</button></span> }
 

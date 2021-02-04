@@ -30,7 +30,7 @@ import CirclePlusSVG from '../../CirclePlusSVG';
 
 const AddNewWorkSpace: React.FunctionComponent<{}> = (props) => {
     const dispatch = useDispatch();
-    const [ws, setWorkSpace] = React.useState<TrenDAP.iWorkSpace>(useSelector(SelectNewWorkSpace));
+    const [ws, setWorkSpace] = React.useState<TrenDAP.iWorkSpace>(useSelector(SelectNewWorkSpace) as TrenDAP.iWorkSpace);
     const [show, setShow] = React.useState<boolean>(false);
 
     return (
@@ -38,7 +38,7 @@ const AddNewWorkSpace: React.FunctionComponent<{}> = (props) => {
         <button style={{ backgroundColor: '#F8F9FA', border: 'none', position: 'absolute', right: 10, top: 15 }} className="align-items-center text-muted" onClick={() => setShow(true)}>
             {CirclePlusSVG()}
         </button>
-        <div className="modal" style={{display: show ? 'block' : null}}>
+        <div className="modal" style={{display: show ? 'block' : null, backgroundColor: 'rgba(0,0,0,0.4)' }}>
             <div className="modal-dialog">
                 <div className="modal-content">
 

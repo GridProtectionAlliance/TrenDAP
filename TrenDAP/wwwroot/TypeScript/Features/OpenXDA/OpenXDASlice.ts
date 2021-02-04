@@ -24,6 +24,7 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { TrenDAP } from '../../global';
+import {ajax, JQuery } from 'jquery';
 
 export const FetchOpenXDA = createAsyncThunk('OpenXDA/FetchOpenXDA', async (ds: { dataSourceID: number, table: string },{ dispatch }) => {
     return await GetOpenXDA(ds.dataSourceID, ds.table)
@@ -97,7 +98,7 @@ export const SelectOpenXDA = (state, dsid: number, table: string) => state.OpenX
 export const SelectOpenXDAStatus = (state, dsid: number, table: string) => state.OpenXDA[dsid][table]?.Status as TrenDAP.Status
 
 function GetOpenXDA(dataSourceID: number, table: string): JQuery.jqXHR<string> {
-    return $.ajax({
+    return ajax({
         type: "GET",
         url: `${homePath}api/OpenXDA/${dataSourceID}/${table}`,
         contentType: "application/json; charset=utf-8",

@@ -54,14 +54,10 @@
         var homePath = '@Html.Raw(Url.Content("~/"))';
         var userName = '@User.Identity.Name.Replace("\\", "\\\\")'
     </script>
-    <script src="@Url.Content("~/@Gemstone/Scripts/jquery.js")"></script>
     @if (DetectIE(Context.Request.Headers["User-Agent"].ToString())) {
         <script src="@Url.Content("~/@Gemstone/Scripts/default.polyfill.min.js")"></script>
     }
 
-
-    <script src="@Url.Content("~/@Gemstone/Scripts/moment.js")"></script>
-    <script src="@Url.Content("~/@Gemstone/Scripts/gsf.web.client.js")"></script>
     
     @if (debug)
     {
@@ -75,8 +71,7 @@
     }
 
     <script src="@Url.Content("~/@Gemstone/Scripts/react-router-dom.min.js")"></script>
-    <script src="@Url.Content("~/@Gemstone/Scripts/d3.v4.min.js")"></script>
-
+    
     <script type="text/javascript" src="~/js/TrenDAP.js"></script>
 </body>
 </html>

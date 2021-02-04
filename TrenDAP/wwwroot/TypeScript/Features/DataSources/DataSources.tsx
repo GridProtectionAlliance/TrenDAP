@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP } from '../../global';
+import { TrenDAP, Redux } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
 import { Sort, SelectDataSourcesForUser, FetchDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSourcesAllPublicNotUser, SelectDataSourcesSortField, SelectDataSourcesAscending } from './DataSourcesSlice'
 import Table from '@gpa-gemstone/react-table/lib/index'
@@ -32,8 +32,8 @@ import { TrashCan, HeavyCheckMark } from './../../Constants'
 
 const DataSources: React.FunctionComponent = (props: {}) => {
     const dispatch = useDispatch();
-    const dataSources = useSelector(state => SelectDataSourcesForUser(state, userName));
-    const publicDataSources = useSelector(state => SelectDataSourcesAllPublicNotUser(state,userName));
+    const dataSources = useSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName));
+    const publicDataSources = useSelector((state: Redux.StoreState)  => SelectDataSourcesAllPublicNotUser(state,userName));
 
     const dsStatus = useSelector(SelectDataSourcesStatus);
     const dataSourceTypes = useSelector(SelectDataSourceTypes);
@@ -44,21 +44,17 @@ const DataSources: React.FunctionComponent = (props: {}) => {
 
     React.useEffect(() => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
-        let promise = dispatch(FetchDataSources());
+        dispatch(FetchDataSources());
 
         return function () {
-            if (dsStatus === 'loading')
-                promise.abort();
         }
     }, [dispatch, dsStatus]);
 
     React.useEffect(() => {
         if (dstStatus != 'unitiated') return;
 
-        let promise = dispatch(FetchDataSourceTypes());
+        dispatch(FetchDataSourceTypes());
         return function () {
-            if(dstStatus === 'loading')
-                promise.abort();
         }
     }, [dispatch, dstStatus]);
 

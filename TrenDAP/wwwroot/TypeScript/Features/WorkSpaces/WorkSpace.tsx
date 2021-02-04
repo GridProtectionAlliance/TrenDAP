@@ -22,11 +22,27 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP } from '../../global';
-import { Input, CheckBox } from '@gpa-gemstone/react-forms';
+import { TrenDAP, Redux } from '../../global';
+import { Input, CheckBox, Select } from '@gpa-gemstone/react-forms';
+import { useDispatch, useSelector } from 'react-redux';
+import { SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsStatus, FetchDataSets } from '../DataSets/DataSetsSlice';
 
 
 const WorkSpace: React.FunctionComponent<{ Record: TrenDAP.iWorkSpace, SetWorkSpace: (ws: TrenDAP.iWorkSpace) => void }> = (props) => {
+    const dispatch = useDispatch();
+    const usersDataSets = useSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
+    const publicDataSets = useSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
+    const dsStatus = useSelector(SelectDataSetsStatus);
+
+    React.useEffect(() => {
+        if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
+        dispatch(FetchDataSets());
+
+        return function () {
+        }
+    }, [dispatch, dsStatus]);
+
+
     function valid(field: keyof (TrenDAP.iWorkSpace)): boolean {
         if (field == 'Name')
             return props.Record.Name != null && props.Record.Name.length > 0 && props.Record.Name.length <= 200;
@@ -37,6 +53,7 @@ const WorkSpace: React.FunctionComponent<{ Record: TrenDAP.iWorkSpace, SetWorkSp
     return (
            <form>
                 <Input<TrenDAP.iWorkSpace> Record={props.Record} Field="Name" Setter={(record) => props.SetWorkSpace(record)} Valid={valid} />
+                <Select<TrenDAP.iWorkSpace> Record={props.Record} Field="DataSetID" Label="Data Set" Options={[...usersDataSets, ...publicDataSets].map(ds => ({ Label: ds.Name, Value: ds.ID.toString() }))} Setter={(record) => props.SetWorkSpace(record) }/>
                 <CheckBox<TrenDAP.iWorkSpace> Record={props.Record} Field="Public" Setter={(record) => props.SetWorkSpace(record)}/>
            </form>
     );

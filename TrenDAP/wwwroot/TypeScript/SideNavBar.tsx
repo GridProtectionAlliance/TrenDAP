@@ -31,22 +31,21 @@ import { Link, useLocation, NavLink } from 'react-router-dom';
 import AddNewDataSet from './Features/DataSets/AddNewDataSet';
 import AddNewDataSource from './Features/DataSources/AddNewDataSource';
 import AddNewWorkSpace from './Features/WorkSpaces/AddNewWorkSpace';
-import { SelectWorkSpacesForUser, SelectWorkSpacesStatus, FetchWorkSpaces, OpenWorkSpace } from './Features/WorkSpaces/WorkSpacesSlice';
+import { SelectWorkSpacesForUser, SelectWorkSpacesStatus, FetchWorkSpaces, OpenCloseWorkSpace } from './Features/WorkSpaces/WorkSpacesSlice';
 import CirclePlusSVG from './CirclePlusSVG';
+import { Redux } from './global';
 
 const SideNavBar: React.FunctionComponent = (props: {}) => {
     const location = useLocation();
     const dispatch = useDispatch();
-    const workSpaces = useSelector(state => SelectWorkSpacesForUser(state, userName));
+    const workSpaces = useSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
     const wsStatus = useSelector(SelectWorkSpacesStatus);
 
     React.useEffect(() => {
         if (wsStatus != 'unitiated' && wsStatus != 'changed') return;
-        let promise = dispatch(FetchWorkSpaces());
+        dispatch(FetchWorkSpaces());
 
         return function () {
-            if (wsStatus === 'loading')
-                promise.abort();
         }
     }, [dispatch, wsStatus]);
 
@@ -98,7 +97,7 @@ const SideNavBar: React.FunctionComponent = (props: {}) => {
                 <ul className="nav flex-column mb-2">
                     {workSpaces.map(ws => <a className="nav-link" href="#" key={ws.ID} onClick={(evt) => {
                         if (location.pathname.indexOf('WorkSpaceEditor') >= 0)
-                            dispatch(OpenWorkSpace(ws.ID));
+                            dispatch(OpenCloseWorkSpace({ workSpace: ws, open: true }));
                         else
                             window.location.href = `${homePath}WorkSpaceEditor/${ws.ID}`
                     }}>

@@ -24,11 +24,18 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { TrenDAP, Redux } from '../../global';
 import _, { result } from 'lodash';
-
+import moment from 'moment';
+import TrenDAPDB, { DataSetTableRow } from './TrenDAPDB';
+import { ajax,JQuery } from 'jquery';
 // #region [ Thunks ]
 export const FetchDataSets = createAsyncThunk('DataSets/FetchDataSets', async (_, { dispatch }) => {
     return await GetDataSets();
 });
+
+export const FetchDataSetData = createAsyncThunk('DataSets/FetchDataSetData', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
+    return await GetDataSetData(DataSet.ID);
+});
+
 
 export const AddDataSet = createAsyncThunk('DataSets/AddDataSet', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
     return await PostDataSet(DataSet);
@@ -41,6 +48,10 @@ export const RemoveDataSet = createAsyncThunk('DataSets/RemoveDataSet', async (D
 export const UpdateDataSet = createAsyncThunk('DataSets/UpdateDataSet', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
     return await PatchDataSet(DataSet);
 });
+export const UpdateDataSetDataFlag = createAsyncThunk('DataSets/UpdateDataSetDataFlag', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
+    return await GetDataSetDataLocal(DataSet);
+});
+
 // #endregion
 
 // #region [ Slice ]
@@ -69,7 +80,7 @@ export const DataSetsSlice = createSlice({
         },
         SetRecordByID: (state, action) => {
             const record = state.Data.find(ds => ds.ID === action.payload);
-            if(record !== undefined)
+            if (record !== undefined)
                 state.Record = record;
         },
         Update: (state, action) => {
@@ -82,9 +93,8 @@ export const DataSetsSlice = createSlice({
             state.Status = 'idle';
             state.Error = null;
             const results = action.payload.map(r => ({ ...r, From: moment(r.From).format('YYYY-MM-DD'), To: moment(r.To).format('YYYY-MM-DD') }));
-            const sorted = _.orderBy(results, [state.SortField], [state.Ascending ? "asc" : "desc"])
+            const sorted = _.orderBy(results, [state.SortField], [state.Ascending ? "asc" : "desc"]);
             state.Data = sorted;
-
         });
         builder.addCase(FetchDataSets.pending, (state, action) => {
             state.Status = 'loading';
@@ -94,6 +104,25 @@ export const DataSetsSlice = createSlice({
             state.Error = action.error.message;
 
         });
+
+        builder.addCase(FetchDataSetData.fulfilled, (state, action) => {
+            //state.Status = 'idle';
+            //state.Error = null;
+            state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'idle', Error: null } ;
+
+        });
+        builder.addCase(FetchDataSetData.pending, (state, action) => {
+            state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'loading', Error: null };
+
+            //state.Status = 'loading';
+        });
+        builder.addCase(FetchDataSetData.rejected, (state, action) => {
+            //state.Status = 'error';
+            //state.Error = action.error.message;
+            state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'error', Error: action.error.message };
+
+        });
+
         builder.addCase(AddDataSet.pending, (state, action) => {
             state.Status = 'loading';
         });
@@ -130,6 +159,20 @@ export const DataSetsSlice = createSlice({
             state.Status = 'changed';
             state.Error = null;
         });
+        builder.addCase(UpdateDataSetDataFlag.pending, (state, action) => {
+            state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'loading', Error: null };
+        });
+        builder.addCase(UpdateDataSetDataFlag.rejected, (state, action) => {
+            if(action.meta.arg.ID !== undefined)
+                state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'error', Error: action.error.message };
+        });
+        builder.addCase(UpdateDataSetDataFlag.fulfilled, (state, action) => {
+            if(action.payload !== undefined)
+                state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'idle', Error: null };
+            else
+                state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'unitiated', Error: null};
+
+        });
 
     }
 
@@ -141,6 +184,11 @@ export const { Sort, New, Update, SetRecordByID } = DataSetsSlice.actions;
 export default DataSetsSlice.reducer; 
 export const SelectDataSets = (state: Redux.StoreState) => state.DataSets.Data;
 export const SelectDataSetByID = (state: Redux.StoreState, id: number) => state.DataSets.Data.find(ds => ds.ID === id) as TrenDAP.iDataSet;
+export const SelectDataSetData = async (state: Redux.StoreState, id: number) => {
+    const db = new TrenDAPDB();
+    let result = await db.Read('DataSet', parseInt(id.toString()));
+    return result.Data as TrenDAP.iDataSetReturn[];
+};
 export const SelectRecord = (state: Redux.StoreState) => state.DataSets.Record;
 export const SelectNewDataSet = ()  => ({ ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1 }) as TrenDAP.iDataSet;
 export const SelectNewXDADataSet = ()  => ({ By: 'Meter', IDs: [], Phases: [], Groups: [], Types: [], Aggregate: '' }) as TrenDAP.iXDADataSet;
@@ -153,8 +201,14 @@ export const SelectDataSetsAscending = (state: Redux.StoreState)  => state.DataS
 // #endregion
 
 // #region [ Async Functions ]
+export async function GetDataSetDataFromIDB(id: number) {
+    const db = new TrenDAPDB();
+    let result = await db.Read('DataSet', parseInt(id.toString()));
+    return result.Data as TrenDAP.iDataSetReturn[];
+}
+
 function GetDataSets(): JQuery.jqXHR<TrenDAP.iDataSet[]> {
-    return $.ajax({
+    return ajax({
         type: "GET",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",
@@ -164,8 +218,25 @@ function GetDataSets(): JQuery.jqXHR<TrenDAP.iDataSet[]> {
     });
 }
 
+function GetDataSetData(id: number) {
+    return new Promise((resolve, reject) => {
+        ajax({
+            type: "GET",
+            url: `${homePath}api/DataSet/Query/${id}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: true,
+            async: true
+        }).done(data => resolve(data)).fail(err => reject(err));
+    }).then(data => {
+        const db = new TrenDAPDB();
+        db.Add("DataSet", id, data);
+        return id;
+    });
+}
+
 function PostDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> {
-    return $.ajax({
+    return ajax({
         type: "POST",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",
@@ -177,7 +248,7 @@ function PostDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> 
 }
 
 function DeleteDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> {
-    return $.ajax({
+    return ajax({
         type: "DELETE",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",
@@ -189,7 +260,7 @@ function DeleteDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet
 }
 
 function PatchDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> {
-    return $.ajax({
+    return ajax({
         type: "PATCH",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",
@@ -198,5 +269,10 @@ function PatchDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet>
         cache: false,
         async: true
     });
+}
+
+function GetDataSetDataLocal(DataSet: TrenDAP.iDataSet): Promise<{Created: number, ID: number}> {
+    const db = new TrenDAPDB();
+    return db.Read('DataSet', DataSet.ID).then(data => ({ID: data.ID, Created: data.Created}));
 }
 // #endregion

@@ -26,77 +26,270 @@
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { Input, CheckBox } from '@gpa-gemstone/react-forms';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import styles from '../../../Styles/app.scss';
-import { SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, OpenWorkSpace, CloseWorkSpace } from './WorkSpacesSlice';
+import { SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, OpenCloseWorkSpace, UpdateWorkSpace, SelectWorkSpacesStatus, FetchWorkSpaces } from './WorkSpacesSlice';
 import { style } from 'd3';
+import Histogram from '../Widgets/Histogram';
+import Profile from '../Widgets/Profile';
+import Stats from '../Widgets/Stats';
+import Table from '../Widgets/Table';
+import Text from '../Widgets/Text';
+import Trend from '../Widgets/Trend';
+import XvsY from '../Widgets/XvsY';
+import { Update, SelectDataSetByID, SelectDataSets, FetchDataSets, SelectDataSetsStatus, SelectDataSetData, GetDataSetDataFromIDB } from '../DataSets/DataSetsSlice';
+import DataSetData from '../DataSets/DataSetData';
+import { CreateGuid } from '@gpa-gemstone/helper-functions';
+import { CreateWidget } from '../../Implementations';
 
-interface Widget { Width: number, Type: any, JSON: any }
-interface Row { Height: number, Wigets: Widget[] }
-interface WorkSpaceJSON { Rows: Row[]}
+const NavMargin = 85;
+const NavWidth = 200;
+
 const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
+    const [data, setData] = React.useState<TrenDAP.iDataSetReturn[]>([]);
     const dispatch = useDispatch();
     const { id } = useParams();
     const [tab, setTab] = React.useState<number>(id);
     const usersWorkSpaces: TrenDAP.iWorkSpace[] = useSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
     const publicWorkSpaces: TrenDAP.iWorkSpace[] = useSelector((state: Redux.StoreState) => SelectWorkSpacesAllPublicNotUser(state, userName));
-    const [workSpaceJSON, setWorkSpaceJSON] = React.useState<WorkSpaceJSON>({ Rows: [] });
-    const [toggle, setToggle] = React.useState<boolean>(false);
-    React.useEffect(() => {
-        const ws = [...usersWorkSpaces, ...publicWorkSpaces].find(ws => ws.ID == tab);
-        if (!ws.Open)
-            dispatch(OpenWorkSpace(tab));
-        setWorkSpaceJSON(JSON.parse(ws.JSONString) as WorkSpaceJSON);
-    }, [tab]);
+    const dataSets = useSelector(SelectDataSets);
+    const wsStatus = useSelector(SelectWorkSpacesStatus);
+    const dsStatus = useSelector(SelectDataSetsStatus);
+    const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [] });
+    const [workSpace, setWorkSpace] = React.useState<TrenDAP.iWorkSpace>([...usersWorkSpaces, ...publicWorkSpaces].find(ws => ws.ID == tab));
+    const [dataSet, setDataSet] = React.useState<TrenDAP.iDataSet>({} as any);
 
+    React.useEffect(() => {
+        setWorkSpace([...usersWorkSpaces, ...publicWorkSpaces].find(ws => ws.ID == tab));
+    }, [dispatch, tab, usersWorkSpaces, publicWorkSpaces]);
+
+    React.useEffect(() => {
+        if (workSpace === undefined) return;
+        setDataSet(dataSets.find(ds => ds.ID === workSpace.DataSetID));
+        if (!workSpace?.Open)
+            dispatch(OpenCloseWorkSpace({ workSpace: workSpace, open: true }));
+
+        let json = JSON.parse(workSpace.JSONString) as TrenDAP.WorkSpaceJSON;
+        setWorkSpaceJSON(json);
+
+        GetDataSetDataFromIDB(workSpace.DataSetID).then(d => {
+            setData(d);
+        });
+
+    }, [workSpace, dataSets]);
+
+    React.useEffect(() => {
+        if (wsStatus != 'unitiated' && wsStatus != 'changed') return;
+            dispatch(FetchWorkSpaces());
+
+        return function () {
+        }
+    }, [dispatch, wsStatus]);
+
+    React.useEffect(() => {
+        if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
+        dispatch(FetchDataSets());
+
+        return function () {
+        }
+    }, [dispatch, dsStatus]);
+
+    function HandleAddObject(type: TrenDAP.WidgetType | 'Row') {
+        if (type === 'Row')
+            setWorkSpaceJSON({ ...workSpaceJSON, Rows: [...workSpaceJSON.Rows, { Height: 500, Widgets: [] }] });
+        else
+            setWorkSpaceJSON({
+                ...workSpaceJSON, Rows: [...workSpaceJSON.Rows, {
+                    Height: window.innerHeight - NavMargin,
+                    Widgets: [
+                        CreateWidget(type, window.innerHeight - NavMargin, window.innerWidth - NavWidth)
+                        //{
+                        //    Label: type,
+                        //    Height: window.innerHeight - NavMargin,
+                        //    Width: window.innerWidth - NavWidth,
+                        //    Type: type,
+                        //    JSON: InitialLoad(type),
+                        //    Update: () => null,
+                        //    Remove: () => {
+                        //        let json = { ...workSpaceJSON };
+                        //        json.Rows.splice(0, 1);
+                        //        dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json) }));
+
+                        //    }
+                        //}
+                    ]
+                }]
+            });
+
+
+    }
     return (
         <>
             <div className={styles.navbarbuttons}>
+                <span style={{ padding: '6px 12px', position: 'relative' }}>Data Set: <Link to={`${homePath}EditDataSet/${dataSet?.ID}`}>{dataSet?.Name}</Link><DataSetData {...dataSet} /></span>
                 <div className="btn-group">
-                    <button className="btn" title='Export current data...' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-plus" ></i></button>
+                    <button className="btn" title='Add Object' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-plus" ></i></button>
                     <div className="dropdown-menu" >
-                        <a className="dropdown-item" href="#">Row</a>
+                        <button className="dropdown-item" onClick={(e) => HandleAddObject('Row')}>Row</button>
                         <div className="dropdown-divider"></div>
-                        <a className="dropdown-item" href="#">Histogram</a>
-                        <a className="dropdown-item" href="#">Profile</a>
-                        <a className="dropdown-item" href="#">Stats</a>
-                        <a className="dropdown-item" href="#">Table</a>
-                        <a className="dropdown-item" href="#">Text</a>
-                        <a className="dropdown-item" href="#">Trend</a>
-                        <a className="dropdown-item" href="#">X vs Y</a>
+                        <button className="dropdown-item" onClick={() => HandleAddObject('Histogram')}>Histogram</button>
+                        {/*<button className="dropdown-item" onClick={() => HandleAddObject('Profile')}>Profile</button>*/}
+                        <button className="dropdown-item" onClick={() => HandleAddObject('Stats')}>Stats</button>
+                        <button className="dropdown-item" onClick={() => HandleAddObject('Table')}>Table</button>
+                        <button className="dropdown-item" onClick={() => HandleAddObject('Text')}>Text</button>
+                        <button className="dropdown-item" onClick={() => HandleAddObject('Trend')}>Trend</button>
+                        <button className="dropdown-item" onClick={() => HandleAddObject('XvsY')}>X vs Y</button>
                     </div>
                 </div>
 
                 <div className="btn-group">
-                    <button className="btn" title='Export current data...' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-download" ></i></button>
+                    <button className="btn" title='Export Current Data Set' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-download" ></i></button>
                     <div className="dropdown-menu" >
                         <a className="dropdown-item" href="#">PDF</a>
                         <a className="dropdown-item" href="#">CSV</a>
                     </div>
                 </div>
-                <button className="btn" title='Save current workspace...'><i className="fa fa-save"></i></button>
-                <button className="btn" title='Settings'><i className="fa fa-cog"></i></button>
+                <button className="btn" title='Save current workspace...' onClick={(e) => {
+                    e.preventDefault();
+                    dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(workSpaceJSON) }));
+                }}><i className="fa fa-save"></i></button>
+                <button className="btn" title='Workspace Settings'><i className="fa fa-cog"></i></button>
 
             </div>
             <ul className="nav nav-tabs">
                 {[...usersWorkSpaces, ...publicWorkSpaces].filter(ws => ws.Open).map(ws =>
                     <li key={ws.ID} className={"nav-item " + styles.workspacetab} >
                         <a className={"nav-link" + (tab == ws.ID ? ' active' : '')} href='#' onClick={(evt) => setTab(ws.ID)} >{ws.Name}</a>
-                        <span  onClick={() => dispatch(CloseWorkSpace(ws.ID))}>X</span>
+                        <span onClick={() => dispatch(OpenCloseWorkSpace({ workSpace: ws, open: false }))}>X</span>
                     </li>)}
             </ul>
-            <div className="tab-content" style={{ position: 'relative', width: '100%', height: 'calc(100% - 50px)' }}>
+            <div className={styles["tab-content"]}>
                 {
                     workSpaceJSON.Rows.map((row, index) =>
-                        <div className="card" key={index} style={{ height: row.Height }}>
-                            <div className="card-body"></div>
-                        </div>
+                        <Row key={index} WorkSpace={workSpace} Data={data} Widgets={row.Widgets} Height={row.Height}
+                            Update={(record) => {
+                                let json = { ...workSpaceJSON };
+                                json.Rows[index].Height = record.Height;
+                                json.Rows[index].Widgets = record.Widgets;
+                                json.Rows[index].WorkSpace = undefined;
+                                json.Rows[index].Data = undefined;
+                                dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json) }));
+                            }}
+                            RemoveRow={() => {
+                                let json = { ...workSpaceJSON };
+                                json.Rows.splice(index,1);
+                                dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json) }));
+                        }}/>   
                     )
                 }
             </div>
         </>
     );
+}
+
+const Row: React.FunctionComponent<TrenDAP.iRow> = (props) => {
+    const [toggle, setToggle] = React.useState<boolean>(false);
+    const [height, setHeight] = React.useState<number>(props.Height);
+
+    function HandleAddObject(type: TrenDAP.WidgetType) {
+        let row = { ...props, Update: undefined, WorkSpace: undefined, RemoveRow: undefined } as TrenDAP.iRow; 
+        row.Widgets.push( CreateWidget( type, 100, (window.innerWidth - NavWidth)/2))
+        props.Update(row);
+    }
+
+    return(   
+        <div className="card" style={{ height: props.Height, display: 'grid' }}>
+            <div className="card-body" style={{ padding: 0, zIndex: 0 }}>
+                <div className={`${styles.triangle}`}>
+                    <div className={`${styles["row-controls"]}`}>
+                        <div className="btn-group">
+                            <button className="btn" title='Add Object' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-plus" ></i></button>
+                            <div className="dropdown-menu" >
+                                <button className="dropdown-item" onClick={() => HandleAddObject('Histogram')}>Histogram</button>
+                                {/*<button className="dropdown-item" onClick={() => HandleAddObject('Profile')}>Profile</button>*/}
+                                <button className="dropdown-item" onClick={() => HandleAddObject('Stats')}>Stats</button>
+                                <button className="dropdown-item" onClick={() => HandleAddObject('Table')}>Table</button>
+                                <button className="dropdown-item" onClick={() => HandleAddObject('Text')}>Text</button>
+                                <button className="dropdown-item" onClick={() => HandleAddObject('Trend')}>Trend</button>
+                                <button className="dropdown-item" onClick={() => HandleAddObject('XvsY')}>X vs Y</button>
+                            </div>
+                        </div>
+                        <button className="btn" title='Remove Row' onClick={() => props.RemoveRow()}><i className="fa fa-minus"></i></button>
+                        <button className="btn" title='Row Settings' onClick={() => setToggle(true) }><i className="fa fa-cog"></i></button>
+                    </div>
+                </div>
+                <div className='grid-container' style={{ display: 'inline-flex' }}>
+                {props.Widgets.map((widget, index) => <Widget {...{
+                    ...widget,
+                    Height: props.Height,
+                    WorkSpace: props.WorkSpace,
+                    Data: props.Data,
+                    Update: (newRecord) => {
+                        let row = { ...props };
+                        let widget = { ...newRecord };
+                        widget.WorkSpace = undefined;
+                        widget.Data = undefined;
+                        row.Widgets[index] = widget;
+                        props.Update(row);
+                    },
+                    Remove: () => {
+                        let row = { ...props };
+                        row.Widgets.splice(index, 1);
+                        props.Update(row);
+                    }
+                }} key={index} />)}
+                </div>
+            </div>
+            <div className="modal" role="dialog" style={{ display: toggle ? 'block' : 'none', backgroundColor: 'rgba(0,0,0,0.4)' }}>
+                <div className="modal-dialog" role="document">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Row Settings</h5>
+                            <button type="button" className="close" onClick={() => setToggle(false)}>
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <label>Height</label>
+                            <div className="input-group">                           
+                                <input type="number" className="form-control" value={height != null ? height : 0} onChange={(evt) => setHeight(parseInt(evt.target.value))} />
+                                <div className="input-group-prepend">
+                                    <button className="btn btn-outline-secondary" type="button" onClick={(evt) => setHeight(window.innerHeight - NavMargin) }>Full Height</button>
+                                </div>
+                          </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-primary" onClick={() => {
+                                props.Update({...props, Height: height});
+                                setToggle(false);
+                            }}>Save changes</button>
+                            <button type="button" className="btn btn-secondary" onClick={() => setToggle(false)}>Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const Widget: React.FunctionComponent<TrenDAP.iWidget> = (props) => {
+    if (props.Type == 'Histogram')
+        return <Histogram {...props} />;
+    else if (props.Type == 'Profile')
+        return <Profile {...props} />;
+    else if (props.Type == 'Stats')
+        return <Stats {...props} />;
+    else if (props.Type == 'Table')
+        return <Table {...props} />;
+    else if (props.Type == 'Text')
+        return <Text {...props} />;
+    else if (props.Type == 'Trend')
+        return <Trend {...props} />;
+    else if (props.Type == 'XvsY')
+        return <XvsY {...props} />;
+    else
+        return <span>Not a widget.</span>;
 }
 
 export default WorkSpaceEditor;

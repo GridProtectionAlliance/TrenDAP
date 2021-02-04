@@ -24,7 +24,116 @@
 import * as React from 'react';
 import { TrenDAP } from '../../global';
 import styles from '../../../Styles/app.scss';
+import TableForm from '@gpa-gemstone/react-table';
+import { Table } from '../../Implementations';
+import Widget, { SeriesSelect, AdditionalInfo } from './Widget';
+import { Input } from '@gpa-gemstone/react-forms';
+import _ from 'lodash';
+import { Sort } from '../WorkSpaces/WorkSpacesSlice';
 
-export default function Table(props: {}) {
-    
+export default function TableJSX(props: TrenDAP.iWidget<TrenDAP.iTable>) {
+    const [toggle, setToggle] = React.useState<boolean>(false);
+    const [record, setRecord] = React.useState<Table>(new Table(props));
+    const [sortField, setSortField] = React.useState<keyof TrenDAP.iXDATrendDataPoint>('Timestamp');
+    const [ascending, setAscending] = React.useState<boolean>(true);
+    const [data, setData] = React.useState<TrenDAP.iXDATrendDataPoint[]>([]);
+    const [info, setInfo] = React.useState<TrenDAP.iXDAReturnData>({} as TrenDAP.iXDAReturnData);
+
+    React.useEffect(() => {
+        setRecord(new Table({ ...record, Data: props.Data }));
+    }, [props.Data]);
+
+    React.useEffect(() => {
+        const dataSource = record.Data.find(dd => dd.DataSource.ID === record.JSON.Series?.DataSourceID ?? 0)?.Data ?? [];
+        const datum = dataSource.find(dd => dd.ID === record.JSON.Series?.ID ?? 0);
+        if (datum == undefined) setInfo({} as TrenDAP.iXDAReturnData );
+        else setInfo(datum);
+    }, [record]);
+
+    React.useEffect(() => {
+
+        const ordered = _.orderBy(info?.Data ?? [], [sortField], [ascending ? 'asc' : 'desc'])
+        setData(ordered);
+    }, [ascending,sortField,info])
+
+
+    return (
+        <div className="card" style={{ width: props.Width, height: props.Height, maxHeight: props.Height, overflowY: 'auto' }}>
+            <div className="card-body" style={{ padding: 0 }}>
+                <div className={styles["widgit-label"]}>
+                    <span>{props.Label}
+                        <button className={"btn " + styles["widgit-controls"]} title='Widget Settings' onClick={() => setToggle(true)}><i className="fa fa-cog"></i></button>
+                    </span>
+                </div>
+                <TableForm<TrenDAP.iXDATrendDataPoint> tableClass='table' cols={[
+                    { key: 'Timestamp', label: 'Timestamp' },
+                    { key: 'Minimum', label: 'Min', content: (item,key, style) => item.Minimum.toFixed(record.JSON.Precision)},
+                    { key: 'Average', label: 'Avg', content: (item, key, style) => item.Average.toFixed(record.JSON.Precision)},
+                    { key: 'Maximum', label: 'Max', content: (item, key, style) => item.Maximum.toFixed(record.JSON.Precision)},
+                ]} data={data} sortField={sortField} onClick={(data) => { }} ascending={ascending} onSort={(data) => {
+                    if (data.col === sortField)
+                        setAscending(!ascending)
+                    else {
+                        setSortField(data.col)
+                        setAscending(true)
+                    }
+                }} />
+            </div>
+
+            <Widget {...props} Record={record} Toggle={toggle} SetToggle={(bool) => setToggle(bool)}>
+                <div className="col">
+                    <Input<TrenDAP.iWidget<TrenDAP.iStats>> Field='Label' Record={record} Type='text' Setter={(r) => setRecord(new Table(r))} Valid={(field) => true} />
+
+                    <label>Width</label>
+                    <div className="input-group">
+                        <input type="number" className="form-control" value={record?.Width} onChange={(evt) => setRecord(new Table({ ...record, Width: parseInt(evt.target.value) }))} />
+                        <div className="input-group-prepend">
+                            <button className="btn btn-outline-secondary" type="button" onClick={(evt) => setRecord(new Table({ ...record, Width: window.innerWidth - 200 }))}>Full Width</button>
+                        </div>
+                    </div>
+                </div>
+                <div className='col'>
+                    <h6>Series</h6>
+                    <hr />
+                    <div id="accordion" style={{ overflowY: 'auto', maxHeight: window.innerHeight - 300, height: window.innerHeight / 2 }}>
+                        {record.Data.map((d, i) =>
+                            <React.Fragment key={i}>
+                                <div className="card-header">
+                                    <a className="card-link" data-toggle="collapse" href={"#collapse" + i}>{d.DataSource.Name}</a>
+                                </div>
+                                <div id={"collapse" + i} className="collapse show" data-parent="#accordion">
+                                    <div className="card-body">
+                                        <SeriesSelect Data={record.AvailableSeries()} AddSeries={(id, dsID) => {
+                                            let something = new Table(record);
+                                            something.SetSeries(id, dsID)
+                                            setRecord(something);
+                                        }} />
+                                        <ul className="list-group">
+                                            {d.DataSource.Type === 'OpenXDA' && record.JSON.Series != undefined ?
+                                                <li key={record.JSON.Series.ID} className="list-group-item">
+                                                    <div className="row">
+                                                        <div className="col-3">
+                                                            <label>{info?.Name ?? ''}</label>
+                                                            <AdditionalInfo Index={i} Data={info} />
+                                                        </div>
+                                                        <div className="col">
+                                                            <label className="form-label">Precision</label>
+                                                            <input className="form-control" type="number" value={record.JSON.Precision} onChange={(evt) => setRecord(record.SetPrecsision(parseInt(evt.target.value)))} />
+                                                        </div>
+
+                                                    </div>
+                                                </li>
+                                                : null}
+                                        </ul>
+
+                                    </div>
+                                </div>
+                            </React.Fragment>
+                        )}
+                    </div>
+                </div>
+            </Widget>
+        </div>
+
+    );
 }

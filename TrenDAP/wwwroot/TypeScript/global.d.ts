@@ -19,6 +19,9 @@
 //  09/08/2020 - Billy Ernest
 //       Generated original version of source code.
 //
+
+import { Widget, Histogram, Trend } from "./Implementations";
+
 //******************************************************************************************************
 export { };
 declare module '*.scss';
@@ -31,14 +34,6 @@ declare global {
     interface String {
         countOccurrences: (chars: string) => number
     }
-
-    namespace moment {
-        function utc(timestamp: string): any;
-    }
-
-    function moment(inp?: any, format?: any, strict?: boolean): any;
-    function moment(inp?: any, format?: any, language?: string, strict?: boolean): any;
-
 }
 
 export namespace Redux {
@@ -61,13 +56,42 @@ export namespace Redux {
 }
 
 export namespace TrenDAP{
-    type Status = 'loading' | 'idle' | 'error' | 'changed' |'unitiated';
+    type Status = 'loading' | 'idle' | 'error' | 'changed' | 'unitiated';
+    type WidgetType = 'Histogram' | 'Profile' | 'Stats' | 'Table' | 'Text' | 'Trend' | 'XvsY';
+    type WidgetClass = iHistogram | iTrend | iProfile | iStats | iTable | iText | iXvsY;
     type DataSourceType = 'OpenXDA';
+
+    // TrenDAP 
     interface iDataSourceType { ID: number, Name: DataSourceType }
     interface iDataSource { ID: number, Name: string, DataSourceTypeID: number, URL: string, Credential: string, Password: string, Public: boolean, User: string }    
-    interface iWorkSpace { ID: number, Name: string, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Open: boolean }    
-    interface iDataSet { ID: number, Name: string, From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, JSON:string, JSONString: string , Public: boolean, UpdatedOn: string }    
-    interface iDataSetSource { ID: number, Name: string, DataSourceTypeID: number, JSON: object}
-    interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], Types:number[], Aggregate : '' | '1h' | '1d' | '1w' }
+    interface iWorkSpace { ID: number, Name: string, User: string, DataSetID: number, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Open: boolean }    
+    interface iDataSet { ID: number, Name: string, From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Data?: { Status: Status, Error?: string } }    
+    interface iDataSetSource { ID: number, Name: string, DataSourceTypeID: number, JSON: object }
+    interface iDataSetReturn { Data: (iXDAReturnData)[], DataSource: { ID: number, Name: string, Type: DataSourceType}, From: string, To: string }
 
+    // XDA
+    interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], Types: number[], Aggregate: '' | '1h' | '1d' | '1w' }
+    interface iXDAReturn { ID: number, Meter: string, Name: string, Station: string, Phase: string, Type: string, Harmonic: number, Latitude: number, Longitude: number, Asset: string, Characteristic: string }
+    interface iXDAReturnWithDataSource extends iXDAReturnData { DataSourceID: number, DataSource: string }
+    interface iXDAReturnData extends iXDAReturn { Data: iXDATrendDataPoint[] }
+    interface iXDATrendDataPoint { Tag: string, Minimum: number, Maximum: number, Average: number, Timestamp: string, QualityFlags: number}
+    type iXDATrendDataPointField = 'Minimum' | 'Maximum' | 'Average';
+
+    // Widget JSON interfaces
+    interface WorkSpaceJSON { Rows: iRow[] }
+    interface iRow { WorkSpace?: iWorkSpace, Height: number, Data?: iDataSetReturn[], Widgets: iWidget[], Update?: (row: iRow) => void, RemoveRow?: () => void }
+    interface iWidget<T = any> { WorkSpace?: iWorkSpace, Data?: iDataSetReturn[], Height: number, Width: number, Type: WidgetType, Label: string, JSON: T, Update?: (widget: iWidget) => void, Remove?: () => void, AddSeries?: (id: number, dataSourceID:number) => void }
+
+    interface iHistogram { Min: number, Max: number, Units: string, Series: iHistogramSeries[] }
+    interface iSeries { DataSourceID: number, ID: number, Field: iXDATrendDataPointField }
+    interface iHistogramSeries extends iSeries { Color: string, BinCount: number, Profile: boolean, ProfileColor: string  }
+    interface iProfile { }
+    interface iStats { Series: iSeries, Precision: number }
+    interface iTable { Series: iSeries, Precision: number}
+    interface iText {Text: string }
+    interface iTrend { Min: number, Max: number, YAxis: iYAxis[], Split: boolean, Series: iTrendSeries[] }
+    interface iAxis { Min: number, Max: number, Units: string }
+    interface iYAxis extends iAxis { Position: 'left' | 'right' }
+    interface iTrendSeries extends iSeries { Color: string, Axis:  number }
+    interface iXvsY { Y: { Series: iSeries, Min: number, Max: number, Units: string }, X: { Series: iSeries, Min: number, Max: number, Units: string }, TimeMin: number, TimeMax: number, RegressionLine: boolean }
 }

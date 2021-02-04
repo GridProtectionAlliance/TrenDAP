@@ -33,6 +33,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -265,8 +266,9 @@ namespace TrenDAP.Controllers
                         if (!response.IsSuccessStatusCode)
                             throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
                         var stream = response.Content.ReadAsStreamAsync().Result;
-                        IFormatter formatter = new BinaryFormatter();
-                        return (DataTable)formatter.Deserialize(stream);
+                        BinaryFormatter formatter = new BinaryFormatter();
+                        DataTable table =  (DataTable)formatter.Deserialize(stream);
+                        return table;
                     }
                     catch (Exception ex)
                     {

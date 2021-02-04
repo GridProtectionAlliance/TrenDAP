@@ -21,6 +21,10 @@
 //
 //******************************************************************************************************
 
+// Variables
+$topMargin: 40;
+$sideMargin: 200;
+
 .sidebar {
 	position: fixed;
 	top: 0;
@@ -29,7 +33,7 @@
 	z-index: 100;
 	padding: 48px 0 0;
 	box-shadow: inset -1px 0 0 rgba(0,0,0,.1);
-	width: 200px;
+	width: #{$sideMargin}px;
 
 	a {
 		color: #78828d;
@@ -48,20 +52,88 @@
 }
 
 .main-window {
-	top: 40px;
+	top: #{$topMargin}px;
 	position: absolute;
-	width: calc(100% - 200px);
-	height: calc(100% - 40px);
+	width: calc(100% - #{$sideMargin}px);
+	height: calc(100% - #{$topMargin}px);
 	overflow: hidden;
-	right: 0px;
+	left: #{$sideMargin}px;
 }
 
 .navbarbuttons {
 	position: absolute;
-	height: 50px;
-	right: 10px;
+	right: 10px;	
 }
 
+.row-controls {
+	visibility: hidden;
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	z-index: 1010;
+}
+
+.triangle:hover .row-controls{
+	visibility: visible;
+}
+
+.triangle {
+	width: 150px;
+	height: 40px;
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	z-index: 1010;
+}
+
+.triangle::before,
+.triangle::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	right: 0;
+	border-color: transparent;
+	border-style: solid;
+}
+
+.triangle::before {
+	border-width: 20px;
+	border-right-color: #ccc;
+	border-top-color: #ccc;
+}
+
+.triangle::after {
+	border-right-color: #ccc;
+	border-top-color: #ccc;
+}
+
+$tabHeight: 42;
+.tab-content {
+	position: relative;
+	width: 100%;
+	height: calc(100% - #{$tabHeight}px);
+	max-height: calc(100% - #{$tabHeight}px);
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+
+.widgit-label {
+	position: absolute;
+	text-align: center;
+	width: 100%;
+	z-index: 1000;
+
+	span .widgit-controls {
+		visibility: hidden;
+	}
+
+	span:hover {
+		.widgit-controls {
+			visibility: visible;
+		}
+	}
+}
 
 .workspacetab {
 	position: relative;

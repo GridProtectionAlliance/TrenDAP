@@ -295,7 +295,7 @@ var SelectDataSetsAscending = function (state) { return state.DataSets.Ascending
 // #endregion
 // #region [ Async Functions ]
 function GetDataSets() {
-    return $.ajax({
+    return ajax({
         type: "GET",
         url: homePath + "api/DataSet",
         contentType: "application/json; charset=utf-8",
@@ -305,7 +305,7 @@ function GetDataSets() {
     });
 }
 function PostDataSet(DataSet) {
-    return $.ajax({
+    return ajax({
         type: "POST",
         url: homePath + "api/DataSet",
         contentType: "application/json; charset=utf-8",
@@ -316,7 +316,7 @@ function PostDataSet(DataSet) {
     });
 }
 function DeleteDataSet(DataSet) {
-    return $.ajax({
+    return ajax({
         type: "DELETE",
         url: homePath + "api/DataSet",
         contentType: "application/json; charset=utf-8",
@@ -327,7 +327,7 @@ function DeleteDataSet(DataSet) {
     });
 }
 function PatchDataSet(DataSet) {
-    return $.ajax({
+    return ajax({
         type: "PATCH",
         url: homePath + "api/DataSet",
         contentType: "application/json; charset=utf-8",

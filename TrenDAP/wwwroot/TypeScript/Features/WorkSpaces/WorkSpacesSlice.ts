@@ -24,6 +24,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { TrenDAP, Redux } from '../../global';
 import _ from 'lodash';
+import moment from 'moment';
+import { $, JQuery,ajax } from 'jquery';
 
 // #region [ Thunks ]
 export const FetchWorkSpaces = createAsyncThunk('WorkSpaces/FetchWorkSpaces', async (_, { dispatch }) => {
@@ -41,6 +43,11 @@ export const RemoveWorkSpace = createAsyncThunk('WorkSpaces/RemoveWorkSpace', as
 export const UpdateWorkSpace = createAsyncThunk('WorkSpaces/UpdateWorkSpace', async (workSpace: TrenDAP.iWorkSpace, { dispatch }) => {
     return await PatchWorkSpace(workSpace);
 });
+
+export const OpenCloseWorkSpace = createAsyncThunk('WorkSpaces/OpenCloseWorkSpace', async (req: { workSpace: TrenDAP.iWorkSpace, open: boolean }, { dispatch }) => {
+    return await OCWorkSpace(req.workSpace, req.open);
+});
+
 // #endregion
 
 // #region [ Slice ]
@@ -69,8 +76,6 @@ export const WorkSpacesSlice = createSlice({
         CloseWorkSpace: (state, action) => {
             state.Data.find(ws => ws.ID == action.payload).Open = false;
         }
-
-
     },
     extraReducers: (builder) => {
 
@@ -126,6 +131,18 @@ export const WorkSpacesSlice = createSlice({
             state.Status = 'changed';
             state.Error = null;
         });
+        builder.addCase(OpenCloseWorkSpace.pending, (state, action) => {
+            state.Status = 'loading';
+        });
+        builder.addCase(OpenCloseWorkSpace.rejected, (state, action) => {
+            state.Status = 'error';
+            state.Error = action.error.message;
+
+        });
+        builder.addCase(OpenCloseWorkSpace.fulfilled, (state, action) => {
+            state.Status = 'changed';
+            state.Error = null;
+        });
 
     }
 
@@ -148,7 +165,7 @@ export const SelectWorkSpacesAscending = (state: Redux.StoreState) => state.Work
 
 // #region [ Async Functions ]
 function GetWorkSpaces(): JQuery.jqXHR<TrenDAP.iWorkSpace[]> {
-    return $.ajax({
+    return ajax({
         type: "GET",
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",
@@ -159,19 +176,19 @@ function GetWorkSpaces(): JQuery.jqXHR<TrenDAP.iWorkSpace[]> {
 }
 
 function PostWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWorkSpace> {
-    return $.ajax({
+    return ajax({
         type: "POST",
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
-        data: JSON.stringify({ ...workSpace, JSONString: JSON.stringify({ Rows: [{Height: 500, Widgets:[]}]}), UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss') }),
+        data: JSON.stringify({ ...workSpace, JSONString: JSON.stringify({ Rows: [/*{Height: 500, Widgets:[]}*/]}), UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss') }),
         cache: false,
         async: true
     });
 }
 
 function DeleteWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWorkSpace> {
-    return $.ajax({
+    return ajax({
         type: "DELETE",
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",
@@ -183,7 +200,7 @@ function DeleteWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iW
 }
 
 function PatchWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWorkSpace> {
-    return $.ajax({
+    return ajax({
         type: "PATCH",
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",
@@ -193,4 +210,18 @@ function PatchWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWo
         async: true
     });
 }
+
+function OCWorkSpace(workSpace: TrenDAP.iWorkSpace, open:boolean): JQuery.jqXHR<TrenDAP.iWorkSpace> {
+    return ajax({
+        type: "PATCH",
+        url: `${homePath}api/WorkSpace`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        data: JSON.stringify({ ...workSpace, Open: open }),
+        cache: false,
+        async: true
+    });
+}
+
+
 // #endregion

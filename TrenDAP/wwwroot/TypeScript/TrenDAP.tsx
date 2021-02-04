@@ -44,7 +44,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
     const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
 
     React.useEffect(() => {
-        window.addEventListener('resize', (evt) => forceUpdate());
+        window.addEventListener('resize', (evt) => forceUpdate(1));
 
         return () => {
             window.removeEventListener('resize', (evt) => { });
@@ -63,9 +63,9 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                     </ul>
             </nav>
             <SideNavBar />
-            <div className={"container-fluid " + styles['main-window']}>
-                <div className="row" style={{ height: '100%' }}>
-                    <div className="col" style={{ width: '100%', height: 'inherit', padding: '0 0 0 0', overflow: 'hidden' }}>
+            <div className={/*"container-fluid " + */styles['main-window']}>
+                    {/*<div className="row" style={{ height: '100%' }}>
+                    <div className="col" style={{ width: '100%', height: 'inherit', padding: '0 0 0 0', overflow: 'hidden' }}>*/}
                             <React.Suspense fallback={<div>Loading...</div>}>
                                 <Switch>
                                     <Route exact path={`${homePath}WorkSpaces`}><WorkSpaces /></Route>
@@ -77,9 +77,9 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                                     <Redirect to={`${homePath}WorkSpaces`} />
                                 </Switch>
                             </React.Suspense>
-                    </div>
+                    {/*</div>
 
-                </div>
+                </div>*/}
             </div>
             </div>
         </Router>

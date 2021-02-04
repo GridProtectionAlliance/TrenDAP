@@ -27,4 +27,7 @@ const Pencil = '✏️';
 const TrashCan = '🗑️';
 const CrossMark = '❌';
 const Plus = '➕';
-export { HeavyCheckMark, Pencil, TrashCan, CrossMark,Plus };
+const Warning = '⚠️';
+const Spinner = '🔄';
+
+export { HeavyCheckMark, Pencil, TrashCan, CrossMark, Plus, Warning, Spinner };

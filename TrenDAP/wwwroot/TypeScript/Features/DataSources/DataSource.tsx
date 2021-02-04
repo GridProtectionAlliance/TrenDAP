@@ -36,10 +36,8 @@ const DataSource: React.FunctionComponent<{ DataSource: TrenDAP.iDataSource, Set
     React.useEffect(() => {
         if (dstStatus != 'unitiated') return;
 
-        let promise = dispatch(FetchDataSourceTypes());
+        dispatch(FetchDataSourceTypes());
         return function () {
-            if (dstStatus === 'loading')
-                promise.abort();
         }
     }, [dispatch]);
 

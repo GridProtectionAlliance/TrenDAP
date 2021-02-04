@@ -152,6 +152,7 @@ namespace TrenDAP.Model
 
                 JObject jObject = new JObject();
                 jObject["DataSource"] = new JObject();
+                jObject["DataSource"]["ID"] = dataSource.ID;
                 jObject["DataSource"]["Name"] = dataSource.Name;
                 jObject["DataSource"]["Type"] = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
                 jObject["From"] = dataset.From;
