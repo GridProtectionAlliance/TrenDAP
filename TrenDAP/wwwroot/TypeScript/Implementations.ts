@@ -65,11 +65,11 @@ export class Histogram extends Widget<TrenDAP.iHistogram> {
         super(props);
         this.Type = "Histogram";
         if (this.JSON === undefined)
-            this.JSON = { Min: 0, Max: 10, Units: '', Series: [] };
+            this.JSON = { Min: 0, Max: 10, Units: '', Series: [], BinCount: 10 };
     }
 
-    public AddSeries = (id: number, dataSourceID: number) => {
-        this.JSON.Series.push({ ID: id, DataSourceID: dataSourceID, BinCount: 10, Field: "Average", Color: RandomColor(), Profile: false, ProfileColor: RandomColor() });
+    public AddSeries = (id: number, dataSourceID: number, label?: string) => {
+        this.JSON.Series.push({ ID: id, DataSourceID: dataSourceID, Field: "Average", Color: GetColor(), Profile: false, ProfileColor: GetColor(label) });
         return new Histogram(this);
     }
 
@@ -86,7 +86,7 @@ export class Histogram extends Widget<TrenDAP.iHistogram> {
 
     public CalculateAxisRange = () => {
         let dd: TrenDAP.iXDAReturnData[] = [].concat(...this.Data.map(d => d.Data));
-        let ss = this.JSON.Series.map(series => dd.find(d => d.ID === series.ID).Data.map(d => d[series.Field]));
+        let ss = this.JSON.Series.map(series => (dd.find(d => d.ID === series.ID)?.Data ?? []).map(d => d[series.Field]));
         let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
         this.JSON.Max = Math.max(...[].concat(...mm));
         this.JSON.Min = Math.min(...[].concat(...mm));
@@ -106,39 +106,103 @@ export class Trend extends Widget<TrenDAP.iTrend> {
         this.Type = "Trend";
 
         if (this.JSON === undefined)
-            this.JSON = { Min: 0, Max: 10,  Split: false, YAxis: [{ Max: 10, Min: 0, Position: 'left', Units: '' }], Series: []  };
+            this.JSON = { Min: 0, Max: 10, Legend: false, Split: false, SplitType: 'Axis', YAxis: [{ Max: 10, Min: 0, Position: 'left', Units: '' }], Series: []  };
     }
 
     public AddAxis = () => this.JSON.YAxis.push({ Max: 10, Min: 0, Position: 'left', Units: '' });
-    public RemoveAxis = (index: number) => this.JSON.YAxis.splice(index, 1);
+    public RemoveAxis = (index: number) => {
+        if (this.JSON.YAxis.length == 1) return;
+
+        this.JSON.YAxis.splice(index, 1)
+        this.JSON.Series.forEach(series => {
+            if (series.Axis >= index)
+                series.Axis = (index > 0 ? series.Axis - 1 : 0);    
+        });
+    };
     public UpdateAxis = (index: keyof TrenDAP.iYAxis[], field: keyof TrenDAP.iYAxis, value: TrenDAP.iYAxis[keyof TrenDAP.iYAxis]) => { this.JSON.YAxis[index][field] = value; };
 
-    public CalculateAxisRange = (type: 'x' | 'y', index: keyof TrenDAP.iYAxis[]) => {
+    public CalculateAxisRange = (type: 'x' | 'y', index?: keyof TrenDAP.iYAxis[]) => {
         let dd: TrenDAP.iXDAReturnData[] = [].concat(...this.Data.map(d => d.Data));
         if (type === 'x')
         {
-            let ss = this.JSON.Series.map(series => dd.find(d => d.ID === series.ID).Data.map(d => new Date(d.Timestamp).getTime()));
+            let ss = this.JSON.Series.map(series => (dd.find(d => d.ID === series.ID)?.Data ?? []).map(d => new Date(d.Timestamp).getTime()));
             let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
             this.JSON.Max = Math.max(...[].concat(...mm));
             this.JSON.Min = Math.min(...[].concat(...mm));
         }
         else {
+            if (index == undefined) {
+                for (let index = 0; index < this.JSON.YAxis.length; index++) {
+                    let ss = this.JSON.Series.filter(series => series.Axis === index).map(series => (dd.find(d => d.ID === series.ID)?.Data ?? []).map(d => d[series.Field]));
+                    let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
+                    this.JSON.YAxis[index]['Max'] = Math.max(...[].concat(...mm));
+                    this.JSON.YAxis[index]['Min'] = Math.min(...[].concat(...mm));
+                    let buffer = (this.JSON.YAxis[index]['Max'] - this.JSON.YAxis[index]['Min']) * .10;
+                    this.JSON.YAxis[index]['Max'] = this.JSON.YAxis[index]['Max'] + buffer;
+                    this.JSON.YAxis[index]['Min'] = this.JSON.YAxis[index]['Min'] - buffer;
 
-            let ss = this.JSON.Series.filter(series => series.Axis === index).map(series => dd.find(d => d.ID === series.ID).Data.map(d => d[series.Field]));
-            let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
-            this.JSON.YAxis[index]['Max'] = Math.max(...[].concat(...mm));
-            this.JSON.YAxis[index]['Min'] = Math.min(...[].concat(...mm));
-            let buffer = (this.JSON.YAxis[index]['Max'] - this.JSON.YAxis[index]['Min']) * .10;
-            this.JSON.YAxis[index]['Max'] = this.JSON.YAxis[index]['Max'] + buffer;
-            this.JSON.YAxis[index]['Min'] = this.JSON.YAxis[index]['Min'] - buffer;
+                }
+            }
+            else {
+                let ss = this.JSON.Series.filter(series => series.Axis === index).map(series => (dd.find(d => d.ID === series.ID)?.Data ?? []).map(d => d[series.Field]));
+                let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
+                this.JSON.YAxis[index]['Max'] = Math.max(...[].concat(...mm));
+                this.JSON.YAxis[index]['Min'] = Math.min(...[].concat(...mm));
+                let buffer = (this.JSON.YAxis[index]['Max'] - this.JSON.YAxis[index]['Min']) * .10;
+                this.JSON.YAxis[index]['Max'] = this.JSON.YAxis[index]['Max'] + buffer;
+                this.JSON.YAxis[index]['Min'] = this.JSON.YAxis[index]['Min'] - buffer;
+            }
         }
 
+        return new Trend(this);
     };
 
-    public AddSeries = (id: number, dataSourceID: number) => this.JSON.Series.push({ ID: id, DataSourceID: dataSourceID, Axis: 0, Field: "Average", Color: RandomColor() });
+    public AddSeries = (id: number, dataSourceID: number, label: string) => {
+        if (this.JSON.Series.find(series => series.ID === id && series.DataSourceID === dataSourceID) !== undefined) return;
+        
+        this.JSON.Series.push({ ID: id, DataSourceID: dataSourceID, Axis: 0, Field: "Average", Color: GetColor(label), Label: label, ShowEvents: false });
+        this.CalculateAxisRange('x');
+        this.CalculateAxisRange('y');
+        return new Trend(this);
+    }
+
+    public QuickAddVoltageRMS = (dataSourceID: number) => {
+        let axis = this.JSON.YAxis.findIndex(axis => axis.Units === 'Volts')
+        if (axis < 0) {
+            axis = this.JSON.YAxis.push({Units: 'Volts', Position: 'left', Min: 0, Max: 100}) - 1
+        }
+
+        this.JSON.Series.push(...this.Data.find(datum => datum.DataSource.ID === dataSourceID).Data.filter(datum => datum.Type === 'Voltage' && datum.Characteristic === 'RMS').map(datum => ({ ID: datum.ID, DataSourceID: dataSourceID, Axis: axis, Field: 'Average' as TrenDAP.iXDATrendDataPointField, Color: GetColor(`V${datum.Phase} - ${datum.Meter}`), Label: datum.Name, ShowEvents: false})))
+        this.CalculateAxisRange('x');
+        this.CalculateAxisRange('y');
+        return new Trend(this);
+    }
+
+    public QuickAddCurrentRMS = (dataSourceID: number) => {
+        let axis = this.JSON.YAxis.findIndex(axis => axis.Units === 'Amps')
+        if (axis < 0) {
+            axis = this.JSON.YAxis.push({ Units: 'Amps', Position: 'left', Min: 0, Max: 100 }) - 1
+        }
+
+        this.JSON.Series.push(...this.Data.find(datum => datum.DataSource.ID === dataSourceID).Data.filter(datum => datum.Type === 'Current' && datum.Characteristic === 'RMS').map(datum => ({ ID: datum.ID, DataSourceID: dataSourceID, Axis: axis, Field: 'Average' as TrenDAP.iXDATrendDataPointField, Color: GetColor(`I${datum.Phase} - ${datum.Meter}`), Label: datum.Name, ShowEvents: false })))
+        this.CalculateAxisRange('x');
+        this.CalculateAxisRange('y');
+        return new Trend(this);
+    }
+
     public RemoveSeries = (index: number) => this.JSON.Series.splice(index, 1);
+    public RemoveAll = (dataSourceID: number) => {
+        this.JSON.Series = this.JSON.Series.filter(series => series.DataSourceID != dataSourceID);
+        return new Trend(this);
+    }
+
     public UpdateSeries = (index: keyof TrenDAP.iTrendSeries[], field: keyof TrenDAP.iTrendSeries, value: TrenDAP.iTrendSeries[keyof TrenDAP.iTrendSeries]) => { this.JSON.Series[index][field] = value; };
 
+    public Pan = (value: number) => {
+        this.JSON.Max = this.JSON.Max + value;
+        this.JSON.Min = this.JSON.Min + value;
+        return new Trend(this);
+    };
 
 }
 
@@ -367,3 +431,24 @@ export function CreateWidget(type: TrenDAP.WidgetType, height: number, width: nu
         return new XvsY({ Height: height, Width: width, Label: type, Type: type, JSON: undefined });
 }
 
+function GetColor(label?: string) {
+    if (label == undefined) return RandomColor();
+    else if (label.indexOf('Voltage A') >= 0) return '#A30000';
+    else if (label.indexOf('Voltage B') >= 0) return '#0029A3';
+    else if (label.indexOf('Voltage C') >= 0) return '#007A29';
+    else if (label.indexOf('Voltage N') >= 0) return '#c3c3c3';
+    else if (label.indexOf('Current A') >= 0) return '#FF0000';
+    else if (label.indexOf('Current B') >= 0) return '#0066CC';
+    else if (label.indexOf('Current C') >= 0) return '#33CC33';
+    else if (label.indexOf('AN') >= 0) return '#FF0000';
+    else if (label.indexOf('BN') >= 0) return '#0066CC';
+    else if (label.indexOf('CN') >= 0) return '#33CC33';
+    else if (label.indexOf('NG') >= 0) return '#c3c3c3';
+    else if (label.indexOf('RES') >= 0) return '#ffc107';
+    else if (label.indexOf('Average') >= 0) return '#9A52A4';
+    else if (label.indexOf('Total') >= 0) return '#9A52A4';
+    else if (label.indexOf('S0') >= 0) return '#A30000';
+    else if (label.indexOf('S2') >= 0) return '#007A29';
+    else if (label.indexOf('S1') >= 0) return '#0029A3';
+    else return RandomColor();
+}

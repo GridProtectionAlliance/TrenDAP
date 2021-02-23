@@ -43,7 +43,7 @@ const AddNewWorkSpace: React.FunctionComponent<{}> = (props) => {
                 <div className="modal-content">
 
                   <div className="modal-header">
-                        <h4 className="modal-title">DataSource</h4>
+                        <h4 className="modal-title">Workspace</h4>
                         <button type="button" className="close" onClick={() => setShow(false)}>&times;</button>
                     </div>
 

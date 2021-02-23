@@ -26,21 +26,22 @@
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { Input, CheckBox } from '@gpa-gemstone/react-forms';
-import { useParams, Link } from 'react-router-dom';
+import { CrossMark, UpArrow, DownArrow } from '@gpa-gemstone/gpa-symbols';
+
+import { useParams, Link, useHistory } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import styles from '../../../Styles/app.scss';
 import { SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, OpenCloseWorkSpace, UpdateWorkSpace, SelectWorkSpacesStatus, FetchWorkSpaces } from './WorkSpacesSlice';
-import { style } from 'd3';
+import * as d3 from 'd3';
 import Histogram from '../Widgets/Histogram';
 import Profile from '../Widgets/Profile';
 import Stats from '../Widgets/Stats';
 import Table from '../Widgets/Table';
 import Text from '../Widgets/Text';
-import Trend from '../Widgets/Trend';
+import Trend from '../Widgets/Trend/Trend';
 import XvsY from '../Widgets/XvsY';
 import { Update, SelectDataSetByID, SelectDataSets, FetchDataSets, SelectDataSetsStatus, SelectDataSetData, GetDataSetDataFromIDB } from '../DataSets/DataSetsSlice';
 import DataSetData from '../DataSets/DataSetData';
-import { CreateGuid } from '@gpa-gemstone/helper-functions';
 import { CreateWidget } from '../../Implementations';
 
 const NavMargin = 85;
@@ -49,7 +50,8 @@ const NavWidth = 200;
 const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
     const [data, setData] = React.useState<TrenDAP.iDataSetReturn[]>([]);
     const dispatch = useDispatch();
-    const { id } = useParams();
+    const { id } = useParams<{ id }>();
+    const history = useHistory();
     const [tab, setTab] = React.useState<number>(id);
     const usersWorkSpaces: TrenDAP.iWorkSpace[] = useSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
     const publicWorkSpaces: TrenDAP.iWorkSpace[] = useSelector((state: Redux.StoreState) => SelectWorkSpacesAllPublicNotUser(state, userName));
@@ -61,12 +63,19 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
     const [dataSet, setDataSet] = React.useState<TrenDAP.iDataSet>({} as any);
 
     React.useEffect(() => {
-        setWorkSpace([...usersWorkSpaces, ...publicWorkSpaces].find(ws => ws.ID == tab));
-    }, [dispatch, tab, usersWorkSpaces, publicWorkSpaces]);
+        if (id != tab) {
+            history.push(`/WorkSpaceEditor/${tab}`); 
+            const ws = [...usersWorkSpaces, ...publicWorkSpaces].find(ws => ws.ID == tab)
+            setWorkSpace(ws);
+            const ds = dataSets.find(ds => ds.ID === workSpace.DataSetID);
+            if (ds != undefined)
+                setDataSet(ds);
+        }
+    }, [tab]);
 
     React.useEffect(() => {
         if (workSpace === undefined) return;
-        setDataSet(dataSets.find(ds => ds.ID === workSpace.DataSetID));
+        //setDataSet(dataSets.find(ds => ds.ID === workSpace.DataSetID));
         if (!workSpace?.Open)
             dispatch(OpenCloseWorkSpace({ workSpace: workSpace, open: true }));
 
@@ -80,16 +89,31 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
     }, [workSpace, dataSets]);
 
     React.useEffect(() => {
-        if (wsStatus != 'unitiated' && wsStatus != 'changed') return;
+        if (wsStatus === 'idle') {
+            const ws = [...usersWorkSpaces, ...publicWorkSpaces].find(ws => ws.ID == tab)
+            setWorkSpace(ws);
+            const ds = dataSets.find(ds => ds.ID === workSpace.DataSetID);
+            if (ds != undefined)
+                setDataSet(ds);
+        }
+        else if (wsStatus == 'unitiated' || wsStatus == 'changed')
             dispatch(FetchWorkSpaces());
+
 
         return function () {
         }
     }, [dispatch, wsStatus]);
 
     React.useEffect(() => {
-        if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
-        dispatch(FetchDataSets());
+        if (dsStatus === 'idle') {
+            if (workSpace != undefined) {
+                const ds = dataSets.find(ds => ds.ID === workSpace.DataSetID);
+                if (ds != undefined)
+                    setDataSet(ds);
+                }
+        }
+        else if (dsStatus == 'unitiated'  || dsStatus === 'changed')
+            dispatch(FetchDataSets());
 
         return function () {
         }
@@ -102,23 +126,7 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
             setWorkSpaceJSON({
                 ...workSpaceJSON, Rows: [...workSpaceJSON.Rows, {
                     Height: window.innerHeight - NavMargin,
-                    Widgets: [
-                        CreateWidget(type, window.innerHeight - NavMargin, window.innerWidth - NavWidth)
-                        //{
-                        //    Label: type,
-                        //    Height: window.innerHeight - NavMargin,
-                        //    Width: window.innerWidth - NavWidth,
-                        //    Type: type,
-                        //    JSON: InitialLoad(type),
-                        //    Update: () => null,
-                        //    Remove: () => {
-                        //        let json = { ...workSpaceJSON };
-                        //        json.Rows.splice(0, 1);
-                        //        dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json) }));
-
-                        //    }
-                        //}
-                    ]
+                    Widgets: [CreateWidget(type, window.innerHeight - NavMargin, window.innerWidth - NavWidth)]
                 }]
             });
 
@@ -180,7 +188,30 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
                                 let json = { ...workSpaceJSON };
                                 json.Rows.splice(index,1);
                                 dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json) }));
-                        }}/>   
+                            }}
+                            MoveUp={() => {
+                                if (index <= 0) return;
+                                const newIndex = index - 1
+                                let json = { ...workSpaceJSON };
+                                const a = json.Rows[newIndex];
+                                const b = json.Rows[index];
+                                json.Rows[newIndex] = b;
+                                json.Rows[index] = a;
+                                dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json) }));
+                            }}
+                            MoveDown={() => {
+                                let json = { ...workSpaceJSON };
+                                if (index >= json.Rows.length) return;
+                                const newIndex = index + 1
+                                const a = json.Rows[newIndex];
+                                const b = json.Rows[index];
+                                json.Rows[newIndex] = b;
+                                json.Rows[index] = a;
+                                dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json) }));
+
+                            }}
+
+                        />   
                     )
                 }
             </div>
@@ -242,7 +273,7 @@ const Row: React.FunctionComponent<TrenDAP.iRow> = (props) => {
                 </div>
             </div>
             <div className="modal" role="dialog" style={{ display: toggle ? 'block' : 'none', backgroundColor: 'rgba(0,0,0,0.4)' }}>
-                <div className="modal-dialog" role="document">
+                <div className="modal-dialog" role="document" style={{maxWidth: 525}}>
                     <div className="modal-content">
                         <div className="modal-header">
                             <h5 className="modal-title">Row Settings</h5>
@@ -257,9 +288,57 @@ const Row: React.FunctionComponent<TrenDAP.iRow> = (props) => {
                                 <div className="input-group-prepend">
                                     <button className="btn btn-outline-secondary" type="button" onClick={(evt) => setHeight(window.innerHeight - NavMargin) }>Full Height</button>
                                 </div>
-                          </div>
+                               
+                            </div>
+                            <label>Widgets (Max Width : {window.innerWidth - 200} px, Width Used: { (props.Widgets.length == 0 ? 0 : props.Widgets.map(w => w.Width).reduce((a,b)=> a+b ))}px)</label>
+                            <ul className='list-group'>
+                                {props.Widgets.map((widget, i) =>
+                                    <li className='list-group-item' key={i}>{widget.Label} - 
+                                        <div className='pull-right'>
+                                            <label>Width:</label>
+                                            <input value={widget.Width} type='number' onChange={(evt) => {
+                                                let row = {...props};
+                                                row.Widgets[i].Width = parseInt(evt.target.value);
+                                                props.Update(row);
+                                            } }/>
+                                            <button className='btn btn-link' disabled={i <= 0} onClick={() => {
+                                                let row = { ...props };
+                                                if (i <= 0) return;
+                                                const newIndex = i - 1;
+                                                const a = row.Widgets[newIndex];
+                                                const b = row.Widgets[i];
+                                                row.Widgets[newIndex] = b;
+                                                row.Widgets[i] = a;
+                                                props.Update(row);
+                                            } }>{UpArrow}</button>
+                                            <button className='btn btn-link' disabled={i >= props.Widgets.length - 1} onClick={() => {
+                                                let row = { ...props };
+                                                if (i >= row.Widgets.length - 1) return;
+                                                const newIndex = i + 1;
+                                                const a = row.Widgets[newIndex];
+                                                const b = row.Widgets[i];
+                                                row.Widgets[newIndex] = b;
+                                                row.Widgets[i] = a;
+                                                props.Update(row);
+                                            }}>{DownArrow}</button>
+                                            <button className='btn btn-link' onClick={() => {
+                                                let row = { ...props };
+                                                row.Widgets.splice(i, 1);
+                                                props.Update(row);
+                                            }}>{CrossMark}</button>
+                                        </div>
+                                    </li>
+                                )}
+                            </ul>
                         </div>
                         <div className="modal-footer">
+                            <button type="button" className="btn btn-primary" onClick={() => {
+                                props.MoveUp();
+                                setToggle(false);
+                            }}>Move Row Up</button><button type="button" className="btn btn-primary" onClick={() => {
+                                props.MoveDown();
+                                setToggle(false);
+                            }}>Move Row Down</button>
                             <button type="button" className="btn btn-primary" onClick={() => {
                                 props.Update({...props, Height: height});
                                 setToggle(false);

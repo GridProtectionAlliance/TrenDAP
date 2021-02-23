@@ -23,6 +23,10 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSets\DataSetsSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\EditDataSet.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\TrenDAPDB.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Chart.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\DataSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Histogram.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\AddNewDataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSources.tsx" />
@@ -36,6 +40,8 @@
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Table.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Text.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Trend.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Trend\Axis.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Trend\SeriesPicker.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\XvsY.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\AddNewWorkSpace.tsx" />
@@ -103,6 +109,10 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\TrenDAPDB.ts" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Chart.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\DataSlice.ts" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Histogram.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\ViewDataSet.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
@@ -139,6 +149,10 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Trend\Axis.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Trend\SeriesPicker.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Widget.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
@@ -160,7 +174,7 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Histogram.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Trend.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Trend\Trend.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\AddNewWorkSpace.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>

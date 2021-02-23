@@ -100,7 +100,7 @@ export const SelectOpenXDAStatus = (state, dsid: number, table: string) => state
 function GetOpenXDA(dataSourceID: number, table: string): JQuery.jqXHR<string> {
     return ajax({
         type: "GET",
-        url: `${homePath}api/OpenXDA/${dataSourceID}/${table}`,
+        url: `${homePath}api/TrenDAPDB/${dataSourceID}/${table}`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
         cache: true,

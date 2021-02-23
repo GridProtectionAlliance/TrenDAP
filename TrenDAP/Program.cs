@@ -72,7 +72,9 @@ namespace TrenDAP
                 Log.Information($"Application: {System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name}");
                 Log.Information($"Application Starts. Version: {System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version}");
                 Log.Information($"Application Directory: {AppDomain.CurrentDomain.BaseDirectory}");
-                CreateHostBuilder(args).Build().Run();
+                var host = CreateHostBuilder(args);
+                host.Start();
+                host.WaitForShutdown();
             }
             catch (Exception e)
             {
@@ -85,7 +87,7 @@ namespace TrenDAP
             }
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
+        public static IHost CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
@@ -98,7 +100,7 @@ namespace TrenDAP
                 //    // load settings from config file
                 //    services.Configure<SystemSettings>(hostContext.Configuration.GetSection("systemSettings"));
                 //})
-                .UseSerilog()
+                .UseSerilog().Build()
             ;
     }
 }

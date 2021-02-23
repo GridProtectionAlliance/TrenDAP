@@ -88,17 +88,13 @@ export default function StatsJSX(props: TrenDAP.iWidget<TrenDAP.iStats>) {
                                 </div>
                                 <div id={"collapse" + i} className="collapse show" data-parent="#accordion">
                                     <div className="card-body">
-                                        <SeriesSelect Data={record.AvailableSeries()} AddSeries={(id, dsID) => {
-                                            let something = new Stats(record);
-                                            something.SetSeries(id, dsID)
-                                            setRecord(something);
-                                        }} />
+                                        <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Callback={() => setRecord(new Stats(record))} />
                                         <ul className="list-group">
-                                            {d.DataSource.Type === 'OpenXDA' && record.JSON.Series != undefined ? 
+                                            {d.DataSource.Type === 'TrenDAPDB' && record.JSON.Series != undefined ? 
                                                     <li key={record.JSON.Series.ID} className="list-group-item">
                                                         <div className="row">
                                                             <div className="col-3">
-                                                                <label>{datum.Name}</label>
+                                                                <label>{datum?.Name}</label>
                                                                 <AdditionalInfo Index={i} Data={datum} />
                                                             </div>
                                                             <div className="col">

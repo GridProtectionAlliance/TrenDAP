@@ -69,7 +69,7 @@ const DataSources: React.FunctionComponent = (props: {}) => {
                             { key: 'Name', label: 'Name' },
                             { key: 'DataSourceTypeID', label: 'Type', content: (item, key, style) => dataSourceTypes.find(dst => item.DataSourceTypeID === dst.ID)?.Name },
                             { key: 'URL', label: 'Url' },
-                            { key: 'Public', label: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
+                            { key: 'Public', label: 'Global', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
                             { key: null, label: '', content: (item, key, style) => <span><EditDataSource DataSource={item} /><button className="btn" onClick={() => dispatch(RemoveDataSource(item))}>{TrashCan}</button></span> }
 
                         ]}
@@ -89,14 +89,14 @@ const DataSources: React.FunctionComponent = (props: {}) => {
         </div>
             <div className="col-6" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header">Public DataSources</div>
+                    <div className="card-header">Global DataSources</div>
                     <div className="card-body">
                         <Table<TrenDAP.iDataSource>
                             cols={[
                                 { key: 'Name', label: 'Name' },
                                 { key: 'DataSourceTypeID', label: 'Type', content: (item, key, style) => dataSourceTypes.find(dst => item.DataSourceTypeID === dst.ID)?.Name },
                                 { key: 'URL', label: 'Url' },
-                                //{ key: 'Public', label: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
+                                //{ key: 'Public', label: 'Global', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
                                 //{ key: null, label: '', content: (item, key, style) => <span><EditDataSource DataSource={item} /><button className="btn" onClick={() => dispatch(RemoveDataSource(item))}>{TrashCan}</button></span> }
 
                             ]}

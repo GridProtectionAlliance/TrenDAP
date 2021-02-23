@@ -39,6 +39,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
     const EditDataSet = React.lazy(() => import(/* webpackChunkName: "EditDataSet" */ './Features/DataSets/EditDataSet'));
     const AddNewDataSet = React.lazy(() => import(/* webpackChunkName: "AddNewDataSet" */ './Features/DataSets/AddNewDataSet'));
     const WorkSpaceEditor = React.lazy(() => import(/* webpackChunkName: "WorkSpaceEditor" */ './Features/WorkSpaces/WorkSpaceEditor'));
+    const ViewDataSet = React.lazy(() => import(/* webpackChunkName: "ViewDataSet" */ './Features/DataSets/ViewDataSet/ViewDataSet'));
 
 
     const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
@@ -63,23 +64,19 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                     </ul>
             </nav>
             <SideNavBar />
-            <div className={/*"container-fluid " + */styles['main-window']}>
-                    {/*<div className="row" style={{ height: '100%' }}>
-                    <div className="col" style={{ width: '100%', height: 'inherit', padding: '0 0 0 0', overflow: 'hidden' }}>*/}
-                            <React.Suspense fallback={<div>Loading...</div>}>
-                                <Switch>
-                                    <Route exact path={`${homePath}WorkSpaces`}><WorkSpaces /></Route>
-                                    <Route path={`${homePath}DataSources`}><DataSources /></Route>
-                                    <Route path={`${homePath}DataSets`}><DataSets /></Route>
-                                    <Route path={`${homePath}AddNewDataSet`}><AddNewDataSet /></Route>
-                                    <Route path={`${homePath}EditDataSet/:id`}><EditDataSet /></Route>
-                                    <Route path={`${homePath}WorkSpaceEditor/:id`}><WorkSpaceEditor /></Route>
-                                    <Redirect to={`${homePath}WorkSpaces`} />
-                                </Switch>
-                            </React.Suspense>
-                    {/*</div>
-
-                </div>*/}
+            <div className={styles['main-window']}>
+                <React.Suspense fallback={<div>Loading...</div>}>
+                    <Switch>
+                        <Route exact path={`${homePath}WorkSpaces`}><WorkSpaces /></Route>
+                        <Route path={`${homePath}DataSources`}><DataSources /></Route>
+                        <Route path={`${homePath}DataSets`}><DataSets /></Route>
+                        <Route path={`${homePath}AddNewDataSet`}><AddNewDataSet /></Route>
+                        <Route path={`${homePath}EditDataSet/:id`}><EditDataSet /></Route>
+                        <Route path={`${homePath}WorkSpaceEditor/:id`}><WorkSpaceEditor /></Route>
+                        <Route path={`${homePath}ViewDataSet/:id`}><ViewDataSet /></Route>
+                        <Redirect to={`${homePath}WorkSpaces`} />
+                    </Switch>
+                </React.Suspense>
             </div>
             </div>
         </Router>

@@ -47,7 +47,7 @@ const EditWorkSpace: React.FunctionComponent<{ WorkSpace: TrenDAP.iWorkSpace}> =
                     <div className="modal-content">
 
                       <div className="modal-header">
-                            <h4 className="modal-title">DataSource</h4>
+                            <h4 className="modal-title">Workspace</h4>
                             <button type="button" className="close" onClick={Cancel}>&times;</button>
                         </div>
 

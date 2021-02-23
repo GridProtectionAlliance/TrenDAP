@@ -60,7 +60,7 @@ const DataSource: React.FunctionComponent<{ DataSource: TrenDAP.iDataSource, Set
             <Input<TrenDAP.iDataSource> Record={props.DataSource} Field="URL" Setter={props.SetDataSource} Valid={valid} />
             <Input<TrenDAP.iDataSource> Record={props.DataSource} Field="Credential" Setter={props.SetDataSource} Valid={valid} />
             <Input<TrenDAP.iDataSource> Record={props.DataSource} Field="Password" Type="password" Setter={props.SetDataSource} Valid={valid} />
-            <CheckBox<TrenDAP.iDataSource> Record={props.DataSource} Field="Public" Setter={props.SetDataSource} />
+            <CheckBox<TrenDAP.iDataSource> Record={props.DataSource} Field="Public" Label='Global' Setter={props.SetDataSource} />
 
         </form>
     );

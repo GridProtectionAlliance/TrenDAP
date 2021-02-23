@@ -33,12 +33,20 @@ export const FetchDataSets = createAsyncThunk('DataSets/FetchDataSets', async (_
 });
 
 export const FetchDataSetData = createAsyncThunk('DataSets/FetchDataSetData', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
-    return await GetDataSetData(DataSet.ID);
+    return await GetDataSetData(DataSet);
 });
 
 
 export const AddDataSet = createAsyncThunk('DataSets/AddDataSet', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
     return await PostDataSet(DataSet);
+});
+
+
+export const CloneDataSet = createAsyncThunk('DataSets/CloneDataSet', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
+    let dataSet = { ...DataSet };
+    dataSet.ID = 0;
+    dataSet.Name = `Copy of ${DataSet.Name}`;
+    return await PostDataSet(dataSet);
 });
 
 export const RemoveDataSet = createAsyncThunk('DataSets/RemoveDataSet', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
@@ -48,8 +56,11 @@ export const RemoveDataSet = createAsyncThunk('DataSets/RemoveDataSet', async (D
 export const UpdateDataSet = createAsyncThunk('DataSets/UpdateDataSet', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
     return await PatchDataSet(DataSet);
 });
-export const UpdateDataSetDataFlag = createAsyncThunk('DataSets/UpdateDataSetDataFlag', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
-    return await GetDataSetDataLocal(DataSet);
+export const UpdateDataSetDataFlag = createAsyncThunk('DataSets/UpdateDataSetDataFlag', (DataSet: TrenDAP.iDataSet, { dispatch }) => {
+    return GetDataSetDataLocal(DataSet);
+});
+export const PatchDataSetData = createAsyncThunk('DataSets/PatchDataSetData', async (req: { DataSet: TrenDAP.iDataSet, dataSourceID, channelID, record }, { dispatch }) => {
+    return await UpdateDataSetData(req.DataSet, req.dataSourceID, req.channelID, req.record);
 });
 
 // #endregion
@@ -63,7 +74,8 @@ export const DataSetsSlice = createSlice({
         Error: null,
         SortField: 'UpdatedOn',
         Ascending: false,
-        Record: { ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 52) - 1, Months: Math.pow(2, 12) - 1 }
+        Record: {
+            ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', Context: 'Relative', RelativeValue: 30, RelativeWindow: 'Day', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 52) - 1, Months: Math.pow(2, 12) - 1, Data: {Status: 'unitiated', Error: null} }
     } as Redux.State<TrenDAP.iDataSet>,
     reducers: {
         Sort: (state, action) => {
@@ -92,7 +104,7 @@ export const DataSetsSlice = createSlice({
         builder.addCase(FetchDataSets.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            const results = action.payload.map(r => ({ ...r, From: moment(r.From).format('YYYY-MM-DD'), To: moment(r.To).format('YYYY-MM-DD') }));
+            const results = action.payload.map(r => ({ ...r, From: moment(r.From).format('YYYY-MM-DD'), To: moment(r.To).format('YYYY-MM-DD'), Data: { Status: 'unitiated', Error: null}}));
             const sorted = _.orderBy(results, [state.SortField], [state.Ascending ? "asc" : "desc"]);
             state.Data = sorted;
         });
@@ -135,6 +147,20 @@ export const DataSetsSlice = createSlice({
             state.Status = 'changed';
             state.Error = null;
         });
+
+        builder.addCase(CloneDataSet.pending, (state, action) => {
+            state.Status = 'loading';
+        });
+        builder.addCase(CloneDataSet.rejected, (state, action) => {
+            state.Status = 'error';
+            state.Error = action.error.message;
+
+        });
+        builder.addCase(CloneDataSet.fulfilled, (state, action) => {
+            state.Status = 'changed';
+            state.Error = null;
+        });
+
         builder.addCase(RemoveDataSet.pending, (state, action) => {
             state.Status = 'loading';
         });
@@ -173,6 +199,9 @@ export const DataSetsSlice = createSlice({
                 state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'unitiated', Error: null};
 
         });
+        builder.addCase(PatchDataSetData.pending, (state, action) => {
+            state.Data.find(d => d.ID === action.meta.arg.DataSet.ID).Data = { Status: 'changed', Error: null };
+        });
 
     }
 
@@ -197,7 +226,6 @@ export const SelectDataSetsForUser = (state: Redux.StoreState, user) => state.Da
 export const SelectDataSetsAllPublicNotUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.Public && ws.User !== user);
 export const SelectDataSetsSortField = (state: Redux.StoreState)  => state.DataSets.SortField;
 export const SelectDataSetsAscending = (state: Redux.StoreState)  => state.DataSets.Ascending;
-
 // #endregion
 
 // #region [ Async Functions ]
@@ -218,11 +246,11 @@ function GetDataSets(): JQuery.jqXHR<TrenDAP.iDataSet[]> {
     });
 }
 
-function GetDataSetData(id: number) {
+function GetDataSetData(dataSet: TrenDAP.iDataSet) {
     return new Promise((resolve, reject) => {
         ajax({
             type: "GET",
-            url: `${homePath}api/DataSet/Query/${id}`,
+            url: `${homePath}api/DataSet/Query/${dataSet.ID}`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
@@ -230,10 +258,51 @@ function GetDataSetData(id: number) {
         }).done(data => resolve(data)).fail(err => reject(err));
     }).then(data => {
         const db = new TrenDAPDB();
-        db.Add("DataSet", id, data);
-        return id;
+        db.Add("DataSet", dataSet.ID, dataSet.Name, data);
+        return dataSet.ID;
     });
 }
+
+
+export async function UpdateDataSetData(dataSet: TrenDAP.iDataSet, dataSourceID: number, channelID: number, record: TrenDAP.iXDATrendDataPoint | TrenDAP.iXDATrendDataPoint[]) {
+    const db = new TrenDAPDB();
+    const data = await db.Read('DataSet', dataSet.ID);
+
+    const newData = [...data.Data];
+
+    if ((record as TrenDAP.iXDATrendDataPoint[]).length == undefined) {
+        let ref = ((newData.find(d => d.DataSource.ID === dataSourceID)?.Data ?? [])
+            .find(d => d.ID === channelID)?.Data ?? [])
+            .find(d => d.Timestamp === (record as TrenDAP.iXDATrendDataPoint).Timestamp)
+
+        if (ref) {
+            newData.find(d => d.DataSource.ID === dataSourceID).Data.find(d => d.ID === channelID).Data.find(d => d.Timestamp === (record as TrenDAP.iXDATrendDataPoint).Timestamp).QualityFlags = (record as TrenDAP.iXDATrendDataPoint).QualityFlags;
+
+            return db.Add("DataSet", dataSet.ID, dataSet.Name, newData);
+        }
+
+    }
+    else {
+        (record as TrenDAP.iXDATrendDataPoint[]).forEach(r => {
+            let ref = ((newData.find(d => d.DataSource.ID === dataSourceID)?.Data ?? [])
+                .find(d => d.ID === channelID)?.Data ?? [])
+                .find(d => d.Timestamp === r.Timestamp)
+
+            if (ref) {
+                newData.find(d => d.DataSource.ID === dataSourceID).Data.find(d => d.ID === channelID).Data.find(d => d.Timestamp === r.Timestamp).QualityFlags = r.QualityFlags;
+
+            }
+
+        });
+
+        return db.Add("DataSet", dataSet.ID, dataSet.Name, newData);
+
+
+    }
+
+    
+}
+
 
 function PostDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> {
     return ajax({
@@ -247,16 +316,20 @@ function PostDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> 
     });
 }
 
-function DeleteDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> {
+function DeleteDataSet(dataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> {
     return ajax({
         type: "DELETE",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
-        data: JSON.stringify(DataSet),
+        data: JSON.stringify(dataSet),
         cache: false,
         async: true
-    });
+    }).then(() => {
+        const db = new TrenDAPDB();
+        db.Delete("DataSet",dataSet.ID);
+        return dataSet;
+    });;
 }
 
 function PatchDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> {
@@ -273,6 +346,10 @@ function PatchDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet>
 
 function GetDataSetDataLocal(DataSet: TrenDAP.iDataSet): Promise<{Created: number, ID: number}> {
     const db = new TrenDAPDB();
-    return db.Read('DataSet', DataSet.ID).then(data => ({ID: data.ID, Created: data.Created}));
+    return db.Read('DataSet', DataSet.ID).then(data => {
+        if (data == null)
+            throw ('Data not loaded into indexedb.');
+        return { ID: data.ID, Created: data.Created}
+    });
 }
 // #endregion

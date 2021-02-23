@@ -49,6 +49,7 @@ module.exports = env => {
                 {
                     test: /\.js$/,
                     enforce: "pre",
+                    exclude: [path.resolve(__dirname,'node_modules')],
                     loader: "source-map-loader"
                 },
                 { test: /\.(woff|woff2|ttf|eot|svg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader?limit=100000" },

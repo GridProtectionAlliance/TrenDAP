@@ -54,17 +54,6 @@ const SideNavBar: React.FunctionComponent = (props: {}) => {
             <nav className={"bg-light " + styles.sidebar}>
                 <div className={styles["sidebar-sticky"]}>
                     <ul className="nav flex-column">
-                        <li className="nav-item">
-                        <Link className="nav-link" to={`${homePath}WorkSpaces`}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-home">
-                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                                </svg>
-                                Workspaces <span className="sr-only">(current)</span>
-                        </Link>
-                        {location.pathname === `${homePath}WorkSpaces` ? <AddNewWorkSpace /> : null}
-
-                        </li>
                         <li className="nav-item" style={{position: 'relative'}}>
                             <Link className="nav-link" to={ `${homePath}DataSources`}>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-file">
@@ -90,6 +79,18 @@ const SideNavBar: React.FunctionComponent = (props: {}) => {
                             </Link>
                             {location.pathname === `${homePath}DataSets` ? <NavLink style={{position: 'absolute', top: 10, right: 10}}to={`${homePath}AddNewDataSet`}>{CirclePlusSVG() }</NavLink>: null}
                         </li>
+                        <li className="nav-item" style={{ position: 'relative' }}>
+                            <Link className="nav-link" to={`${homePath}WorkSpaces`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-home">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                                    Workspaces <span className="sr-only">(current)</span>
+                            </Link>
+                            {location.pathname === `${homePath}WorkSpaces` ? <AddNewWorkSpace /> : null}
+
+                        </li>
+
                     </ul>
                     <h6 className={styles["sidebar-heading"] + " d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted"}>
                         <span>Recent Workspaces</span>

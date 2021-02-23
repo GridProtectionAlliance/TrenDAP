@@ -38,6 +38,7 @@ $sideMargin: 200;
 	a {
 		color: #78828d;
 	}
+
 }
 
 .sidebar-sticky {
@@ -58,6 +59,10 @@ $sideMargin: 200;
 	height: calc(100% - #{$topMargin}px);
 	overflow: hidden;
 	left: #{$sideMargin}px;
+
+	svg{
+		user-select: none;
+	}
 }
 
 .navbarbuttons {
@@ -123,6 +128,7 @@ $tabHeight: 42;
 	text-align: center;
 	width: 100%;
 	z-index: 1000;
+	user-select: none;
 
 	span .widgit-controls {
 		visibility: hidden;

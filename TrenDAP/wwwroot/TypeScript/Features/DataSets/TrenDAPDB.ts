@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 import { TrenDAP } from "../../global";
+import moment from "moment";
 
 export interface DataSetTableRow {
     ID: number,
@@ -101,13 +102,74 @@ export default class TrenDAPDB {
         });
     }
 
-    public async Add(table: string, id: number, record: any) {
+    public Add(table: string, id: number, name: string, record: any) {
+        return new Promise(async (resolve, reject) => {
+
+
+            let db = await this.OpenDB();
+
+            let tx = db.transaction(table, 'readwrite');
+            let store = tx.objectStore(table);
+            let result = store.put({ ID: id, Created: moment().format('MM/DD/YYYY HH:mm'), Name: name, Data: record });
+
+            result.onsuccess = (evt: any) => {
+                resolve(evt.target.result);
+            };
+
+            result.onerror = (evt: any) => {
+                reject(evt.target.error);
+            };
+
+            tx.oncomplete = () => db.close();
+        })
+    }
+
+    public AddMultiple(table: string, id: number, name: string, record: any[]) {
+        return new Promise(async (resolve, reject) => {
+
+
+            let db = await this.OpenDB();
+
+            let tx = db.transaction(table, 'readwrite');
+            let store = tx.objectStore(table);
+            Promise.all(record.map(r => new Promise((res, rej) => {
+                let result = store.put({ ID: id, Created: moment().format('MM/DD/YYYY HH:mm'), Name: name, Data: record });
+
+                result.onsuccess = (evt: any) => {
+                    res(evt.target.result);
+                };
+
+                result.onerror = (evt: any) => {
+                    rej(evt.target.error);
+                };
+            }))).then(d => resolve(d)).catch(err => reject(err));
+
+            tx.oncomplete = () => db.close();
+        })
+    }
+
+
+    public Delete(table: string, id: number) {
+        return new Promise(async (resolve, reject) => {
+
         let db = await this.OpenDB();
 
         let tx = db.transaction(table, 'readwrite');
         let store = tx.objectStore(table);
-        store.put({ ID: id, Created: new Date().getTime(), Data: record });
+        let result = store.delete(id);
+        result.onsuccess = (evt: any) => {
+            resolve(evt.target.result);
+        };
+
+        result.onerror = (evt: any) => {
+            reject(evt.target.error);
+        };
         tx.oncomplete = () => db.close();
+
+
+        })
+
     }
+
 
 }

@@ -32,6 +32,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -39,7 +40,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TrenDAP.Controllers;
-using static TrenDAP.Controllers.OpenXDAController;
+using static TrenDAP.Controllers.TrenDAPDBController;
 
 namespace TrenDAP.Model
 {
@@ -55,20 +56,34 @@ namespace TrenDAP.Model
         [UseEscapedName]
         public DateTime To { get; set; }
         [UseEscapedName]
+        public string Context { get; set; }
+        [UseEscapedName]
+        public double RelativeValue { get; set; }
+        [UseEscapedName]
+        public string RelativeWindow { get; set; }
+        [UseEscapedName]
         public int Hours { get; set; }
         [UseEscapedName]
         public int Days { get; set; }
         [UseEscapedName]
         public long Weeks { get; set; }
         [UseEscapedName]
-        public int Months  { get; set; }
+        public int Months { get; set; }
 
         [UseEscapedName]
         public string User { get; set; }
         [UseEscapedName]
         public byte[] JSON { get; set; }
         [NonRecordField]
-        public string JSONString => Encoding.ASCII.GetString(JSON);
+        public string JSONString
+        {
+            get
+            {
+                try { return Encoding.UTF8.GetString(JSON); }
+                catch { return Encoding.ASCII.GetString(JSON); }
+            } 
+            
+        }
 
         [UseEscapedName]
         public bool Public { get; set; }
@@ -89,24 +104,26 @@ namespace TrenDAP.Model
         private IConfiguration Configuration { get; }
         #endregion
 
-        public DataSetController(IConfiguration configuration) : base(configuration){
+        public DataSetController(IConfiguration configuration) : base(configuration)
+        {
             Configuration = configuration;
         }
 
         public override ActionResult Post([FromBody] JObject record)
         {
             record["User"] = Request.HttpContext.User.Identity.Name;
-            record["JSON"] = Encoding.ASCII.GetBytes(record["JSONString"].ToString());
+            record["JSON"] = Encoding.UTF8.GetBytes(record["JSONString"].ToString());
             return base.Post(record);
         }
         public override ActionResult Patch([FromBody] JObject record)
         {
-            record["JSON"] = Encoding.ASCII.GetBytes(record["JSONString"].ToString());
+            record["JSON"] = Encoding.UTF8.GetBytes(record["JSONString"].ToString());
             return base.Patch(record);
         }
 
         [HttpGet, Route("Query/{dataSetID:int}")]
-        public async Task<ActionResult> GetData(int dataSetID, CancellationToken cancellationToken) {
+        public async Task<ActionResult> GetData(int dataSetID, CancellationToken cancellationToken)
+        {
             try
             {
                 using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
@@ -123,7 +140,8 @@ namespace TrenDAP.Model
 
                 }
             }
-            catch (AggregateException ex) {
+            catch (AggregateException ex)
+            {
                 return StatusCode(StatusCodes.Status500InternalServerError, ex);
             }
             catch (Exception ex)
@@ -134,41 +152,66 @@ namespace TrenDAP.Model
 
         private Task<JObject> Query(DataSet dataset, DataSetJson json, string type, CancellationToken cancellationToken)
         {
-            if(type == "OpenXDA")
-                return QueryXDA(dataset, json, cancellationToken);
+            if (type == "TrenDAPDB")
+                return QueryTrenDAPDB(dataset, json, cancellationToken);
             else
                 return Task.FromResult(new JObject());
         }
 
-        private async Task<JObject> QueryXDA(DataSet dataset, DataSetJson json, CancellationToken cancellationToken) {
-            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+        private Task<JObject> QueryTrenDAPDB(DataSet dataset, DataSetJson json, CancellationToken cancellationToken)
+        {
+            return Task.Run(async () =>
             {
-                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
-                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", json.DataSource.ID);
-
-                XDADataSetData setData = json.Data.ToObject<XDADataSetData>();
-                DataTable table = GetDataTable(json.DataSource.ID, dataset, setData, Configuration, cancellationToken);
-                IEnumerable<Point> points = QueryHIDS(json.DataSource.ID, dataset, setData, Configuration, cancellationToken);
-
-                JObject jObject = new JObject();
-                jObject["DataSource"] = new JObject();
-                jObject["DataSource"]["ID"] = dataSource.ID;
-                jObject["DataSource"]["Name"] = dataSource.Name;
-                jObject["DataSource"]["Type"] = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
-                jObject["From"] = dataset.From;
-                jObject["To"] = dataset.To;
-                IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
-                var groupjoin = tableJson.GroupJoin(points, row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) =>
+                using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
                 {
-                    row["Data"] = JArray.FromObject(resultcollection);
-                    return row;
-                });
+                    List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
+                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", json.DataSource.ID);
+                    
+                    XDADataSetData setData = json.Data.ToObject<XDADataSetData>();
 
-                jObject["Data"] = JArray.FromObject(groupjoin);
+                    JObject jObject = new JObject();
+                    jObject["DataSource"] = new JObject();
+                    jObject["DataSource"]["ID"] = dataSource.ID;
+                    jObject["DataSource"]["Name"] = dataSource.Name;
+                    jObject["DataSource"]["Type"] = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
+                    jObject["DataSource"]["OpenSEE"] = await GetOpenSEEURL(dataSource.ID, Configuration);
 
-                return jObject;
-            }
+                    HIDSPost post = CreatePost(dataset, setData);
+
+                    jObject["Context"] = dataset.Context;
+                    jObject["From"] = post.StartTime.ToString("MM/dd/yyyy");
+                    jObject["To"] = post.EndTime.ToString("MM/dd/yyyy");
+
+                    DataTable table = GetDataTable(json.DataSource.ID, post, Configuration, cancellationToken);
+
+                    if (table.Rows.Count > 0) {
+                        Task<string> eventsTask = GetEvents(json.DataSource.ID, post, Configuration, cancellationToken);
+                        Task<string> alarmsTask = GetAlarms(json.DataSource.ID, post, Configuration, cancellationToken);
+
+                        IAsyncEnumerable<Point> points = QueryHIDSDirectly(table, json.DataSource.ID, post, Configuration, cancellationToken);
+                        IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
+
+                        string eventsString = await eventsTask;
+                        JArray events = JArray.Parse(eventsString);
+                        string alarmsString = await alarmsTask;
+                        var groupjoin = tableJson.GroupJoin(points.ToArrayAsync().Result, row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) =>
+                        {
+                            row["Events"] = JArray.FromObject(events.Where(token => int.Parse(token["ChannelID"].ToString()) == int.Parse(row["ID"].ToString())));
+                            row["Data"] = JArray.FromObject(resultcollection);
+                            return row;
+                        });
+
+                        jObject["Data"] = JArray.FromObject(groupjoin);
+                    }
+                    else
+                        jObject["Data"] = JArray.FromObject(new List<int> () { });
+
+                    return jObject;
+                }
+            });
+
         }
+
 
     }
 

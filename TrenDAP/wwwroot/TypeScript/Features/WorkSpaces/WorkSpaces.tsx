@@ -60,8 +60,8 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                         <Table<TrenDAP.iWorkSpace>
                             cols={[
                                 { key: 'Name', label: 'Name' },
-                                { key: 'DataSetID', label: 'Data Set', content: (item, key, style) => dataSets.find(ds => ds.ID === item.ID)?.Name },
-                                { key: 'Public', label: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
+                                { key: 'DataSetID', label: 'Data Set', content: (item, key, style) => dataSets.find(ds => ds.ID === item.DataSetID)?.Name },
+                                { key: 'Public', label: 'Global', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
                                 { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
                                     {
                                         key: null, label: '', content: (item, key, style) =>
@@ -90,7 +90,7 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
             </div>
             <div className="col-4" style={{ padding: '0 0 0 0' }}>
                 <div className="card ">
-                    <div className="card-header">Public Workspaces</div>
+                    <div className="card-header">Global Workspaces</div>
                     <div className="card-body">
                         <Table<TrenDAP.iWorkSpace>
                             cols={[

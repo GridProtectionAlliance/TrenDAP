@@ -30,6 +30,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 import { SelectNewXDADataSet } from './DataSetsSlice';
 import { SelectOpenXDA, FetchOpenXDA } from '../OpenXDA/OpenXDASlice';
+import moment from 'moment';
 
 
 const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
@@ -69,7 +70,7 @@ const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (
                     dataSources.map((ds, index) => (
                         <div className={"tab-pane container " + (tab === index.toString() ? 'active' : 'fade')} id={index} key={index}>
                             {
-                                (dataSourceTypes.find(dst => dst.ID === ds.DataSource.DataSourceTypeID)?.Name === "OpenXDA" ? <DataSetOpenXDA {...props} Data={ds} Index={index}/>: null )
+                                (dataSourceTypes.find(dst => dst.ID === ds.DataSource.DataSourceTypeID)?.Name === "TrenDAPDB" ? <DataSetOpenXDA {...props} Data={ds} Index={index}/>: null )
                             }
                         </div>
                     ))
@@ -121,7 +122,7 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
     }
 
     function GetDS(dataSource: TrenDAP.iDataSource) {
-        if (dataSourceTypes.find(dst => dst.ID === dataSource.DataSourceTypeID).Name === "OpenXDA")
+        if (dataSourceTypes.find(dst => dst.ID === dataSource.DataSourceTypeID).Name === "TrenDAPDB")
             return SelectNewXDADataSet();
         else
             return {};
@@ -130,12 +131,13 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
     return (
         <form>
             <Input<TrenDAP.iDataSet> Record={props.Record} Field="Name" Setter={(record) => props.SetDataSet(record)} Valid={valid} />
-            <DateRangePicker<TrenDAP.iDataSet> Record={props.Record} FromField="From" ToField="To" Setter={props.SetDataSet} Label="Date Range" />
+            <RelativeDateRangePicker Record={props.Record} Setter={(record) => props.SetDataSet(record)}/>
+            {/*<DateRangePicker<TrenDAP.iDataSet> Record={props.Record} FromField="From" ToField="To" Setter={props.SetDataSet} Label="Date Range" />*/}
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Hours" Label="Hour of Day" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Days" Label="Day of Week" Setter={(record) => props.SetDataSet(record)} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} />
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Weeks" Label="Week of Year" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 53 }, (_, i) => i.toString())} />
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Months" Label="Month of Year" Setter={(record) => props.SetDataSet(record)} Enum={['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']} />
-            <CheckBox<TrenDAP.iDataSet> Record={props.Record} Field="Public" Setter={(record) => props.SetDataSet(record)} />
+            <CheckBox<TrenDAP.iDataSet> Record={props.Record} Field="Public" Label='Global' Setter={(record) => props.SetDataSet(record)} />
             <div className="form-group">
             <div className="dropup">
                 <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -144,7 +146,7 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
                 <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
                     <div className="dropdown-header">Your DataSources</div>
                         {dataSources.map(ds => <a key={ds.ID} className="dropdown-item" onClick={() => AddDS(ds) }>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name  })</a>)}
-                    <div className="dropdown-header">Public DataSources</div>
+                    <div className="dropdown-header">Global DataSources</div>
                         {publicDataSources.map(ds => <a key={ds.ID} className="dropdown-item" onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
                 </div>
             </div>
@@ -153,6 +155,118 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
     );
 
 }
+
+const RelativeDateRangePicker = (props: { Record: TrenDAP.iDataSet, Setter: (record:TrenDAP.iDataSet) => void }) => {
+    const [context, setContext] = React.useState<'Relative' | 'Fixed Dates'>(props.Record.Context);
+    const [relativeValue, setRelativeValue] = React.useState<number>(props.Record.RelativeValue);
+    const [relativeWindow, setRelativeWindow] = React.useState<'Day' | 'Week' | 'Month' | 'Year'>(props.Record.RelativeWindow)
+    const [startDate, setStartDate] = React.useState<string>(props.Record.From);
+    const [endDate, setEndDate] = React.useState<string>(props.Record.To);
+
+    React.useEffect(() => {  
+        if (context !== props.Record.Context) setContext(props.Record.Context);
+        if (relativeValue !== props.Record.RelativeValue) setRelativeValue(props.Record.RelativeValue);
+        if (relativeWindow !== props.Record.RelativeWindow) setRelativeWindow(props.Record.RelativeWindow);
+        if (startDate !== props.Record.From) setStartDate(props.Record.From);
+        if (endDate !== props.Record.To) setEndDate(props.Record.To);
+    }, [props.Record]);
+
+    React.useEffect(() => {
+        if (context !== props.Record.Context) {
+            const newRecord = { ...props.Record };
+            newRecord.Context = context;
+            props.Setter(newRecord);
+        }
+    }, [context]);
+
+    React.useEffect(() => {
+        if (relativeValue !== props.Record.RelativeValue) {
+            const newRecord = { ...props.Record };
+            newRecord.RelativeValue = relativeValue;
+            props.Setter(newRecord);
+        }
+    }, [relativeValue]);
+
+    React.useEffect(() => {
+        if (relativeWindow !== props.Record.RelativeWindow) {
+            const newRecord = { ...props.Record };
+            newRecord.RelativeWindow = relativeWindow;
+            props.Setter(newRecord);
+        }
+    }, [relativeWindow]);
+
+    React.useEffect(() => {
+        if (startDate !== props.Record.From) {
+            const newRecord = { ...props.Record };
+            newRecord.From = startDate;
+            props.Setter(newRecord);
+        }
+    }, [startDate]);
+
+    React.useEffect(() => {
+        if (endDate !== props.Record.To) {
+            const newRecord = { ...props.Record };
+            newRecord.To = endDate;
+            props.Setter(newRecord);
+        }
+    }, [endDate]);
+
+
+    const ShowContent = () => {
+        if (context == 'Relative')
+            return ShowRelative();
+        else return ShowFixed();
+    }
+
+    const ShowRelative = () => {
+        return (
+            <>
+                <div className='col'>
+                    <label>Time Window Size</label>
+                    <input value={relativeValue} type='number' className='form-control' onChange={(evt) => setRelativeValue(parseFloat(evt.target.value)) }/>
+                </div>
+                <div className='col'>
+                    <label>Time Window Units</label>
+                    <select className='form-control' value={relativeWindow} onChange={(evt) => setRelativeWindow(evt.target.value as any)}>
+                        <option value='Day'>Day(s)</option>
+                        <option value='Week'>Week(s)</option>
+                        <option value='Month'>Month(s)</option>
+                        <option value='Year'>Year(s)</option>
+                    </select>
+                </div>
+            </>
+        );
+    }
+    const ShowFixed = () => {
+        return (
+            <>
+                <div className='col'>
+                    <label>Start Date</label>
+                    <input value={startDate} type='date' className='form-control' onChange={(evt) => setStartDate(evt.target.value)} />
+                </div>
+                <div className='col'>
+                    <label>End Date</label>
+                    <input value={endDate} type='date' className='form-control' onChange={(evt) => setEndDate(evt.target.value)} />
+                </div>
+            </>
+        );
+    }
+
+
+    return (
+        <div className='row'>
+            <div className='col'>
+                <label>Time Context</label>
+                <select className='form-control' value={context} onChange={(evt) => setContext(evt.target.value as any)}>
+                    <option value='Relative'>Relative</option>
+                    <option value='Fixed Dates'>Fixed Dates</option>
+                </select>
+            </div>
+            {ShowContent()}
+        </div>
+    );
+}
+
 
 const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: {DataSource: TrenDAP.iDataSource, Data: TrenDAP.iXDADataSet}, Index: number, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
     const dispatch = useDispatch();

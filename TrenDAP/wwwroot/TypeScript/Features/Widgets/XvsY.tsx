@@ -260,7 +260,7 @@ export default function XvsYJSX(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
                                     <div className="card-body">
                                         <h6>X Series</h6>
                                         <hr/>
-                                        <SeriesSelect Data={record.AvailableSeries()} AddSeries={(id, dsID) => setRecord(record.SetSeries('x', id, dsID))} />
+                                        <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Axis='x' Callback={() => setRecord(new XvsY(record))}  />
                                         {(record.JSON.X.Series != undefined ?
                                             <div className="row">
                                                 <div className="col-3">
@@ -271,7 +271,7 @@ export default function XvsYJSX(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
                                             </div> : null)}
                                         <h6>Y Series</h6>
                                         <hr />
-                                        <SeriesSelect Data={record.AvailableSeries()} AddSeries={(id, dsID) => setRecord(record.SetSeries('y', id, dsID))} />
+                                        <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Axis='y' Callback={() => setRecord(new XvsY(record))}  />
                                         {(record.JSON.Y.Series != undefined ?
                                             <div className="row">
                                                 <div className="col-3">

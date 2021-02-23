@@ -68,14 +68,15 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
         const margin = { bottom: 50, left: 50, top: 40, right: (profile ? 70 : 20) };
         const svgHeight = record.Height - margin.top - margin.bottom;
 
+        const extent = d3.extent([].concat(...settings.JSON.Series.map(series => ((settings.Data.find(d => d.DataSource.ID === series.DataSourceID)?.Data ??[]).find(d=> d.ID === series.ID)?.Data?? []).map(d => d[series.Field] as number))));
         //// set the parameters for the histogram
         let histograms = (settings.JSON?.Series ?? []).map(series => {
-            let dataSource = props.Data.find(d => d.DataSource.ID === series.DataSourceID)?.Data ?? [];
+            let dataSource = settings.Data.find(d => d.DataSource.ID === series.DataSourceID)?.Data ?? [];
             let datum = dataSource.find(d => d.ID === series.ID)?.Data.map(d => d[series.Field]) ?? [];
             let histogram = d3.histogram<number, number>()
                 .value(function (d) { return d; })   // I need to give the vector of value
-                .domain(d3.extent(datum) as [number, number])  // then the domain of the graphic
-                .thresholds(series.BinCount); // then the numbers of bins
+                .domain(extent)  // then the domain of the graphic
+                .thresholds(settings.JSON.BinCount); // then the numbers of bins
 
             // And apply this function to data to get the bins
             return histogram(datum);
@@ -111,31 +112,36 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
             .call(d3.axisLeft(y));
         svg.append("text")
-            .attr("transform", "rotate(-90) translate(-" + props.Height/2 + "," + margin.left/3 + ")")
+            .attr("transform", "rotate(-90) translate(-" + settings.Height/2 + "," + margin.left/3 + ")")
             .style("text-anchor", "middle")
             .text("Counts")
 
-        svg.selectAll("rect").remove();
-        let histogram = [].concat(...histograms.map((histogram, index) => histogram.map((h: any) => { h.Color = settings.JSON.Series[index].Color; return h })));
-        svg.selectAll("rect")
-            .data(histogram)
-            .enter()
-            .append("rect")
-            .attr("x", 1)
-            .attr("transform", (d) => "translate(" + (margin.left + x(d.x0)) + "," + (margin.top + y(d.length)) + ")")
-            .attr("width", (d) => (x(d.x1) - x(d.x0) > 2 ? x(d.x1) - x(d.x0) : 2) - 1)
-            .attr("height", (d) => svgHeight - y(d.length))
-            .attr("fill", (d) => d.Color)
-            //.attr("opacity", 0.3)
+        const binWidth = Math.max(...histograms.map(histogram => Math.max(...histogram.map(a => x(a.x1) - x(a.x0)))));
+        //svg.selectAll("g.bins").remove();
 
+        svg.selectAll("g.bins")
+            .data(settings.JSON.Series)
+            .enter()
+                .append('g').attr('class', 'bins').attr("fill", (series) => series.Color)
+            .attr('transform', (d, index) => `translate(${margin.left + index * binWidth / settings.JSON.Series.length},${margin.top})`)
+                //.attr("opacity", 0.3)
+                .selectAll('rect')
+                .data((series, index) => histograms[index])
+                .enter()
+                    .append("rect")
+                    .attr("x", 1)
+                    .attr("transform", (d,i,g) => `translate(${x(d.x0)},${y(d.length)})`)
+            .attr("width", (d) => (x(d.x1) - x(d.x0) > 2 ? (x(d.x1) - x(d.x0)) / settings.JSON.Series.length : 2) - 1)
+                    .attr("height", (d) => svgHeight - y(d.length))
+            
         if (profile) {
             const profiles = record.JSON.Series.filter(series => series.Profile).map((series, index) => {
-                let dataSource = props.Data.find(d => d.DataSource.ID === series.DataSourceID)?.Data ?? [];
+                let dataSource = settings.Data.find(d => d.DataSource.ID === series.DataSourceID)?.Data ?? [];
                 let datum = dataSource.find(d => d.ID === series.ID)?.Data.map(d => d[series.Field]) ?? [];
                 let histogram = d3.histogram<number, number>()
                     .value(function (d) { return d; })   // I need to give the vector of value
                     .domain(d3.extent(datum) as [number, number])  // then the domain of the graphic
-                    .thresholds(series.BinCount)(datum); // then the numbers of bins
+                    .thresholds(settings.JSON.BinCount)(datum); // then the numbers of bins
 
                 return { Color: series.ProfileColor, Profile: histogram.map((sum => value => sum += value.length)(0)).map((prof, i) => ({ Bin: histogram[i].x0, Value: prof }))};
 
@@ -148,10 +154,10 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
                 .domain([0, pyMax]);   // d3.hist has to be called before the Y axis obviously
 
             const pyAxis = svg.append("g")
-                .attr("transform", "translate(" + (props.Width - margin.right) + "," + margin.top + ")")
+                .attr("transform", "translate(" + (settings.Width - margin.right) + "," + margin.top + ")")
                 .call(d3.axisRight(py));
             svg.append("text")
-                .attr("transform", "rotate(-90) translate(-" + props.Height / 2 + "," + (props.Width - margin.right/3) + ")")
+                .attr("transform", "rotate(-90) translate(-" + settings.Height / 2 + "," + (settings.Width - margin.right/3) + ")")
                 .style("text-anchor", "middle")
                 .text("Profile")
 
@@ -192,9 +198,16 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
                             <button className="btn btn-outline-secondary" type="button" onClick={(evt) => setRecord(new Histogram({ ...record, Width: window.innerWidth - 200 }))}>Full Width</button>
                         </div>
                     </div>
+                    <div className='row'>
+                        <div className='col'>
+                            <Input<TrenDAP.iHistogram> Field='Units' Record={record.JSON} Type='text' Setter={(r) => setRecord(new Histogram({ ...record, JSON: r }))} Valid={(field) => true} />
+                        </div>
+                        <div className='col'>
+                            <Input<TrenDAP.iHistogram> Field='BinCount' Label='Bins' Record={record.JSON} Type='number' Setter={(r) => setRecord(new Histogram({ ...record, JSON: r }))} Valid={(field) => true} />
 
-                    <Input<TrenDAP.iHistogram> Field='Units' Record={record.JSON} Type='text' Setter={(r) => setRecord(new Histogram({ ...record, JSON: r }))} Valid={(field) => true} />
-
+                        </div>
+                    </div>
+                    
                     <div className="row">
                         <div className="col">
                             <Input<TrenDAP.iHistogram> Field='Min' Label='Min' Record={record.JSON as TrenDAP.iHistogram} Type='number' Setter={(r) => setRecord({ ...record, JSON: r })} Valid={(field) => true} />
@@ -220,10 +233,10 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
                             </div>
                             <div id={"collapse" + i} className="collapse show" data-parent="#accordion">
                                     <div className="card-body">
-                                        <SeriesSelect Data={record.AvailableSeries()} AddSeries={(id, dsID) => setRecord(record.AddSeries(id, dsID)) } />
+                                        <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Callback={() => setRecord(new Histogram(record))} />
 
                                         <ul className="list-group">
-                                            {(d.DataSource.Type === 'OpenXDA' ? (record.JSON?.Series ?? []).map((series,ind) => {
+                                            {(d.DataSource.Type === 'TrenDAPDB' ? (record.JSON?.Series ?? []).map((series,ind) => {
                                                 let datum = d.Data.find(dd => dd.ID === series.ID);
                                                 if (datum === undefined) return null;
                                                 return (
@@ -254,14 +267,12 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
 }
 
 const SeriesPicker = (props: { Index: number, Series: TrenDAP.iHistogramSeries, Widget: Histogram, Callback: (widget: Histogram) => void }) => {
-    const [bins, setBins] = React.useState<number>(props.Series.BinCount);
     const [color, setColor] = React.useState<string>(props.Series.Color);
     const [type, setType] = React.useState<TrenDAP.iXDATrendDataPointField>(props.Series.Field);
     const [profile, setProfile] = React.useState<boolean>(props.Series.Profile);
     const [pColor, setPColor] = React.useState<string>(props.Series.ProfileColor);
     React.useEffect(() => props.Callback(props.Widget.UpdateSeries(props.Index, "Color", color)), [color]);
     React.useEffect(() => props.Callback(props.Widget.UpdateSeries(props.Index, "Field", type)), [type]);
-    React.useEffect(() => props.Callback(props.Widget.UpdateSeries(props.Index, "BinCount", bins)), [bins]);
     React.useEffect(() => props.Callback(props.Widget.UpdateSeries(props.Index, "Profile", profile)), [profile]);
     React.useEffect(() => props.Callback(props.Widget.UpdateSeries(props.Index, "ProfileColor", pColor)), [pColor]);
 
@@ -275,10 +286,6 @@ const SeriesPicker = (props: { Index: number, Series: TrenDAP.iHistogramSeries, 
                     <option value="Minimum">Min</option>
                     <option value="Maximum">Max</option>
                 </select>
-            </div>
-            <div className="col-2">
-                <label >Bins</label>
-                <input type="number" className="form-control" value={bins} onChange={(evt) => setBins(parseInt(evt.target.value))}/>
             </div>
             <div className="col">
                 <label>Color</label>

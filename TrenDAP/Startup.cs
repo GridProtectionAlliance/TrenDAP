@@ -36,6 +36,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Security.Principal;
 using TrenDAP.WebApp;
+using Serilog;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 
 namespace TrenDAP
 {

@@ -58,7 +58,7 @@ CREATE TABLE DataSourceType
 )
 GO
 
-INSERT INTO DataSourceType (Name) VALUES ('OpenXDA')
+INSERT INTO DataSourceType (Name) VALUES ('TrenDAPDB')
 GO
 
 CREATE TABLE DataSource
@@ -91,6 +91,9 @@ GO
 CREATE TABLE DataSet
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    [Context] VARCHAR(11) NOT NULL,
+    [RelativeValue] FLOAT NOT NULL,
+    [RelativeWindow] VARCHAR(5) NOT NULL,
     [From] Date NOT NULL,
     [To] Date NOT NULL,
     [Hours] INT NOT NULL,

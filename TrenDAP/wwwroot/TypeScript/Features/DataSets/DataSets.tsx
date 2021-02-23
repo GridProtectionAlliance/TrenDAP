@@ -26,13 +26,14 @@ import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
 import Table from '@gpa-gemstone/react-table/lib/index'
-import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, FetchDataSetData } from './DataSetsSlice';
+import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, FetchDataSetData, CloneDataSet } from './DataSetsSlice';
 import EditDataSet from './EditDataSet';
-import { TrashCan, HeavyCheckMark, Pencil, Warning, CrossMark, Spinner } from './../../Constants'
+import { TrashCan, HeavyCheckMark, Pencil, Wrench, CrossMark, Spinner } from './../../Constants'
 import { useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 import DataSetData from './DataSetData';
+import { DNA } from '@gpa-gemstone/gpa-symbols';
 
 const DataSets: React.FunctionComponent = (props: {}) => {
 
@@ -62,10 +63,22 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                         <Table<TrenDAP.iDataSet>
                         cols={[
                             { key: 'Name', label: 'Name' },
-                            { key: 'Public', label: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
+                            { key: 'Public', label: 'Global', headerStyle: { width: 75 }, rowStyle: { width: 75 },content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
                             { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
                                 {
-                                    key: null, label: '', headerStyle: { width: 200 }, rowStyle: { width: 200 }, content: (item, key, style) => <span><DataSetData {...item}/><Link to={`${homePath}EditDataSet/${item.ID}`} className='btn'>{Pencil}</Link><a className="btn" onClick={() => dispatch(RemoveDataSet(item)) }>{TrashCan}</a></span>}
+                                    key: null,
+                                    label: '',
+                                    headerStyle: { width: 300 },
+                                    rowStyle: { width: 300 },
+                                    content: (item, key, style) =>
+                                    <span>
+                                            <DataSetData {...item} />
+                                            {item.Data?.Status === 'idle' ? <Link to={`${homePath}ViewDataSet/${item.ID}`} title='View/Edit DataSet Data.' className='btn'>{Wrench}</Link> : null}
+                                            <Link to={`${homePath}EditDataSet/${item.ID}`} title='Edit DataSet Parameters.' className='btn'>{Pencil}</Link>
+                                            <a title='Clone DataSet.' className="btn" onClick={() => dispatch(CloneDataSet(item))}>{DNA}</a>
+                                            <a title='Delete DataSet.' className="btn" onClick={() => dispatch(RemoveDataSet(item))}>{TrashCan}</a>
+                                    </span>
+                                }
 
                         ]}
                         tableClass="table table-hover"
@@ -83,7 +96,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
             </div>
             <div className="col-4" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header">Public DataSets</div>
+                    <div className="card-header">Global DataSets</div>
                     <div className="card-body">
                         <Table<TrenDAP.iDataSet>
                             cols={[
