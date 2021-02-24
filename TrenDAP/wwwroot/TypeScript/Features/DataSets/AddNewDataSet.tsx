@@ -33,9 +33,9 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
 
     const dataSet = useSelector(SelectRecord);
 
-    React.useEffect(() => {
-        dispatch(New);
-    }, []);
+    //React.useEffect(() => {
+    //    dispatch(New);
+    //});
 
     return (
         <div className="row" style={{margin: 10}}>
@@ -47,7 +47,7 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
                     <DataSet Record={dataSet} SetDataSet={(record) => dispatch(Update(record))} />
                 </div>
                 <div className="card-footer">
-                    <Link to={`${homePath}DataSets` } type="button" className="btn btn-primary" onClick={() => {
+                    <Link to={`${homePath}DataSets`} type="button" className="btn btn-primary" onClick={() => {
                         dispatch(AddDataSet(dataSet));
                     }}>Save</Link>
 

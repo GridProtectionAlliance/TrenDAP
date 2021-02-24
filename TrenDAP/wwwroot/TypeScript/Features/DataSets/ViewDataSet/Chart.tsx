@@ -48,8 +48,8 @@ export default function Chart(props: { Data: TrenDAP.iXDATrendDataPoint[], SetSe
             .attr('width', svgWidth)
             .attr('height', svgHeight);
 
-        const x = d3.scaleTime()
-            .domain(d3.extent(props.Data, d=> moment(d.Timestamp)))
+        const x = d3.scaleUtc()
+            .domain(d3.extent(props.Data, d=> moment.utc(d.Timestamp)))
             .range([margin.left, svgWidth - margin.right]);
 
         svg.selectAll('g.xaxis').remove();

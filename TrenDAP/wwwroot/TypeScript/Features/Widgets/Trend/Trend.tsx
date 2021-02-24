@@ -143,7 +143,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
         AddXAxis(svg, x);
 
         const y = GetYScale(svgHeight, axis);
-
+        svg.selectAll('g.yaxis').remove();
         AddYAxisLeft(axis, svg, y);
 
         const filteredData = ((record.Data.find(ds => ds.DataSource.ID === series.DataSourceID)?.Data ?? []).find(ds => ds.ID === series.ID)?.Data ?? []).filter(ds => moment(ds.Timestamp).toDate().getTime() >= settings.JSON.Min && moment(ds.Timestamp).toDate().getTime() <= settings.JSON.Max && ds[field] >= axis.Min && ds[field] <= axis.Max)
@@ -188,7 +188,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
             AddXAxis(svg, x);
 
             const y = GetYScale(svgHeight, axis);
-
+            svg.selectAll('g.yaxis').remove();
             AddYAxisLeft(axis, svg, y);
 
             const lineFunc = d3.line<[string, number]>().x(dd => x(moment(dd[0], 'YYYY-MM-DDTHH:mm:ss.fffZ'))).y(dd => y(dd[1]));
@@ -336,13 +336,12 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
         const svgWidth = parseInt(svg.attr('width'));
         const svgHeight = parseInt(svg.attr('height'));
 
-        svg.selectAll('g.lyaxis' + index).remove();
-        const yAxis = svg.append("g").classed('lyaxis' + index, true)
+        const yAxis = svg.append("g").classed('yaxis', true)
             .attr("transform", "translate(" + (margin.current.left - index * 50) + ",0)")
             .call(d3.axisLeft(y).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => d3.format("~s")(value)));
 
         const text = svg.append("g")
-            .classed('lyaxis' + index, true)
+            .classed('yaxis', true)
             .append("text")                 
             .text(axis.Units);
         if (rotate)
@@ -354,20 +353,20 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
     function AddYAxisRight(axis: TrenDAP.iYAxis, svg, y, index: number = 0) {
         const svgWidth = parseInt(svg.attr('width'));
         const svgHeight = parseInt(svg.attr('height'));
-        svg.selectAll('g.ryaxis' + index).remove();
-        const yAxis = svg.append("g").classed('ryaxis' + index, true)
+
+        const yAxis = svg.append("g").classed('yaxis', true)
             .attr("transform", "translate(" + (svgWidth - margin.current.right + index * 50) + ",0)")
             .call(d3.axisRight(y).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => d3.format("~s")(value)));
 
         const text = svg.append("g")
-            .classed('ryaxis' + index, true)
+            .classed('yaxis', true)
             .append("text")
             .text(axis.Units);
             text.attr("transform", "translate(" + (svgWidth - margin.current.right + index * 50) + "," + (svgHeight - margin.current.bottom / 2) + ")").style("text-anchor", "start");
     }
 
     function GetXScale(settings: Trend) {
-        return d3.scaleTime()
+        return d3.scaleUtc()
             .domain([settings.JSON.Min, settings.JSON.Max])     // can use this instead of 1000 to have the max of data: d3.max(data, function(d) { return +d.price })
             .range([margin.current.left, settings.Width - margin.current.right]);
     }

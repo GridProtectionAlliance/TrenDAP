@@ -47,6 +47,7 @@ export default function ViewDataSet() {
     const [criteria, setCriteria] = React.useState<{ Field: any, Condition: any, Value: number, AndOr }[]>([{ Field: 'Average', Condition: '>', Value: 0, AndOr: 'None' }]);
     const [showFlagged, setShowFlagged] = React.useState<boolean>(false);
     const [selectedPoint, setSelectedPoint] = React.useState<TrenDAP.iXDATrendDataPoint>(null);
+    const [selectedChannels, setSelectedChannels] = React.useState<TrenDAP.iDataSetReturn>({} as TrenDAP.iDataSetReturn );
 
     React.useEffect(() => {
         setCriteria([{ Field: 'Average', Condition: '>', Value: 0, AndOr: 'None' }]);
@@ -81,7 +82,24 @@ export default function ViewDataSet() {
     React.useEffect(() => {
         const d = (data.find(ds => ds.DataSource.ID === dataSourceID)?.Data ?? []).find(dd => dd.ID === channelID)?.Data ?? [];
         setSelectedData(d);
+        
     }, [channelID]);
+
+    React.useEffect(() => {
+        const dataSource = data.find(d => d.DataSource.ID === dataSourceID);
+        if (dataSource == undefined) return;
+        else if (dataSource.Data == undefined) return;
+        if (dataSource.DataSource.Type === 'TrenDAPDB') {
+            dataSource.Data.sort((a, b) => {
+                if (a.Meter + ' - ' + a.Name > b.Meter + ' - ' + b.Name) return 1;
+                else if (a.Meter + ' - ' + a.Name == b.Meter + ' - ' + b.Name) return 0;
+                else return -1;
+            })
+        }
+        setChannelID(dataSource.Data[0].ID);
+        setSelectedChannels(dataSource);
+
+    }, [dataSourceID]);
 
     function FlagData(record: TrenDAP.iXDATrendDataPoint | TrenDAP.iXDATrendDataPoint[]) {
         UpdateDataSetData(dataSet, dataSourceID, channelID, record).then(() => setFlag(1));
@@ -101,11 +119,12 @@ export default function ViewDataSet() {
                 <div className='col'>
                     <label>Channel</label>
                     <select className='form-control' value={channelID} onChange={(evt) => setChannelID(parseInt(evt.target.value))}>
-                        {Options(data.find(d => d.DataSource.ID === dataSourceID)) }
+                        {Options(selectedChannels) }
                     </select>
 
                 </div>
-                <div className='col-1' style={{width: 75}}>
+                <div className='col-2'>
+                    <button className='btn btn-primary' style={{ position: 'relative', top: 30, marginRight: 5 }} onClick={() => { }}>Add Virtual</button>
                     <button className='btn btn-primary' style={{ position: 'relative', top: 30 }} onClick={() => { /*setRecord(item); ;*/ setToggle(true)}}>Flag Data</button>
                 </div>
 
@@ -152,6 +171,13 @@ export default function ViewDataSet() {
                             </ul>
                         </div>
                         <div className="modal-footer">
+                            <button type="button" className="btn btn-primary pull-left" onClick={() => {
+                                let points = selectedData.filter(f => (f.QualityFlags/Math.pow(2,4) & 1) !== 0);
+                                points.forEach(p => p.QualityFlags = p.QualityFlags- Math.pow(2, 4));
+                                FlagData(points);
+                                setToggle(false);
+                            }}>Unflag All</button>
+
                             <button type="button" className="btn btn-primary" onClick={() => {
                                 let points = selectedData.filter(f => {
 
@@ -174,7 +200,7 @@ export default function ViewDataSet() {
                                         else return a && b.Value;
                                     },undefined);
                                 });
-                                points.forEach(p => p.QualityFlags = 1);
+                                points.forEach(p => p.QualityFlags = p.QualityFlags + Math.pow(2, 4));
                                 FlagData(points);
                                 setToggle(false);
                             }}>Process</button>

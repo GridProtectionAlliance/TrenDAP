@@ -30,7 +30,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 import { SelectNewXDADataSet } from './DataSetsSlice';
 import { SelectOpenXDA, FetchOpenXDA } from '../OpenXDA/OpenXDASlice';
-import moment from 'moment';
+import styles from '../../../Styles/app.scss';
 
 
 const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
@@ -48,6 +48,7 @@ const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (
 
     const [tab, setTab] = React.useState<string>('settings');
     const dataSources = JSON.parse(props.Record.JSONString);
+
     return (
         <>
             <ul className="nav nav-tabs" style={{padding:10}}>
@@ -56,8 +57,13 @@ const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (
                 </li>
                 {
                     dataSources.map((ds, index) => (
-                        <li className="nav-item" key={index}>
-                            <a className="nav-link" data-toggle="tab" onClick={() => setTab(index.toString())}>{ds.DataSource.Name }</a>
+                        <li className={"nav-item " + styles.workspacetab}  key={index}>
+                            <a className="nav-link" data-toggle="tab" onClick={() => setTab(index.toString())}>{ds.DataSource.Name}</a>
+                            <span onClick={() => {
+                                let json = JSON.parse(props.Record.JSONString);
+                                json.splice(index, 1);
+                                props.SetDataSet({ ...props.Record, JSONString: JSON.stringify(json) });
+                            }}>X</span>
                         </li>
                     ))
                 }
@@ -72,6 +78,7 @@ const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (
                             {
                                 (dataSourceTypes.find(dst => dst.ID === ds.DataSource.DataSourceTypeID)?.Name === "TrenDAPDB" ? <DataSetOpenXDA {...props} Data={ds} Index={index}/>: null )
                             }
+                           
                         </div>
                     ))
 

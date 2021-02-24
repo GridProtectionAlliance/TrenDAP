@@ -34,6 +34,7 @@ import AddNewWorkSpace from './Features/WorkSpaces/AddNewWorkSpace';
 import { SelectWorkSpacesForUser, SelectWorkSpacesStatus, FetchWorkSpaces, OpenCloseWorkSpace } from './Features/WorkSpaces/WorkSpacesSlice';
 import CirclePlusSVG from './CirclePlusSVG';
 import { Redux } from './global';
+import { New } from './Features/DataSets/DataSetsSlice';
 
 const SideNavBar: React.FunctionComponent = (props: {}) => {
     const location = useLocation();
@@ -77,7 +78,7 @@ const SideNavBar: React.FunctionComponent = (props: {}) => {
                                 <span>Data Sets</span>
 
                             </Link>
-                            {location.pathname === `${homePath}DataSets` ? <NavLink style={{position: 'absolute', top: 10, right: 10}}to={`${homePath}AddNewDataSet`}>{CirclePlusSVG() }</NavLink>: null}
+                        {location.pathname === `${homePath}DataSets` ? <NavLink style={{ position: 'absolute', top: 10, right: 10 }} to={`${homePath}AddNewDataSet`} onClick={() => dispatch(New({})) }>{CirclePlusSVG() }</NavLink>: null}
                         </li>
                         <li className="nav-item" style={{ position: 'relative' }}>
                             <Link className="nav-link" to={`${homePath}WorkSpaces`}>

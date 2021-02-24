@@ -26,6 +26,7 @@ import { TrenDAP } from './global';
 import { CreateGuid, RandomColor } from '@gpa-gemstone/helper-functions';
 import stats from 'stats-lite';
 import { random } from 'lodash';
+import moment from 'moment';
 
 export class Widget<T extends TrenDAP.WidgetClass> implements TrenDAP.iWidget<T>{
     JSON: T;
@@ -125,7 +126,7 @@ export class Trend extends Widget<TrenDAP.iTrend> {
         let dd: TrenDAP.iXDAReturnData[] = [].concat(...this.Data.map(d => d.Data));
         if (type === 'x')
         {
-            let ss = this.JSON.Series.map(series => (dd.find(d => d.ID === series.ID)?.Data ?? []).map(d => new Date(d.Timestamp).getTime()));
+            let ss = this.JSON.Series.map(series => (dd.find(d => d.ID === series.ID)?.Data ?? []).map(d => moment(d.Timestamp).toDate().getTime()));
             let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
             this.JSON.Max = Math.max(...[].concat(...mm));
             this.JSON.Min = Math.min(...[].concat(...mm));

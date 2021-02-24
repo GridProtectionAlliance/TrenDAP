@@ -75,7 +75,7 @@ export const DataSetsSlice = createSlice({
         SortField: 'UpdatedOn',
         Ascending: false,
         Record: {
-            ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', Context: 'Relative', RelativeValue: 30, RelativeWindow: 'Day', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 52) - 1, Months: Math.pow(2, 12) - 1, Data: {Status: 'unitiated', Error: null} }
+            ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', Context: 'Relative', RelativeValue: 30, RelativeWindow: 'Day', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1, Data: {Status: 'unitiated', Error: null} }
     } as Redux.State<TrenDAP.iDataSet>,
     reducers: {
         Sort: (state, action) => {
@@ -88,7 +88,7 @@ export const DataSetsSlice = createSlice({
             state.Data = sorted as TrenDAP.iDataSet[];
         },
         New: (state, action) => {
-            state.Record = { ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 52) - 1, Months: Math.pow(2, 12) - 1 } as TrenDAP.iDataSet
+            state.Record = { ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', Context: 'Relative', RelativeValue: 30, RelativeWindow: 'Day', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1 } as TrenDAP.iDataSet
         },
         SetRecordByID: (state, action) => {
             const record = state.Data.find(ds => ds.ID === action.payload);
@@ -189,7 +189,7 @@ export const DataSetsSlice = createSlice({
             state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'loading', Error: null };
         });
         builder.addCase(UpdateDataSetDataFlag.rejected, (state, action) => {
-            if(action.meta.arg.ID !== undefined)
+            if (action.meta.arg.ID !== undefined && state.Data.find(d => d.ID === action.meta.arg.ID)?.Data != undefined)
                 state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'error', Error: action.error.message };
         });
         builder.addCase(UpdateDataSetDataFlag.fulfilled, (state, action) => {
