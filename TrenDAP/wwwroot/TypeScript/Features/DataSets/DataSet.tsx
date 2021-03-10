@@ -31,6 +31,8 @@ import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceType
 import { SelectNewXDADataSet } from './DataSetsSlice';
 import { SelectOpenXDA, FetchOpenXDA } from '../OpenXDA/OpenXDASlice';
 import styles from '../../../Styles/app.scss';
+import DataSetOpenHistorian from '../OpenHistorian/DataSetOpenHistorian';
+import { SelectNewOpenHistorianDataSet } from '../OpenHistorian/OpenHistorianSlice';
 
 
 const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
@@ -78,7 +80,9 @@ const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (
                             {
                                 (dataSourceTypes.find(dst => dst.ID === ds.DataSource.DataSourceTypeID)?.Name === "TrenDAPDB" ? <DataSetOpenXDA {...props} Data={ds} Index={index}/>: null )
                             }
-                           
+                            {
+                                (dataSourceTypes.find(dst => dst.ID === ds.DataSource.DataSourceTypeID)?.Name === "OpenHistorian" ? <DataSetOpenHistorian {...props} Data={ds} Index={index} /> : null)
+                            }
                         </div>
                     ))
 
@@ -131,6 +135,8 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
     function GetDS(dataSource: TrenDAP.iDataSource) {
         if (dataSourceTypes.find(dst => dst.ID === dataSource.DataSourceTypeID).Name === "TrenDAPDB")
             return SelectNewXDADataSet();
+        if (dataSourceTypes.find(dst => dst.ID === dataSource.DataSourceTypeID).Name === "OpenHistorian")
+            return SelectNewOpenHistorianDataSet();
         else
             return {};
     }
@@ -370,5 +376,9 @@ const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: 
     );
 
 }
+
+
+
+
 
 export default DataSet;

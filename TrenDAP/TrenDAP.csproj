@@ -33,6 +33,8 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSourcesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSourceTypes\DataSourceTypesSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\DataSetOpenHistorian.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Histogram.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Profile.tsx" />
@@ -43,6 +45,10 @@
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Trend\Axis.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Trend\SeriesPicker.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget\OpenHistorian\AdditionalInfo.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget\OpenHistorian\SeriesSelect.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget\XDA\AdditionalInfo.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget\XDA\SeriesSelect.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\XvsY.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\AddNewWorkSpace.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\EditWorkSpace.tsx" />
@@ -146,6 +152,10 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\DataSetsSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenHistorian\DataSetOpenHistorian.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
@@ -153,13 +163,21 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Trend\SeriesPicker.tsx" />
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Widget.tsx">
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Widget\OpenHistorian\AdditionalInfo.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Widget\OpenHistorian\SeriesSelect.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Widget\Widget.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Stats.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Profile.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Widget\XDA\AdditionalInfo.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Widget\XDA\SeriesSelect.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\XvsY.tsx">

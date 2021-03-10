@@ -27,13 +27,15 @@ import DataSourceTypesReducer from '../Features/DataSourceTypes/DataSourceTypesS
 import WorkSpaceReducer from '../Features/WorkSpaces/WorkSpacesSlice';
 import DataSetReducer from '../Features/DataSets/DataSetsSlice';
 import OpenXDAReducer from '../Features/OpenXDA/OpenXDASlice';
+import OpenHistorianReducer from '../Features/OpenHistorian/OpenHistorianSlice';
 
 const reducer = {
     DataSets: DataSetReducer,
     WorkSpaces: WorkSpaceReducer,
     DataSources: DataSourcesReducuer,
     DataSourceTypes: DataSourceTypesReducer,
-    OpenXDA: OpenXDAReducer
+    OpenXDA: OpenXDAReducer,
+    OpenHistorian: OpenHistorianReducer,
 }
 
 const store = configureStore({ reducer });

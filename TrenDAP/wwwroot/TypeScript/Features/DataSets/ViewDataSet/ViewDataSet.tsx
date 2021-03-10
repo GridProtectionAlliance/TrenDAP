@@ -40,7 +40,7 @@ export default function ViewDataSet() {
     const wsStatus = useSelector(SelectDataSetsStatus);
     const [data, setData] = React.useState<TrenDAP.iDataSetReturn[]>([]);
     const [dataSourceID, setDataSourceID] = React.useState<number>(0);
-    const [channelID, setChannelID] = React.useState<number>(0);
+    const [channelID, setChannelID] = React.useState<string>('0');
     const [selectedData, setSelectedData] = React.useState<TrenDAP.iXDATrendDataPoint[]>([]);
     const [flag, setFlag] = React.useReducer((s,_) => s + 1, 0);
     const [toggle, setToggle] = React.useState<boolean>(false);
@@ -65,8 +65,8 @@ export default function ViewDataSet() {
     React.useEffect(() => {
         if(dataSourceID === 0)
             setDataSourceID(data[0]?.DataSource.ID ?? 0);
-        if(channelID === 0)
-            setChannelID((data[0]?.Data ?? [{ ID: 0 }])[0].ID);
+        if(channelID === '0')
+            setChannelID((data[0]?.Data ?? [{ ID:'0' }])[0].ID.toString());
 
         const d = (data.find(ds => ds.DataSource.ID === dataSourceID)?.Data ?? []).find(dd => dd.ID === channelID)?.Data ?? [];
         setSelectedData(d);
@@ -89,14 +89,24 @@ export default function ViewDataSet() {
         const dataSource = data.find(d => d.DataSource.ID === dataSourceID);
         if (dataSource == undefined) return;
         else if (dataSource.Data == undefined) return;
+
         if (dataSource.DataSource.Type === 'TrenDAPDB') {
-            dataSource.Data.sort((a, b) => {
+            (dataSource.Data as TrenDAP.iXDAReturnData[]).sort((a, b) => {
                 if (a.Meter + ' - ' + a.Name > b.Meter + ' - ' + b.Name) return 1;
                 else if (a.Meter + ' - ' + a.Name == b.Meter + ' - ' + b.Name) return 0;
                 else return -1;
             })
         }
-        setChannelID(dataSource.Data[0].ID);
+
+        else if (dataSource.DataSource.Type === 'OpenHistorian') {
+            (dataSource.Data as TrenDAP.iOpenHistorianReturn[]).sort((a, b) => {
+                if (a.Device + ' - ' + a.Description > b.Device + ' - ' + b.Description) return 1;
+                else if (a.Device + ' - ' + a.Description == b.Device + ' - ' + b.Description) return 0;
+                else return -1;
+            })
+        }
+
+        setChannelID(dataSource.Data[0].ID.toString());
         setSelectedChannels(dataSource);
 
     }, [dataSourceID]);
@@ -109,8 +119,8 @@ export default function ViewDataSet() {
         <div style={{padding:10}}>
             <h3>{dataSet.Name}</h3>
             <hr />
-            <div className='row'>
-                <div className='col'>
+            <div className='row' >
+                <div style={{ paddingLeft: 15, width: '50%' }}>
                     <label>Data Source</label>
                     <select className='form-control' value={dataSourceID} onChange={(evt) => setDataSourceID(parseInt(evt.target.value)) }>
                         {data.map(d => <option key={d.DataSource.ID} value={d.DataSource.ID}>{d.DataSource.Name}</option>) }
@@ -118,7 +128,7 @@ export default function ViewDataSet() {
                 </div>
                 <div className='col'>
                     <label>Channel</label>
-                    <select className='form-control' value={channelID} onChange={(evt) => setChannelID(parseInt(evt.target.value))}>
+                    <select className='form-control' value={channelID} onChange={(evt) => setChannelID(evt.target.value)}>
                         {Options(selectedChannels) }
                     </select>
 
@@ -218,13 +228,22 @@ export default function ViewDataSet() {
 const Options = (dataSource: TrenDAP.iDataSetReturn) => {
     if (dataSource == undefined) return null;
     else if (dataSource.Data == undefined) return null;
+
     if (dataSource.DataSource.Type === 'TrenDAPDB') {
-        dataSource.Data.sort((a, b) => {
+        (dataSource.Data as TrenDAP.iXDAReturnData[]).sort((a, b) => {
             if (a.Meter + ' - ' + a.Name > b.Meter + ' - ' + b.Name) return 1;
             else if (a.Meter + ' - ' + a.Name == b.Meter + ' - ' + b.Name) return 0;
             else return -1;
         })
-        return dataSource.Data.map(channel => <TrenDAPDBChannel key={channel.ID} channel={channel} />);
+        return dataSource.Data.map(channel => <TrenDAPDBChannel key={channel.ID} channel={channel as TrenDAP.iXDAReturnData} />);
+    }
+    else if (dataSource.DataSource.Type === 'OpenHistorian') {
+        (dataSource.Data as TrenDAP.iOpenHistorianReturn[]).sort((a, b) => {
+            if (a.Device + ' - ' + a.Description > b.Device + ' - ' + b.Description) return 1;
+            else if (a.Device + ' - ' + a.Description == b.Device + ' - ' + b.Description) return 0;
+            else return -1;
+        })
+        return dataSource.Data.map(channel => <OpenHistorianChannel key={channel.ID} channel={channel as TrenDAP.iOpenHistorianReturn} />);
     }
     else
         return dataSource.Data.map(channel => <OtherChannel key={channel.ID} channel={channel} />);
@@ -234,8 +253,13 @@ const TrenDAPDBChannel = (props: { channel: TrenDAP.iXDAReturnData }) => {
     return <option value={props.channel.ID}>{props.channel.Meter + ' - ' + props.channel.Name}</option>
 }
 
-const OtherChannel = (props: { channel: TrenDAP.iXDAReturnData }) => {
-    return <option value={props.channel.ID}>{props.channel.Name}</option>
+const OpenHistorianChannel = (props: { channel: TrenDAP.iOpenHistorianReturn }) => {
+    return <option value={props.channel.ID}>{props.channel.Device + ' - ' + props.channel.Description}</option>
+}
+
+
+const OtherChannel = (props: { channel: object }) => {
+    return <option value={props.channel['ID']}>{props.channel['Name']}</option>
 }
 
 const FlagCriteria = (props: {Field, Condition, Value, AndOr, Update: (record) => void, Add: () => void}) => {

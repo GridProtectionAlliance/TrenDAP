@@ -27,7 +27,10 @@ import * as React from 'react';
 import { TrenDAP } from '../../global';
 import styles from '../../../Styles/app.scss';
 import { Input } from '@gpa-gemstone/react-forms';
-import Widget, { AdditionalInfo, SeriesSelect } from './Widget';
+import Widget, { SeriesSelect } from './Widget/Widget';
+import AdditionalInfoXDA from './Widget/XDA/AdditionalInfo';
+import AdditionalInfoOpenHistorian from './Widget/OpenHistorian/AdditionalInfo';
+
 import { CrossMark } from '../../Constants';
 import { Histogram } from '../../Implementations';
 
@@ -237,14 +240,14 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
 
                                         <ul className="list-group">
                                             {(d.DataSource.Type === 'TrenDAPDB' ? (record.JSON?.Series ?? []).map((series,ind) => {
-                                                let datum = d.Data.find(dd => dd.ID === series.ID);
+                                                let datum = (d.Data as TrenDAP.iXDAReturnData[]).find(dd => dd.ID.toString() === series.ID);
                                                 if (datum === undefined) return null;
                                                 return (
                                                     <li key={series.ID} className="list-group-item">
                                                         <div className="row">
                                                             <div className="col">
                                                                 <label>{datum.Name}</label>
-                                                                <AdditionalInfo Data={datum} Index={i} />
+                                                                <AdditionalInfoXDA Data={datum} Index={i} />
                                                             </div>
                                                             <SeriesPicker Index={ind} Series={series} Widget={record} Callback={(widget) => setRecord(widget)} />
 
@@ -252,6 +255,23 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
                                                     </li>
                                                 )
                                             }) : null)}
+                                            {(d.DataSource.Type === 'OpenHistorian' ? (record.JSON?.Series ?? []).map((series, ind) => {
+                                                let datum = (d.Data as TrenDAP.iOpenHistorianReturn[]).find(dd => dd.ID.toString() === series.ID);
+                                                if (datum === undefined) return null;
+                                                return (
+                                                    <li key={series.ID} className="list-group-item">
+                                                        <div className="row">
+                                                            <div className="col">
+                                                                <label>{datum.Device + ' - ' + datum.Description }</label>
+                                                                <AdditionalInfoOpenHistorian Data={datum} />
+                                                            </div>
+                                                            <SeriesPicker Index={ind} Series={series} Widget={record} Callback={(widget) => setRecord(widget)} />
+
+                                                        </div>
+                                                    </li>
+                                                )
+                                            }) : null)}
+
                                     </ul>
                                 </div>
                             </div>

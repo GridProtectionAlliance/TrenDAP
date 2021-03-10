@@ -25,7 +25,7 @@ import * as React from 'react';
 import { TrenDAP } from '../../global';
 import styles from '../../../Styles/app.scss';
 import { Text } from '../../Implementations';
-import Widget from './Widget';
+import Widget from './Widget/Widget';
 import { Input, TextArea } from '@gpa-gemstone/react-forms';
 
 export default function TextJSX(props: TrenDAP.iWidget<TrenDAP.iText>) {

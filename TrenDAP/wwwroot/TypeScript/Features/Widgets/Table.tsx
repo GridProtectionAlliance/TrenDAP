@@ -26,7 +26,9 @@ import { TrenDAP } from '../../global';
 import styles from '../../../Styles/app.scss';
 import TableForm from '@gpa-gemstone/react-table';
 import { Table } from '../../Implementations';
-import Widget, { SeriesSelect, AdditionalInfo } from './Widget';
+import Widget, { SeriesSelect } from './Widget/Widget';
+import AdditionalInfoXDA from './Widget/XDA/AdditionalInfo';
+import AdditionalInfoOpenHistorian from './Widget/OpenHistorian/AdditionalInfo';
 import { Input } from '@gpa-gemstone/react-forms';
 import _ from 'lodash';
 import { Sort } from '../WorkSpaces/WorkSpacesSlice';
@@ -37,7 +39,7 @@ export default function TableJSX(props: TrenDAP.iWidget<TrenDAP.iTable>) {
     const [sortField, setSortField] = React.useState<keyof TrenDAP.iXDATrendDataPoint>('Timestamp');
     const [ascending, setAscending] = React.useState<boolean>(true);
     const [data, setData] = React.useState<TrenDAP.iXDATrendDataPoint[]>([]);
-    const [info, setInfo] = React.useState<TrenDAP.iXDAReturnData>({} as TrenDAP.iXDAReturnData);
+    const [info, setInfo] = React.useState<TrenDAP.iDataSetReturnType>({} as TrenDAP.iDataSetReturnType);
 
     React.useEffect(() => {
         setRecord(new Table({ ...record, Data: props.Data }));
@@ -46,8 +48,8 @@ export default function TableJSX(props: TrenDAP.iWidget<TrenDAP.iTable>) {
     React.useEffect(() => {
         const dataSource = record.Data.find(dd => dd.DataSource.ID === record.JSON.Series?.DataSourceID ?? 0)?.Data ?? [];
         const datum = dataSource.find(dd => dd.ID === record.JSON.Series?.ID ?? 0);
-        if (datum == undefined) setInfo({} as TrenDAP.iXDAReturnData );
-        else setInfo(datum);
+        if (datum == undefined) setInfo({} as TrenDAP.iDataSetReturnType );
+        else setInfo(datum as TrenDAP.iDataSetReturnType);
     }, [record]);
 
     React.useEffect(() => {
@@ -109,8 +111,8 @@ export default function TableJSX(props: TrenDAP.iWidget<TrenDAP.iTable>) {
                                                 <li key={record.JSON.Series.ID} className="list-group-item">
                                                     <div className="row">
                                                         <div className="col-3">
-                                                            <label>{info?.Name ?? ''}</label>
-                                                            <AdditionalInfo Index={i} Data={info} />
+                                                            <label>{(info as TrenDAP.iXDAReturnData)?.Name ?? ''}</label>
+                                                            <AdditionalInfoXDA Index={i} Data={(info as TrenDAP.iXDAReturnData)} />
                                                         </div>
                                                         <div className="col">
                                                             <label className="form-label">Precision</label>
@@ -120,6 +122,23 @@ export default function TableJSX(props: TrenDAP.iWidget<TrenDAP.iTable>) {
                                                     </div>
                                                 </li>
                                                 : null}
+
+                                            {d.DataSource.Type === 'OpenHistorian' && record.JSON.Series != undefined ?
+                                                <li key={record.JSON.Series.ID} className="list-group-item">
+                                                    <div className="row">
+                                                        <div className="col-3">
+                                                            <label>{(info as TrenDAP.iOpenHistorianReturn)?.Description ?? ''}</label>
+                                                            <AdditionalInfoOpenHistorian Data={(info as TrenDAP.iOpenHistorianReturn)} />
+                                                        </div>
+                                                        <div className="col">
+                                                            <label className="form-label">Precision</label>
+                                                            <input className="form-control" type="number" value={record.JSON.Precision} onChange={(evt) => setRecord(record.SetPrecsision(parseInt(evt.target.value)))} />
+                                                        </div>
+
+                                                    </div>
+                                                </li>
+                                                : null}
+
                                         </ul>
 
                                     </div>

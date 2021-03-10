@@ -60,6 +60,8 @@ GO
 
 INSERT INTO DataSourceType (Name) VALUES ('TrenDAPDB')
 GO
+INSERT INTO DataSourceType (Name) VALUES ('OpenHistorian')
+GO
 
 CREATE TABLE DataSource
 (

@@ -125,24 +125,41 @@ namespace TrenDAP.Controllers
         #endregion
 
         #region [ Http Methods ]
-        [HttpGet, Route("{dataSourceID:int}/{table}")]
-        public virtual ActionResult Get(int dataSourceID, string table)
+        [HttpGet, Route("{dataSourceID:int}/{table?}")]
+        public virtual ActionResult Get(int dataSourceID, string table = "")
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
-            using (HttpClient client = new HttpClient())
             {
 
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
+                    string type = connection.ExecuteScalar<string>("SELECT Name FROM DataSourceType WHERE ID = {0}", dataSource.DataSourceTypeID);
 
+                    if (type == "TrenDAPDB")
+                        return GetOpenXDA(dataSource, table);
+                    else if (type == "OpenHistorian")
+                        return GetOpenHistorian(dataSource, table);
+                    else return StatusCode(StatusCodes.Status400BadRequest, "Datasource type not supported");
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
+                }
+            }
+
+        }
+
+        private ActionResult GetOpenXDA(DataSource dataSource, string table) {
+            using (HttpClient client = new HttpClient())
+            {
+
+                try
+                {
                     client.BaseAddress = new Uri(dataSource.URL);
                     client.DefaultRequestHeaders.Accept.Clear();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-
-
-
                     HttpResponseMessage response = client.GetAsync($"api/{table}").Result;
 
                     if (!response.IsSuccessStatusCode)
@@ -151,7 +168,8 @@ namespace TrenDAP.Controllers
                     Task<string> rsp = response.Content.ReadAsStringAsync();
                     return Ok(rsp.Result);
                 }
-                catch (InvalidOperationException ex) {
+                catch (InvalidOperationException ex)
+                {
                     return StatusCode(StatusCodes.Status500InternalServerError, ex);
 
                 }
@@ -162,6 +180,39 @@ namespace TrenDAP.Controllers
             }
 
         }
+
+        private ActionResult GetOpenHistorian(DataSource dataSource, string table)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+
+                try
+                {
+                    client.BaseAddress = new Uri(dataSource.URL);
+                    client.DefaultRequestHeaders.Accept.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
+                    HttpResponseMessage response = client.GetAsync($"api/trendap/{table}").Result;
+
+                    if (!response.IsSuccessStatusCode)
+                        return StatusCode((int)response.StatusCode, response.ReasonPhrase);
+
+                    string rsp = response.Content.ReadAsStringAsync().Result;
+                    return Ok(rsp);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
+
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
+                }
+            }
+
+        }
+
 
         [HttpGet, Route("HIDS/{dataSourceID:int}/{dataSetID:int}")]
         public ActionResult Get(int dataSourceID, int dataSetID, CancellationToken cancellationToken)
@@ -266,7 +317,7 @@ namespace TrenDAP.Controllers
             IEnumerable<TimeFilter> days = Enumerable.Range(0, 7).Where(index => (~post.Days & (1Lu << index)) > 0).Select(h => TimeFilter.Sunday + h);
             IEnumerable<TimeFilter> weeks = Enumerable.Range(0, 53).Where(index => (~post.Weeks & (1Lu << index)) > 0).Select(h => TimeFilter.Week00 + h);
             IEnumerable<TimeFilter> months = Enumerable.Range(0, 12).Where(index => (~post.Months & (1Lu << index)) > 0).Select(h => TimeFilter.January + h);
-
+            
             using (API hids = new API())
             {
                 string host = settings.Find(setting => setting.Name == "HIDS.Host")?.Value ?? "http://localhost";

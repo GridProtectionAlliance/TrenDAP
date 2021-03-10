@@ -25,12 +25,15 @@ import * as React from 'react';
 import { TrenDAP } from '../../../global';
 import { CheckBox } from '@gpa-gemstone/react-forms';
 
-import { AdditionalInfo } from '../Widget';
+import AdditionalInfoXDA from '../Widget/XDA/AdditionalInfo';
+import AdditionalInfoOpenHistorian from '../Widget/OpenHistorian/AdditionalInfo';
+
 import { CrossMark } from '../../../Constants';
 import { Trend } from '../../../Implementations';
 import "react-datetime/css/react-datetime.css";
+import AdditionalInfo from '../Widget/OpenHistorian/AdditionalInfo';
 
-export default function SeriesPicker(props: { Index: number, Series: TrenDAP.iTrendSeries, Data: TrenDAP.iXDAReturnData, Widget: Trend, Callback: () => void }){
+export default function SeriesPicker(props: { Index: number, Type: TrenDAP.DataSourceType, Series: TrenDAP.iTrendSeries, Data: TrenDAP.iDataSetReturnType, Widget: Trend, Callback: () => void }){
     const [axis, setAxis] = React.useState<number>(props.Series.Axis);
     const [color, setColor] = React.useState<string>(props.Series.Color);
     const [type, setType] = React.useState<TrenDAP.iXDATrendDataPointField>(props.Series.Field);
@@ -56,13 +59,19 @@ export default function SeriesPicker(props: { Index: number, Series: TrenDAP.iTr
     }, [axis]);
 
 
-
+    function ShowAdditionInfo() {
+        if (props.Type === 'TrenDAPDB')
+            return <AdditionalInfoXDA Index={props.Index} Data={props.Data as TrenDAP.iXDAReturnData } />;
+        else if (props.Type === 'OpenHistorian')
+            return <AdditionalInfoOpenHistorian Data={props.Data as TrenDAP.iOpenHistorianReturn} />;
+        return null;
+    }
     return (
         <>
             <div className='row'>
                 <div className="col-3">
                     <label>{props.Series.Label}</label>
-                    <AdditionalInfo Index={props.Index} Data={props.Data} />
+                    {ShowAdditionInfo()}
                 </div>
 
                 <div className="col">
@@ -90,7 +99,7 @@ export default function SeriesPicker(props: { Index: number, Series: TrenDAP.iTr
                     }}>{CrossMark}</button>
                 </div>
             </div>
-            {(props.Data.Events.length > 0 ?
+            {(props.Type === 'TrenDAPDB' && (props.Data as TrenDAP.iXDAReturnData).Events.length > 0 ?
                 <div className='row'>
                     <div className='col'>
                         <CheckBox<TrenDAP.iTrendSeries> Record={props.Series} Field='ShowEvents' Label='Show Events' Setter={(r) => setShowEvents(!showEvents)} />

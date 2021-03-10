@@ -27,6 +27,7 @@ import { CreateGuid, RandomColor } from '@gpa-gemstone/helper-functions';
 import stats from 'stats-lite';
 import { random } from 'lodash';
 import moment from 'moment';
+import TrenDAPDB from './Features/DataSets/TrenDAPDB';
 
 export class Widget<T extends TrenDAP.WidgetClass> implements TrenDAP.iWidget<T>{
     JSON: T;
@@ -69,8 +70,8 @@ export class Histogram extends Widget<TrenDAP.iHistogram> {
             this.JSON = { Min: 0, Max: 10, Units: '', Series: [], BinCount: 10 };
     }
 
-    public AddSeries = (id: number, dataSourceID: number, label?: string) => {
-        this.JSON.Series.push({ ID: id, DataSourceID: dataSourceID, Field: "Average", Color: GetColor(), Profile: false, ProfileColor: GetColor(label) });
+    public AddSeries = (id: number | string, dataSourceID: number, label?: string) => {
+        this.JSON.Series.push({ ID: id.toString(), DataSourceID: dataSourceID, Field: "Average", Color: GetColor(), Profile: false, ProfileColor: GetColor(label) });
         return new Histogram(this);
     }
 
@@ -87,7 +88,7 @@ export class Histogram extends Widget<TrenDAP.iHistogram> {
 
     public CalculateAxisRange = () => {
         let dd: TrenDAP.iXDAReturnData[] = [].concat(...this.Data.map(d => d.Data));
-        let ss = this.JSON.Series.map(series => (dd.find(d => d.ID === series.ID)?.Data ?? []).map(d => d[series.Field]));
+        let ss = this.JSON.Series.map(series => (dd.find(d => d.ID.toString() === series.ID)?.Data ?? []).map(d => d[series.Field]));
         let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
         this.JSON.Max = Math.max(...[].concat(...mm));
         this.JSON.Min = Math.min(...[].concat(...mm));
@@ -126,7 +127,7 @@ export class Trend extends Widget<TrenDAP.iTrend> {
         let dd: TrenDAP.iXDAReturnData[] = [].concat(...this.Data.map(d => d.Data));
         if (type === 'x')
         {
-            let ss = this.JSON.Series.map(series => (dd.find(d => d.ID === series.ID)?.Data ?? []).map(d => moment(d.Timestamp).toDate().getTime()));
+            let ss = this.JSON.Series.map(series => (dd.find(d => d.ID.toString() == series.ID)?.Data ?? []).map(d => moment(d.Timestamp).toDate().getTime()));
             let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
             this.JSON.Max = Math.max(...[].concat(...mm));
             this.JSON.Min = Math.min(...[].concat(...mm));
@@ -134,7 +135,7 @@ export class Trend extends Widget<TrenDAP.iTrend> {
         else {
             if (index == undefined) {
                 for (let index = 0; index < this.JSON.YAxis.length; index++) {
-                    let ss = this.JSON.Series.filter(series => series.Axis === index).map(series => (dd.find(d => d.ID === series.ID)?.Data ?? []).map(d => d[series.Field]));
+                    let ss = this.JSON.Series.filter(series => series.Axis === index).map(series => (dd.find(d => d.ID.toString() == series.ID)?.Data ?? []).map(d => d[series.Field]));
                     let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
                     this.JSON.YAxis[index]['Max'] = Math.max(...[].concat(...mm));
                     this.JSON.YAxis[index]['Min'] = Math.min(...[].concat(...mm));
@@ -145,7 +146,7 @@ export class Trend extends Widget<TrenDAP.iTrend> {
                 }
             }
             else {
-                let ss = this.JSON.Series.filter(series => series.Axis === index).map(series => (dd.find(d => d.ID === series.ID)?.Data ?? []).map(d => d[series.Field]));
+                let ss = this.JSON.Series.filter(series => series.Axis === index).map(series => (dd.find(d => d.ID.toString() == series.ID)?.Data ?? []).map(d => d[series.Field]));
                 let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
                 this.JSON.YAxis[index]['Max'] = Math.max(...[].concat(...mm));
                 this.JSON.YAxis[index]['Min'] = Math.min(...[].concat(...mm));
@@ -158,10 +159,10 @@ export class Trend extends Widget<TrenDAP.iTrend> {
         return new Trend(this);
     };
 
-    public AddSeries = (id: number, dataSourceID: number, label: string) => {
-        if (this.JSON.Series.find(series => series.ID === id && series.DataSourceID === dataSourceID) !== undefined) return;
+    public AddSeries = (id: number | string, dataSourceID: number, label: string) => {
+        if (this.JSON.Series.find(series => series.ID === id.toString() && series.DataSourceID === dataSourceID) !== undefined) return;
         
-        this.JSON.Series.push({ ID: id, DataSourceID: dataSourceID, Axis: 0, Field: "Average", Color: GetColor(label), Label: label, ShowEvents: false });
+        this.JSON.Series.push({ ID: id.toString(), DataSourceID: dataSourceID, Axis: 0, Field: "Average", Color: GetColor(label), Label: label, ShowEvents: false });
         this.CalculateAxisRange('x');
         this.CalculateAxisRange('y');
         return new Trend(this);
@@ -173,7 +174,7 @@ export class Trend extends Widget<TrenDAP.iTrend> {
             axis = this.JSON.YAxis.push({Units: 'Volts', Position: 'left', Min: 0, Max: 100}) - 1
         }
 
-        this.JSON.Series.push(...this.Data.find(datum => datum.DataSource.ID === dataSourceID).Data.filter(datum => datum.Type === 'Voltage' && datum.Characteristic === 'RMS').map(datum => ({ ID: datum.ID, DataSourceID: dataSourceID, Axis: axis, Field: 'Average' as TrenDAP.iXDATrendDataPointField, Color: GetColor(`V${datum.Phase} - ${datum.Meter}`), Label: datum.Name, ShowEvents: false})))
+        this.JSON.Series.push(...this.Data.find(datum => datum.DataSource.ID === dataSourceID).Data.filter((datum: TrenDAP.iXDAReturnData) => datum.Type === 'Voltage' && datum.Characteristic === 'RMS').map((datum: TrenDAP.iXDAReturnData) => ({ ID: datum.ID.toString(), DataSourceID: dataSourceID, Axis: axis, Field: 'Average' as TrenDAP.iXDATrendDataPointField, Color: GetColor(`V${datum.Phase} - ${datum.Meter}`), Label: datum.Name, ShowEvents: false})))
         this.CalculateAxisRange('x');
         this.CalculateAxisRange('y');
         return new Trend(this);
@@ -185,7 +186,7 @@ export class Trend extends Widget<TrenDAP.iTrend> {
             axis = this.JSON.YAxis.push({ Units: 'Amps', Position: 'left', Min: 0, Max: 100 }) - 1
         }
 
-        this.JSON.Series.push(...this.Data.find(datum => datum.DataSource.ID === dataSourceID).Data.filter(datum => datum.Type === 'Current' && datum.Characteristic === 'RMS').map(datum => ({ ID: datum.ID, DataSourceID: dataSourceID, Axis: axis, Field: 'Average' as TrenDAP.iXDATrendDataPointField, Color: GetColor(`I${datum.Phase} - ${datum.Meter}`), Label: datum.Name, ShowEvents: false })))
+        this.JSON.Series.push(...this.Data.find(datum => datum.DataSource.ID === dataSourceID).Data.filter((datum: TrenDAP.iXDAReturnData) => datum.Type === 'Current' && datum.Characteristic === 'RMS').map((datum: TrenDAP.iXDAReturnData) => ({ ID: datum.ID.toString(), DataSourceID: dataSourceID, Axis: axis, Field: 'Average' as TrenDAP.iXDATrendDataPointField, Color: GetColor(`I${datum.Phase} - ${datum.Meter}`), Label: datum.Name, ShowEvents: false })))
         this.CalculateAxisRange('x');
         this.CalculateAxisRange('y');
         return new Trend(this);
@@ -223,7 +224,7 @@ export class Stats extends Widget<TrenDAP.iStats> {
         if (this.JSON === undefined)
             this.JSON = {Series: null, Precision: 3};
     }
-    public SetSeries = (id: number, dsID: number) => this.JSON.Series = { ID: id, DataSourceID: dsID, Field: 'Average' };
+    public SetSeries = (id: number | string, dsID: number) => this.JSON.Series = { ID: id.toString(), DataSourceID: dsID, Field: 'Average' };
     public SetSeriesField = (field: TrenDAP.iXDATrendDataPointField) => {
         this.JSON.Series.Field = field;
         return new Stats(this);
@@ -296,7 +297,7 @@ export class Table extends Widget<TrenDAP.iTable> {
         if (this.JSON === undefined)
             this.JSON = { Series: null, Precision: 3 };
     }
-    public SetSeries = (id: number, dsID: number) => this.JSON.Series = { ID: id, DataSourceID: dsID, Field: 'Average' };
+    public SetSeries = (id: number | string, dsID: number) => this.JSON.Series = { ID: id.toString(), DataSourceID: dsID, Field: 'Average' };
     public SetSeriesField = (field: TrenDAP.iXDATrendDataPointField) => {
         this.JSON.Series.Field = field;
         return new Stats(this);
@@ -383,11 +384,11 @@ export class XvsY extends Widget<TrenDAP.iXvsY> {
     }
 
 
-    public SetSeries = (axis: 'x' | 'y', id: number, dsID: number) => {
+    public SetSeries = (axis: 'x' | 'y', id: number | string, dsID: number) => {
         if(axis === 'x')
-            this.JSON.X.Series = { ID: id, DataSourceID: dsID, Field: 'Average' };
+            this.JSON.X.Series = { ID: id.toString(), DataSourceID: dsID, Field: 'Average' };
         else
-            this.JSON.Y.Series = { ID: id, DataSourceID: dsID, Field: 'Average' };
+            this.JSON.Y.Series = { ID: id.toString(), DataSourceID: dsID, Field: 'Average' };
 
         return new XvsY(this);
     }

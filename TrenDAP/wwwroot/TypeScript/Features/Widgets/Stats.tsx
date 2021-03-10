@@ -25,7 +25,9 @@ import * as React from 'react';
 import { TrenDAP } from '../../global';
 import styles from '../../../Styles/app.scss';
 import { Stats } from '../../Implementations';
-import Widget, { SeriesSelect, AdditionalInfo } from './Widget';
+import Widget, { SeriesSelect } from './Widget/Widget';
+import AdditionalInfoXDA from './Widget/XDA/AdditionalInfo';
+import AdditionalInfoOpenHistorian from './Widget/OpenHistorian/AdditionalInfo';
 import { Input } from '@gpa-gemstone/react-forms';
 
 export default function StatsJSX(props: TrenDAP.iWidget<TrenDAP.iStats>) {
@@ -94,8 +96,8 @@ export default function StatsJSX(props: TrenDAP.iWidget<TrenDAP.iStats>) {
                                                     <li key={record.JSON.Series.ID} className="list-group-item">
                                                         <div className="row">
                                                             <div className="col-3">
-                                                                <label>{datum?.Name}</label>
-                                                                <AdditionalInfo Index={i} Data={datum} />
+                                                                <label>{(datum as TrenDAP.iXDAReturnData)?.Name}</label>
+                                                            <AdditionalInfoXDA Index={i} Data={datum as TrenDAP.iXDAReturnData} />
                                                             </div>
                                                             <div className="col">
                                                                 <label className="form-label">Field</label>
@@ -112,7 +114,31 @@ export default function StatsJSX(props: TrenDAP.iWidget<TrenDAP.iStats>) {
 
                                                         </div>
                                                     </li>
-                                            : null}
+                                                : null}
+                                            {d.DataSource.Type === 'OpenHistorian' && record.JSON.Series != undefined ?
+                                                <li key={record.JSON.Series.ID} className="list-group-item">
+                                                    <div className="row">
+                                                        <div className="col-3">
+                                                            <label>{(datum as TrenDAP.iOpenHistorianReturn)?.Description}</label>
+                                                            <AdditionalInfoOpenHistorian Data={datum as TrenDAP.iOpenHistorianReturn} />
+                                                        </div>
+                                                        <div className="col">
+                                                            <label className="form-label">Field</label>
+                                                            <select className="form-control" value={record.JSON.Series.Field} onChange={(evt) => setRecord(record.SetSeriesField(evt.target.value as TrenDAP.iXDATrendDataPointField))}>
+                                                                <option value="Average">Avg</option>
+                                                                <option value="Minimum">Min</option>
+                                                                <option value="Maximum">Max</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="col">
+                                                            <label className="form-label">Precision</label>
+                                                            <input className="form-control" type="number" value={record.JSON.Precision} onChange={(evt) => setRecord(record.SetPrecsision(parseInt(evt.target.value)))} />
+                                                        </div>
+
+                                                    </div>
+                                                </li>
+                                                : null}
+
                                         </ul>
 
                                     </div>

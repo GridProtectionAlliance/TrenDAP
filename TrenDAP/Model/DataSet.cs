@@ -40,7 +40,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TrenDAP.Controllers;
-using static TrenDAP.Controllers.TrenDAPDBController;
 
 namespace TrenDAP.Model
 {
@@ -152,66 +151,104 @@ namespace TrenDAP.Model
 
         private Task<JObject> Query(DataSet dataset, DataSetJson json, string type, CancellationToken cancellationToken)
         {
-            if (type == "TrenDAPDB")
-                return QueryTrenDAPDB(dataset, json, cancellationToken);
-            else
-                return Task.FromResult(new JObject());
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
+                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", json.DataSource.ID);
+
+                JObject jObject = new JObject();
+                jObject["DataSource"] = new JObject();
+                jObject["DataSource"]["ID"] = dataSource.ID;
+                jObject["DataSource"]["Name"] = dataSource.Name;
+                jObject["DataSource"]["Type"] = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
+
+                if (type == "TrenDAPDB") {
+                    jObject["DataSource"]["OpenSEE"] = TrenDAPDBController.GetOpenSEEURL(dataSource.ID, Configuration).Result;
+                    return QueryTrenDAPDB(jObject, dataset, json, cancellationToken);
+                }
+                else if (type == "OpenHistorian")
+                    return QueryOpenHistorian(jObject, dataset, json, cancellationToken);
+                else
+                    return Task.FromResult(jObject);
+            }
         }
 
-        private Task<JObject> QueryTrenDAPDB(DataSet dataset, DataSetJson json, CancellationToken cancellationToken)
+        private Task<JObject> QueryTrenDAPDB(JObject jObject, DataSet dataset, DataSetJson json, CancellationToken cancellationToken)
         {
             return Task.Run(async () =>
-            {
-                using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
-                {
-                    List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
-                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", json.DataSource.ID);
-                    
-                    XDADataSetData setData = json.Data.ToObject<XDADataSetData>();
+            {                    
+                TrenDAPDBController.XDADataSetData setData = json.Data.ToObject<TrenDAPDBController.XDADataSetData>();
+                TrenDAPDBController.HIDSPost post = TrenDAPDBController.CreatePost(dataset, setData);
 
-                    JObject jObject = new JObject();
-                    jObject["DataSource"] = new JObject();
-                    jObject["DataSource"]["ID"] = dataSource.ID;
-                    jObject["DataSource"]["Name"] = dataSource.Name;
-                    jObject["DataSource"]["Type"] = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
-                    jObject["DataSource"]["OpenSEE"] = await GetOpenSEEURL(dataSource.ID, Configuration);
+                jObject["Context"] = dataset.Context;
+                jObject["From"] = post.StartTime.ToString("MM/dd/yyyy");
+                jObject["To"] = post.EndTime.ToString("MM/dd/yyyy");
 
-                    HIDSPost post = CreatePost(dataset, setData);
+                DataTable table = TrenDAPDBController.GetDataTable(json.DataSource.ID, post, Configuration, cancellationToken);
 
-                    jObject["Context"] = dataset.Context;
-                    jObject["From"] = post.StartTime.ToString("MM/dd/yyyy");
-                    jObject["To"] = post.EndTime.ToString("MM/dd/yyyy");
+                if (table.Rows.Count > 0) {
+                    Task<string> eventsTask = TrenDAPDBController.GetEvents(json.DataSource.ID, post, Configuration, cancellationToken);
+                    Task<string> alarmsTask = TrenDAPDBController.GetAlarms(json.DataSource.ID, post, Configuration, cancellationToken);
 
-                    DataTable table = GetDataTable(json.DataSource.ID, post, Configuration, cancellationToken);
+                    IAsyncEnumerable<Point> points = TrenDAPDBController.QueryHIDSDirectly(table, json.DataSource.ID, post, Configuration, cancellationToken);
+                    IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
 
-                    if (table.Rows.Count > 0) {
-                        Task<string> eventsTask = GetEvents(json.DataSource.ID, post, Configuration, cancellationToken);
-                        Task<string> alarmsTask = GetAlarms(json.DataSource.ID, post, Configuration, cancellationToken);
+                    string eventsString = await eventsTask;
+                    JArray events = JArray.Parse(eventsString);
+                    string alarmsString = await alarmsTask;
+                    var groupjoin = tableJson.GroupJoin(points.ToArrayAsync().Result, row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) =>
+                    {
+                        row["Events"] = JArray.FromObject(events.Where(token => int.Parse(token["ChannelID"].ToString()) == int.Parse(row["ID"].ToString())));
+                        row["Data"] = JArray.FromObject(resultcollection);
+                        return row;
+                    });
 
-                        IAsyncEnumerable<Point> points = QueryHIDSDirectly(table, json.DataSource.ID, post, Configuration, cancellationToken);
-                        IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
-
-                        string eventsString = await eventsTask;
-                        JArray events = JArray.Parse(eventsString);
-                        string alarmsString = await alarmsTask;
-                        var groupjoin = tableJson.GroupJoin(points.ToArrayAsync().Result, row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) =>
-                        {
-                            row["Events"] = JArray.FromObject(events.Where(token => int.Parse(token["ChannelID"].ToString()) == int.Parse(row["ID"].ToString())));
-                            row["Data"] = JArray.FromObject(resultcollection);
-                            return row;
-                        });
-
-                        jObject["Data"] = JArray.FromObject(groupjoin);
-                    }
-                    else
-                        jObject["Data"] = JArray.FromObject(new List<int> () { });
-
-                    return jObject;
+                    jObject["Data"] = JArray.FromObject(groupjoin);
                 }
+                else
+                    jObject["Data"] = JArray.FromObject(new List<int> () { });
+
+                return jObject;
             });
 
         }
 
+        private Task<JObject> QueryOpenHistorian(JObject jObject, DataSet dataset, DataSetJson json, CancellationToken cancellationToken)
+        {
+            return Task.Run(() =>
+            {
+
+                OpenHistorianController.OpenHistorianDataSet setData = json.Data.ToObject<OpenHistorianController.OpenHistorianDataSet>();
+
+                OpenHistorianController.Post post = OpenHistorianController.CreatePost(dataset, setData);
+
+                jObject["Context"] = dataset.Context;
+                jObject["From"] = post.StartTime.ToString("MM/dd/yyyy");
+                jObject["To"] = post.EndTime.ToString("MM/dd/yyyy");
+
+                DataTable table = OpenHistorianController.GetDataTable(json.DataSource.ID, post, Configuration, cancellationToken);
+
+                if (table.Rows.Count > 0)
+                {
+                    IEnumerable<OpenHistorianController.HistorianAggregatePoint> points = OpenHistorianController.Query(json.DataSource.ID, post, Configuration, cancellationToken);
+                    IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
+
+                    var groupjoin = tableJson.GroupJoin(points, row => row["ID"].ToString(), result => result.Tag, (row, resultcollection) =>
+                    {
+                        row["Data"] = JArray.FromObject(resultcollection);
+                        return row;
+                    });
+
+                    jObject["Data"] = JArray.FromObject(groupjoin);
+                }
+                else
+                    jObject["Data"] = JArray.FromObject(new List<string>() { });
+
+                return jObject;
+                
+            });
+
+        }
 
     }
 

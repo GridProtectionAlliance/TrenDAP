@@ -27,7 +27,9 @@ import { TrenDAP, Redux } from '../../../global';
 import styles from '../../../../Styles/app.scss';
 import { Input, CheckBox, Select } from '@gpa-gemstone/react-forms';
 
-import Widget, { SeriesSelect, AdditionalInfo} from '../Widget';
+import Widget, { SeriesSelect } from '../Widget/Widget';
+import AdditionalInfoXDA from '../Widget/XDA/AdditionalInfo';
+import AdditionalInfoOpenHistorian from '../Widget/OpenHistorian/AdditionalInfo';
 import { CrossMark, Plus } from '../../../Constants';
 import { Trend } from '../../../Implementations';
 import moment from 'moment';
@@ -297,7 +299,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
         const svgHeight = parseInt(svg.attr('height'))
         
 
-        const data = ((record.Data.find(ds => ds.DataSource.ID === series.DataSourceID)?.Data ?? []).find(ds => ds.ID === series.ID)?.Events ?? [])
+        const data = ((record.Data.find(ds => ds.DataSource.ID === series.DataSourceID)?.Data as TrenDAP.iXDAReturnData[] ?? []).find(ds => ds.ID.toString() === series.ID)?.Events ?? [])
         svg.selectAll('g.event-line').remove();
         const g = svg.selectAll('g.event-line')
             .data(data)
@@ -610,20 +612,24 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
                                 </div>
                                 <div id={"collapse" + i} className="collapse show" data-parent="#accordion">
                                     <div className="card-body">
-                                        <button className='btn btn-primary' onClick={() => setRecord(record.QuickAddVoltageRMS(d.DataSource.ID))}>Quick Add VRMS</button>
-                                        <button className='btn btn-primary' onClick={() => setRecord(record.QuickAddCurrentRMS(d.DataSource.ID))}>Quick Add IRMS</button>
-                                        <button className='btn btn-primary' onClick={() => setRecord(record.RemoveAll(d.DataSource.ID))}>Remove All</button>
+                                        {(d.DataSource.Type === 'TrenDAPDB' ?
+                                        <>
+                                            <button className='btn btn-primary' onClick={() => setRecord(record.QuickAddVoltageRMS(d.DataSource.ID))}>Quick Add VRMS</button>
+                                            <button className='btn btn-primary' onClick={() => setRecord(record.QuickAddCurrentRMS(d.DataSource.ID))}>Quick Add IRMS</button>
+                                            <button className='btn btn-primary' onClick={() => setRecord(record.RemoveAll(d.DataSource.ID))}>Remove All</button> 
+                                        </>: null)
+                                    }
                                         <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Callback={() => setRecord(new Trend(record))} />
                                         <ul className="list-group">
-                                            {(d.DataSource.Type === 'TrenDAPDB' ? record.JSON.Series.map((series, ind) => {
+                                            {record.JSON.Series.map((series, ind) => {
                                                 let datum = d.Data.find(dd => dd.ID === series.ID);
                                                 if (datum === undefined) return null;
                                                 return (
                                                     <li key={series.ID} className="list-group-item">                                                            
-                                                        <SeriesPicker Index={ind} Series={series} Data={datum} Widget={record} Callback={() => setRecord(new Trend(record))} />
+                                                        <SeriesPicker Type={d.DataSource.Type} Index={ind} Series={series} Data={datum as TrenDAP.iXDAReturnData} Widget={record} Callback={() => setRecord(new Trend(record))} />
                                                     </li>
                                                 )
-                                            }) : null)}
+                                            })}
                                         </ul>
                                     </div>
                                 </div>

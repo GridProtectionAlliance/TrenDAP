@@ -27,7 +27,9 @@ import { TrenDAP, Redux } from '../../global';
 import styles from '../../../Styles/app.scss';
 import { Input, CheckBox } from '@gpa-gemstone/react-forms';
 
-import Widget, { SeriesSelect, AdditionalInfo } from './Widget';
+import Widget, { SeriesSelect } from './Widget/Widget';
+import AdditionalInfoXDA from './Widget/XDA/AdditionalInfo';
+import AdditionalInfoOpenHistorian from './Widget/OpenHistorian/AdditionalInfo';
 import { CrossMark, Plus } from '../../Constants';
 import { XvsY } from '../../Implementations';
 import moment from 'moment';
@@ -265,7 +267,7 @@ export default function XvsYJSX(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
                                             <div className="row">
                                                 <div className="col-3">
                                                     <label>{GetDatum('x')?.Name ?? ''}</label>
-                                                    <AdditionalInfo Index={i} Data={GetDatum('x')} />
+                                                    <AdditionalInfoXDA Index={i} Data={GetDatum('x')} />
                                                 </div>
                                                 <SeriesPicker Axis='x' Series={record.JSON.X.Series} Widget={record} Callback={() => setRecord(new XvsY(record))} />
                                             </div> : null)}
@@ -276,7 +278,7 @@ export default function XvsYJSX(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
                                             <div className="row">
                                                 <div className="col-3">
                                                     <label>{GetDatum('y')?.Name ?? ''}</label>
-                                                    <AdditionalInfo Index={i} Data={GetDatum('y')} />
+                                                    <AdditionalInfoXDA Index={i} Data={GetDatum('y')} />
                                                 </div>
                                                 <SeriesPicker Axis='y' Series={record.JSON.Y.Series} Widget={record} Callback={() => setRecord(new XvsY(record))} />
                                             </div> : null)}

@@ -220,7 +220,7 @@ export const SelectDataSetData = async (state: Redux.StoreState, id: number) => 
 };
 export const SelectRecord = (state: Redux.StoreState) => state.DataSets.Record;
 export const SelectNewDataSet = ()  => ({ ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1 }) as TrenDAP.iDataSet;
-export const SelectNewXDADataSet = ()  => ({ By: 'Meter', IDs: [], Phases: [], Groups: [], Types: [], Aggregate: '' }) as TrenDAP.iXDADataSet;
+export const SelectNewXDADataSet = () => ({ By: 'Meter', IDs: [], Phases: [], Groups: [], Types: [], Aggregate: '' }) as TrenDAP.iXDADataSet;
 export const SelectDataSetsStatus = (state: Redux.StoreState)  => state.DataSets.Status;
 export const SelectDataSetsForUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.User === user);
 export const SelectDataSetsAllPublicNotUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.Public && ws.User !== user);
@@ -260,11 +260,11 @@ function GetDataSetData(dataSet: TrenDAP.iDataSet) {
         const db = new TrenDAPDB();
         db.Add("DataSet", dataSet.ID, dataSet.Name, data);
         return dataSet.ID;
-    });
+    }).catch(err => { return err });
 }
 
 
-export async function UpdateDataSetData(dataSet: TrenDAP.iDataSet, dataSourceID: number, channelID: number, record: TrenDAP.iXDATrendDataPoint | TrenDAP.iXDATrendDataPoint[]) {
+export async function UpdateDataSetData(dataSet: TrenDAP.iDataSet, dataSourceID: number, channelID: string, record: TrenDAP.iXDATrendDataPoint | TrenDAP.iXDATrendDataPoint[]) {
     const db = new TrenDAPDB();
     const data = await db.Read('DataSet', dataSet.ID);
 

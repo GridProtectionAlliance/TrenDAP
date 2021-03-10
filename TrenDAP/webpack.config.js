@@ -12,11 +12,11 @@ module.exports = env => {
             TrenDAP: "./TypeScript/TrenDAP.tsx"
 
         },
-
         output: {
             path: path.resolve(__dirname, 'wwwroot', 'js'),
             publicPath: '../js/',
             filename: "[name].js",
+            clean: true
             //chunkFilename: '[name].bundle.js'
         },
         // Enable sourcemaps for debugging webpack's output.
@@ -44,7 +44,7 @@ module.exports = env => {
                 {
                     test: /\.css$/,
                     include: /\./,
-                    loaders: ['style-loader', 'css-loader'],
+                    use: ['style-loader', 'css-loader'],
                 },
                 {
                     test: /\.js$/,
@@ -52,7 +52,7 @@ module.exports = env => {
                     exclude: [path.resolve(__dirname,'node_modules')],
                     loader: "source-map-loader"
                 },
-                { test: /\.(woff|woff2|ttf|eot|svg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader?limit=100000" },
+                { test: /\.(woff|woff2|ttf|eot|svg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader", options: {limit: 100000} },
 
             ]
         },
