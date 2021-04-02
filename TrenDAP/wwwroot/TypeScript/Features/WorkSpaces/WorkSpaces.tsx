@@ -25,7 +25,7 @@
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
-import Table from '@gpa-gemstone/react-table/lib/index'
+import Table from '@gpa-gemstone/react-table'
 import { Sort, FetchWorkSpaces, SelectWorkSpacesStatus, RemoveWorkSpace, SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, SelectWorkSpacesSortField, SelectWorkSpacesAscending } from './WorkSpacesSlice';
 import EditWorkSpace from './EditWorkSpace';
 import { TrashCan, HeavyCheckMark } from './../../Constants'

@@ -25,7 +25,7 @@ import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
 import { Sort, SelectDataSourcesForUser, FetchDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSourcesAllPublicNotUser, SelectDataSourcesSortField, SelectDataSourcesAscending } from './DataSourcesSlice'
-import Table from '@gpa-gemstone/react-table/lib/index'
+import Table from '@gpa-gemstone/react-table'
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 import EditDataSource from './EditDataSource';
 import { TrashCan, HeavyCheckMark } from './../../Constants'
