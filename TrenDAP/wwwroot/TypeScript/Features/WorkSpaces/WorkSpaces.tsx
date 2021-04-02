@@ -61,6 +61,8 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                             cols={[
                                 { key: 'Name', label: 'Name' },
                                 { key: 'DataSetID', label: 'Data Set', content: (item, key, style) => dataSets.find(ds => ds.ID === item.DataSetID)?.Name },
+                                { key: 'Type', label: 'Type' },
+
                                 { key: 'Public', label: 'Global', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
                                 { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
                                     {

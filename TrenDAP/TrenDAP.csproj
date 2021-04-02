@@ -40,20 +40,41 @@
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Profile.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Stats.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Table.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Text.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Trend\Axis.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Trend\SeriesPicker.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Trend\TemplatePicker.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Trend\Trend.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\OpenHistorian\AdditionalInfo.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\OpenHistorian\SeriesSelect.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\XDA\AdditionalInfo.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\XDA\SeriesSelect.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Text.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Trend.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Widgets\Trend\Axis.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Widgets\Trend\SeriesPicker.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Regular\Trend\Axis.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Regular\Trend\SeriesPicker.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Regular\Trend\TemplatePicker.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget\OpenHistorian\AdditionalInfo.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget\OpenHistorian\SeriesSelect.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget\XDA\AdditionalInfo.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget\XDA\SeriesSelect.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Regular\Widget\OpenHistorian\AdditionalInfo.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Regular\Widget\OpenHistorian\SeriesSelect.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Histogram.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Profile.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Stats.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Table.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Widget.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\XvsY.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Regular\Widget\XDA\AdditionalInfo.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Regular\Widget\XDA\SeriesSelect.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Regular\Widget\XDA\TemplateSelect.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\XvsY.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\AddNewWorkSpace.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\EditWorkSpace.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\Regular\Editor.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\Regular\Implementations.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\Row.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\Templatable\Editor.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\Templatable\Row.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpace.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpaceEditor.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpaces.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpacesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\global.d.ts" />
@@ -159,44 +180,106 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Trend\Axis.tsx">
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Text.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Trend\SeriesPicker.tsx" />
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Widget\OpenHistorian\AdditionalInfo.tsx" />
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Widget\OpenHistorian\SeriesSelect.tsx" />
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Widget\Widget.tsx">
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Trend\Axis.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Stats.tsx">
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Trend\TemplatePicker.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Profile.tsx">
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Trend\SeriesPicker.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Trend\Axis.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Widget\XDA\AdditionalInfo.tsx">
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Trend\SeriesPicker.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Widget\XDA\SeriesSelect.tsx">
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Trend\TemplatePicker.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\XvsY.tsx">
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Trend\Trend.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Text.tsx">
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Widget\OpenHistorian\AdditionalInfo.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Widget\OpenHistorian\SeriesSelect.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Histogram.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Table.tsx">
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Profile.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Histogram.tsx">
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Stats.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Trend\Trend.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Table.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\Widget.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\OpenHistorian\AdditionalInfo.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\OpenHistorian\SeriesSelect.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\XDA\AdditionalInfo.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\XDA\SeriesSelect.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\XvsY.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Widget\Widget.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Stats.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Profile.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Widget\XDA\AdditionalInfo.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Widget\XDA\TemplateSelect.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Widget\XDA\SeriesSelect.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\XvsY.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Text.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Table.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Histogram.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Trend\Trend.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\AddNewWorkSpace.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\EditWorkSpace.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\Regular\Editor.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Implementations.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\Regular\Row.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\Templatable\Editor.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\Templatable\Row.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\WorkSpaceEditor.tsx">
@@ -211,7 +294,7 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\WorkSpaces\WorkSpacesSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Implementations.ts" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Implementations.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\LoadingSpinner.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Store\Store.ts">
       <SubType>Code</SubType>

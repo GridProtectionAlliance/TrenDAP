@@ -23,7 +23,8 @@
 
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { OpenHistorian, TrenDAP, Redux } from '../../global';
+import { TrenDAP, Redux } from '../../global';
+import { OpenHistorianTypes as OpenHistorian } from '@gpa-gemstone/application-typings';
 import {ajax, JQuery } from 'jquery';
 
 export const FetchOpenHistorian = createAsyncThunk('OpenHistorian/FetchOpenHistorian', async (ds: { dataSourceID: number },{ dispatch }) => {

@@ -181,7 +181,7 @@ function PostWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWor
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
-        data: JSON.stringify({ ...workSpace, JSONString: JSON.stringify({ Rows: [/*{Height: 500, Widgets:[]}*/]}), UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss') }),
+        data: JSON.stringify({ ...workSpace, JSONString: JSON.stringify({ Rows: [], By: 'Meter',Type: 'TrenDAPDB'}), UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss') }),
         cache: false,
         async: true
     });

@@ -46,6 +46,8 @@ namespace TrenDAP.Model
         public string User { get; set; }
         public byte[] JSON { get; set; }
         public int DataSetID { get; set; }
+        [UseEscapedName]
+        public string Type { get; set; }
 
         [NonRecordField]
         public string JSONString

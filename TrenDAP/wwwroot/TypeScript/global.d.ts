@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+import { OpenXDATypes as OpenXDA, OpenHistorianTypes as OpenHistorian } from '@gpa-gemstone/application-typings';
+
 export { };
 declare module '*.scss';
 
@@ -64,21 +66,25 @@ export namespace TrenDAP{
     type Status = 'loading' | 'idle' | 'error' | 'changed' | 'unitiated';
     type WidgetType = 'Histogram' | 'Profile' | 'Stats' | 'Table' | 'Text' | 'Trend' | 'XvsY';
     type WidgetClass = iHistogram | iTrend | iProfile | iStats | iTable | iText | iXvsY;
+    type TemplatableWidgetClass = iTemplatableHistogram | iTemplatableTrend | iTemplatableProfile | iTemplatableStats | iTemplatableTable | iTemplatableText | iTemplatableXvsY;
+    type TemplateSeries = iTemplateSeriesXDA | iTemplateSeriesOpenHistorian;
     type DataSourceType = 'TrenDAPDB' | 'OpenHistorian' |'None';
     type iDataSetReturnType = iXDAReturnData | iOpenHistorianReturn;
     type ChartAction = 'Click' | 'Pan' | 'ZoomX' | 'ZoomY' | 'ZoomXY';
+    type WorkSpaceType = 'Regular' | 'Templatable';
+    type TemplateBy = 'Meter' | 'Asset' | 'Device';
 
     // TrenDAP 
     interface iDataSourceType { ID: number, Name: DataSourceType }
     interface iDataSource { ID: number, Name: string, DataSourceTypeID: number, URL: string, Credential: string, Password: string, Public: boolean, User: string }    
-    interface iWorkSpace { ID: number, Name: string, User: string, DataSetID: number, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Open: boolean }    
+    interface iWorkSpace { ID: number, Type: WorkSpaceType, Name: string, User: string, DataSetID: number, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Open: boolean }    
     interface iDataSet { ID: number, Name: string, Context: 'Relative' | 'Fixed Dates', RelativeValue: number, RelativeWindow: 'Day' | 'Week' | 'Month' | 'Year',From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Data?: { Status: Status, Error?: string } }    
     interface iDataSetSource { ID: number, Name: string, DataSourceTypeID: number, JSON: object }
     interface iDataSetReturn { Data: iDataSetReturnType[], DataSource: { ID: number, Name: string, Type: DataSourceType, OpenSEE?: string}, From: string, To: string }
 
     // XDA
     interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], Types: number[], Aggregate: '' | '1h' | '1d' | '1w' }
-    interface iXDAReturn { ID: number, Meter: string, Name: string, Station: string, Phase: string, Type: string, Harmonic: number, Latitude: number, Longitude: number, Asset: string, Characteristic: string }
+    interface iXDAReturn { ID: number, Meter: string, Name: string, Station: string, Phase: OpenXDA.PhaseName, Type: OpenXDA.MeasurementTypeName, Harmonic: number, Latitude: number, Longitude: number, Asset: string, Characteristic: OpenXDA.MeasurementCharacteristicName }
     interface iXDAReturnWithDataSource extends iXDAReturnData { DataSourceID: number, DataSource: string }
     interface iXDAReturnData extends iXDAReturn { Data: iXDATrendDataPoint[], Events: {ID: number, ChannelID: number, StartTime: string}[] }
     interface iXDATrendDataPoint { Tag: string, Minimum: number, Maximum: number, Average: number, Timestamp: string, QualityFlags: number}
@@ -90,40 +96,65 @@ export namespace TrenDAP{
     interface iOpenHistorianAggregationPoint extends iXDATrendDataPoint { }
 
     // Widget JSON interfaces
-    interface WorkSpaceJSON { Rows: iRow[] }
-    interface iRow { WorkSpace?: iWorkSpace, Height: number, Data?: iDataSetReturn[], Widgets: iWidget[], Update?: (row: iRow) => void, RemoveRow?: () => void, MoveUp?: () => void, MoveDown?: () => void }
-    interface iWidget<T = any> { WorkSpace?: iWorkSpace, Data?: iDataSetReturn[], Height: number, Width: number, Type: WidgetType, Label: string, JSON: T, Update?: (widget: iWidget) => void, Remove?: () => void, AddSeries?: (id: number, dataSourceID:number, label?: string) => void }
+    interface WorkSpaceJSON { Rows: iRow[] | iTemplatableRow[], By?: TemplateBy, Type?: DataSourceType }
+    interface WorkSpaceJSONTrenDAPDB extends WorkSpaceJSON { By: 'Meter' | 'Asset' , Type: 'TrenDAPDB'}
+    interface WorkSpaceJSONOpenHistorian extends WorkSpaceJSON { By: 'Device', Type: 'OpenHistorian' }
 
-    interface iHistogram { Min: number, Max: number, Units: string, BinCount: number, Series: iHistogramSeries[] }
+    // Workspace
+    interface iRow { WorkSpace?: iWorkSpace, Height: number, Data?: iDataSetReturn[], Widgets: iWidget[], Update?: (row: iRow) => void, RemoveRow?: () => void, MoveUp?: () => void, MoveDown?: () => void }
+    interface iTemplatableRow extends iRow { By: TrenDAP.TemplateBy, Device: string, Widgets: iTemplatableWidget[] }
+
+    // Generic Widget
+    interface iWidget<T = any> { WorkSpace?: iWorkSpace, Data?: iDataSetReturn[], Height: number, Width: number, Type: WidgetType, Label: string, JSON: T, Update?: (widget: iWidget) => void, Remove?: () => void, AddSeries?: (id: number, dataSourceID: number, label?: string) => void }
+    interface iTemplatableWidget<T = any> { WorkSpace?: iWorkSpace, By: TemplateBy, Device: string, Data?: iDataSetReturn[], Height: number, Width: number, Type: WidgetType, Label: string, JSON: T, Update?: (widget: iTemplatableWidget) => void, Remove?: () => void }
+
     interface iSeries { DataSourceID: number, ID: string, Field: iXDATrendDataPointField }
-    interface iHistogramSeries extends iSeries { Color: string, Profile: boolean, ProfileColor: string  }
+    interface iTemplateSeries { DataSourceID: number, Field: iXDATrendDataPointField }
+    interface iTemplateSeriesXDA extends iTemplateSeries { Phase: OpenXDA.PhaseName, Characteristic: OpenXDA.MeasurementCharacteristicName, Type: OpenXDA.MeasurementTypeName }
+    interface iTemplateSeriesOpenHistorian extends iTemplateSeries { Phase: OpenHistorian.Phase, Type: OpenHistorian.SignalType }
+    interface iAxis { Min: number, Max: number, Units: string }
+    interface iYAxis extends iAxis { Position: 'left' | 'right' }
+
+    // Histogram Specific
+    interface iHistogram { Min: number, Max: number, Units: string, BinCount: number, Series: iHistogramSeries[] }   
+    interface iHistogramSeries extends iSeries { Color: string, Profile: boolean, ProfileColor: string }
+    interface iTemplatableHistogram { Min: number, Max: number, Units: string, BinCount: number, Series: iTemplatableHistogramSeriesXDA[] | iTemplatableHistogramSeriesOpenHistorian[]}
+    interface iTemplatableHistogramSeries extends iTemplateSeries { Color: string, Profile: boolean, ProfileColor: string }
+    interface iTemplatableHistogramSeriesXDA extends iTemplatableHistogramSeries { Phase: OpenXDA.PhaseName, Characteristic: OpenXDA.MeasurementCharacteristicName, Type: OpenXDA.MeasurementTypeName }
+    interface iTemplatableHistogramSeriesOpenHistorian extends iTemplatableHistogramSeries { Phase: OpenHistorian.Phase, Type: OpenHistorian.SignalType }
+
+    // Profile
     interface iProfile { }
+    interface iTemplatableProfile { }
+
+    // Stats
     interface iStats { Series: iSeries, Precision: number }
-    interface iTable { Series: iSeries, Precision: number}
+    interface iTemplatableStats { Series: iTemplateSeriesXDA | iTemplateSeriesOpenHistorian, Precision: number }
+
+    // Table
+    interface iTable { Series: iSeries, Precision: number }
+    interface iTemplatableTable { Series: iTemplateSeriesXDA | iTemplateSeriesOpenHistorian, Precision: number }
+
+    // Text
     interface iText {Text: string }
+    interface iTemplatableText { Text: string }
+
+    // Trend
     interface iTrend {
         Min: number, Max: number, YAxis: iYAxis[], Legend: boolean, Split: boolean, SplitType: 'Axis' | 'Series', Series: iTrendSeries[]
     }
-    interface iAxis { Min: number, Max: number, Units: string }
-    interface iYAxis extends iAxis { Position: 'left' | 'right' }
-    interface iTrendSeries extends iSeries { Color: string, Axis:  number, Label: string, ShowEvents: boolean }
+
+    interface iTemplatableTrend {
+        Min: number, Max: number, YAxis: iYAxis[], Legend: boolean, Split: boolean, SplitType: 'Axis' | 'Series', Series: iTrendTemplateSeries[]
+    }
+
+    interface iTrendSeries extends iSeries { Color: string, Axis: number, Label: string, ShowEvents: boolean }
+    interface iTrendTemplateSeries extends iTemplateSeries { Color: string, Axis: number, Label: string }
+    interface iTrendTemplateSeriesXDA extends iTrendTemplateSeries { Phase: OpenXDA.PhaseName, Characteristic: OpenXDA.MeasurementCharacteristicName, Type: OpenXDA.MeasurementTypeName, ShowEvents: boolean }
+    interface iTrendTemplateSeriesOpenHistorian extends iTrendTemplateSeries { Phase: OpenHistorian.Phase, Type: OpenHistorian.SignalType }
+
+    // XvsY
     interface iXvsY { Y: { Series: iSeries, Min: number, Max: number, Units: string }, X: { Series: iSeries, Min: number, Max: number, Units: string }, TimeMin: number, TimeMax: number, RegressionLine: boolean }
-}
+    interface iTemplatableXvsY { Y: { Series: iTemplateSeriesXDA | iTemplateSeriesOpenHistorian, Min: number, Max: number, Units: string }, X: { Series: iTemplateSeriesXDA | iTemplateSeriesOpenHistorian, Min: number, Max: number, Units: string }, TimeMin: number, TimeMax: number, RegressionLine: boolean }
 
-export namespace OpenHistorian {
-    interface iHistorian {
-        NodeID: string, ID: string, Acronym: string, Name: string,
-        AssemblyName: string, TypeName: string, ConnectionString: string, IsLocal: boolean, MeasurementReportingInterval: number, Description: string,
-        LoadOrder: number, Enabled: boolean, CreatedOn: string, CreatedBy: string, UpdatedOn: string, UpdatedBy: string
-    }
-    interface iActiveMeasurement {
-        NodeID: string, SourceNodeID: string, ID: string, SignalID: string, PointTag: string, AlternateTag: string,
-        SignalReference: string, Internal: boolean, Subscribed: boolean, Device: string, DeviceID: number, FramesPerSecond: number,
-        Protocol: string, SignalType: SignalType, EngineeringUnits: string, PhasorID: number, PhasorType: string, Phase: Phase,
-        Adder: number, Multiplier: number, Company: string, Longitude: number, Latitude: number, Description: string,
-        UpdatedOn: string
-    }
-
-    type SignalType = 'IPHM' | 'IPHA' | 'VPHM' | 'VPHA' | 'FREQ' | 'DFDT' | 'ALOG' | 'FLAG' | 'DIGI' | 'CALC' | 'STAT' | 'ALARM' | 'QUAL'
-    type Phase = 'A' | 'B' | 'C' | '+' | '-' | '0' | 'None'
 }

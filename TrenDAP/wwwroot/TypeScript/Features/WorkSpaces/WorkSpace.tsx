@@ -53,8 +53,10 @@ const WorkSpace: React.FunctionComponent<{ Record: TrenDAP.iWorkSpace, SetWorkSp
     return (
            <form>
                 <Input<TrenDAP.iWorkSpace> Record={props.Record} Field="Name" Setter={(record) => props.SetWorkSpace(record)} Valid={valid} />
-            <Select<TrenDAP.iWorkSpace> Record={props.Record} Field="DataSetID" Label="Data Set" Options={[...usersDataSets, ...publicDataSets].map(ds => ({ Label: ds.Name, Value: ds.ID.toString() }))} EmptyOption={true} Setter={(record) => props.SetWorkSpace(record) }/>
-            <CheckBox<TrenDAP.iWorkSpace> Record={props.Record} Field="Public" Label='Global' Setter={(record) => props.SetWorkSpace(record)}/>
+                <Select<TrenDAP.iWorkSpace> Record={props.Record} Field="DataSetID" Label="Data Set" Options={[...usersDataSets, ...publicDataSets].map(ds => ({ Label: ds.Name, Value: ds.ID.toString() }))} EmptyOption={true} Setter={(record) => props.SetWorkSpace(record)} />
+                <Select<TrenDAP.iWorkSpace> Record={props.Record} Field="Type" Options={[{ Label: 'Regular' as TrenDAP.WorkSpaceType, Value: 'Regular' }, { Label: 'Templatable ' as TrenDAP.WorkSpaceType, Value: 'Templatable' }] } EmptyOption={true} Setter={(record) => props.SetWorkSpace(record)} />
+
+                <CheckBox<TrenDAP.iWorkSpace> Record={props.Record} Field="Public" Label='Global' Setter={(record) => props.SetWorkSpace(record)}/>
            </form>
     );
 }

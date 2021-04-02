@@ -66,6 +66,7 @@ module.exports = env => {
             'react-router-dom': 'ReactRouterDOM',
         },
         optimization: {
+            minimize: false
             //splitChunks: {
             //    chunks: 'all',
             //}
