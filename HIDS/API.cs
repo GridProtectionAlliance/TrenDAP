@@ -31,6 +31,7 @@ using InfluxDB.Client;
 using InfluxDB.Client.Api.Domain;
 using InfluxDB.Client.Core;
 using InfluxDB.Client.Core.Flux.Domain;
+using InfluxDB.Client.Writes;
 
 namespace HIDS
 {
@@ -94,15 +95,33 @@ namespace HIDS
             }
         }
 
-        public void WritePoints(IEnumerable<Point> points)
+        public async Task WritePointsAsync(IEnumerable<Point> points)
         {
             if (m_client is null)
                 throw new InvalidOperationException("Cannot write points: not connected to InfluxDB.");
 
+            TaskCreationOptions runContinuationsAsynchronously = TaskCreationOptions.RunContinuationsAsynchronously;
+            TaskCompletionSource<object?> taskCompletionSource = new TaskCompletionSource<object?>(runContinuationsAsynchronously);
+
             using WriteApi writeApi = m_client.GetWriteApi();
 
+            writeApi.EventHandler += (sender, args) =>
+            {
+                if (args is WriteErrorEvent errorEvent)
+                    taskCompletionSource.TrySetException(errorEvent.Exception);
+            };
+
             foreach (Point point in points)
+            {
+                if (taskCompletionSource.Task.IsFaulted)
+                    break;
+
                 writeApi.WriteMeasurement(PointBucket, OrganizationID, WritePrecision.Ns, point);
+            }
+
+            writeApi.Dispose();
+            taskCompletionSource.TrySetResult(null);
+            await taskCompletionSource.Task;
         }
 
         public IAsyncEnumerable<Point> ReadPointsAsync(IEnumerable<string> tags, DateTime startTime, DateTime stopTime, CancellationToken cancellationToken = default) =>
