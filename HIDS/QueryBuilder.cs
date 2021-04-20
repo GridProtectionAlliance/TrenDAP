@@ -124,8 +124,9 @@ namespace HIDS
             {
                 IEnumerable<string> flagConditionals = Enumerable
                     .Range(0, 32)
-                    .Where(exp => (InvalidFlags & (1u << exp)) > 0)
-                    .Select(exp => $"(((r.flags / (2 ^ {exp})) % 2) == 0)");
+                    .Select(exp => InvalidFlags & (1u << exp))
+                    .Where(flag => flag > 0)
+                    .Select(flag => $"(((r.flags / {flag}) % 2) == 0)");
 
                 string flagExpression = string.Join(" and ", flagConditionals);
                 clauses.Add($"filter(fn: (r) => {flagExpression})");
@@ -192,8 +193,9 @@ namespace HIDS
             {
                 IEnumerable<string> flagConditionals = Enumerable
                     .Range(0, 32)
-                    .Where(exp => (InvalidFlags & (1u << exp)) > 0)
-                    .Select(exp => $"(((r._value / (2 ^ {exp})) % 2) == 0)");
+                    .Select(exp => InvalidFlags & (1u << exp))
+                    .Where(flag => flag > 0)
+                    .Select(flag => $"(((r._value / {flag}) % 2) == 0)");
 
                 string flagExpression = string.Join(" and ", flagConditionals);
                 clauses.Add($"filter(fn: (r) => {flagExpression})");
