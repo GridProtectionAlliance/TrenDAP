@@ -131,7 +131,9 @@ namespace TrenDAP.Model
                     DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", dataSetID);
                     if (dataSet == null) return BadRequest();
                     List<DataSetJson> json = JsonConvert.DeserializeObject<List<DataSetJson>>(dataSet.JSONString);
-                    IEnumerable<Task<JObject>> tasks = json.Select(ds => Query(dataSet, ds, dataSourceTypes.Find(dst => dst.ID == ds.DataSource.DataSourceTypeID).Name, cancellationToken));
+                    IEnumerable<Task<JObject>> tasks = json.Select(ds => {
+                        return Query(dataSet, ds, dataSourceTypes.Find(dst => dst.ID == ds.DataSource.DataSourceTypeID).Name, cancellationToken);
+                    });
                     JObject[] result = Task.WhenAll(tasks).Result;
                     JObject returnjson = new JObject();
 

@@ -65,10 +65,10 @@ export default function ViewDataSet() {
     React.useEffect(() => {
         if(dataSourceID === 0)
             setDataSourceID(data[0]?.DataSource.ID ?? 0);
-        if(channelID === '0')
+        if(channelID == '0')
             setChannelID((data[0]?.Data ?? [{ ID:'0' }])[0].ID.toString());
 
-        const d = (data.find(ds => ds.DataSource.ID === dataSourceID)?.Data ?? []).find(dd => dd.ID === channelID)?.Data ?? [];
+        const d = (data.find(ds => ds.DataSource.ID === dataSourceID)?.Data ?? []).find(dd => dd.ID == channelID)?.Data ?? [];
         setSelectedData(d);
     }, [data]);
 
@@ -80,7 +80,7 @@ export default function ViewDataSet() {
     }, [flag]);
 
     React.useEffect(() => {
-        const d = (data.find(ds => ds.DataSource.ID === dataSourceID)?.Data ?? []).find(dd => dd.ID === channelID)?.Data ?? [];
+        const d = (data.find(ds => ds.DataSource.ID === dataSourceID)?.Data ?? []).find(dd => dd.ID == channelID)?.Data ?? [];
         setSelectedData(d);
         
     }, [channelID]);

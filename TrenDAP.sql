@@ -77,19 +77,6 @@ CREATE TABLE DataSource
 )
 GO
 
-CREATE TABLE WorkSpace
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    [Name] VARCHAR(200) NOT NULL,
-    [User] VARCHAR(MAX) NOT NULL,
-    [Type] VARCHAR(200) NULL DEFAULT('Regular'),
-    [Public] bit NULL DEFAULT 0,
-    UpdatedOn DATETIME NULL DEFAULT GETUTCDATE(),
-    [JSON] varbinary(max) NULL,
-    [Open] bit NOT NULL DEFAULT 0,
-    [DataSetID] INT NOT NULL REFERENCES DataSet(ID)
-)
-GO
 
 CREATE TABLE DataSet
 (
@@ -111,6 +98,20 @@ CREATE TABLE DataSet
 )
 GO
 
+CREATE TABLE WorkSpace
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    [Name] VARCHAR(200) NOT NULL,
+    [User] VARCHAR(MAX) NOT NULL,
+    [Type] VARCHAR(200) NULL DEFAULT('Regular'),
+    [Public] bit NULL DEFAULT 0,
+    UpdatedOn DATETIME NULL DEFAULT GETUTCDATE(),
+    [JSON] varbinary(max) NULL,
+    [Open] bit NOT NULL DEFAULT 0,
+    [DataSetID] INT NOT NULL REFERENCES DataSet(ID)
+)
+GO
+
 CREATE TABLE ApplicationRole
 (
     ID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
@@ -125,11 +126,8 @@ GO
 
 INSERT INTO ApplicationRole(Name, Description) VALUES('Administrator', 'Admin Role')
 GO
-INSERT INTO SecurityGroup(Name, Description) VALUES('S-1-5-32-545', 'All Windows authenticated users')
-GO
 
-INSERT INTO ApplicationRoleSecurityGroup(ApplicationRoleID, SecurityGroupID) VALUES((SELECT ID FROM ApplicationRole WHERE Name = 'Administrator'), (SELECT ID FROM SecurityGroup))
-GO
+
 
 CREATE TABLE SecurityGroup
 (
@@ -141,6 +139,9 @@ CREATE TABLE SecurityGroup
     UpdatedOn DATETIME NULL DEFAULT GETUTCDATE(),
     UpdatedBy VARCHAR(200) NULL DEFAULT SUSER_NAME()
 )
+GO
+
+INSERT INTO SecurityGroup(Name, Description) VALUES('S-1-5-32-545', 'All Windows authenticated users')
 GO
 
 CREATE TABLE UserAccount
@@ -184,3 +185,9 @@ CREATE TABLE SecurityGroupUserAccount
     UserAccountID UNIQUEIDENTIFIER NOT NULL REFERENCES UserAccount(ID)
 )
 GO
+
+INSERT INTO ApplicationRoleSecurityGroup(ApplicationRoleID, SecurityGroupID) VALUES((SELECT ID FROM ApplicationRole WHERE Name = 'Administrator'), (SELECT ID FROM SecurityGroup))
+GO
+
+USE master
+go

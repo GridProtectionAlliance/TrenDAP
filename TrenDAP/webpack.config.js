@@ -14,7 +14,7 @@ module.exports = env => {
         },
         output: {
             path: path.resolve(__dirname, 'wwwroot', 'js'),
-            publicPath: '../js/',
+            //publicPath: '/js/',
             filename: "[name].js",
             clean: true
             //chunkFilename: '[name].bundle.js'
