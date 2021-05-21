@@ -126,7 +126,7 @@ namespace HIDS
                     .Range(0, 32)
                     .Select(exp => InvalidFlags & (1u << exp))
                     .Where(flag => flag > 0)
-                    .Select(flag => $"(((r.flags / {flag}) % 2) == 0)");
+                    .Select(flag => $"(((r.flags / uint(v: {flag})) % uint(v: 2)) == 0)");
 
                 string flagExpression = string.Join(" and ", flagConditionals);
                 clauses.Add($"filter(fn: (r) => {flagExpression})");
@@ -195,7 +195,7 @@ namespace HIDS
                     .Range(0, 32)
                     .Select(exp => InvalidFlags & (1u << exp))
                     .Where(flag => flag > 0)
-                    .Select(flag => $"(((r._value / {flag}) % 2) == 0)");
+                    .Select(flag => $"(((r._value / uint(v: {flag})) % uint(v: 2)) == 0)");
 
                 string flagExpression = string.Join(" and ", flagConditionals);
                 clauses.Add($"filter(fn: (r) => {flagExpression})");
