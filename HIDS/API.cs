@@ -109,6 +109,9 @@ namespace HIDS
             {
                 if (args is WriteErrorEvent errorEvent)
                     taskCompletionSource.TrySetException(errorEvent.Exception);
+
+                if (args is WriteRuntimeExceptionEvent exceptionEvent)
+                    taskCompletionSource.TrySetException(exceptionEvent.Exception);
             };
 
             foreach (Point point in points)
