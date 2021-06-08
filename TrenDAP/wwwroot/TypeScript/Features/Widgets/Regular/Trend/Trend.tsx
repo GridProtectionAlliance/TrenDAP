@@ -148,7 +148,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
         svg.selectAll('g.yaxis').remove();
         AddYAxisLeft(axis, svg, y);
 
-        const filteredData = ((record.Data.find(ds => ds.DataSource.ID === series.DataSourceID)?.Data ?? []).find(ds => ds.ID === series.ID)?.Data ?? []).filter(ds => moment(ds.Timestamp).toDate().getTime() >= settings.JSON.Min && moment(ds.Timestamp).toDate().getTime() <= settings.JSON.Max && ds[field] >= axis.Min && ds[field] <= axis.Max)
+        const filteredData = ((record.Data.find(ds => ds.DataSource.ID.toString() === series.DataSourceID.toString())?.Data ?? []).find(ds => ds.ID.toString() === series.ID.toString())?.Data ?? []).filter(ds => moment(ds.Timestamp).toDate().getTime() >= settings.JSON.Min && moment(ds.Timestamp).toDate().getTime() <= settings.JSON.Max && ds[field] >= axis.Min && ds[field] <= axis.Max)
         const lineFunc = d3.line<TrenDAP.iXDATrendDataPoint>().x(dd => x(moment(dd.Timestamp, 'YYYY-MM-DDTHH:mm:ss.fffZ'))).y(dd => y(dd[series.Field]));
 
         svg.selectAll("g.line").remove();
@@ -184,7 +184,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
             const axis = settings.JSON.YAxis[i];
             const series = settings.JSON.Series.filter((s) => s.Axis === i).map(s => ({
                 ...s,
-                Data: ((record.Data.find(ds => ds.DataSource.ID === s.DataSourceID)?.Data ?? []).find(ds => ds.ID === s.ID)?.Data ?? []).filter(ds => moment(ds.Timestamp).toDate().getTime() >= settings.JSON.Min && moment(ds.Timestamp).toDate().getTime() <= settings.JSON.Max && ds[s.Field] >= axis.Min && ds[s.Field] <= axis.Max).map(point => [point.Timestamp, point[s.Field]])
+                Data: ((record.Data.find(ds => ds.DataSource.ID.toString() === s.DataSourceID.toString())?.Data ?? []).find(ds => ds.ID.toString() === s.ID.toString())?.Data ?? []).filter(ds => moment(ds.Timestamp).toDate().getTime() >= settings.JSON.Min && moment(ds.Timestamp).toDate().getTime() <= settings.JSON.Max && ds[s.Field] >= axis.Min && ds[s.Field] <= axis.Max).map(point => [point.Timestamp, point[s.Field]])
             }));
 
             AddXAxis(svg, x);
@@ -257,7 +257,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
             .attr("d", (d: TrenDAP.iTrendSeries) => {
                 let yScale = y[d.Axis];
                 let lineFunc = d3.line<TrenDAP.iXDATrendDataPoint>().x(dd => x(moment(dd.Timestamp, 'YYYY-MM-DDTHH:mm:ss.fffZ'))).y(dd => yScale(dd[d.Field]));
-                let filteredData = ((record.Data.find(ds => ds.DataSource.ID === d.DataSourceID)?.Data ?? []).find(ds => ds.ID === d.ID)?.Data ?? []).filter(ds => moment(ds.Timestamp).toDate().getTime() >= settings.JSON.Min && moment(ds.Timestamp).toDate().getTime() <= settings.JSON.Max && ds[d.Field] >= settings.JSON.YAxis[d.Axis]?.Min && ds[d.Field] <= settings.JSON.YAxis[d.Axis]?.Max)
+                let filteredData = ((record.Data.find(ds => ds.DataSource.ID.toString() === d.DataSourceID.toString())?.Data ?? []).find(ds => ds.ID.toString() === d.ID.toString())?.Data ?? []).filter(ds => moment(ds.Timestamp).toDate().getTime() >= settings.JSON.Min && moment(ds.Timestamp).toDate().getTime() <= settings.JSON.Max && ds[d.Field] >= settings.JSON.YAxis[d.Axis]?.Min && ds[d.Field] <= settings.JSON.YAxis[d.Axis]?.Max)
                 return lineFunc(filteredData);
             })
         svg.on('mousemove', (d: MouseEvent) => setHover(d.offsetX))
@@ -299,7 +299,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
         const svgHeight = parseInt(svg.attr('height'))
         
 
-        const data = ((record.Data.find(ds => ds.DataSource.ID === series.DataSourceID)?.Data as TrenDAP.iXDAReturnData[] ?? []).find(ds => ds.ID.toString() === series.ID)?.Events ?? [])
+        const data = ((record.Data.find(ds => ds.DataSource.ID.toString() === series.DataSourceID.toString())?.Data as TrenDAP.iXDAReturnData[] ?? []).find(ds => ds.ID.toString() === series.ID.toString())?.Events ?? [])
         svg.selectAll('g.event-line').remove();
         const g = svg.selectAll('g.event-line')
             .data(data)
@@ -314,7 +314,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
             .attr('fill', 'red')
             .style('cursor', 'pointer')
             .on('click', (e, d) => {
-                window.open(record.Data.find(ds => ds.DataSource.ID === series.DataSourceID).DataSource.OpenSEE + '?eventID=' + d.ID)
+                window.open(record.Data.find(ds => ds.DataSource.ID.toString() === series.DataSourceID.toString()).DataSource.OpenSEE + '?eventID=' + d.ID)
             })
     }
 
@@ -622,7 +622,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
                                         <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Callback={() => setRecord(new Trend(record))} />
                                         <ul className="list-group">
                                             {record.JSON.Series.map((series, ind) => {
-                                                let datum = d.Data.find(dd => dd.ID === series.ID);
+                                                let datum = d.Data.find(dd => dd.ID.toString() === series.ID);
                                                 if (datum === undefined) return null;
                                                 return (
                                                     <li key={series.ID} className="list-group-item">                                                            

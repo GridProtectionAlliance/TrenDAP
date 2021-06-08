@@ -253,8 +253,8 @@ export class Stats extends Widget<TrenDAP.iStats> {
         }
 
 
-        const dataSourceData = this.Data.find(ds => ds.DataSource.ID === series.DataSourceID)?.Data ?? [];
-        const dataSeries = dataSourceData.find(d => d.ID === series.ID)?.Data ?? [];
+        const dataSourceData = this.Data.find(ds => ds.DataSource.ID.toString() === series.DataSourceID.toString())?.Data ?? [];
+        const dataSeries = dataSourceData.find(d => d.ID.toString() === series.ID.toString())?.Data ?? [];
         const data = dataSeries.map(d =>d[series.Field]);
 
 
@@ -341,8 +341,8 @@ export class XvsY extends Widget<TrenDAP.iXvsY> {
     public CalculateRange = (type: 'x' | 'y' | 'time') => {
         
         if (type === 'x') {
-            let dd = this.Data.find(ds => ds.DataSource.ID === this.JSON.X.Series.DataSourceID)?.Data ?? [];
-            let ss = dd.find(d => d.ID === this.JSON.X.Series.ID).Data.map(d => d[this.JSON.X.Series.Field]);
+            let dd = this.Data.find(ds => ds.DataSource.ID.toString() === this.JSON.X.Series.DataSourceID.toString())?.Data ?? [];
+            let ss = dd.find(d => d.ID.toString() === this.JSON.X.Series.ID.toString()).Data.map(d => d[this.JSON.X.Series.Field]);
             this.JSON.X.Max = Math.max(...ss);
             this.JSON.X.Min = Math.min(...ss);
             let buffer = (this.JSON.X.Max - this.JSON.X.Min) * .10;
@@ -352,8 +352,8 @@ export class XvsY extends Widget<TrenDAP.iXvsY> {
 
         }
         else if (type === 'y') {
-            let dd = this.Data.find(ds => ds.DataSource.ID === this.JSON.Y.Series.DataSourceID)?.Data ?? [];
-            let ss = dd.find(d => d.ID === this.JSON.Y.Series.ID).Data.map(d => d[this.JSON.Y.Series.Field]);
+            let dd = this.Data.find(ds => ds.DataSource.ID.toString() === this.JSON.Y.Series.DataSourceID.toString())?.Data ?? [];
+            let ss = dd.find(d => d.ID.toString() === this.JSON.Y.Series.ID.toString()).Data.map(d => d[this.JSON.Y.Series.Field]);
             this.JSON.Y.Max = Math.max(...ss);
             this.JSON.Y.Min = Math.min(...ss);
             let buffer = (this.JSON.Y.Max - this.JSON.Y.Min) * .10;
@@ -362,9 +362,9 @@ export class XvsY extends Widget<TrenDAP.iXvsY> {
 
         }
         else {
-            let dd = this.Data.find(ds => ds.DataSource.ID === this.JSON.X.Series.DataSourceID)?.Data ?? [];
+            let dd = this.Data.find(ds => ds.DataSource.ID.toString() === this.JSON.X.Series.DataSourceID.toString())?.Data ?? [];
 
-            let ss = dd.find(d => d.ID === this.JSON.X.Series.ID).Data.map(d => new Date(d.Timestamp).getTime());
+            let ss = dd.find(d => d.ID.toString() === this.JSON.X.Series.ID.toString()).Data.map(d => new Date(d.Timestamp).getTime());
             this.JSON.TimeMax = Math.max(...ss);
             this.JSON.TimeMin = Math.min(...ss);
 

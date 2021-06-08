@@ -46,8 +46,8 @@ export default function TableJSX(props: TrenDAP.iWidget<TrenDAP.iTable>) {
     }, [props.Data]);
 
     React.useEffect(() => {
-        const dataSource = record.Data.find(dd => dd.DataSource.ID === record.JSON.Series?.DataSourceID ?? 0)?.Data ?? [];
-        const datum = dataSource.find(dd => dd.ID === record.JSON.Series?.ID ?? 0);
+        const dataSource = record.Data.find(dd => dd.DataSource.ID.toString() === record.JSON.Series?.DataSourceID.toString() ?? 0)?.Data ?? [];
+        const datum = dataSource.find(dd => dd.ID.toString() === record.JSON.Series?.ID.toString() ?? 0);
         if (datum == undefined) setInfo({} as TrenDAP.iDataSetReturnType );
         else setInfo(datum as TrenDAP.iDataSetReturnType);
     }, [record]);

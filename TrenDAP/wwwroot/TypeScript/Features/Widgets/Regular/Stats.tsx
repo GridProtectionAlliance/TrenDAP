@@ -40,8 +40,8 @@ export default function StatsJSX(props: TrenDAP.iWidget<TrenDAP.iStats>) {
 
 
     const stats = record.Stats();
-    const dataSource = record.Data.find(dd => dd.DataSource.ID === record.JSON.Series?.DataSourceID ?? 0)?.Data ?? [];
-    const datum = dataSource.find(dd => dd.ID === record.JSON.Series?.ID ?? 0);
+    const dataSource = record.Data.find(dd => dd.DataSource.ID.toString() === record.JSON.Series?.DataSourceID.toString() ?? 0)?.Data ?? [];
+    const datum = dataSource.find(dd => dd.ID.toString() === record.JSON.Series?.ID.toString() ?? 0);
     return (
         <div className="card" style={{ width: props.Width, height: props.Height, maxHeight: props.Height, overflowY: 'auto' }}>
             <div className="card-body" style={{ padding: 0 }}>

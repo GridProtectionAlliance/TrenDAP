@@ -159,14 +159,14 @@ export default function XvsYJSX(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
     function GetDatum(axis: 'x' | 'y') {
         if (axis === 'x') {
             if (record.JSON.X.Series == undefined) return {Name: ''} as any;
-            const dataSource = record.Data.find(d => d.DataSource.ID === record.JSON.X.Series.DataSourceID)?.Data ?? [];
-            const datum = dataSource.find(ds => ds.ID === record.JSON.X.Series.ID)
+            const dataSource = record.Data.find(d => d.DataSource.ID.toString() === record.JSON.X.Series.DataSourceID.toString())?.Data ?? [];
+            const datum = dataSource.find(ds => ds.ID.toString() === record.JSON.X.Series.ID.toString())
             return datum;
         }
         else {
             if (record.JSON.Y.Series == undefined) return { Name: '' } as any;
-            const dataSource = record.Data.find(d => d.DataSource.ID === record.JSON.Y.Series.DataSourceID)?.Data ?? [];
-            const datum = dataSource.find(ds => ds.ID === record.JSON.Y.Series.ID)
+            const dataSource = record.Data.find(d => d.DataSource.ID.toString() === record.JSON.Y.Series.DataSourceID.toString())?.Data ?? [];
+            const datum = dataSource.find(ds => ds.ID.toString() === record.JSON.Y.Series.ID.toString())
             return datum;
         }
     }

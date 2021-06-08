@@ -71,11 +71,11 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
         const margin = { bottom: 50, left: 50, top: 40, right: (profile ? 70 : 20) };
         const svgHeight = record.Height - margin.top - margin.bottom;
 
-        const extent = d3.extent([].concat(...settings.JSON.Series.map(series => ((settings.Data.find(d => d.DataSource.ID === series.DataSourceID)?.Data ??[]).find(d=> d.ID === series.ID)?.Data?? []).map(d => d[series.Field] as number))));
+        const extent = d3.extent([].concat(...settings.JSON.Series.map(series => ((settings.Data.find(d => d.DataSource.ID === series.DataSourceID)?.Data ??[]).find(d=> d.ID.toString() === series.ID)?.Data?? []).map(d => d[series.Field] as number))));
         //// set the parameters for the histogram
         let histograms = (settings.JSON?.Series ?? []).map(series => {
             let dataSource = settings.Data.find(d => d.DataSource.ID === series.DataSourceID)?.Data ?? [];
-            let datum = dataSource.find(d => d.ID === series.ID)?.Data.map(d => d[series.Field]) ?? [];
+            let datum = dataSource.find(d => d.ID.toString() === series.ID)?.Data.map(d => d[series.Field]) ?? [];
             let histogram = d3.histogram<number, number>()
                 .value(function (d) { return d; })   // I need to give the vector of value
                 .domain(extent)  // then the domain of the graphic
@@ -140,7 +140,7 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
         if (profile) {
             const profiles = record.JSON.Series.filter(series => series.Profile).map((series, index) => {
                 let dataSource = settings.Data.find(d => d.DataSource.ID === series.DataSourceID)?.Data ?? [];
-                let datum = dataSource.find(d => d.ID === series.ID)?.Data.map(d => d[series.Field]) ?? [];
+                let datum = dataSource.find(d => d.ID.toString() === series.ID)?.Data.map(d => d[series.Field]) ?? [];
                 let histogram = d3.histogram<number, number>()
                     .value(function (d) { return d; })   // I need to give the vector of value
                     .domain(d3.extent(datum) as [number, number])  // then the domain of the graphic
