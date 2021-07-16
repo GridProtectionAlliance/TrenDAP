@@ -35,6 +35,14 @@ namespace HIDS
         [Column("max")] public double Maximum { get; set; }
         [Column("avg")] public double Average { get; set; }
         [Column("flags")] public uint QualityFlags { get; set; }
-        [Column(IsTimestamp = true)] public DateTime Timestamp { get; set; }
+
+        [Column(IsTimestamp = true)]
+        public DateTime Timestamp
+        {
+            get => _Timestamp;
+            set => _Timestamp = API.ForceUTC(value);
+        }
+
+        private DateTime _Timestamp { get; set; }
     }
 }

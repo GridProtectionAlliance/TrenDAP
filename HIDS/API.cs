@@ -32,6 +32,7 @@ using InfluxDB.Client.Api.Domain;
 using InfluxDB.Client.Core;
 using InfluxDB.Client.Core.Flux.Domain;
 using InfluxDB.Client.Writes;
+using Newtonsoft.Json;
 
 namespace HIDS
 {
@@ -168,7 +169,7 @@ namespace HIDS
             return fluxRecords.Select(record => new Point()
             {
                 Tag = record.GetValueByKey("tag")?.ToString(),
-                Timestamp = record.GetTimeInDateTime().GetValueOrDefault(),
+                Timestamp = StripTimeZone(record.GetTimeInDateTime().GetValueOrDefault()),
                 QualityFlags = Convert.ToUInt32(record.GetValueByKey("flags") ?? 0u),
                 Minimum = Convert.ToDouble(record.GetValueByKey("min") ?? double.NaN),
                 Maximum = Convert.ToDouble(record.GetValueByKey("max") ?? double.NaN),
@@ -176,14 +177,14 @@ namespace HIDS
             });
         }
 
-        private IAsyncEnumerable<PointCount> ReadPointCountAsync(string fluxQuery, CancellationToken cancellationToken = default)
+        public IAsyncEnumerable<PointCount> ReadPointCountAsync(string fluxQuery, CancellationToken cancellationToken = default)
         {
             IAsyncEnumerable<FluxRecord> fluxRecords = ReadFluxRecordsAsync(fluxQuery, cancellationToken);
 
             return fluxRecords.Select(record => new PointCount()
             {
                 Tag = record.GetValueByKey("tag")?.ToString(),
-                Timestamp = record.GetTimeInDateTime().GetValueOrDefault(),
+                Timestamp = StripTimeZone(record.GetTimeInDateTime().GetValueOrDefault()),
                 Count = Convert.ToUInt64(record.GetValue())
             });
         }
@@ -241,6 +242,16 @@ namespace HIDS
             }
         }
 
-        public static string FormatTimestamp(DateTime timestamp) => timestamp.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+        public static string FormatTimestamp(DateTime timestamp) =>
+            JsonConvert.ToString(ForceUTC(timestamp)).Trim('"');
+
+        // InfluxDB only accepts UTC timestamps,
+        // and properly converting to UTC would change semantics for daily aggregation
+        internal static DateTime ForceUTC(DateTime timestamp) =>
+            DateTime.SpecifyKind(timestamp, DateTimeKind.Utc);
+
+        // Time zone of timestamp read from InfluxDB cannot be determined
+        internal static DateTime StripTimeZone(DateTime timestamp) =>
+            DateTime.SpecifyKind(timestamp, DateTimeKind.Unspecified);
     }
 }
