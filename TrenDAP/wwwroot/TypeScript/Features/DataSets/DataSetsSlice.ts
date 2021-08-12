@@ -193,8 +193,8 @@ export const DataSetsSlice = createSlice({
                 state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'error', Error: action.error.message };
         });
         builder.addCase(UpdateDataSetDataFlag.fulfilled, (state, action) => {
-            if(action.payload !== undefined)
-                state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'idle', Error: null };
+            if(action.payload.ID != null)
+                state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'idle', Error: action.payload.Created };
             else
                 state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'unitiated', Error: null};
 
@@ -344,11 +344,11 @@ function PatchDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet>
     });
 }
 
-function GetDataSetDataLocal(DataSet: TrenDAP.iDataSet): Promise<{Created: number, ID: number}> {
+function GetDataSetDataLocal(DataSet: TrenDAP.iDataSet): Promise<{Created: string, ID: number}> {
     const db = new TrenDAPDB();
     return db.Read('DataSet', DataSet.ID).then(data => {
         if (data == null)
-            throw ('Data not loaded into indexedb.');
+            return {ID: null, Created: null};
         return { ID: data.ID, Created: data.Created}
     });
 }

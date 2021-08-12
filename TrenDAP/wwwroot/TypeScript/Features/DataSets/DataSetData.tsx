@@ -29,6 +29,7 @@ import { FetchDataSetData, FetchDataSets, SelectDataSetByID, SelectDataSetsStatu
 import {  Spinner, Warning, CrossMark, HeavyCheckMark } from '../../Constants'
 import styles from '../../../Styles/spinner.scss';
 import LoadingSpinner from '../../LoadingSpinner';
+import moment from 'moment';
 
 const DataSetData = (props: { ID: number }) => {
     const dispatch = useDispatch();
@@ -48,16 +49,22 @@ const DataSetData = (props: { ID: number }) => {
         if (dataSet == undefined) return;
         else if (dataSet.Data.Status === 'unitiated')
             dispatch(UpdateDataSetDataFlag(dataSet));
-    }, [dataSet]);
+    }, [dataSet?.ID]);
 
 
     if (dataSet == undefined) return null;
+    else if (dataSet.Data?.Status === 'unitiated')
+        return <button className='btn btn-primary' onClick={() => dispatch(FetchDataSetData(dataSet))} title={`Click to load data.`}>Load</button>;
     else if (dataSet.Data?.Status === 'loading')
         return <span title="Loading Data." style={{ marginLeft: 25 }}><LoadingSpinner Height={25} Width={25} Color="black" Background="white" /></span>;
     else if (dataSet.Data?.Status === 'error')
-        return <button className='btn btn-link' onClick={() => dispatch(FetchDataSetData(dataSet))} title={`Error loading data: ${dataSet.Data.Error}. Click to reload.`}>{CrossMark}</button>;
-    else if (dataSet.Data?.Status === 'idle')
-        return <><button className='btn btn-link' onClick={() => dispatch(FetchDataSetData(dataSet))} title='Data loaded into TrenDAP. Click to reload.' >{HeavyCheckMark}</button></>;
+        return <button className='btn btn-link' onClick={() => dispatch(FetchDataSetData(dataSet))} title={`Error loading data: ${dataSet.Data.Error}. Click to attempt a reload.`}>{CrossMark}</button>;
+    else if (dataSet.Data?.Status === 'idle') {
+        if (moment(dataSet.Data.Error, "MM/DD/YYYY HH:mm").valueOf() < moment(dataSet.UpdatedOn).valueOf())
+            return <button className='btn btn-link' onClick={() => dispatch(FetchDataSetData(dataSet))} title='Data outdated.  Click to load data into TrenDAP'>{Warning}</button>;
+        else
+            return <button className='btn btn-link' onClick={() => dispatch(FetchDataSetData(dataSet))} title='Data loaded into TrenDAP. Click to reload.' >{HeavyCheckMark}</button>;
+    }
      else
         return <button className='btn btn-link' onClick={() => dispatch(FetchDataSetData(dataSet))} title='Click to load data into TrenDAP'>{Warning}</button>;
 

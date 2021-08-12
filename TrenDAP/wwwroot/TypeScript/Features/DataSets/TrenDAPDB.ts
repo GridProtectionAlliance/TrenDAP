@@ -26,9 +26,10 @@ import moment from "moment";
 
 export interface DataSetTableRow {
     ID: number,
-    Created: number,
+    Created: string,
     Data: (TrenDAP.iDataSetReturn)[]
 }
+const TimeFormat = 'MM/DD/YYYY HH:mm';
 export default class TrenDAPDB {
 
     private OpenDB() {
@@ -110,7 +111,7 @@ export default class TrenDAPDB {
 
             let tx = db.transaction(table, 'readwrite');
             let store = tx.objectStore(table);
-            let result = store.put({ ID: id, Created: moment().format('MM/DD/YYYY HH:mm'), Name: name, Data: record });
+            let result = store.put({ ID: id, Created: moment().format(TimeFormat), Name: name, Data: record });
 
             result.onsuccess = (evt: any) => {
                 resolve(evt.target.result);
@@ -133,7 +134,7 @@ export default class TrenDAPDB {
             let tx = db.transaction(table, 'readwrite');
             let store = tx.objectStore(table);
             Promise.all(record.map(r => new Promise((res, rej) => {
-                let result = store.put({ ID: id, Created: moment().format('MM/DD/YYYY HH:mm'), Name: name, Data: record });
+                let result = store.put({ ID: id, Created: moment().format(TimeFormat), Name: name, Data: record });
 
                 result.onsuccess = (evt: any) => {
                     res(evt.target.result);
