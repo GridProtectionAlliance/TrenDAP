@@ -5,7 +5,9 @@
   "repository": "https://github.com/GridProtectionAlliance/TrenDAP",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npm prune && npm install && webpack --mode=development",
+    "watch": "webpack --watch --color --mode=development",
+    "update": "npx npm-check-updates"
   },
   "author": "",
   "license": "MIT",

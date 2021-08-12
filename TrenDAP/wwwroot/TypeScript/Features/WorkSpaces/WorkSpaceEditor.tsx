@@ -26,11 +26,11 @@
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 
-import { useParams, Link, useHistory } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import styles from '../../../Styles/app.scss';
-import { SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, OpenCloseWorkSpace, UpdateWorkSpace, SelectWorkSpacesStatus, FetchWorkSpaces } from './WorkSpacesSlice';
-import { SelectDataSets, FetchDataSets, SelectDataSetsStatus, GetDataSetDataFromIDB } from '../DataSets/DataSetsSlice';
+import { SelectWorkSpaceByID, UpdateWorkSpace, SelectWorkSpacesStatus, FetchWorkSpaces } from './WorkSpacesSlice';
+import { SelectDataSets, FetchDataSets, SelectDataSetsStatus, GetDataSetDataFromIDB, SelectDataSetByID } from '../DataSets/DataSetsSlice';
 import DataSetData from '../DataSets/DataSetData';
 
 import { CreateWidget as CreateRegularWidget } from './../Widgets/Regular/Implementations';
@@ -46,34 +46,16 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
     const [data, setData] = React.useState<TrenDAP.iDataSetReturn[]>([]);
     const dispatch = useDispatch();
     const { id } = useParams<{ id }>();
-    const history = useHistory();
-    const [tab, setTab] = React.useState<number>(id);
-    const usersWorkSpaces: TrenDAP.iWorkSpace[] = useSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
-    const publicWorkSpaces: TrenDAP.iWorkSpace[] = useSelector((state: Redux.StoreState) => SelectWorkSpacesAllPublicNotUser(state, userName));
-    const dataSets = useSelector(SelectDataSets);
+    const workSpace = useSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, parseInt(id)));
+    const dataSet = useSelector((state: Redux.StoreState) => SelectDataSetByID(state, workSpace?.DataSetID ?? 0));
     const wsStatus = useSelector(SelectWorkSpacesStatus);
     const dsStatus = useSelector(SelectDataSetsStatus);
     const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [], By: 'Meter' });
-    const [workSpace, setWorkSpace] = React.useState<TrenDAP.iWorkSpace>([...usersWorkSpaces, ...publicWorkSpaces].find(ws => ws.ID == tab));
-    const [dataSet, setDataSet] = React.useState<TrenDAP.iDataSet>({} as any);
     const [toggle, setToggle] = React.useState<boolean>(false);
 
-    React.useEffect(() => {
-        if (id != tab) {
-            history.push(`/WorkSpaceEditor/${tab}`); 
-            const ws = [...usersWorkSpaces, ...publicWorkSpaces].find(ws => ws.ID == tab)
-            setWorkSpace(ws);
-            const ds = dataSets.find(ds => ds.ID === workSpace.DataSetID);
-            if (ds != undefined)
-                setDataSet(ds);
-        }
-    }, [tab]);
 
     React.useEffect(() => {
         if (workSpace === undefined) return;
-        //setDataSet(dataSets.find(ds => ds.ID === workSpace.DataSetID));
-        if (!workSpace?.Open)
-            dispatch(OpenCloseWorkSpace({ workSpace: workSpace, open: true }));
 
         let json = JSON.parse(workSpace.JSONString) as TrenDAP.WorkSpaceJSON;
         setWorkSpaceJSON(json);
@@ -82,33 +64,18 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
             setData(d);
         });
 
-    }, [workSpace, dataSets]);
+    }, [workSpace]);
 
     React.useEffect(() => {
-        if (wsStatus === 'idle') {
-            const ws = [...usersWorkSpaces, ...publicWorkSpaces].find(ws => ws.ID == tab)
-            setWorkSpace(ws);
-            const ds = dataSets.find(ds => ds.ID === workSpace.DataSetID);
-            if (ds != undefined)
-                setDataSet(ds);
-        }
-        else if (wsStatus == 'unitiated' || wsStatus == 'changed')
+        if (wsStatus == 'unitiated' || wsStatus == 'changed')
             dispatch(FetchWorkSpaces());
-
 
         return function () {
         }
     }, [dispatch, wsStatus]);
 
     React.useEffect(() => {
-        if (dsStatus === 'idle') {
-            if (workSpace != undefined) {
-                const ds = dataSets.find(ds => ds.ID === workSpace.DataSetID);
-                if (ds != undefined)
-                    setDataSet(ds);
-                }
-        }
-        else if (dsStatus == 'unitiated'  || dsStatus === 'changed')
+        if (dsStatus == 'unitiated'  || dsStatus === 'changed')
             dispatch(FetchDataSets());
 
         return function () {
@@ -131,46 +98,45 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
         }
 
     }
+    if (workSpace == undefined) return null;
     return (
         <>
-            <div className={styles.navbarbuttons}>
-                <span style={{ padding: '6px 12px', position: 'relative' }}>Data Set: <Link to={`${homePath}EditDataSet/${dataSet?.ID}`}>{dataSet?.Name}</Link><DataSetData {...dataSet} /></span>
-                <div className="btn-group">
-                    <button className="btn" title='Add Object' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-plus" ></i></button>
-                    <div className="dropdown-menu" >
-                        <button className="dropdown-item" onClick={(e) => HandleAddObject('Row')}>Row</button>
-                        <div className="dropdown-divider"></div>
-                        <button className="dropdown-item" onClick={() => HandleAddObject('Histogram')}>Histogram</button>
-                        {/*<button className="dropdown-item" onClick={() => HandleAddObject('Profile')}>Profile</button>*/}
-                        <button className="dropdown-item" onClick={() => HandleAddObject('Stats')}>Stats</button>
-                        <button className="dropdown-item" onClick={() => HandleAddObject('Table')}>Table</button>
-                        <button className="dropdown-item" onClick={() => HandleAddObject('Text')}>Text</button>
-                        <button className="dropdown-item" onClick={() => HandleAddObject('Trend')}>Trend</button>
-                        <button className="dropdown-item" onClick={() => HandleAddObject('XvsY')}>X vs Y</button>
-                    </div>
-                </div>
+            <div style={{ height: 42 }}>
 
-                <div className="btn-group">
-                    <button className="btn" title='Export Current Data Set' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-download" ></i></button>
-                    <div className="dropdown-menu" >
-                        <a className="dropdown-item" href="#">PDF</a>
-                        <a className="dropdown-item" href="#">CSV</a>
-                    </div>
-                </div>
-                <button className="btn" title='Save current workspace...' onClick={(e) => {
-                    e.preventDefault();
-                    dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(workSpaceJSON) }));
-                }}><i className="fa fa-save"></i></button>
-                <button className="btn" title='Workspace Settings' onClick={() => setToggle(true) }><i className="fa fa-cog"></i></button>
+                <div className={styles.navbarbuttons}>
 
+                    <span style={{ padding: '6px 12px', position: 'relative' }}>Data Set: <Link to={`${homePath}EditDataSet/${dataSet?.ID}`}>{dataSet?.Name}</Link><DataSetData {...dataSet} /></span>
+                    <div className="btn-group">
+                        <button className="btn" title='Add Object' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-plus" ></i></button>
+                        <div className="dropdown-menu" >
+                            <button className="dropdown-item" onClick={(e) => HandleAddObject('Row')}>Row</button>
+                            <div className="dropdown-divider"></div>
+                            <button className="dropdown-item" onClick={() => HandleAddObject('Histogram')}>Histogram</button>
+                            {/*<button className="dropdown-item" onClick={() => HandleAddObject('Profile')}>Profile</button>*/}
+                            <button className="dropdown-item" onClick={() => HandleAddObject('Stats')}>Stats</button>
+                            <button className="dropdown-item" onClick={() => HandleAddObject('Table')}>Table</button>
+                            <button className="dropdown-item" onClick={() => HandleAddObject('Text')}>Text</button>
+                            <button className="dropdown-item" onClick={() => HandleAddObject('Trend')}>Trend</button>
+                            <button className="dropdown-item" onClick={() => HandleAddObject('XvsY')}>X vs Y</button>
+                        </div>
+                    </div>
+
+                    <div className="btn-group">
+                        <button className="btn" title='Export Current Data Set' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-download" ></i></button>
+                        <div className="dropdown-menu" >
+                            <a className="dropdown-item" href="#">PDF</a>
+                            <a className="dropdown-item" href="#">CSV</a>
+                        </div>
+                    </div>
+                    <button className="btn" title='Save current workspace...' onClick={(e) => {
+                        e.preventDefault();
+                        dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(workSpaceJSON) }));
+                    }}><i className="fa fa-save"></i></button>
+                    <button className="btn" title='Workspace Settings' onClick={() => setToggle(true) }><i className="fa fa-cog"></i></button>
+
+                </div>
+                <div style={{padding: '6px 12px'}}>Workspace: {workSpace?.Name ?? ''}</div>
             </div>
-            <ul className="nav nav-tabs">
-                {[...usersWorkSpaces, ...publicWorkSpaces].filter(ws => ws.Open).map(ws =>
-                    <li key={ws.ID} className={"nav-item " + styles.workspacetab} >
-                        <a className={"nav-link" + (tab == ws.ID ? ' active' : '')} href='#' onClick={(evt) => setTab(ws.ID)} >{ws.Name}</a>
-                        <span onClick={() => dispatch(OpenCloseWorkSpace({ workSpace: ws, open: false }))}>X</span>
-                    </li>)}
-            </ul>
             { workSpace.Type === 'Regular' ?
                 <RegularEditor WorkSpace={workSpace} Data={data} /> : 
                 <TemplatableEditor WorkSpace={workSpace} Data={data} />
