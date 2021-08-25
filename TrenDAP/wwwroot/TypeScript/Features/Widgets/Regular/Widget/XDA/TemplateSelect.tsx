@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 
-import { OpenXDATypes as OpenXDA } from '@gpa-gemstone/application-typings';
+import { OpenXDA } from '@gpa-gemstone/application-typings';
 import * as React from 'react';
 import { TrenDAP } from '../../../../../global';
 import { Histogram, Stats, Table, Trend, Widget, XvsY } from '../../Implementations';
@@ -32,22 +32,22 @@ import { FetchOpenXDA, SelectOpenXDA, SelectOpenXDAStatus } from '../../../../Op
 export default function TemplateSelect(props: { Widget: Widget<TrenDAP.WidgetClass>, DataSourceID: number, Callback: () => void, Axis?: 'x' | 'y' }) {
     const [dataSource, setDataSource] = React.useState<TrenDAP.iDataSetReturn>(undefined)
     const [selected, setSelected] = React.useState<TrenDAP.iXDAReturnData>({ ID: 0 } as TrenDAP.iXDAReturnData);
-    const [measurementType, setMeasurementType] = React.useState<OpenXDA.MeasurementTypeName>('Voltage');
-    const [measurementCharacteristic, setMeasurementCharacteristic] = React.useState<OpenXDA.MeasurementCharacteristicName>('RMS');
-    const [phase, setPhase] = React.useState<OpenXDA.PhaseName>('AN');
+    const [measurementType, setMeasurementType] = React.useState<OpenXDA.Types.MeasurementTypeName>('Voltage');
+    const [measurementCharacteristic, setMeasurementCharacteristic] = React.useState<OpenXDA.Types.MeasurementCharacteristicName>('RMS');
+    const [phase, setPhase] = React.useState<OpenXDA.Types.PhaseName>('AN');
 
 
     const [delimeter, setDelimeter] = React.useState<string>('');
 
     const dispatch = useDispatch();
 
-    const measurementTypes:OpenXDA.MeasurementType[] = useSelector((state) => SelectOpenXDA(state, props.DataSourceID, 'MeasurementType'));
+    const measurementTypes: OpenXDA.Types.MeasurementType[] = useSelector((state) => SelectOpenXDA(state, props.DataSourceID, 'MeasurementType'));
     const mtStatus = useSelector((state) => SelectOpenXDAStatus(state, props.DataSourceID, 'MeasurementType'));
 
-    const measurementCharacteristics: OpenXDA.MeasurementCharacteristic[] = useSelector((state) => SelectOpenXDA(state, props.DataSourceID, 'MeasurementCharacteristic'));
+    const measurementCharacteristics: OpenXDA.Types.MeasurementCharacteristic[] = useSelector((state) => SelectOpenXDA(state, props.DataSourceID, 'MeasurementCharacteristic'));
     const mcStatus = useSelector((state) => SelectOpenXDAStatus(state, props.DataSourceID, 'MeasurementCharacteristic'));
 
-    const phases: OpenXDA.Phase[] = useSelector((state) => SelectOpenXDA(state, props.DataSourceID, 'Phase'));
+    const phases: OpenXDA.Types.Phase[] = useSelector((state) => SelectOpenXDA(state, props.DataSourceID, 'Phase'));
     const phStatus = useSelector((state) => SelectOpenXDAStatus(state, props.DataSourceID, 'Phase'));
 
 

@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-import { OpenXDATypes as OpenXDA, OpenXDAMeasurementTypes as MeasurementTypes, OpenXDAMeasurementCharacteristics as MeasurementCharacteristics, OpenXDAPhases as Phases } from '@gpa-gemstone/application-typings';
+import { OpenXDA } from '@gpa-gemstone/application-typings';
 import * as React from 'react';
 import { TrenDAP } from '../../../../../global';
 import { Histogram, Stats, Table, Trend, Widget, XvsY } from './../../Implementations';
@@ -31,9 +31,9 @@ import { FetchOpenXDA, SelectOpenXDA, SelectOpenXDAStatus } from '../../../../Op
 export default function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass>, DataSourceID: number, Callback: () => void, Axis?: 'X' | 'Y' }) {
     const [dataSource, setDataSource] = React.useState<TrenDAP.iDataSetReturn>(undefined)
     const [selected, setSelected] = React.useState<TrenDAP.iXDAReturnData>({ ID: 0 } as TrenDAP.iXDAReturnData);
-    const [measurementType, setMeasurementType] = React.useState<OpenXDA.MeasurementTypeName>('Voltage');
-    const [measurementCharacteristic, setMeasurementCharacteristic] = React.useState<OpenXDA.MeasurementCharacteristicName>('RMS');
-    const [phase, setPhase] = React.useState<OpenXDA.PhaseName>('AN');
+    const [measurementType, setMeasurementType] = React.useState<OpenXDA.Types.MeasurementTypeName>('Voltage');
+    const [measurementCharacteristic, setMeasurementCharacteristic] = React.useState<OpenXDA.Types.MeasurementCharacteristicName>('RMS');
+    const [phase, setPhase] = React.useState<OpenXDA.Types.PhaseName>('AN');
 
 
     const [delimeter, setDelimeter] = React.useState<string>('');
@@ -52,21 +52,21 @@ export default function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass
       return (
         <div className="input-group">
             <select className="form-control" value={measurementType} onChange={(evt) => setMeasurementType(evt.target.value as any)}>
-                {MeasurementTypes.sort((a, b) => {
+                {OpenXDA.Lists.MeasurementTypes.sort((a, b) => {
                     if (a > b) return 1;
                     else if (a == b) return 0;
                     else -1;
                 }).map(mts => <option key={mts} value={mts}>{mts}</option>)}
             </select>
             <select className="form-control" value={measurementCharacteristic} onChange={(evt) => setMeasurementCharacteristic(evt.target.value as any)}>
-                  {MeasurementCharacteristics.sort((a, b) => {
+                  {OpenXDA.Lists.MeasurementCharacteristics.sort((a, b) => {
                     if (a > b) return 1;
                     else if (a == b) return 0;
                     else -1;
                 }).map(mts => <option key={mts} value={mts}>{mts}</option>)}
             </select>
             <select className="form-control" value={phase} onChange={(evt) => setPhase(evt.target.value as any)}>
-                {Phases.sort((a, b) => {
+                  {OpenXDA.Lists.Phases.sort((a, b) => {
                     if (a > b) return 1;
                     else if (a == b) return 0;
                     else -1;

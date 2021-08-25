@@ -24,7 +24,7 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { TrenDAP, Redux } from '../../global';
-import { OpenHistorianTypes as OpenHistorian } from '@gpa-gemstone/application-typings';
+import { OpenHistorian } from '@gpa-gemstone/application-typings';
 import {ajax, JQuery } from 'jquery';
 
 export const FetchOpenHistorian = createAsyncThunk('OpenHistorian/FetchOpenHistorian', async (ds: { dataSourceID: number },{ dispatch }) => {
@@ -40,8 +40,8 @@ export const OpenHistorianSlice = createSlice({
     extraReducers: (builder) => {
 
         builder.addCase(FetchOpenHistorian.fulfilled, (state, action) => {
-            const instances:OpenHistorian.iHistorian[] = typeof (action.payload.Instances) === 'string' ? JSON.parse(action.payload.Instances) : action.payload.Instances;
-            const json: OpenHistorian.iActiveMeasurement[] = typeof (action.payload.MetaData) === 'string' ? JSON.parse(action.payload.MetaData) : action.payload.MetaData;
+            const instances:OpenHistorian.Types.iHistorian[] = typeof (action.payload.Instances) === 'string' ? JSON.parse(action.payload.Instances) : action.payload.Instances;
+            const json: OpenHistorian.Types.iActiveMeasurement[] = typeof (action.payload.MetaData) === 'string' ? JSON.parse(action.payload.MetaData) : action.payload.MetaData;
 
             let obj = state.find(s => s.ID === action.meta.arg.dataSourceID);
             let s = {

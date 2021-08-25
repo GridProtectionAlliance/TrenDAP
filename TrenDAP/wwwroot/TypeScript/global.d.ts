@@ -20,7 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-import { OpenXDATypes as OpenXDA, OpenHistorianTypes as OpenHistorian } from '@gpa-gemstone/application-typings';
+import {OpenXDA, OpenHistorian } from '@gpa-gemstone/application-typings';
 
 export { };
 declare module '*.scss';
@@ -53,8 +53,8 @@ export namespace Redux {
     }
 
     interface OpenHistorianState {
-        Instances: OpenHistorian.iHistorian[],
-        Measurements: OpenHistorian.iActiveMeasurement[],
+        Instances: OpenHistorian.Types.iHistorian[],
+        Measurements: OpenHistorian.Types.iActiveMeasurement[],
         Status: TrenDAP.Status,
         Error: string
     }
@@ -84,7 +84,7 @@ export namespace TrenDAP{
 
     // XDA
     interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], Types: number[], Aggregate: '' | '1h' | '1d' | '1w' }
-    interface iXDAReturn { ID: number, Meter: string, Name: string, Station: string, Phase: OpenXDA.PhaseName, Type: OpenXDA.MeasurementTypeName, Harmonic: number, Latitude: number, Longitude: number, Asset: string, Characteristic: OpenXDA.MeasurementCharacteristicName }
+    interface iXDAReturn { ID: number, Meter: string, Name: string, Station: string, Phase: OpenXDA.Types.PhaseName, Type: OpenXDA.Types.MeasurementTypeName, Harmonic: number, Latitude: number, Longitude: number, Asset: string, Characteristic: OpenXDA.Types.MeasurementCharacteristicName }
     interface iXDAReturnWithDataSource extends iXDAReturnData { DataSourceID: number, DataSource: string }
     interface iXDAReturnData extends iXDAReturn { Data: iXDATrendDataPoint[], Events: {ID: number, ChannelID: number, StartTime: string}[] }
     interface iXDATrendDataPoint { Tag: string, Minimum: number, Maximum: number, Average: number, Timestamp: string, QualityFlags: number}
@@ -92,7 +92,7 @@ export namespace TrenDAP{
 
     // openHistorian
     interface iOpenHistorianDataSet { Devices: string[], Phases: string[], Types: string[], Instance: string, Aggregate: '1s' | '1m' | '1h' | '1d' | '1w' }
-    interface iOpenHistorianReturn extends OpenHistorian.iActiveMeasurement { Data: iOpenHistorianAggregationPoint[] }
+    interface iOpenHistorianReturn extends OpenHistorian.Types.iActiveMeasurement { Data: iOpenHistorianAggregationPoint[] }
     interface iOpenHistorianAggregationPoint extends iXDATrendDataPoint { }
 
     // Widget JSON interfaces
@@ -110,8 +110,8 @@ export namespace TrenDAP{
 
     interface iSeries { DataSourceID: number, ID: string, Field: iXDATrendDataPointField }
     interface iTemplateSeries { DataSourceID: number, Field: iXDATrendDataPointField }
-    interface iTemplateSeriesXDA extends iTemplateSeries { Phase: OpenXDA.PhaseName, Characteristic: OpenXDA.MeasurementCharacteristicName, Type: OpenXDA.MeasurementTypeName }
-    interface iTemplateSeriesOpenHistorian extends iTemplateSeries { Phase: OpenHistorian.Phase, Type: OpenHistorian.SignalType }
+    interface iTemplateSeriesXDA extends iTemplateSeries { Phase: OpenXDA.Types.PhaseName, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Type: OpenXDA.Types.MeasurementTypeName }
+    interface iTemplateSeriesOpenHistorian extends iTemplateSeries { Phase: OpenHistorian.Types.Phase, Type: OpenHistorian.Types.SignalType }
     interface iAxis { Min: number, Max: number, Units: string }
     interface iYAxis extends iAxis { Position: 'left' | 'right' }
 
@@ -120,8 +120,8 @@ export namespace TrenDAP{
     interface iHistogramSeries extends iSeries { Color: string, Profile: boolean, ProfileColor: string }
     interface iTemplatableHistogram { Min: number, Max: number, Units: string, BinCount: number, Series: iTemplatableHistogramSeriesXDA[] | iTemplatableHistogramSeriesOpenHistorian[]}
     interface iTemplatableHistogramSeries extends iTemplateSeries { Color: string, Profile: boolean, ProfileColor: string }
-    interface iTemplatableHistogramSeriesXDA extends iTemplatableHistogramSeries { Phase: OpenXDA.PhaseName, Characteristic: OpenXDA.MeasurementCharacteristicName, Type: OpenXDA.MeasurementTypeName }
-    interface iTemplatableHistogramSeriesOpenHistorian extends iTemplatableHistogramSeries { Phase: OpenHistorian.Phase, Type: OpenHistorian.SignalType }
+    interface iTemplatableHistogramSeriesXDA extends iTemplatableHistogramSeries { Phase: OpenXDA.Types.PhaseName, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Type: OpenXDA.Types.MeasurementTypeName }
+    interface iTemplatableHistogramSeriesOpenHistorian extends iTemplatableHistogramSeries { Phase: OpenHistorian.Types.Phase, Type: OpenHistorian.Types.SignalType }
 
     // Profile
     interface iProfile { }
@@ -150,8 +150,8 @@ export namespace TrenDAP{
 
     interface iTrendSeries extends iSeries { Color: string, Axis: number, Label: string, ShowEvents: boolean }
     interface iTrendTemplateSeries extends iTemplateSeries { Color: string, Axis: number, Label: string }
-    interface iTrendTemplateSeriesXDA extends iTrendTemplateSeries { Phase: OpenXDA.PhaseName, Characteristic: OpenXDA.MeasurementCharacteristicName, Type: OpenXDA.MeasurementTypeName, ShowEvents: boolean }
-    interface iTrendTemplateSeriesOpenHistorian extends iTrendTemplateSeries { Phase: OpenHistorian.Phase, Type: OpenHistorian.SignalType }
+    interface iTrendTemplateSeriesXDA extends iTrendTemplateSeries { Phase: OpenXDA.Types.PhaseName, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Type: OpenXDA.Types.MeasurementTypeName, ShowEvents: boolean }
+    interface iTrendTemplateSeriesOpenHistorian extends iTrendTemplateSeries { Phase: OpenHistorian.Types.Phase, Type: OpenHistorian.Types.SignalType }
 
     // XvsY
     interface iXvsY { Y: { Series: iSeries, Min: number, Max: number, Units: string }, X: { Series: iSeries, Min: number, Max: number, Units: string }, TimeMin: number, TimeMax: number, RegressionLine: boolean }

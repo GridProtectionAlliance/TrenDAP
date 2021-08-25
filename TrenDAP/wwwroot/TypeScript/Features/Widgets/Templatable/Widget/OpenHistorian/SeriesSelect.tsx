@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-import { OpenHistorianTypes as OpenHistorian, OpenHistorianSignalTypes as SignalTypes, OpenHistorianPhases as Phases } from '@gpa-gemstone/application-typings';
+import { OpenHistorian } from '@gpa-gemstone/application-typings';
 import * as React from 'react';
 import { TrenDAP } from '../../../../../global';
 
@@ -32,8 +32,8 @@ export default function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass
     const [dataSource, setDataSource] = React.useState<TrenDAP.iDataSetReturn>(undefined)
     const [selected, setSelected] = React.useState<TrenDAP.iOpenHistorianReturn>({ ID: '0' } as unknown as TrenDAP.iOpenHistorianReturn);
     const [delimeter, setDelimeter] = React.useState<string>('');
-    const [type, setType] = React.useState<OpenHistorian.SignalType>('VPHM');
-    const [phase, setPhase] = React.useState<OpenHistorian.Phase>('A');
+    const [type, setType] = React.useState<OpenHistorian.Types.SignalType>('VPHM');
+    const [phase, setPhase] = React.useState<OpenHistorian.Types.Phase>('A');
 
     React.useEffect(() => {
         const dataSource = props.Widget.Data.find(d => d.DataSource.ID === props.DataSourceID);
@@ -47,10 +47,10 @@ export default function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass
         <div className="input-group">
             <div className="input-group">
                 <select className="form-control" value={type} onChange={(evt) => setType(evt.target.value as any)}>
-                    {SignalTypes.map((a,i) => <option key={i} value={a}>{a}</option>)}
+                    {OpenHistorian.Lists.SignalTypes.map((a,i) => <option key={i} value={a}>{a}</option>)}
                 </select>
                 <select className="form-control" value={phase} onChange={(evt) => setPhase(evt.target.value as any)}>
-                    {Phases.map((a, i) => <option key={i} value={a}>{a}</option>)}
+                    {OpenHistorian.Lists.Phases.map((a, i) => <option key={i} value={a}>{a}</option>)}
                 </select>
                 <div className="input-group-append">
                     <button className="btn btn-outline-secondary" type="button" onClick={() => {

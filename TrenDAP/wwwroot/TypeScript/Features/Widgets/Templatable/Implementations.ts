@@ -26,7 +26,7 @@ import { TrenDAP } from '../../../global';
 import { CreateGuid, RandomColor } from '@gpa-gemstone/helper-functions';
 import stats from 'stats-lite';
 import moment from 'moment';
-import { OpenHistorianTypes as OpenHistorian, OpenXDATypes as OpenXDA } from '@gpa-gemstone/application-typings';
+import { OpenHistorian, OpenXDA } from '@gpa-gemstone/application-typings';
 
 export class Widget<T extends TrenDAP.TemplatableWidgetClass> implements TrenDAP.iTemplatableWidget<T>{
     JSON: T;
@@ -73,7 +73,7 @@ export class Histogram extends Widget<TrenDAP.iTemplatableHistogram> {
             this.JSON = { Min: 0, Max: 10, Units: '', Series: [], BinCount: 10 };
     }
 
-    public AddSeriesXDA = (dataSourceID: number, phase: OpenXDA.PhaseName, type: OpenXDA.MeasurementTypeName, characteristic: OpenXDA.MeasurementCharacteristicName) => {
+    public AddSeriesXDA = (dataSourceID: number, phase: OpenXDA.Types.PhaseName, type: OpenXDA.Types.MeasurementTypeName, characteristic: OpenXDA.Types.MeasurementCharacteristicName) => {
         let label = `${type} ${phase} ${characteristic}`;
 
         let series = {
@@ -91,7 +91,7 @@ export class Histogram extends Widget<TrenDAP.iTemplatableHistogram> {
         return new Histogram(this);
     }
 
-    public AddSeriesOH = (dataSourceID: number, phase: OpenHistorian.Phase, type: OpenHistorian.SignalType) => {
+    public AddSeriesOH = (dataSourceID: number, phase: OpenHistorian.Types.Phase, type: OpenHistorian.Types.SignalType) => {
         let label = `${type} ${phase}`;
 
         let series = {
@@ -239,7 +239,7 @@ export class Trend extends Widget<TrenDAP.iTemplatableTrend> {
     };
 
 
-    public AddSeriesXDA = (dataSourceID: number, phase: OpenXDA.PhaseName, type: OpenXDA.MeasurementTypeName, characteristic: OpenXDA.MeasurementCharacteristicName) => {
+    public AddSeriesXDA = (dataSourceID: number, phase: OpenXDA.Types.PhaseName, type: OpenXDA.Types.MeasurementTypeName, characteristic: OpenXDA.Types.MeasurementCharacteristicName) => {
         let label = '';
         if (characteristic === 'Frequency')
             label = 'Frequency';
@@ -270,7 +270,7 @@ export class Trend extends Widget<TrenDAP.iTemplatableTrend> {
         return new Trend(this);
     }
 
-    public AddSeriesOH = (dataSourceID: number, phase: OpenHistorian.Phase, type: OpenHistorian.SignalType) => {
+    public AddSeriesOH = (dataSourceID: number, phase: OpenHistorian.Types.Phase, type: OpenHistorian.Types.SignalType) => {
         let label = `${type} ${phase}`;
 
         let series = {
@@ -449,8 +449,8 @@ export class Stats extends Widget<TrenDAP.iTemplatableStats> {
         if (this.JSON === undefined)
             this.JSON = {Series: null, Precision: 3};
     }
-    public SetSeriesXDA = (dataSourceID: number, phase: OpenXDA.PhaseName, type: OpenXDA.MeasurementTypeName, characteristic: OpenXDA.MeasurementCharacteristicName) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Characteristic: characteristic, Field: 'Average' };
-    public SetSeriesOH = (dataSourceID: number, phase: OpenHistorian.Phase, type: OpenHistorian.SignalType) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Field: 'Average' };
+    public SetSeriesXDA = (dataSourceID: number, phase: OpenXDA.Types.PhaseName, type: OpenXDA.Types.MeasurementTypeName, characteristic: OpenXDA.Types.MeasurementCharacteristicName) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Characteristic: characteristic, Field: 'Average' };
+    public SetSeriesOH = (dataSourceID: number, phase: OpenHistorian.Types.Phase, type: OpenHistorian.Types.SignalType) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Field: 'Average' };
 
     public SetSeriesField = (field: TrenDAP.iXDATrendDataPointField) => {
         this.JSON.Series.Field = field;
@@ -534,8 +534,8 @@ export class Table extends Widget<TrenDAP.iTemplatableTable> {
         if (this.JSON === undefined)
             this.JSON = { Series: null, Precision: 3 };
     }
-    public SetSeriesXDA = (dataSourceID: number, phase: OpenXDA.PhaseName, type: OpenXDA.MeasurementTypeName, characteristic: OpenXDA.MeasurementCharacteristicName) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Characteristic: characteristic, Field: 'Average' };
-    public SetSeriesOH = (dataSourceID: number, phase: OpenHistorian.Phase, type: OpenHistorian.SignalType) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Field: 'Average' };
+    public SetSeriesXDA = (dataSourceID: number, phase: OpenXDA.Types.PhaseName, type: OpenXDA.Types.MeasurementTypeName, characteristic: OpenXDA.Types.MeasurementCharacteristicName) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Characteristic: characteristic, Field: 'Average' };
+    public SetSeriesOH = (dataSourceID: number, phase: OpenHistorian.Types.Phase, type: OpenHistorian.Types.SignalType) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Field: 'Average' };
 
     public SetSeriesField = (field: TrenDAP.iXDATrendDataPointField) => {
         this.JSON.Series.Field = field;
@@ -622,11 +622,11 @@ export class XvsY extends Widget<TrenDAP.iTemplatableXvsY> {
         return new XvsY(this);
     }
 
-    public SetSeriesXDA = (axis: 'X' | 'Y', dataSourceID: number, phase: OpenXDA.PhaseName, type: OpenXDA.MeasurementTypeName, characteristic: OpenXDA.MeasurementCharacteristicName) => {
+    public SetSeriesXDA = (axis: 'X' | 'Y', dataSourceID: number, phase: OpenXDA.Types.PhaseName, type: OpenXDA.Types.MeasurementTypeName, characteristic: OpenXDA.Types.MeasurementCharacteristicName) => {
         this.JSON[axis].Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Characteristic: characteristic, Field: 'Average' }
         return new XvsY(this);
     };
-    public SetSeriesOH = (axis: 'X' | 'Y', dataSourceID: number, phase: OpenHistorian.Phase, type: OpenHistorian.SignalType) => {
+    public SetSeriesOH = (axis: 'X' | 'Y', dataSourceID: number, phase: OpenHistorian.Types.Phase, type: OpenHistorian.Types.SignalType) => {
         this.JSON[axis].Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Field: 'Average' }
         return new XvsY(this);
     };
