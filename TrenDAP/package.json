@@ -63,6 +63,8 @@
     "jquery": "3.6.0",
     "lodash": "4.17.21",
     "moment": "2.29.1",
+    "moment-timezone": "^0.5.33",
+    "node-polyfill-webpack-plugin": "^1.1.4",
     "popper": "1.0.1",
     "query-string": "5.1.1",
     "react-datetime": "3.0.4",
@@ -71,6 +73,10 @@
     "react-redux": "7.2.2",
     "react-router-dom": "5.2.0",
     "simple-statistics": "7.4.0",
-    "stats-lite": "2.2.0"
+    "stats-lite": "2.2.0",
+    "terser-webpack-plugin": "^5.1.4",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-router-dom": "5.2.0"
   }
 }

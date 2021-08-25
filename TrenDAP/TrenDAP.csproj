@@ -38,7 +38,9 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSourceTypes\DataSourceTypesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\DataSetOpenHistorian.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\OpenXDA\DataSetOpenXDA.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\OpenXDA\QuickViewOpenXDA.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Histogram.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Profile.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Stats.tsx" />
@@ -80,6 +82,7 @@
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpace.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpaces.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpacesSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Forms\MultiCheckBoxSelect.tsx" />
     <Content Remove="wwwroot\TypeScript\global.d.ts" />
     <Content Remove="wwwroot\TypeScript\Implementations.ts" />
     <Content Remove="wwwroot\TypeScript\LoadingSpinner.tsx" />
@@ -179,9 +182,11 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\DataSetOpenXDA.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\QuickViewOpenXDA.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Text.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
@@ -297,6 +302,7 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Implementations.ts" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Forms\MultiCheckBoxSelect.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\LoadingSpinner.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Store\Store.ts">
       <SubType>Code</SubType>

@@ -40,6 +40,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
     const AddNewDataSet = React.lazy(() => import(/* webpackChunkName: "AddNewDataSet" */ './Features/DataSets/AddNewDataSet'));
     const WorkSpaceEditor = React.lazy(() => import(/* webpackChunkName: "WorkSpaceEditor" */ './Features/WorkSpaces/WorkSpaceEditor'));
     const ViewDataSet = React.lazy(() => import(/* webpackChunkName: "ViewDataSet" */ './Features/DataSets/ViewDataSet/ViewDataSet'));
+    const QuickViewOpenXDA = React.lazy(() => import(/* webpackChunkName: "QuickViewXDA" */ './Features/OpenXDA/QuickViewOpenXDA'));
 
 
     const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
@@ -74,6 +75,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                         <Route path={`${homePath}EditDataSet/:id`}><EditDataSet /></Route>
                         <Route path={`${homePath}WorkSpaceEditor/:id`}><WorkSpaceEditor /></Route>
                         <Route path={`${homePath}ViewDataSet/:id`}><ViewDataSet /></Route>
+                        <Route path={`${homePath}QuickViewOpenXDA`}><QuickViewOpenXDA /></Route>
                         <Redirect to={`${homePath}WorkSpaces`} />
                     </Switch>
                 </React.Suspense>
