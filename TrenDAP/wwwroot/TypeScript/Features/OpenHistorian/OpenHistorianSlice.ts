@@ -25,7 +25,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { TrenDAP, Redux } from '../../global';
 import { OpenHistorian } from '@gpa-gemstone/application-typings';
-import {ajax, JQuery } from 'jquery';
+import {ajax } from 'jquery';
 
 export const FetchOpenHistorian = createAsyncThunk('OpenHistorian/FetchOpenHistorian', async (ds: { dataSourceID: number },{ dispatch }) => {
     return await GetOpenHistorian(ds.dataSourceID)
@@ -99,7 +99,7 @@ export const SelectOpenHistorian = (state: Redux.StoreState, dsid: number) => st
 export const SelectOpenHistorianStatus = (state: Redux.StoreState, dsid: number) => state.OpenHistorian.find(s => s.ID === dsid)?.State.Status
 export const SelectNewOpenHistorianDataSet = () => ({Devices: [], Aggregate: '1d', Phases: [], Types: [], Instance: '' }) as TrenDAP.iOpenHistorianDataSet;
 
-function GetOpenHistorian(dataSourceID: number): JQuery.jqXHR<string> {
+function GetOpenHistorian(dataSourceID: number): Promise<{ MetaData: any, Instances: any }> {
     return new Promise(async (res, rej) => {
         let instances = await ajax({
             type: "GET",

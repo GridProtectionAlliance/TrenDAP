@@ -1,15 +1,19 @@
 ﻿"use strict";
 const path = require("path");
+const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+
 module.exports = env => {
     if (process.env.NODE_ENV == undefined) process.env.NODE_ENV = 'development';
 
 
     return {
         mode: process.env.NODE_ENV,
-        context: path.resolve(__dirname, 'wwwroot'),
+        context: path.resolve(__dirname),
         cache: true,
         entry: {
-            TrenDAP: "./TypeScript/TrenDAP.tsx"
+            TrenDAP: "./wwwroot/TypeScript/TrenDAP.tsx"
 
         },
         output: {
@@ -40,40 +44,28 @@ module.exports = env => {
                 }, 
 
                 // All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
-                { test: /\.tsx?$/, loader: "ts-loader" },
+                {
+                    test: /\.tsx?$/,
+                    include: path.resolve(__dirname, 'wwwroot', "TypeScript"),
+                    loader: "ts-loader", options: { transpileOnly: true }
+                },
                 {
                     test: /\.css$/,
                     include: /\./,
                     use: ['style-loader', 'css-loader'],
                 },
-                {
-                    test: /\.js$/,
-                    enforce: "pre",
-                    exclude: [path.resolve(__dirname,'node_modules')],
-                    loader: "source-map-loader"
-                },
                 { test: /\.(woff|woff2|ttf|eot|svg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader", options: {limit: 100000} },
 
             ]
         },
-        externals: {
-            //jquery: 'jQuery',
-            react: 'React',
-            'react-dom': 'ReactDOM',
-            //moment: 'moment',
-            //ace: 'ace',
-            //d3: 'd3',
-            'react-router-dom': 'ReactRouterDOM',
-        },
         optimization: {
-            minimize: false
-            //splitChunks: {
-            //    chunks: 'all',
-            //}
-            //minimizer: [new UglifyJsPlugin({
-            //    test: /\.js(\?.*)?$/i,
-            //    sourceMap: true
-            //})],
+            minimizer: [
+                new TerserPlugin({ extractComments: false })
+            ],
         },
+        plugins: [
+            new NodePolyfillPlugin(),
+            new ForkTsCheckerWebpackPlugin()
+        ]
     }
 };

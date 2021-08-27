@@ -84,7 +84,7 @@ export namespace TrenDAP{
 
     // XDA
     interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], Types: number[], Aggregate: '' | '1h' | '1d' | '1w' }
-    interface iXDAReturn { ID: number, Meter: string, Name: string, Station: string, Phase: OpenXDA.Types.PhaseName, Type: OpenXDA.Types.MeasurementTypeName, Harmonic: number, Latitude: number, Longitude: number, Asset: string, Characteristic: OpenXDA.Types.MeasurementCharacteristicName }
+    interface iXDAReturn { ID: number, Meter: string, Name: string, Station: string, Phase: OpenXDA.Types.PhaseName, Type: OpenXDA.Types.MeasurementTypeName, Harmonic: number, Latitude: number, Longitude: number, Asset: string, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Unit: string }
     interface iXDAReturnWithDataSource extends iXDAReturnData { DataSourceID: number, DataSource: string }
     interface iXDAReturnData extends iXDAReturn { Data: iXDATrendDataPoint[], Events: {ID: number, ChannelID: number, StartTime: string}[] }
     interface iXDATrendDataPoint { Tag: string, Minimum: number, Maximum: number, Average: number, Timestamp: string, QualityFlags: number}

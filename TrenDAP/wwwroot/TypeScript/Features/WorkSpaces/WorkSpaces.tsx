@@ -59,12 +59,12 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                     <div className="card-body">
                         <Table<TrenDAP.iWorkSpace>
                             cols={[
-                                { key: 'Name', label: 'Name' },
-                                { key: 'DataSetID', label: 'Data Set', content: (item, key, style) => dataSets.find(ds => ds.ID === item.DataSetID)?.Name },
-                                { key: 'Type', label: 'Type' },
+                                { key: 'Name', label: 'Name', field: 'Name'},
+                                { key: 'DataSetID', label: 'Data Set',  field: 'DataSetID',content: (item, key, style) => dataSets.find(ds => ds.ID === item.DataSetID)?.Name },
+                                { key: 'Type', label: 'Type', field: 'Type' },
 
-                                { key: 'Public', label: 'Global', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
-                                { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
+                                { key: 'Public', label: 'Global', field: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
+                                { key: 'UpdatedOn', field: 'UpdatedOn',label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
                                     {
                                         key: null, label: '', content: (item, key, style) =>
                                             <span><EditWorkSpace WorkSpace={item} /><button className="btn" onClick={(evt) => {
@@ -78,12 +78,12 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
                             tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            sortField={sortField}
+                            sortKey={sortField}
                             onClick={(data, evt) => {
                                 if (evt.target.tagName.toLowerCase() === 'td')
                                     window.location.href = `${homePath}WorkSpaceEditor/${data.row.ID}`
                             }}
-                            onSort={data => dispatch(Sort({ SortField: data.col, Ascending: data.ascending }))}
+                            onSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             data={workSpaces}
                             ascending={ascending}
                             />
@@ -96,9 +96,9 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                     <div className="card-body">
                         <Table<TrenDAP.iWorkSpace>
                             cols={[
-                                { key: 'Name', label: 'Name' },
-                                { key: 'DataSetID', label: 'Data Set', content: (item, key, style) => dataSets.find(ds => ds.ID === item.ID)?.Name },
-                                { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
+                                { key: 'Name', label: 'Name', field: 'Name' },
+                                { key: 'DataSetID', field: 'DataSetID', label: 'Data Set', content: (item, key, style) => dataSets.find(ds => ds.ID === item.ID)?.Name },
+                                { key: 'UpdatedOn', field: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
 
                                 //{ key: null, label: '', content: (item, key, style) => <span><EditWorkSpace WorkSpace={item} /><button className="btn" onClick={() => dispatch(RemoveWorkSpace(item))}>{TrashCan}</button></span> }
 
@@ -107,9 +107,9 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
                             tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            sortField={sortField}
+                            sortKey={sortField}
                             onClick={() => { }}
-                            onSort={data => dispatch(Sort({ SortField: data.col, Ascending: data.ascending }))}
+                            onSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             data={publicWorkSpaces}
                             ascending={ascending}
                         />

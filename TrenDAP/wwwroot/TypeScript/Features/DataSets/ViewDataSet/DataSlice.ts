@@ -27,7 +27,7 @@ import { TrenDAP, Redux } from '../../../global';
 import _, { result } from 'lodash';
 import moment from 'moment';
 import TrenDAPDB, { DataSetTableRow } from './../TrenDAPDB';
-import { ajax, JQuery } from 'jquery';
+import { ajax } from 'jquery';
 
 // #region [ Thunks ]
 

@@ -23,7 +23,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { TrenDAP, Redux } from '../../global';
 import _ from 'lodash';
-import { ajax, JQuery } from 'jquery';
+import { ajax } from 'jquery';
 
 // #region [ Thunks ]
 export const FetchDataSources = createAsyncThunk('DataSources/FetchDataSources', async (_, { dispatch }) => {

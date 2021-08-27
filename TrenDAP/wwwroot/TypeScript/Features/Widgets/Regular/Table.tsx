@@ -68,15 +68,15 @@ export default function TableJSX(props: TrenDAP.iWidget<TrenDAP.iTable>) {
                     </span>
                 </div>
                 <TableForm<TrenDAP.iXDATrendDataPoint> tableClass='table' cols={[
-                    { key: 'Timestamp', label: 'Timestamp' },
-                    { key: 'Minimum', label: 'Min', content: (item,key, style) => item.Minimum.toFixed(record.JSON.Precision)},
-                    { key: 'Average', label: 'Avg', content: (item, key, style) => item.Average.toFixed(record.JSON.Precision)},
-                    { key: 'Maximum', label: 'Max', content: (item, key, style) => item.Maximum.toFixed(record.JSON.Precision)},
-                ]} data={data} sortField={sortField} onClick={(data) => { }} ascending={ascending} onSort={(data) => {
-                    if (data.col === sortField)
+                    { key: 'Timestamp', field: 'Timestamp',label: 'Timestamp' },
+                    { key: 'Minimum', field: 'Minimum', label: 'Min', content: (item,key, style) => item.Minimum.toFixed(record.JSON.Precision)},
+                    { key: 'Average', field: 'Average', label: 'Avg', content: (item, key, style) => item.Average.toFixed(record.JSON.Precision)},
+                    { key: 'Maximum', field: 'Maximum', label: 'Max', content: (item, key, style) => item.Maximum.toFixed(record.JSON.Precision)},
+                ]} data={data} sortKey={sortField} onClick={(data) => { }} ascending={ascending} onSort={(data) => {
+                    if (data.colField === sortField)
                         setAscending(!ascending)
                     else {
-                        setSortField(data.col)
+                        setSortField(data.colField)
                         setAscending(true)
                     }
                 }} />

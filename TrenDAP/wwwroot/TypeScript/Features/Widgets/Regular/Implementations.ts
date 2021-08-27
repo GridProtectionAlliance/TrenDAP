@@ -161,17 +161,27 @@ export class Trend extends Widget<TrenDAP.iTrend> {
 
     public AddSeries = (id: number | string, dataSourceID: number, label: string) => {
         if (this.JSON.Series.find(series => series.ID === id.toString() && series.DataSourceID === dataSourceID) !== undefined) return;
-        
-        this.JSON.Series.push({ ID: id.toString(), DataSourceID: dataSourceID, Axis: 0, Field: "Average", Color: GetColor(label), Label: label, ShowEvents: false });
+
+        let dd: TrenDAP.iXDAReturnData[] = [].concat(...this.Data.map(d => d.Data));
+        let series = dd.find(d => d.ID.toString() === id.toString())
+        console.log(series);
+
+        let axisIndex = this.JSON.YAxis.findIndex(a => a.Units === series.Unit);
+
+        if (axisIndex === -1) {
+            axisIndex = this.JSON.YAxis.push({ Units: series.Unit, Min: 0, Max: 100, Position: 'left' }) - 1;
+        }
+
+        this.JSON.Series.push({ ID: id.toString(), DataSourceID: dataSourceID, Axis: axisIndex, Field: "Average", Color: GetColor(label), Label: label, ShowEvents: false });
         this.CalculateAxisRange('x');
         this.CalculateAxisRange('y');
         return new Trend(this);
     }
 
     public QuickAddVoltageRMS = (dataSourceID: number) => {
-        let axis = this.JSON.YAxis.findIndex(axis => axis.Units === 'Volts')
+        let axis = this.JSON.YAxis.findIndex(axis => axis.Units === 'V')
         if (axis < 0) {
-            axis = this.JSON.YAxis.push({Units: 'Volts', Position: 'left', Min: 0, Max: 100}) - 1
+            axis = this.JSON.YAxis.push({Units: 'V', Position: 'left', Min: 0, Max: 100}) - 1
         }
 
         this.JSON.Series.push(...this.Data.find(datum => datum.DataSource.ID === dataSourceID).Data.filter((datum: TrenDAP.iXDAReturnData) => datum.Type === 'Voltage' && datum.Characteristic === 'RMS').map((datum: TrenDAP.iXDAReturnData) => ({ ID: datum.ID.toString(), DataSourceID: dataSourceID, Axis: axis, Field: 'Average' as TrenDAP.iXDATrendDataPointField, Color: GetColor(`V${datum.Phase} - ${datum.Meter}`), Label: datum.Name, ShowEvents: false})))
@@ -181,9 +191,9 @@ export class Trend extends Widget<TrenDAP.iTrend> {
     }
 
     public QuickAddCurrentRMS = (dataSourceID: number) => {
-        let axis = this.JSON.YAxis.findIndex(axis => axis.Units === 'Amps')
+        let axis = this.JSON.YAxis.findIndex(axis => axis.Units === 'A')
         if (axis < 0) {
-            axis = this.JSON.YAxis.push({ Units: 'Amps', Position: 'left', Min: 0, Max: 100 }) - 1
+            axis = this.JSON.YAxis.push({ Units: 'A', Position: 'left', Min: 0, Max: 100 }) - 1
         }
 
         this.JSON.Series.push(...this.Data.find(datum => datum.DataSource.ID === dataSourceID).Data.filter((datum: TrenDAP.iXDAReturnData) => datum.Type === 'Current' && datum.Characteristic === 'RMS').map((datum: TrenDAP.iXDAReturnData) => ({ ID: datum.ID.toString(), DataSourceID: dataSourceID, Axis: axis, Field: 'Average' as TrenDAP.iXDATrendDataPointField, Color: GetColor(`I${datum.Phase} - ${datum.Meter}`), Label: datum.Name, ShowEvents: false })))

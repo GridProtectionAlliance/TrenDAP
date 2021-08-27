@@ -25,7 +25,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { TrenDAP, Redux } from '../../global';
 import _ from 'lodash';
 import moment from 'moment';
-import { $, JQuery,ajax } from 'jquery';
+import { ajax } from 'jquery';
 
 // #region [ Thunks ]
 export const FetchWorkSpaces = createAsyncThunk('WorkSpaces/FetchWorkSpaces', async (_, { dispatch }) => {

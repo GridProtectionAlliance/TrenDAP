@@ -24,7 +24,7 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { TrenDAP } from '../../global';
-import {ajax, JQuery } from 'jquery';
+import {ajax } from 'jquery';
 
 export const FetchOpenXDA = createAsyncThunk('OpenXDA/FetchOpenXDA', async (ds: { dataSourceID: number, table: string },{ dispatch }) => {
     return await GetOpenXDA(ds.dataSourceID, ds.table)

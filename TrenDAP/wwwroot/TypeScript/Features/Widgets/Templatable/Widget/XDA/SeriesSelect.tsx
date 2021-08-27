@@ -41,7 +41,6 @@ export default function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass
     const dispatch = useDispatch();
 
 
-
     React.useEffect(() => {
         const dataSource = props.Widget.Data.find(d => d.DataSource.ID === props.DataSourceID);
         if (dataSource != undefined) {
@@ -52,21 +51,21 @@ export default function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass
       return (
         <div className="input-group">
             <select className="form-control" value={measurementType} onChange={(evt) => setMeasurementType(evt.target.value as any)}>
-                {OpenXDA.Lists.MeasurementTypes.sort((a, b) => {
+                  {(OpenXDA.Lists.MeasurementTypes ?? []).sort((a, b) => {
                     if (a > b) return 1;
                     else if (a == b) return 0;
                     else -1;
                 }).map(mts => <option key={mts} value={mts}>{mts}</option>)}
             </select>
             <select className="form-control" value={measurementCharacteristic} onChange={(evt) => setMeasurementCharacteristic(evt.target.value as any)}>
-                  {OpenXDA.Lists.MeasurementCharacteristics.sort((a, b) => {
+                  {(OpenXDA.Lists.MeasurementCharacteristics ?? []).sort((a, b) => {
                     if (a > b) return 1;
                     else if (a == b) return 0;
                     else -1;
                 }).map(mts => <option key={mts} value={mts}>{mts}</option>)}
             </select>
             <select className="form-control" value={phase} onChange={(evt) => setPhase(evt.target.value as any)}>
-                  {OpenXDA.Lists.Phases.sort((a, b) => {
+                  {(OpenXDA.Lists.Phases ?? []).sort((a, b) => {
                     if (a > b) return 1;
                     else if (a == b) return 0;
                     else -1;

@@ -66,10 +66,10 @@ const DataSources: React.FunctionComponent = (props: {}) => {
                 <div className="card-body">
                     <Table<TrenDAP.iDataSource>
                         cols={[
-                            { key: 'Name', label: 'Name' },
-                            { key: 'DataSourceTypeID', label: 'Type', content: (item, key, style) => dataSourceTypes.find(dst => item.DataSourceTypeID === dst.ID)?.Name },
-                            { key: 'URL', label: 'Url' },
-                            { key: 'Public', label: 'Global', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
+                            { key: 'Name', field: 'Name', label: 'Name' },
+                            { key: 'DataSourceTypeID', field: 'DataSourceTypeID', label: 'Type', content: (item, key, style) => dataSourceTypes.find(dst => item.DataSourceTypeID === dst.ID)?.Name },
+                            { key: 'URL',field: 'URL', label: 'Url' },
+                            { key: 'Public',field: 'Public', label: 'Global', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
                             { key: null, label: '', content: (item, key, style) => <span><EditDataSource DataSource={item} /><button className="btn" onClick={() => dispatch(RemoveDataSource(item))}>{TrashCan}</button></span> }
 
                         ]}
@@ -77,9 +77,9 @@ const DataSources: React.FunctionComponent = (props: {}) => {
                         theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
                         tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
                         rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                        sortField={sortField}
+                        sortKey={sortField}
                         onClick={() => { }}
-                        onSort={data => dispatch(Sort({SortField: data.col, Ascending: data.ascending}))}
+                        onSort={data => dispatch(Sort({SortField: data.colField, Ascending: data.ascending}))}
                         data={dataSources}
                         ascending={ascending}
                     />
@@ -93,9 +93,9 @@ const DataSources: React.FunctionComponent = (props: {}) => {
                     <div className="card-body">
                         <Table<TrenDAP.iDataSource>
                             cols={[
-                                { key: 'Name', label: 'Name' },
-                                { key: 'DataSourceTypeID', label: 'Type', content: (item, key, style) => dataSourceTypes.find(dst => item.DataSourceTypeID === dst.ID)?.Name },
-                                { key: 'URL', label: 'Url' },
+                                { key: 'Name', field: 'Name', label: 'Name' },
+                                { key: 'DataSourceTypeID', field: 'DataSourceTypeID', label: 'Type', content: (item, key, style) => dataSourceTypes.find(dst => item.DataSourceTypeID === dst.ID)?.Name },
+                                { key: 'URL', field: 'URL', label: 'Url' },
                                 //{ key: 'Public', label: 'Global', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
                                 //{ key: null, label: '', content: (item, key, style) => <span><EditDataSource DataSource={item} /><button className="btn" onClick={() => dispatch(RemoveDataSource(item))}>{TrashCan}</button></span> }
 
@@ -104,9 +104,9 @@ const DataSources: React.FunctionComponent = (props: {}) => {
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
                             tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            sortField={sortField}
+                            sortKey={sortField}
                             onClick={() => { }}
-                            onSort={data => dispatch(Sort({ SortField: data.col, Ascending: data.ascending }))}
+                            onSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             data={publicDataSources}
                             ascending={ascending}
                         />

@@ -62,9 +62,9 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                     <div className="card-body">
                         <Table<TrenDAP.iDataSet>
                         cols={[
-                            { key: 'Name', label: 'Name' },
-                            { key: 'Public', label: 'Global', headerStyle: { width: 75 }, rowStyle: { width: 75 },content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
-                            { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
+                                { key: 'Name', field: 'Name', label: 'Name' },
+                                { key: 'Public', field: 'Public', label: 'Global', headerStyle: { width: 75 }, rowStyle: { width: 75 },content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
+                                { key: 'UpdatedOn', field: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
                                 {
                                     key: null,
                                     label: '',
@@ -85,9 +85,9 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                         theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
                         tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
                         rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                        sortField={sortField}
+                        sortKey={sortField}
                         onClick={(data) => { }}
-                        onSort={data => dispatch(Sort({ SortField: data.col, Ascending: data.ascending }))}
+                        onSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                         data={DataSets}
                         ascending={ascending}
                             />
@@ -100,8 +100,8 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                     <div className="card-body">
                         <Table<TrenDAP.iDataSet>
                             cols={[
-                                { key: 'Name', label: 'Name' },
-                                { key: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
+                                { key: 'Name', field: 'Name', label: 'Name' },
+                                { key: 'UpdatedOn', field: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
 
                                 //{ key: null, label: '', content: (item, key, style) => <span><EditDataSet DataSet={item} /><button className="btn" onClick={() => dispatch(RemoveDataSet(item))}>{TrashCan}</button></span> }
 
@@ -110,9 +110,9 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
                             tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            sortField={sortField}
+                            sortKey={sortField}
                             onClick={() => { }}
-                            onSort={data => dispatch(Sort({ SortField: data.col, Ascending: data.ascending }))}
+                            onSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             data={publicDataSets}
                             ascending={ascending}
                         />

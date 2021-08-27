@@ -31,7 +31,7 @@ import { Link, useParams } from 'react-router-dom';
 
 const EditDataSet: React.FunctionComponent<{}> = (props) => {
     const dispatch = useDispatch();
-    const { id } = useParams();
+    const { id } = useParams<{ id }>();
     const dataSet = useSelector(SelectRecord)
     const wsStatus = useSelector(SelectDataSetsStatus);
 

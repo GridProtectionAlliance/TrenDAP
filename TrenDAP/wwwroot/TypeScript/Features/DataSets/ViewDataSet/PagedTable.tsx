@@ -67,24 +67,24 @@ export default function PagedTable(props: { Data: TrenDAP.iXDATrendDataPoint[], 
         <>
             <Table<TrenDAP.iXDATrendDataPoint> tableClass='table'
                 cols={[
-                    { key: 'Timestamp', label: 'Timestamp' },
-                    { key: 'Minimum', label: 'Min', content: (item, key, style) => item.Minimum.toFixed(2) },
-                    { key: 'Average', label: 'Avg', content: (item, key, style) => item.Average.toFixed(2) },
-                    { key: 'Maximum', label: 'Max', content: (item, key, style) => item.Maximum.toFixed(2) },
-                    { key: 'QualityFlags', label: 'Flagged', content: (item, key, style) => item.QualityFlags > 0 ? Flag : ''},
+                    { key: 'Timestamp', field: 'Timestamp', label: 'Timestamp' },
+                    { key: 'Minimum', field: 'Minimum', label: 'Min', content: (item, key, style) => item.Minimum.toFixed(2) },
+                    { key: 'Average', field: 'Average', label: 'Avg', content: (item, key, style) => item.Average.toFixed(2) },
+                    { key: 'Maximum', field: 'Maximum', label: 'Max', content: (item, key, style) => item.Maximum.toFixed(2) },
+                    { key: 'QualityFlags', field: 'QualityFlags', label: 'Flagged', content: (item, key, style) => item.QualityFlags > 0 ? Flag : ''},
                     {
                         key: null, label: '', content: (item) => <button className='btn btn-link' onClick={() => { setRecord(item); setToggle(true); } }>{Pencil}</button>}
                 ]}
                 selected={record => record.Timestamp === props.Selected?.Timestamp }
                 data={tableData}
-                sortField={sortField}
+                sortKey={sortField}
                 onClick={(data) => { }}
                 ascending={ascending}
                 onSort={(data) => {
-                    if (data.col === sortField)
+                    if (data.colField === sortField)
                         setAscending(!ascending)
                     else {
-                        setSortField(data.col)
+                        setSortField(data.colField)
                         setAscending(true)
                     }
                 }} />

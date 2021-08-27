@@ -45,7 +45,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
     const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
 
     React.useEffect(() => {
-        window.addEventListener('resize', (evt) => forceUpdate(1));
+        window.addEventListener('resize', (evt) => forceUpdate());
 
         return () => {
             window.removeEventListener('resize', (evt) => { });

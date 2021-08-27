@@ -26,7 +26,8 @@ import { TrenDAP, Redux } from '../../global';
 import _, { result } from 'lodash';
 import moment from 'moment';
 import TrenDAPDB, { DataSetTableRow } from './TrenDAPDB';
-import { ajax,JQuery } from 'jquery';
+import { ajax } from 'jquery';
+
 // #region [ Thunks ]
 export const FetchDataSets = createAsyncThunk('DataSets/FetchDataSets', async (_, { dispatch }) => {
     return await GetDataSets();
@@ -105,7 +106,7 @@ export const DataSetsSlice = createSlice({
             state.Status = 'idle';
             state.Error = null;
             const results = action.payload.map(r => ({ ...r, From: moment(r.From).format('YYYY-MM-DD'), To: moment(r.To).format('YYYY-MM-DD'), Data: { Status: 'unitiated', Error: null}}));
-            const sorted = _.orderBy(results, [state.SortField], [state.Ascending ? "asc" : "desc"]);
+            const sorted = _.orderBy(results, [state.SortField], [state.Ascending ? "asc" : "desc"]) as TrenDAP.iDataSet[];
             state.Data = sorted;
         });
         builder.addCase(FetchDataSets.pending, (state, action) => {
@@ -316,7 +317,7 @@ function PostDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> 
     });
 }
 
-function DeleteDataSet(dataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> {
+function DeleteDataSet(dataSet: TrenDAP.iDataSet){
     return ajax({
         type: "DELETE",
         url: `${homePath}api/DataSet`,

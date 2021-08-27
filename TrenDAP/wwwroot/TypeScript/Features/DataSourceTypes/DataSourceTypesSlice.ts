@@ -24,7 +24,7 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { TrenDAP, Redux } from '../../global';
-import { ajax, JQuery } from 'jquery';
+import { ajax } from 'jquery';
 
 export const FetchDataSourceTypes = createAsyncThunk('DataSources/FetchDataSourceTypes', async (_,{ dispatch }) => {
     return await GetDataSourceTypes()

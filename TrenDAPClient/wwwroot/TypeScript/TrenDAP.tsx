@@ -34,6 +34,7 @@ import { createBrowserHistory } from "history"
 
 const TrenDAP: React.FunctionComponent = (props: {}) => {
     const DataSources = React.lazy(() => import(/* webpackChunkName: "DataSources" */ './Feature/DataSources/DataSources'));
+    const WorkSpaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Feature/WorkSpaces/WorkSpaces'));
 
     return (
         <Router>
