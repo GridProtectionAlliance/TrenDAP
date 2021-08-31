@@ -253,6 +253,15 @@ export class Trend extends Widget<TrenDAP.iTemplatableTrend> {
             label = `I${phase} ${characteristic}`;
         else label = `${type} ${phase} ${characteristic}`;
 
+        let dd: TrenDAP.iXDAReturnData[] = [].concat(...this.Data.map(d => d.Data));
+        let channel = dd.find(d => d.Characteristic === characteristic && d.Type === type && d.Phase === phase);
+        let unit = channel?.Unit ?? ''
+        let axisIndex = this.JSON.YAxis.findIndex(a => a.Units === unit);
+
+        if (axisIndex === -1) {
+            axisIndex = this.JSON.YAxis.push({ Units: unit, Min: 0, Max: 100, Position: 'left' }) - 1;
+        }
+
         let series = {
             Phase: phase,
             Type: type,
@@ -260,9 +269,11 @@ export class Trend extends Widget<TrenDAP.iTemplatableTrend> {
             DataSourceID: dataSourceID,
             Field: "Average",
             Color: GetColor(label),
-            Axis: 0,
+            Axis: axisIndex,
             ShowEvents: false
         } as TrenDAP.iTrendTemplateSeriesXDA
+
+
 
         this.JSON.Series.push(series as any);
         this.CalculateAxisRange('x');

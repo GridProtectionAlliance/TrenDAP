@@ -59,7 +59,20 @@ export namespace Redux {
         Error: string
     }
 
+    interface OpenXDATableSlice {
+        Status: TrenDAP.Status,
+        Error: string,
+        Data: any[]
+    }
 
+}
+
+export namespace OpenXDAExt {
+    interface ChannelGroupDetails {
+        ID: number, ChannelGroup: string, MeasurementType: OpenXDA.Types.MeasurementTypeName,
+        MeasurementCharacteristic: OpenXDA.Types.MeasurementCharacteristicName,
+        DisplayName: string, Unit: string
+    }
 }
 
 export namespace TrenDAP{

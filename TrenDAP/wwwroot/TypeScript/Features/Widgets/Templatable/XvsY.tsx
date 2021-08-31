@@ -258,7 +258,7 @@ export default function XvsYJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTempl
                                     <div className="card-body">
                                         <h6>X Series</h6>
                                         <hr/>
-                                        <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Axis='X' Callback={() => setRecord(new XvsY(record))}  />
+                                        <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Axis='X' Callback={() => setRecord(new XvsY(record))}   />
                                         {(record.JSON.X.Series != undefined ?
                                             <div className="row">
                                                 <div className="col-3">

@@ -112,7 +112,7 @@ export default function TableJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
                                 </div>
                                 <div id={"collapse" + i} className="collapse show" data-parent="#accordion">
                                     <div className="card-body">
-                                        <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Callback={() => setRecord(new Table(record))}  />
+                                        <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Callback={() => setRecord(new Table(record))}   />
                                         <ul className="list-group">
                                             {d.DataSource.Type === 'TrenDAPDB' && record.JSON.Series != undefined ?
                                                 <li key={i} className="list-group-item">

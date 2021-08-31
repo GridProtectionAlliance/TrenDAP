@@ -23,17 +23,18 @@
 
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { TrenDAP } from '../../global';
+import { Redux, TrenDAP } from '../../global';
 import {ajax } from 'jquery';
 
-export const FetchOpenXDA = createAsyncThunk('OpenXDA/FetchOpenXDA', async (ds: { dataSourceID: number, table: string },{ dispatch }) => {
+export const FetchOpenXDA = createAsyncThunk<string | object, { dataSourceID: number, table: string }, {}>('OpenXDA/FetchOpenXDA', async (ds ,{ dispatch }) => {
     return await GetOpenXDA(ds.dataSourceID, ds.table)
 });
 
-
 export const OpenXDASlice = createSlice({
     name: 'OpenXDA',
-    initialState: {},
+    initialState: {} as {
+        [instance: number]: { [table: string]: Redux.OpenXDATableSlice }
+    },
     reducers: {
     },
     extraReducers: (builder) => {
@@ -53,7 +54,10 @@ export const OpenXDASlice = createSlice({
 
             state[action.meta.arg.dataSourceID][action.meta.arg.table].Status = 'idle';
             state[action.meta.arg.dataSourceID][action.meta.arg.table].Error = null;
-            state[action.meta.arg.dataSourceID][action.meta.arg.table].Data.push(...JSON.parse(action.payload));
+            if (typeof (action.payload) === "string")
+                state[action.meta.arg.dataSourceID][action.meta.arg.table].Data.push(...JSON.parse(action.payload));
+            else if (typeof (action.payload) === "object")
+                state[action.meta.arg.dataSourceID][action.meta.arg.table].Data = action.payload as any[];
         });
         builder.addCase(FetchOpenXDA.pending, (state, action) => {
             if (state[action.meta.arg.dataSourceID] === undefined) {
@@ -94,7 +98,7 @@ export const OpenXDASlice = createSlice({
 
 export const { } = OpenXDASlice.actions;
 export default OpenXDASlice.reducer;
-export const SelectOpenXDA = (state, dsid: number, table: string) => state.OpenXDA[dsid] ? state.OpenXDA[dsid][table] : undefined;
+export const SelectOpenXDA = (state, dsid: number, table: string) => (state.OpenXDA[dsid] ? state.OpenXDA[dsid][table] : undefined )as Redux.OpenXDATableSlice;
 export const SelectOpenXDAStatus = (state, dsid: number, table: string) => state.OpenXDA[dsid][table]?.Status as TrenDAP.Status
 
 function GetOpenXDA(dataSourceID: number, table: string): JQuery.jqXHR<string> {

@@ -24,10 +24,12 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSets\DataSetsSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\EditDataSet.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\TrenDAPDB.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\Types\DataSetGlobalSettings.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Chart.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\DataSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Histogram.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\Types\DataSetOpenXDA.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\AddNewDataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSources.tsx" />
@@ -134,10 +136,12 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\TrenDAPDB.ts" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\Types\DataSetGlobalSettings.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Chart.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\DataSlice.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Histogram.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\ViewDataSet.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\Types\DataSetOpenXDA.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
