@@ -156,11 +156,7 @@ namespace TrenDAP.Controllers
 
                 try
                 {
-                    client.BaseAddress = new Uri(dataSource.URL);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-                    HttpResponseMessage response = client.GetAsync($"api/{table}").Result;
+                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), $"api/{table}");
 
                     if (!response.IsSuccessStatusCode)
                         return StatusCode((int)response.StatusCode, response.ReasonPhrase);
@@ -218,6 +214,8 @@ namespace TrenDAP.Controllers
         public ActionResult Get(int dataSourceID, int dataSetID, CancellationToken cancellationToken)
         {
             string token = GenerateAntiForgeryToken(dataSourceID, Configuration);
+            JsonContent content = JsonContent.Create("");
+
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             using (HttpClientHandler handler = new HttpClientHandler() { UseCookies = true })
             using (HttpClient client = new HttpClient(handler))
@@ -227,14 +225,7 @@ namespace TrenDAP.Controllers
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                     DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", dataSetID);
 
-                    client.BaseAddress = new Uri(dataSource.URL);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-
-                    HttpContent content = JsonContent.Create("");
-                    HttpResponseMessage response = client.PostAsync($"api/HIDS", content, cancellationToken).Result;
+                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), $"api/HIDS", content, token, cancellationToken);
 
                     if (!response.IsSuccessStatusCode)
                         return StatusCode((int)response.StatusCode, response.ReasonPhrase);
@@ -266,16 +257,13 @@ namespace TrenDAP.Controllers
                 List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                 HIDSPost post = CreatePost(dataSet, data);
+                JsonContent content = JsonContent.Create(post);
 
                 using (HttpClient client = new HttpClient()
                 {
                     Timeout = TimeSpan.FromMinutes(10)
                 }) {
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-                    var response = client.PostAsync(dataSource.URL + "/api/HIDS", JsonContent.Create(post), cancellationToken).Result;
+                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), $"api/HIDS", content, token, cancellationToken);
 
                     try
                     {
@@ -356,14 +344,8 @@ namespace TrenDAP.Controllers
                     Timeout = TimeSpan.FromMinutes(10)
                 })
                 {
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
+                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), $"api/HIDS/Table", JsonContent.Create(post), token, cancellationToken);
 
-
-                    var response = client.PostAsync(dataSource.URL + "/api/HIDS/Table", JsonContent.Create(post), cancellationToken).Result;
-                   
 
                     try
                     {
@@ -399,14 +381,7 @@ namespace TrenDAP.Controllers
                     Timeout = TimeSpan.FromMinutes(10)
                 })
                 {
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-
-
-                    var response = client.PostAsync(dataSource.URL + "/api/Event/TrenDAP", JsonContent.Create(post), cancellationToken).Result;
-
+                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), $"api/Event/TrenDAP", JsonContent.Create(post), token, cancellationToken);
 
                     try
                     {
@@ -439,14 +414,7 @@ namespace TrenDAP.Controllers
                     Timeout = TimeSpan.FromMinutes(10)
                 })
                 {
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-
-
-                    var response = client.PostAsync(dataSource.URL + "/api/AlarmLimits", JsonContent.Create(post), cancellationToken).Result;
-
+                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), "api/AlarmLimits", JsonContent.Create(post), token);
 
                     try
                     {
@@ -517,15 +485,7 @@ namespace TrenDAP.Controllers
                     handler.ServerCertificateCustomValidationCallback = ServerCertificateCustomValidation;
 
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-
-                    client.BaseAddress = new Uri(dataSource.URL);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-
-
-
-                    HttpResponseMessage response = client.GetAsync($"api/rvht").Result;
+                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), "api/rvht");
 
                     if (!response.IsSuccessStatusCode)
                         return "";
@@ -555,15 +515,7 @@ namespace TrenDAP.Controllers
                     handler.ServerCertificateCustomValidationCallback = ServerCertificateCustomValidation;
 
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-
-                    client.BaseAddress = new Uri(dataSource.URL);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-
-
-
-                    HttpResponseMessage response = client.GetAsync($"api/Setting/Category/HIDS").Result;
+                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), "api/Setting/Category/HIDS");
 
                     if (!response.IsSuccessStatusCode)
                         return "";
@@ -593,15 +545,7 @@ namespace TrenDAP.Controllers
                     handler.ServerCertificateCustomValidationCallback = ServerCertificateCustomValidation;
 
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-
-                    client.BaseAddress = new Uri(dataSource.URL);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-
-
-
-                    HttpResponseMessage response = await client.GetAsync($"api/Setting/OpenSEE.URL");
+                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), "api/Setting/OpenSEE.URL");
 
                     if (!response.IsSuccessStatusCode)
                         throw new Exception(response.ReasonPhrase);
@@ -615,6 +559,26 @@ namespace TrenDAP.Controllers
                 }
 
             }
+        }
+
+        private static HttpResponseMessage SetHeaders(HttpClient client, DataSource dataSource, MediaTypeWithQualityHeaderValue mtwqhv, string path, JsonContent post = null, string token = null, CancellationToken cancellationToken = new CancellationToken()) {
+            client.BaseAddress = new Uri(dataSource.URL);
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(mtwqhv);
+
+            if (!dataSource.OIDC)
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
+            else
+                path += $"?code={dataSource.Password}";
+
+            if (post != null)
+            {
+                client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
+                return client.PostAsync(path, post, cancellationToken).Result;
+            }
+            else
+                return client.GetAsync(path, cancellationToken).Result;
+
         }
 
         private static bool ServerCertificateCustomValidation(HttpRequestMessage requestMessage, X509Certificate2 certificate, X509Chain chain, SslPolicyErrors sslErrors)

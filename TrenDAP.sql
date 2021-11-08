@@ -72,7 +72,8 @@ CREATE TABLE DataSource
     URL VARCHAR(MAX) NULL,
     [Public] bit NULL DEFAULT 0,
     Credential varchar(max) NULL,
-    Password varchar(max) NULL
+    Password varchar(max) NULL,
+    OIDC bit NOT NULL DEFAULT 0
 
 )
 GO

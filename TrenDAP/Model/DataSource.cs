@@ -43,6 +43,7 @@ namespace TrenDAP.Model
         public bool Public { get; set; }
         [UseEscapedName]
         public string User { get; set; }
+        public bool OIDC { get; set; }
     }
 
 

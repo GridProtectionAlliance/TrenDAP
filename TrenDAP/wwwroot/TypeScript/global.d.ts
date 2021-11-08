@@ -89,7 +89,7 @@ export namespace TrenDAP{
 
     // TrenDAP 
     interface iDataSourceType { ID: number, Name: DataSourceType }
-    interface iDataSource { ID: number, Name: string, DataSourceTypeID: number, URL: string, Credential: string, Password: string, Public: boolean, User: string }    
+    interface iDataSource { ID: number, Name: string, DataSourceTypeID: number, URL: string, Credential: string, Password: string, Public: boolean, User: string, OIDC: boolean }    
     interface iWorkSpace { ID: number, Type: WorkSpaceType, Name: string, User: string, DataSetID: number, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Open: boolean }    
     interface iDataSet { ID: number, Name: string, Context: 'Relative' | 'Fixed Dates', RelativeValue: number, RelativeWindow: 'Day' | 'Week' | 'Month' | 'Year',From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Data?: { Status: Status, Error?: string } }    
     interface iDataSetSource { ID: number, Name: string, DataSourceTypeID: number, JSON: object }
