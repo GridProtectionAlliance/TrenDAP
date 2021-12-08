@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using Gemstone.Data;
 using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
@@ -44,6 +45,15 @@ namespace TrenDAP.Model
         [UseEscapedName]
         public string User { get; set; }
         public bool OIDC { get; set; }
+
+        public static DataSource GetDataSource(IConfiguration configuration, int id)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
+            {
+                return new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", id);
+            }
+        }
+
     }
 
 

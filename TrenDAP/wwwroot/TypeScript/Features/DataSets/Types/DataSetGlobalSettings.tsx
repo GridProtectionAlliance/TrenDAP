@@ -30,6 +30,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../../DataSourceTypes/DataSourceTypesSlice';
 import { SelectNewXDADataSet } from './../DataSetsSlice';
 import { SelectNewOpenHistorianDataSet } from '../../OpenHistorian/OpenHistorianSlice';
+import { NewSapphireDataSet } from '../../Sapphire/SapphireSlice';
 
 const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
     const dispatch = useDispatch();
@@ -73,6 +74,8 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
     function GetDS(dataSource: TrenDAP.iDataSource) {
         if (dataSourceTypes.find(dst => dst.ID === dataSource.DataSourceTypeID).Name === "TrenDAPDB")
             return SelectNewXDADataSet();
+        if (dataSourceTypes.find(dst => dst.ID === dataSource.DataSourceTypeID).Name === "Sapphire")
+            return NewSapphireDataSet();
         if (dataSourceTypes.find(dst => dst.ID === dataSource.DataSourceTypeID).Name === "OpenHistorian")
             return SelectNewOpenHistorianDataSet();
         else

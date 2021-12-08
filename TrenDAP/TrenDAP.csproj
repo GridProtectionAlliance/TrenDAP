@@ -25,6 +25,7 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSets\EditDataSet.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\TrenDAPDB.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\Types\DataSetGlobalSettings.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\Types\DataSetSapphire.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Chart.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\DataSlice.ts" />
@@ -41,6 +42,7 @@
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\DataSetOpenXDA.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\QuickViewOpenXDA.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Histogram.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Profile.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Stats.tsx" />
@@ -140,6 +142,9 @@
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\TrenDAPDB.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\Types\DataSetGlobalSettings.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Sapphire\DataSetSapphire.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Chart.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\DataSlice.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Histogram.tsx" />
@@ -184,6 +189,9 @@
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\DataSetOpenXDA.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\QuickViewOpenXDA.tsx" />

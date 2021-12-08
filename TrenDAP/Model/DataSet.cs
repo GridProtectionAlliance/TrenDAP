@@ -134,7 +134,7 @@ namespace TrenDAP.Model
                     IEnumerable<Task<JObject>> tasks = json.Select(ds => {
                         return Query(dataSet, ds, dataSourceTypes.Find(dst => dst.ID == ds.DataSource.DataSourceTypeID).Name, cancellationToken);
                     });
-                    JObject[] result = Task.WhenAll(tasks).Result;
+                    JObject[] result = await Task.WhenAll(tasks);
                     JObject returnjson = new JObject();
 
                     return Ok(result);
@@ -208,6 +208,8 @@ namespace TrenDAP.Model
                 }
                 else if (type == "OpenHistorian")
                     return QueryOpenHistorian(jObject, dataset, json, cancellationToken);
+                else if (type == "Sapphire")
+                    return QuerySapphire(jObject, dataset, json, cancellationToken);
                 else
                     return Task.FromResult(jObject);
             }
@@ -287,6 +289,44 @@ namespace TrenDAP.Model
                 return jObject;
                 
             });
+
+        }
+
+        private Task<JObject> QuerySapphire(JObject jObject, DataSet dataset, DataSetJson json, CancellationToken cancellationToken)
+        {
+            return Task.Run(() =>
+            {
+
+                SapphireController.SapphireDataSetData setData = json.Data.ToObject<SapphireController.SapphireDataSetData>();
+
+                SapphireController.SapphirePost post = SapphireController.CreatePost(dataset, setData);
+
+                jObject["Context"] = dataset.Context;
+                jObject["From"] = post.StartTime.ToString("MM/dd/yyyy");
+                jObject["To"] = post.EndTime.ToString("MM/dd/yyyy");
+
+                SapphireController sapphireController = new SapphireController(Configuration);
+                sapphireController.Query(json.DataSource.ID, post, cancellationToken);
+
+                //if (table.Rows.Count > 0)
+                //{
+                //    IEnumerable<SapphireController.SapphireAggregatePoint> points = SapphireController.Query(json.DataSource.ID, post, Configuration, cancellationToken);
+                //    IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
+
+                //    var groupjoin = tableJson.GroupJoin(points, row => row["ID"].ToString(), result => result.Tag, (row, resultcollection) =>
+                //    {
+                //        row["Data"] = JArray.FromObject(resultcollection);
+                //        return row;
+                //    });
+
+                //    jObject["Data"] = JArray.FromObject(groupjoin);
+                //}
+                //else
+                //    jObject["Data"] = JArray.FromObject(new List<string>() { });
+
+                return jObject;
+
+            }, cancellationToken);
 
         }
 

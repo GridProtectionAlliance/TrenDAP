@@ -65,6 +65,12 @@ export namespace Redux {
         Data: any[]
     }
 
+    interface SapphireTableSlice {
+        Status: TrenDAP.Status,
+        Error: string,
+        Data: any[]
+    }
+
 }
 
 export namespace OpenXDAExt {
@@ -81,7 +87,7 @@ export namespace TrenDAP{
     type WidgetClass = iHistogram | iTrend | iProfile | iStats | iTable | iText | iXvsY;
     type TemplatableWidgetClass = iTemplatableHistogram | iTemplatableTrend | iTemplatableProfile | iTemplatableStats | iTemplatableTable | iTemplatableText | iTemplatableXvsY;
     type TemplateSeries = iTemplateSeriesXDA | iTemplateSeriesOpenHistorian;
-    type DataSourceType = 'TrenDAPDB' | 'OpenHistorian' |'None';
+    type DataSourceType = 'TrenDAPDB' | 'OpenHistorian' |'None' | 'Sapphire';
     type iDataSetReturnType = iXDAReturnData | iOpenHistorianReturn;
     type ChartAction = 'Click' | 'Pan' | 'ZoomX' | 'ZoomY' | 'ZoomXY';
     type WorkSpaceType = 'Regular' | 'Templatable';
@@ -107,6 +113,14 @@ export namespace TrenDAP{
     interface iOpenHistorianDataSet { Devices: string[], Phases: string[], Types: string[], Instance: string, Aggregate: '1s' | '1m' | '1h' | '1d' | '1w' }
     interface iOpenHistorianReturn extends OpenHistorian.Types.iActiveMeasurement { Data: iOpenHistorianAggregationPoint[] }
     interface iOpenHistorianAggregationPoint extends iXDATrendDataPoint { }
+
+    // Sapphire
+    interface iSapphireDataSet { IDs: number[], Phases: number[], Types: number[], Aggregate: '' | '1h' | '1d' | '1w'}
+    interface iSapphireReturn extends iXDAReturn { }
+    interface iSapphireReturnWithDataSource extends iXDAReturnWithDataSource {  }
+    interface iSapphireReturnData extends iXDAReturnData { }
+    interface iSapphireTrendDataPoint extends iXDATrendDataPoint { }
+    type iSapphireTrendDataPointField = iXDATrendDataPointField ;
 
     // Widget JSON interfaces
     interface WorkSpaceJSON { Rows: iRow[] | iTemplatableRow[], By?: TemplateBy, Type?: DataSourceType }

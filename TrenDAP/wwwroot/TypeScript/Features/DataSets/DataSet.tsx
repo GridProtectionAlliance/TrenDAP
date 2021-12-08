@@ -34,6 +34,7 @@ import DataSetOpenHistorian from '../OpenHistorian/DataSetOpenHistorian';
 import { SelectNewOpenHistorianDataSet } from '../OpenHistorian/OpenHistorianSlice';
 import DataSetOpenXDA from './Types/DataSetOpenXDA';
 import DataSetGlobalSettings from './Types/DataSetGlobalSettings';
+import DataSetSapphire from '../Sapphire/DataSetSapphire';
 
 
 const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
@@ -80,6 +81,9 @@ const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (
                         <div className={"tab-pane container " + (tab === index.toString() ? 'active' : 'fade')} id={index} key={index}>
                             {
                                 (dataSourceTypes.find(dst => dst.ID === ds.DataSource.DataSourceTypeID)?.Name === "TrenDAPDB" ? <DataSetOpenXDA {...props} Data={ds} Index={index}/>: null )
+                            }
+                            {
+                                (dataSourceTypes.find(dst => dst.ID === ds.DataSource.DataSourceTypeID)?.Name === "Sapphire" ? <DataSetSapphire {...props} Data={ds} Index={index} /> : null)
                             }
                             {
                                 (dataSourceTypes.find(dst => dst.ID === ds.DataSource.DataSourceTypeID)?.Name === "OpenHistorian" ? <DataSetOpenHistorian {...props} Data={ds} Index={index} /> : null)
