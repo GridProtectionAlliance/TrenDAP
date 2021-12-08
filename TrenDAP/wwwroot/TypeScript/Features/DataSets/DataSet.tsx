@@ -22,17 +22,12 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP, Redux } from '../../global';
-import { Input, CheckBox, EnumCheckBoxes, DateRangePicker, Select, ArrayCheckBoxes, ArrayMultiSelect } from '@gpa-gemstone/react-forms';
-import { Plus } from '../../Constants';
-import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from '../DataSources/DataSourcesSlice';
+import { TrenDAP } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
-import { SelectNewXDADataSet } from './DataSetsSlice';
 import styles from '../../../Styles/app.scss';
 import DataSetOpenHistorian from '../OpenHistorian/DataSetOpenHistorian';
-import { SelectNewOpenHistorianDataSet } from '../OpenHistorian/OpenHistorianSlice';
-import DataSetOpenXDA from './Types/DataSetOpenXDA';
+import DataSetOpenXDA from '../OpenXDA/DataSetOpenXDA';
 import DataSetGlobalSettings from './Types/DataSetGlobalSettings';
 import DataSetSapphire from '../Sapphire/DataSetSapphire';
 

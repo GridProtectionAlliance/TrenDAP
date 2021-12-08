@@ -135,14 +135,15 @@ function CreatePost(dataSet: TrenDAP.iDataSet, data: TrenDAP.iXDADataSet)
     let endTime = moment(dataSet.To);
     if (dataSet.Context == "Relative") {
         endTime = moment();
+        startTime = moment();
         if (dataSet.RelativeWindow == "Day")
-            startTime = endTime.add('days', -dataSet.RelativeValue);
+            startTime.add('days', -dataSet.RelativeValue);
         else if (dataSet.RelativeWindow == "Week")
-            startTime = endTime.add('days', -dataSet.RelativeValue * 7);
+            startTime.add('days', -dataSet.RelativeValue * 7);
         else if (dataSet.RelativeWindow == "Month")
-            startTime = endTime.add('months', -dataSet.RelativeValue);
+            startTime.add('months', -dataSet.RelativeValue);
         else
-            startTime = endTime.add('years', -dataSet.RelativeValue);
+            startTime.add('years', -dataSet.RelativeValue);
     }
 
     return {

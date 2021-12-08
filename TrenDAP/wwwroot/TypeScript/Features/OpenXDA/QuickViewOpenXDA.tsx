@@ -193,6 +193,7 @@ const Chart = (props: { Name: string, Channels: TrenDAP.iXDAReturnData[], ShowSt
 
             let hovDict = {};
             $.each(Object.keys(dict), (i, key) => {
+                if (dict[key].Data.length == 0) return;
                 dict[key].Min = Math.min(...dict[key].Data.map(d => d.Value));
                 dict[key].Max = Math.max(...dict[key].Data.map(d => d.Value));
                 dict[key].Avg = stats.mean(dict[key].Data.map(d => d.Value));
@@ -240,6 +241,7 @@ const Chart = (props: { Name: string, Channels: TrenDAP.iXDAReturnData[], ShowSt
                     let mult = (props.Hover - margin.left - margin.right) / (svgWidth - margin.left - margin.right);
 
         $.each(Object.keys(data), (i, key) => {
+            if (data[key].Data.length == 0) return;
             let length = data[key].Data.length;
             let index = Math.floor(mult * length);
             //console.log(ts, data[key].Data[index].TimeStamp);
