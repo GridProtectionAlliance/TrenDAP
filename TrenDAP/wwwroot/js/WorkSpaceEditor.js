@@ -321,7 +321,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var stats_lite__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! stats-lite */ "./node_modules/stats-lite/stats.js");
 /* harmony import */ var moment__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! moment */ "./node_modules/moment/moment.js");
 /* harmony import */ var moment__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(moment__WEBPACK_IMPORTED_MODULE_2__);
-/* provided dependency */ var console = __webpack_require__(/*! console-browserify */ "./node_modules/console-browserify/index.js");
+/* provided dependency */ var console = __webpack_require__(/*! ./node_modules/console-browserify/index.js */ "./node_modules/console-browserify/index.js");
 //******************************************************************************************************
 //  Implementations.ts - Gbtc
 //
@@ -1548,7 +1548,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var bootstrap_switch_button_react__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(bootstrap_switch_button_react__WEBPACK_IMPORTED_MODULE_10__);
 /* harmony import */ var _Axis__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./Axis */ "./wwwroot/TypeScript/Features/Widgets/Regular/Trend/Axis.tsx");
 /* harmony import */ var _SeriesPicker__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./SeriesPicker */ "./wwwroot/TypeScript/Features/Widgets/Regular/Trend/SeriesPicker.tsx");
-/* provided dependency */ var console = __webpack_require__(/*! console-browserify */ "./node_modules/console-browserify/index.js");
+/* provided dependency */ var console = __webpack_require__(/*! ./node_modules/console-browserify/index.js */ "./node_modules/console-browserify/index.js");
 //******************************************************************************************************
 //  Trend.tsx - Gbtc
 //
@@ -4658,7 +4658,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var bootstrap_switch_button_react__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(bootstrap_switch_button_react__WEBPACK_IMPORTED_MODULE_9__);
 /* harmony import */ var _Axis__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./Axis */ "./wwwroot/TypeScript/Features/Widgets/Templatable/Trend/Axis.tsx");
 /* harmony import */ var _SeriesPicker__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./SeriesPicker */ "./wwwroot/TypeScript/Features/Widgets/Templatable/Trend/SeriesPicker.tsx");
-/* provided dependency */ var console = __webpack_require__(/*! console-browserify */ "./node_modules/console-browserify/index.js");
+/* provided dependency */ var console = __webpack_require__(/*! ./node_modules/console-browserify/index.js */ "./node_modules/console-browserify/index.js");
 //******************************************************************************************************
 //  Trend.tsx - Gbtc
 //

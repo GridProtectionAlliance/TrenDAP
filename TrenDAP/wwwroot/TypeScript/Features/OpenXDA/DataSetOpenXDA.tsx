@@ -26,7 +26,6 @@ import { TrenDAP, Redux } from '../../global';
 import { Select, ArrayCheckBoxes, ArrayMultiSelect } from '@gpa-gemstone/react-forms';
 import { useSelector, useDispatch } from 'react-redux';
 import { SelectOpenXDA, FetchOpenXDA } from '../OpenXDA/OpenXDASlice';
-import { ajax, JQuery } from 'jquery';
 import moment from 'moment';
 
 const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: { DataSource: TrenDAP.iDataSource, Data: TrenDAP.iXDADataSet }, Index: number, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
