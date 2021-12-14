@@ -98,8 +98,8 @@ export const OpenXDASlice = createSlice({
 
 export const { } = OpenXDASlice.actions;
 export default OpenXDASlice.reducer;
-export const SelectOpenXDA = (state, dsid: number, table: string) => (state.OpenXDA[dsid] ? state.OpenXDA[dsid][table] : undefined )as Redux.OpenXDATableSlice;
-export const SelectOpenXDAStatus = (state, dsid: number, table: string) => state.OpenXDA[dsid][table]?.Status as TrenDAP.Status
+export const SelectOpenXDA = (state, dsid: number, table: string) => (state.OpenXDA[dsid] ? state.OpenXDA[dsid][table].Data : [] ) as Redux.OpenXDATableSlice;
+export const SelectOpenXDAStatus = (state, dsid: number, table: string) => (state.OpenXDA[dsid] ? state.OpenXDA[dsid][table]?.Status ?? 'unitiated' : 'unitiated') as TrenDAP.Status
 
 function GetOpenXDA(dataSourceID: number, table: string): JQuery.jqXHR<string> {
     return ajax({

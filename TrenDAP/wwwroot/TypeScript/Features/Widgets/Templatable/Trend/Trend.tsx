@@ -28,15 +28,11 @@ import styles from '../../../../../Styles/app.scss';
 import { Input, CheckBox, Select } from '@gpa-gemstone/react-forms';
 
 import Widget, { SeriesSelect } from '../Widget/Widget';
-import AdditionalInfoXDA from '../Widget/XDA/AdditionalInfo';
-import AdditionalInfoOpenHistorian from '../Widget/OpenHistorian/AdditionalInfo';
 import { CrossMark, Plus } from '@gpa-gemstone/gpa-symbols';
 import { Trend } from './../Implementations';
 import moment from 'moment';
-import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
 import SwitchButton from 'bootstrap-switch-button-react';
-import { Switch } from 'react-router';
 import Axis from './Axis';
 import SeriesPicker from './SeriesPicker';
 
@@ -86,12 +82,27 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
         const dataSource = record.Data.find(dd => dd.DataSource.ID === series?.DataSourceID ?? 0)
         const data = dataSource?.Data ?? [];
         let datum;
-        if (dataSource?.DataSource.Type === 'OpenHistorian')
-            datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === (series as TrenDAP.iTrendTemplateSeriesOpenHistorian).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesOpenHistorian).Phase)?.Data ?? [];
-        if (dataSource?.DataSource.Type === 'TrenDAPDB')
-            datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === (series as TrenDAP.iTrendTemplateSeriesXDA).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesXDA).Phase && dd.Characteristic === (series as TrenDAP.iTrendTemplateSeriesXDA).Characteristic)?.Data ?? [];
+        //if (dataSource?.DataSource.Type === 'OpenHistorian')
+        //    datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === (series as TrenDAP.iTrendTemplateSeriesOpenHistorian).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesOpenHistorian).Phase)?.Data ?? [];
+        //if (dataSource?.DataSource.Type === 'TrenDAPDB')
+        //    datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === (series as TrenDAP.iTrendTemplateSeriesXDA).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesXDA).Phase && dd.Characteristic === (series as TrenDAP.iTrendTemplateSeriesXDA).Characteristic)?.Data ?? [];
+        //else
+        //    datum = [];
+
+        if (dataSource?.DataSource.Type === 'OpenHistorian') {
+            let s = series as TrenDAP.iTrendTemplateSeriesOpenHistorian;
+            datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === s.Type && dd.Phase === s.Phase)?.Data ?? [];
+        }
+        else if (dataSource?.DataSource.Type === 'TrenDAPDB') {
+            let s = series as TrenDAP.iTrendTemplateSeriesXDA;
+            datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === s.Type && dd.Phase === s.Phase && dd.Characteristic === s.Characteristic)?.Data ?? [];
+        }
+        else if (dataSource?.DataSource.Type === 'Sapphire') {
+            let s = series as TrenDAP.iTrendTemplateSeriesSapphire;
+            datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement)?.Data ?? [];
+        }
         else
-            datum = [];
+            datum = [] ;
 
         return datum.map(d => [new Date(d.Timestamp).getTime(), d[series.Field]]);
     }

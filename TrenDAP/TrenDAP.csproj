@@ -45,6 +45,9 @@
     <Content Remove="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Histogram.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Profile.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Regular\Widget\Sapphire\AdditionalInfo.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Regular\Widget\Sapphire\SeriesSelect.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Regular\Widget\Sapphire\TemplateSelect.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Stats.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Table.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Text.tsx" />
@@ -54,6 +57,8 @@
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Trend\Trend.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\OpenHistorian\AdditionalInfo.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\OpenHistorian\SeriesSelect.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\Sapphire\AdditionalInfo.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\Sapphire\SeriesSelect.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\XDA\AdditionalInfo.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\XDA\SeriesSelect.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Text.tsx" />
@@ -195,6 +200,15 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\QuickViewOpenXDA.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Widget\Sapphire\AdditionalInfo.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Widget\Sapphire\SeriesSelect.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Widget\Sapphire\TemplateSelect.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Text.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
@@ -229,6 +243,12 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Table.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\Sapphire\AdditionalInfo.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\Sapphire\SeriesSelect.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Templatable\Widget\Widget.tsx">

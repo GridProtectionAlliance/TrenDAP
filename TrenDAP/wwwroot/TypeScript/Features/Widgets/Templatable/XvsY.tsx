@@ -82,12 +82,24 @@ export default function XvsYJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTempl
 
         let xSeries, ySeries;
         if (dataSource?.DataSource.Type === 'OpenHistorian') {
-            xSeries = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === settings.JSON.X.Series.Type && dd.Phase === settings.JSON.X.Series.Phase);
-            ySeries = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === settings.JSON.Y.Series.Type && dd.Phase === settings.JSON.Y.Series.Phase);
+            let x = { ...settings.JSON.X.Series } as TrenDAP.iTemplateSeriesOpenHistorian;
+            let y = { ...settings.JSON.Y.Series } as TrenDAP.iTemplateSeriesOpenHistorian;
+            xSeries = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === x.Type && dd.Phase === x.Phase);
+            ySeries = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === y.Type && dd.Phase === y.Phase);
         }
-        if (dataSource?.DataSource.Type === 'TrenDAPDB') {
-            xSeries = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === settings.JSON.X.Series.Type && dd.Phase === settings.JSON.X.Series.Phase && dd.Characteristic === settings.JSON.X.Series.Characteristic);
-            ySeries = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === settings.JSON.Y.Series.Type && dd.Phase === settings.JSON.Y.Series.Phase && dd.Characteristic === settings.JSON.Y.Series.Characteristic);
+        else if (dataSource?.DataSource.Type === 'TrenDAPDB') {
+            let x = { ...settings.JSON.X.Series } as TrenDAP.iTemplateSeriesXDA;
+            let y = { ...settings.JSON.Y.Series } as TrenDAP.iTemplateSeriesXDA;
+
+            xSeries = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === x.Type && dd.Phase === x.Phase && dd.Characteristic === x.Characteristic);
+            ySeries = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === y.Type && dd.Phase === y.Phase && dd.Characteristic === y.Characteristic);
+        }
+        else if (dataSource?.DataSource.Type === 'Sapphire') {
+            let x = { ...settings.JSON.X.Series } as TrenDAP.iTemplateSeriesSapphire;
+            let y = { ...settings.JSON.Y.Series } as TrenDAP.iTemplateSeriesSapphire;
+
+            xSeries = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter == props.Device && dd.Phase === x.Phase && dd.Characteristic === x.Measurement);
+            ySeries = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === y.Phase && dd.Characteristic === y.Measurement);
         }
         else {
             xSeries = { Data: [] };
@@ -183,10 +195,18 @@ export default function XvsYJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTempl
         let ds = record.Data.find(dd => dd?.DataSource.ID === record.JSON[axis].Series?.DataSourceID ?? 0)
         const data = ds?.Data ?? [];
         let datum;
-        if (ds?.DataSource.Type === 'OpenHistorian')
-            datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === record.JSON[axis].Series.Type && dd.Phase === record.JSON[axis].Series.Phase);
-        if (ds?.DataSource.Type === 'TrenDAPDB')
-            datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === record.JSON[axis].Series.Type && dd.Phase === record.JSON[axis].Series.Phase && dd.Characteristic === (record.JSON[axis].Series as TrenDAP.iTemplateSeriesXDA).Characteristic);
+        if (ds?.DataSource.Type === 'OpenHistorian') {
+            let s = record.JSON[axis].Series as TrenDAP.iTemplateSeriesOpenHistorian;
+            datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === s.Type && dd.Phase === s.Phase);
+        }
+        else if (ds?.DataSource.Type === 'TrenDAPDB') {
+            let s = record.JSON[axis].Series as TrenDAP.iTemplateSeriesXDA;
+            datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === s.Type && dd.Phase === s.Phase && dd.Characteristic === s.Characteristic);
+        }
+        else if (ds?.DataSource.Type === 'Sapphire') {
+            let s = record.JSON[axis].Series as TrenDAP.iTemplateSeriesSapphire;
+            datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd[props.By] === props.Device  && dd.Phase === s.Phase && dd.Characteristic === s.Measurement);
+        }
         else
             datum = { Name: '' };
 

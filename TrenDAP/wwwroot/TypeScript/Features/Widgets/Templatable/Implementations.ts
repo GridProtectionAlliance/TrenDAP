@@ -28,16 +28,16 @@ import stats from 'stats-lite';
 import moment from 'moment';
 import { OpenHistorian, OpenXDA } from '@gpa-gemstone/application-typings';
 
-export class Widget<T extends TrenDAP.TemplatableWidgetClass> implements TrenDAP.iTemplatableWidget<T>{
+export class Widget<T extends TrenDAP.TemplatableWidgetClass, U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> implements TrenDAP.iTemplatableWidget<T,U>{
     JSON: T;
     Height: number;
     Width: number;
     Type: TrenDAP.WidgetType;
     Label: string;
-    Data: TrenDAP.iDataSetReturn[];
+    Data: TrenDAP.iDataSetReturn<U>[];
     By: TrenDAP.TemplateBy;
     Device: string;
-    constructor(props: TrenDAP.iTemplatableWidget<T>) {
+    constructor(props: TrenDAP.iTemplatableWidget<T,U>) {
         this.Height = props.Height;
         this.Width = props.Width;
         this.Type = props.Type;
@@ -65,8 +65,8 @@ export class Widget<T extends TrenDAP.TemplatableWidgetClass> implements TrenDAP
 
 }
 
-export class Histogram extends Widget<TrenDAP.iTemplatableHistogram> {
-    constructor(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableHistogram> ) {
+export class Histogram<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> extends Widget<TrenDAP.iTemplatableHistogram,U> {
+    constructor(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableHistogram,U> ) {
         super(props);
         this.Type = "Histogram";
         if (this.JSON === undefined)
@@ -90,6 +90,24 @@ export class Histogram extends Widget<TrenDAP.iTemplatableHistogram> {
         (this.JSON.Series as TrenDAP.iTemplatableHistogramSeriesXDA[]).push(series);
         return new Histogram(this);
     }
+
+    public AddSeriesSapphire = (dataSourceID: number, phase: string, measurement:string) => {
+        let label = `${phase} ${measurement}`;
+
+        let series = {
+            Phase: phase,
+            Measurement: measurement,
+            DataSourceID: dataSourceID,
+            Field: "Average",
+            Color: GetColor(),
+            Profile: false,
+            ProfileColor: GetColor(label)
+        } as TrenDAP.iTemplatableHistogramSeriesSapphire
+
+        (this.JSON.Series as TrenDAP.iTemplatableHistogramSeriesSapphire[]).push(series);
+        return new Histogram(this);
+    }
+
 
     public AddSeriesOH = (dataSourceID: number, phase: OpenHistorian.Types.Phase, type: OpenHistorian.Types.SignalType) => {
         let label = `${type} ${phase}`;
@@ -149,8 +167,8 @@ export class Histogram extends Widget<TrenDAP.iTemplatableHistogram> {
     };
 }
 
-export class Trend extends Widget<TrenDAP.iTemplatableTrend> {
-    constructor(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableTrend>) {
+export class Trend<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> extends Widget<TrenDAP.iTemplatableTrend,U> {
+    constructor(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableTrend,U>) {
         super(props);
         this.Type = "Trend";
 
@@ -280,6 +298,33 @@ export class Trend extends Widget<TrenDAP.iTemplatableTrend> {
         this.CalculateAxisRange('y');
         return new Trend(this);
     }
+
+    public AddSeriesSapphire = (dataSourceID: number, phase: string, measurement: string) => {
+        let label = `${phase} ${measurement}`;
+        let dd: TrenDAP.iSapphireReturnData[] = [].concat(...this.Data.map(d => d.Data));
+        let channel = dd.find(d => d.Characteristic === measurement &&d.Phase === phase);
+        let unit = channel?.Unit ?? ''
+        let axisIndex = this.JSON.YAxis.findIndex(a => a.Units === unit);
+
+        if (axisIndex === -1) {
+            axisIndex = this.JSON.YAxis.push({ Units: unit, Min: 0, Max: 100, Position: 'left' }) - 1;
+        }
+
+        let series = {
+            Phase: phase,
+            Measurement: measurement,
+            DataSourceID: dataSourceID,
+            Field: "Average",
+            Color: GetColor(label),
+            Axis: axisIndex,
+            ShowEvents: false
+        } as TrenDAP.iTrendTemplateSeriesSapphire
+
+        (this.JSON.Series as TrenDAP.iTrendTemplateSeriesSapphire[]).push(series);
+        return new Trend(this);
+    }
+
+
 
     public AddSeriesOH = (dataSourceID: number, phase: OpenHistorian.Types.Phase, type: OpenHistorian.Types.SignalType) => {
         let label = `${type} ${phase}`;
@@ -444,17 +489,8 @@ export class Trend extends Widget<TrenDAP.iTemplatableTrend> {
 
 }
 
-//export class Profile extends Widget<TrenDAP.iProfile> {
-//    constructor(height: number, width: number, json?: TrenDAP.iTrend) {
-//        super("Profile", height, width, json);
-//        if (json === undefined)
-//            this.JSON = {  };
-//    }
-
-//}
-
-export class Stats extends Widget<TrenDAP.iTemplatableStats> {
-    constructor(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableStats>) {
+export class Stats<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> extends Widget<TrenDAP.iTemplatableStats,U> {
+    constructor(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableStats,U>) {
         super(props);
         this.Type = "Stats";
         if (this.JSON === undefined)
@@ -462,6 +498,7 @@ export class Stats extends Widget<TrenDAP.iTemplatableStats> {
     }
     public SetSeriesXDA = (dataSourceID: number, phase: OpenXDA.Types.PhaseName, type: OpenXDA.Types.MeasurementTypeName, characteristic: OpenXDA.Types.MeasurementCharacteristicName) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Characteristic: characteristic, Field: 'Average' };
     public SetSeriesOH = (dataSourceID: number, phase: OpenHistorian.Types.Phase, type: OpenHistorian.Types.SignalType) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Field: 'Average' };
+    public SetSeriesSapphire = (dataSourceID: number, phase: string, measurement: string) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Measurement: measurement, Field: 'Average' };
 
     public SetSeriesField = (field: TrenDAP.iXDATrendDataPointField) => {
         this.JSON.Series.Field = field;
@@ -496,10 +533,18 @@ export class Stats extends Widget<TrenDAP.iTemplatableStats> {
         
         let dataSeries;
         
-        if (dataSourceData?.DataSource.Type === 'TrenDAPDB')
-            dataSeries = (dataSourceData?.Data ?? []).find((d: TrenDAP.iXDAReturnData) => d[this.By] === this.Device && d.Phase === series.Phase && d.Type === series.Type && series.Characteristic === d.Characteristic)?.Data ?? [];
-        else if (dataSourceData?.DataSource.Type === 'OpenHistorian')
-            dataSeries = (dataSourceData?.Data ?? []).find((d: TrenDAP.iOpenHistorianReturn) => d[this.By] === this.Device && d.Phase === series.Phase && d.SignalType === series.Type)?.Data ?? [];
+        if (dataSourceData?.DataSource.Type === 'TrenDAPDB') {
+            let s = series as TrenDAP.iTemplateSeriesXDA;
+            dataSeries = ((dataSourceData?.Data ?? []) as TrenDAP.iXDAReturnData[]).find(d => d[this.By] === this.Device && d.Phase === series.Phase && d.Type === s.Type && s.Characteristic === d.Characteristic)?.Data ?? [];
+        }
+        else if (dataSourceData?.DataSource.Type === 'Sapphire') {
+            let s = series as TrenDAP.iTemplateSeriesSapphire;
+            dataSeries = ((dataSourceData?.Data ?? []) as TrenDAP.iSapphireReturnData[]).find(d => d.Meter === this.Device && d.Phase === s.Phase && s.Measurement === d.Characteristic)?.Data ?? [];
+        }
+        else if (dataSourceData?.DataSource.Type === 'OpenHistorian') {
+            let s = series as TrenDAP.iTemplateSeriesOpenHistorian;
+            dataSeries = ((dataSourceData?.Data ?? []) as TrenDAP.iOpenHistorianReturn[]).find(d => d[this.By] === this.Device && d.Phase === s.Phase && d.SignalType === s.Type)?.Data ?? [];
+        }
         else
             dataSeries = [];
 
@@ -539,29 +584,30 @@ export class Stats extends Widget<TrenDAP.iTemplatableStats> {
 
 }
 
-export class Table extends Widget<TrenDAP.iTemplatableTable> {
-    constructor(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableTable>) {
+export class Table<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> extends Widget<TrenDAP.iTemplatableTable,U> {
+    constructor(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableTable,U>) {
         super(props);
         if (this.JSON === undefined)
             this.JSON = { Series: null, Precision: 3 };
     }
     public SetSeriesXDA = (dataSourceID: number, phase: OpenXDA.Types.PhaseName, type: OpenXDA.Types.MeasurementTypeName, characteristic: OpenXDA.Types.MeasurementCharacteristicName) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Characteristic: characteristic, Field: 'Average' };
     public SetSeriesOH = (dataSourceID: number, phase: OpenHistorian.Types.Phase, type: OpenHistorian.Types.SignalType) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Field: 'Average' };
+    public SetSeriesSapphire = (dataSourceID: number, phase: string, measurement: string) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Measurement: measurement, Field: 'Average' };
 
     public SetSeriesField = (field: TrenDAP.iXDATrendDataPointField) => {
         this.JSON.Series.Field = field;
-        return new Stats(this);
+        return new Table(this);
     };
     public SetPrecsision = (value: number) => {
         this.JSON.Precision = value;
-        return new Stats(this);
+        return new Table(this);
     };
 
 
 }
 
-export class Text extends Widget<TrenDAP.iTemplatableText> {
-    constructor(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableText>) {
+export class Text<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> extends Widget<TrenDAP.iTemplatableText,U> {
+    constructor(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableText,U>) {
         super(props);
         if (this.JSON === undefined)
             this.JSON = {Text: ''};
@@ -569,8 +615,8 @@ export class Text extends Widget<TrenDAP.iTemplatableText> {
 
 }
 
-export class XvsY extends Widget<TrenDAP.iTemplatableXvsY> {
-    constructor(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableXvsY>) {
+export class XvsY<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> extends Widget<TrenDAP.iTemplatableXvsY,U> {
+    constructor(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableXvsY,U>) {
         super(props);
         if (this.JSON === undefined)
             this.JSON = {
@@ -594,10 +640,18 @@ export class XvsY extends Widget<TrenDAP.iTemplatableXvsY> {
         let ss;
 
         if (type === 'time') {
-            if (ds.DataSource.Type === 'TrenDAPDB')
-                ss = dd.find((d: TrenDAP.iXDAReturnData) => d[this.By] === this.Device && d.Phase === this.JSON[type].Series.Phase && d.Characteristic === (this.JSON[type].Series as TrenDAP.iTemplateSeriesXDA).Characteristic && d.Type === this.JSON[type].Series.Type).Data.map(d => new Date(d.Timestamp).getTime());
-            else if (ds.DataSource.Type === 'OpenHistorian')
-                ss = dd.find((d: TrenDAP.iOpenHistorianReturn) => d[this.By] === this.Device && d.Phase === this.JSON[type].Series.Phase && d.SignalType === this.JSON[type].Series.Type).Data.map(d => new Date(d.Timestamp).getTime());
+            if (ds.DataSource.Type === 'TrenDAPDB') {
+                let s = this.JSON[type].Series as TrenDAP.iTrendTemplateSeriesXDA;
+                ss = (dd as TrenDAP.iXDAReturnData[]).find(d => d[this.By] === this.Device && d.Phase === s.Phase && d.Characteristic === s.Characteristic && d.Type === s.Type).Data.map(d => new Date(d.Timestamp).getTime());
+            }
+            else if (ds.DataSource.Type === 'Sapphire') {
+                let s = this.JSON[type].Series as TrenDAP.iTrendTemplateSeriesSapphire;
+                ss = (dd as TrenDAP.iSapphireReturnData[]).find(d => d.Meter === this.Device && d.Phase === s.Phase && d.Characteristic === s.Measurement).Data.map(d => new Date(d.Timestamp).getTime());
+            }
+            else if (ds.DataSource.Type === 'OpenHistorian') {
+                let s = this.JSON[type].Series as TrenDAP.iTrendTemplateSeriesOpenHistorian;
+                ss = (dd as TrenDAP.iOpenHistorianReturn[]).find(d => d[this.By] === this.Device && d.Phase === s.Phase && d.SignalType === s.Type).Data.map(d => new Date(d.Timestamp).getTime());
+            }
             else
                 ss = [];
             this.JSON.TimeMax = Math.max(...ss);
@@ -605,10 +659,18 @@ export class XvsY extends Widget<TrenDAP.iTemplatableXvsY> {
 
         }
         else {
-            if (ds.DataSource.Type === 'TrenDAPDB')
-                ss = dd.find((d: TrenDAP.iXDAReturnData) => d[this.By] === this.Device && d.Phase === this.JSON[type].Series.Phase && d.Characteristic === (this.JSON[type].Series as TrenDAP.iTemplateSeriesXDA).Characteristic && d.Type === this.JSON[type].Series.Type).Data.map(d => d[this.JSON[type].Series.Field]);
-            else if (ds.DataSource.Type === 'OpenHistorian')
-                ss = dd.find((d: TrenDAP.iOpenHistorianReturn) => d[this.By] === this.Device && d.Phase === this.JSON[type].Series.Phase && d.SignalType === this.JSON[type].Series.Type).Data.map(d => d[this.JSON[type].Series.Field]);
+            if (ds.DataSource.Type === 'TrenDAPDB') {
+                let s = this.JSON[type].Series as TrenDAP.iTrendTemplateSeriesXDA;
+                ss = (dd as TrenDAP.iXDAReturnData[]).find(d => d[this.By] === this.Device && d.Phase === s.Phase && d.Characteristic === s.Characteristic && d.Type === s.Type).Data.map(d => d[s.Field]);
+            }
+            else if (ds.DataSource.Type === 'Sapphire') {
+                let s = this.JSON[type].Series as TrenDAP.iTrendTemplateSeriesSapphire;
+                ss = (dd as TrenDAP.iSapphireReturnData[]).find(d => d.Meter === this.Device && d.Phase === ss.Phase && d.Characteristic === s.Measurement ).Data.map(d => d[s.Field]);
+            }
+            else if (ds.DataSource.Type === 'OpenHistorian') {
+                let s = this.JSON[type].Series as TrenDAP.iTrendTemplateSeriesOpenHistorian;
+                ss = (dd as TrenDAP.iOpenHistorianReturn[]).find(d => d[this.By] === this.Device && d.Phase === s.Phase && d.SignalType === s.Type).Data.map(d => d[s.Field]);
+            }
             else
                 ss = [];
 
@@ -639,6 +701,11 @@ export class XvsY extends Widget<TrenDAP.iTemplatableXvsY> {
     };
     public SetSeriesOH = (axis: 'X' | 'Y', dataSourceID: number, phase: OpenHistorian.Types.Phase, type: OpenHistorian.Types.SignalType) => {
         this.JSON[axis].Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Field: 'Average' }
+        return new XvsY(this);
+    };
+
+    public SetSeriesSapphire = (axis: 'X' | 'Y', dataSourceID: number, phase: string, measurement: string) => {
+        this.JSON[axis].Series = { DataSourceID: dataSourceID, Phase: phase, Measurement: measurement, Field: 'Average' }
         return new XvsY(this);
     };
 

@@ -71,10 +71,19 @@ export default function HistogramJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.i
             const dataSource = settings.Data.find(dd => dd.DataSource.ID === series?.DataSourceID ?? 0)
             const data = dataSource?.Data ?? [];
             let datum;
-            if (dataSource?.DataSource.Type === 'OpenHistorian')
-                datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === (series as TrenDAP.iTemplatableHistogramSeriesOpenHistorian).Type && dd.Phase === (series as TrenDAP.iTemplatableHistogramSeriesOpenHistorian).Phase)?.Data ?? [];
-            if (dataSource?.DataSource.Type === 'TrenDAPDB')
-                datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === (series as TrenDAP.iTemplatableHistogramSeriesXDA).Type && dd.Phase === (series as TrenDAP.iTemplatableHistogramSeriesXDA).Phase && dd.Characteristic === (series as TrenDAP.iTemplatableHistogramSeriesXDA).Characteristic)?.Data ?? [];
+
+            if (dataSource?.DataSource.Type === 'OpenHistorian') {
+                let s = series as TrenDAP.iTemplatableHistogramSeriesOpenHistorian;
+                datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === s.Type && dd.Phase === s.Phase)?.Data ?? [];
+            }
+            else if (dataSource?.DataSource.Type === 'TrenDAPDB') {
+                let s = series as TrenDAP.iTemplatableHistogramSeriesXDA;
+                datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === s.Type && dd.Phase === s.Phase && dd.Characteristic === s.Characteristic)?.Data ?? [];
+            }
+            else if (dataSource?.DataSource.Type === 'Sapphire') {
+                let s = series as TrenDAP.iTemplatableHistogramSeriesSapphire;
+                datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement)?.Data ?? [];
+            }
             else
                 datum = [];
 
@@ -86,10 +95,18 @@ export default function HistogramJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.i
             const dataSource = record.Data.find(dd => dd.DataSource.ID === series?.DataSourceID ?? 0)
             const data = dataSource?.Data ?? [];
             let datum;
-            if (dataSource?.DataSource.Type === 'OpenHistorian')
-                datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === (series as TrenDAP.iTemplatableHistogramSeriesOpenHistorian).Type && dd.Phase === (series as TrenDAP.iTemplatableHistogramSeriesOpenHistorian).Phase);
-            if (dataSource?.DataSource.Type === 'TrenDAPDB')
-                datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === (series as TrenDAP.iTemplatableHistogramSeriesXDA).Type && dd.Phase === (series as TrenDAP.iTemplatableHistogramSeriesXDA).Phase && dd.Characteristic === (series as TrenDAP.iTemplatableHistogramSeriesXDA).Characteristic);
+            if (dataSource?.DataSource.Type === 'OpenHistorian') {
+                let s = series as TrenDAP.iTemplatableHistogramSeriesOpenHistorian;
+                datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === s.Type && dd.Phase === s.Phase);
+            }
+            else if (dataSource?.DataSource.Type === 'TrenDAPDB') {
+                let s = series as TrenDAP.iTemplatableHistogramSeriesXDA;
+                datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === s.Type && dd.Phase === s.Phase && dd.Characteristic === s.Characteristic);
+            }
+            else if (dataSource?.DataSource.Type === 'Sapphire') {
+                let s = series as TrenDAP.iTemplatableHistogramSeriesSapphire;
+                datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement);
+            }
             else
                 datum = {Data: []};
 

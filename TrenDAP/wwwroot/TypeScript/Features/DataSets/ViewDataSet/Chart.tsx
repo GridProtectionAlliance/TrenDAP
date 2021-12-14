@@ -90,7 +90,7 @@ export default function Chart(props: { Data: TrenDAP.iXDATrendDataPoint[], SetSe
         //point.append('path').attr('stroke', 'lightgray').attr('d', d => `M ${x(moment.utc(d.Timestamp).toDate().getTime())}, ${y(d.Average)} V ${y(d.Minimum)}Z`)
         point.append("circle")
             .attr("r", 3.5)
-            .attr("cx", function (d) { return x(moment(d.Timestamp).toDate().getTime()); })
+            .attr("cx", function (d) { return x(moment.utc(d.Timestamp).toDate().getTime()); })
             .attr("cy", function (d) { return y(d.Average); })
             .on('click', (e,d: any) => { props.SetSelected(d) })
             .style('cursor', 'pointer');

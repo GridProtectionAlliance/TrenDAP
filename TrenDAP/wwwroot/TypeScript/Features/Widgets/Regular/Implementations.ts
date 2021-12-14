@@ -23,20 +23,18 @@
 
 
 import { TrenDAP } from '../../../global';
-import { CreateGuid, RandomColor } from '@gpa-gemstone/helper-functions';
+import { RandomColor } from '@gpa-gemstone/helper-functions';
 import stats from 'stats-lite';
-import { random } from 'lodash';
 import moment from 'moment';
-import TrenDAPDB from '../../../Features/DataSets/TrenDAPDB';
 
-export class Widget<T extends TrenDAP.WidgetClass> implements TrenDAP.iWidget<T>{
+export class Widget<T extends TrenDAP.WidgetClass, U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> implements TrenDAP.iWidget<T,U>{
     JSON: T;
     Height: number;
     Width: number;
     Type: TrenDAP.WidgetType;
     Label: string;
-    Data: TrenDAP.iDataSetReturn[];
-    constructor(props: TrenDAP.iWidget<T>) {
+    Data: TrenDAP.iDataSetReturn<U>[];
+    constructor(props: TrenDAP.iWidget<T,U>) {
         this.Height = props.Height;
         this.Width = props.Width;
         this.Type = props.Type;
@@ -62,8 +60,8 @@ export class Widget<T extends TrenDAP.WidgetClass> implements TrenDAP.iWidget<T>
 
 }
 
-export class Histogram extends Widget<TrenDAP.iHistogram> {
-    constructor(props: TrenDAP.iWidget<TrenDAP.iHistogram> ) {
+export class Histogram<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> extends Widget<TrenDAP.iHistogram, U> {
+    constructor(props: TrenDAP.iWidget<TrenDAP.iHistogram, U> ) {
         super(props);
         this.Type = "Histogram";
         if (this.JSON === undefined)
@@ -87,7 +85,7 @@ export class Histogram extends Widget<TrenDAP.iHistogram> {
     }
 
     public CalculateAxisRange = () => {
-        let dd: TrenDAP.iXDAReturnData[] = [].concat(...this.Data.map(d => d.Data));
+        let dd: TrenDAP.iDataSetReturnType[] = [].concat(...this.Data.map(d => d.Data));
         let ss = this.JSON.Series.map(series => (dd.find(d => d.ID.toString() === series.ID)?.Data ?? []).map(d => d[series.Field]));
         let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
         this.JSON.Max = Math.max(...[].concat(...mm));
@@ -102,8 +100,8 @@ export class Histogram extends Widget<TrenDAP.iHistogram> {
 
 }
 
-export class Trend extends Widget<TrenDAP.iTrend> {
-    constructor(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
+export class Trend<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> extends Widget<TrenDAP.iTrend,U> {
+    constructor(props: TrenDAP.iWidget<TrenDAP.iTrend, U>) {
         super(props);
         this.Type = "Trend";
 
@@ -124,7 +122,7 @@ export class Trend extends Widget<TrenDAP.iTrend> {
     public UpdateAxis = (index: keyof TrenDAP.iYAxis[], field: keyof TrenDAP.iYAxis, value: TrenDAP.iYAxis[keyof TrenDAP.iYAxis]) => { this.JSON.YAxis[index][field] = value; };
 
     public CalculateAxisRange = (type: 'x' | 'y', index?: keyof TrenDAP.iYAxis[]) => {
-        let dd: TrenDAP.iXDAReturnData[] = [].concat(...this.Data.map(d => d.Data));
+        let dd: TrenDAP.iDataSetReturnType[] = [].concat(...this.Data.map(d => d.Data));
         if (type === 'x')
         {
             let ss = this.JSON.Series.map(series => (dd.find(d => d.ID.toString() == series.ID)?.Data ?? []).map(d => moment(d.Timestamp).toDate().getTime()));
@@ -162,14 +160,17 @@ export class Trend extends Widget<TrenDAP.iTrend> {
     public AddSeries = (id: number | string, dataSourceID: number, label: string) => {
         if (this.JSON.Series.find(series => series.ID === id.toString() && series.DataSourceID === dataSourceID) !== undefined) return;
 
-        let dd: TrenDAP.iXDAReturnData[] = [].concat(...this.Data.map(d => d.Data));
+        let dd:U[] = [].concat(...this.Data.map(d => d.Data));
         let series = dd.find(d => d.ID.toString() === id.toString())
-        console.log(series);
 
-        let axisIndex = this.JSON.YAxis.findIndex(a => a.Units === series.Unit);
+        let axisIndex = 0;
 
-        if (axisIndex === -1) {
-            axisIndex = this.JSON.YAxis.push({ Units: series.Unit, Min: 0, Max: 100, Position: 'left' }) - 1;
+        if (series['Unit'] != undefined) {
+            axisIndex = this.JSON.YAxis.findIndex(a => a.Units === series['Unit']);
+
+            if (axisIndex === -1) {
+                axisIndex = this.JSON.YAxis.push({ Units: series['Unit'], Min: 0, Max: 100, Position: 'left' }) - 1;
+            }
         }
 
         this.JSON.Series.push({ ID: id.toString(), DataSourceID: dataSourceID, Axis: axisIndex, Field: "Average", Color: GetColor(label), Label: label, ShowEvents: false });
@@ -184,7 +185,7 @@ export class Trend extends Widget<TrenDAP.iTrend> {
             axis = this.JSON.YAxis.push({Units: 'V', Position: 'left', Min: 0, Max: 100}) - 1
         }
 
-        this.JSON.Series.push(...this.Data.find(datum => datum.DataSource.ID === dataSourceID).Data.filter((datum: TrenDAP.iXDAReturnData) => datum.Type === 'Voltage' && datum.Characteristic === 'RMS').map((datum: TrenDAP.iXDAReturnData) => ({ ID: datum.ID.toString(), DataSourceID: dataSourceID, Axis: axis, Field: 'Average' as TrenDAP.iXDATrendDataPointField, Color: GetColor(`V${datum.Phase} - ${datum.Meter}`), Label: datum.Name, ShowEvents: false})))
+        this.JSON.Series.push(...this.Data.find(datum => datum.DataSource.ID === dataSourceID).Data.filter(datum => datum['Type'] === 'Voltage' && datum['Characteristic'] === 'RMS').map(datum => ({ ID: datum.ID.toString(), DataSourceID: dataSourceID, Axis: axis, Field: 'Average' as TrenDAP.iXDATrendDataPointField, Color: GetColor(`V${datum.Phase} - ${datum['Meter']}`), Label: datum['Name'], ShowEvents: false})))
         this.CalculateAxisRange('x');
         this.CalculateAxisRange('y');
         return new Trend(this);
@@ -196,7 +197,7 @@ export class Trend extends Widget<TrenDAP.iTrend> {
             axis = this.JSON.YAxis.push({ Units: 'A', Position: 'left', Min: 0, Max: 100 }) - 1
         }
 
-        this.JSON.Series.push(...this.Data.find(datum => datum.DataSource.ID === dataSourceID).Data.filter((datum: TrenDAP.iXDAReturnData) => datum.Type === 'Current' && datum.Characteristic === 'RMS').map((datum: TrenDAP.iXDAReturnData) => ({ ID: datum.ID.toString(), DataSourceID: dataSourceID, Axis: axis, Field: 'Average' as TrenDAP.iXDATrendDataPointField, Color: GetColor(`I${datum.Phase} - ${datum.Meter}`), Label: datum.Name, ShowEvents: false })))
+        this.JSON.Series.push(...this.Data.find(datum => datum.DataSource.ID === dataSourceID).Data.filter(datum => datum['Type'] === 'Current' && datum['Characteristic'] === 'RMS').map(datum => ({ ID: datum.ID.toString(), DataSourceID: dataSourceID, Axis: axis, Field: 'Average' as TrenDAP.iXDATrendDataPointField, Color: GetColor(`V${datum.Phase} - ${datum['Meter']}`), Label: datum['Name'], ShowEvents: false })))
         this.CalculateAxisRange('x');
         this.CalculateAxisRange('y');
         return new Trend(this);
@@ -227,8 +228,8 @@ export class Trend extends Widget<TrenDAP.iTrend> {
 
 //}
 
-export class Stats extends Widget<TrenDAP.iStats> {
-    constructor(props: TrenDAP.iWidget<TrenDAP.iStats>) {
+export class Stats<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> extends Widget<TrenDAP.iStats,U> {
+    constructor(props: TrenDAP.iWidget<TrenDAP.iStats,U>) {
         super(props);
         this.Type = "Stats";
         if (this.JSON === undefined)
@@ -301,8 +302,8 @@ export class Stats extends Widget<TrenDAP.iStats> {
 
 }
 
-export class Table extends Widget<TrenDAP.iTable> {
-    constructor(props: TrenDAP.iWidget<TrenDAP.iStats>) {
+export class Table<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> extends Widget<TrenDAP.iTable,U> {
+    constructor(props: TrenDAP.iWidget<TrenDAP.iStats,U>) {
         super(props);
         if (this.JSON === undefined)
             this.JSON = { Series: null, Precision: 3 };
@@ -320,8 +321,8 @@ export class Table extends Widget<TrenDAP.iTable> {
 
 }
 
-export class Text extends Widget<TrenDAP.iText> {
-    constructor(props: TrenDAP.iWidget<TrenDAP.iText>) {
+export class Text<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> extends Widget<TrenDAP.iText,U> {
+    constructor(props: TrenDAP.iWidget<TrenDAP.iText,U>) {
         super(props);
         if (this.JSON === undefined)
             this.JSON = {Text: ''};
@@ -329,8 +330,8 @@ export class Text extends Widget<TrenDAP.iText> {
 
 }
 
-export class XvsY extends Widget<TrenDAP.iXvsY> {
-    constructor(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
+export class XvsY<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> extends Widget<TrenDAP.iXvsY,U> {
+    constructor(props: TrenDAP.iWidget<TrenDAP.iXvsY,U>) {
         super(props);
         if (this.JSON === undefined)
             this.JSON = {

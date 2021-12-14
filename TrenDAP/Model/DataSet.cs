@@ -40,6 +40,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TrenDAP.Controllers;
+using HIDSPoint = HIDS.Point;
+using TrenDAP.Controllers.Sapphire;
+using SapphirePoint = TrenDAP.Controllers.Sapphire.Point;
 
 namespace TrenDAP.Model
 {
@@ -163,7 +166,7 @@ namespace TrenDAP.Model
 
                     if (table.Rows.Count > 0)
                     {
-                        IAsyncEnumerable<Point> points = TrenDAPDBController.QueryHIDSDirectly(table, dataSourceID, post, Configuration, cancellationToken);
+                        IAsyncEnumerable<HIDSPoint> points = TrenDAPDBController.QueryHIDSDirectly(table, dataSourceID, post, Configuration, cancellationToken);
                         IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
 
                         var groupjoin = tableJson.GroupJoin(points.ToArrayAsync().Result, row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) =>
@@ -202,14 +205,18 @@ namespace TrenDAP.Model
                 jObject["DataSource"]["Name"] = dataSource.Name;
                 jObject["DataSource"]["Type"] = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
 
-                if (type == "TrenDAPDB") {
+                if (type == "TrenDAPDB")
+                {
                     jObject["DataSource"]["OpenSEE"] = TrenDAPDBController.GetOpenSEEURL(dataSource.ID, Configuration).Result;
                     return QueryTrenDAPDB(jObject, dataset, json, cancellationToken);
                 }
                 else if (type == "OpenHistorian")
                     return QueryOpenHistorian(jObject, dataset, json, cancellationToken);
                 else if (type == "Sapphire")
+                {
+                    jObject["DataSource"]["OpenSEE"] = TrenDAPDBController.GetOpenSEEURL(dataSource.ID, Configuration).Result;
                     return QuerySapphire(jObject, dataset, json, cancellationToken);
+                }
                 else
                     return Task.FromResult(jObject);
             }
@@ -232,7 +239,7 @@ namespace TrenDAP.Model
                     Task<string> eventsTask = TrenDAPDBController.GetEvents(json.DataSource.ID, post, Configuration, cancellationToken);
                     Task<string> alarmsTask = TrenDAPDBController.GetAlarms(json.DataSource.ID, post, Configuration, cancellationToken);
 
-                    IAsyncEnumerable<Point> points = TrenDAPDBController.QueryHIDSDirectly(table, json.DataSource.ID, post, Configuration, cancellationToken);
+                    IAsyncEnumerable<HIDSPoint> points = TrenDAPDBController.QueryHIDSDirectly(table, json.DataSource.ID, post, Configuration, cancellationToken);
                     IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
 
                     string eventsString = await eventsTask;
@@ -297,32 +304,17 @@ namespace TrenDAP.Model
             return Task.Run(() =>
             {
 
-                SapphireController.SapphireDataSetData setData = json.Data.ToObject<SapphireController.SapphireDataSetData>();
+                SapphireDataSetData setData = json.Data.ToObject<SapphireDataSetData>();
 
-                SapphireController.SapphirePost post = SapphireController.CreatePost(dataset, setData);
+                SapphirePost post = SapphireController.CreatePost(dataset, setData);
 
                 jObject["Context"] = dataset.Context;
                 jObject["From"] = post.StartTime.ToString("MM/dd/yyyy");
                 jObject["To"] = post.EndTime.ToString("MM/dd/yyyy");
 
                 SapphireController sapphireController = new SapphireController(Configuration);
-                sapphireController.Query(json.DataSource.ID, post, cancellationToken);
-
-                //if (table.Rows.Count > 0)
-                //{
-                //    IEnumerable<SapphireController.SapphireAggregatePoint> points = SapphireController.Query(json.DataSource.ID, post, Configuration, cancellationToken);
-                //    IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
-
-                //    var groupjoin = tableJson.GroupJoin(points, row => row["ID"].ToString(), result => result.Tag, (row, resultcollection) =>
-                //    {
-                //        row["Data"] = JArray.FromObject(resultcollection);
-                //        return row;
-                //    });
-
-                //    jObject["Data"] = JArray.FromObject(groupjoin);
-                //}
-                //else
-                //    jObject["Data"] = JArray.FromObject(new List<string>() { });
+                List<SapphireChannelRow> results =  sapphireController.Query(json.DataSource.ID, post, cancellationToken);
+                jObject["Data"] = JArray.FromObject(results);
 
                 return jObject;
 

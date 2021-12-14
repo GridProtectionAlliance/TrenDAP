@@ -48,10 +48,18 @@ export default function TableJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
         const dataSource = record.Data.find(dd => dd.DataSource.ID === record.JSON.Series?.DataSourceID ?? 0)
         const data = dataSource?.Data ?? [];
         let datum;
-        if (dataSource?.DataSource.Type === 'OpenHistorian')
-            datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === record.JSON.Series.Type && dd.Phase === record.JSON.Series.Phase);
-        if (dataSource?.DataSource.Type === 'TrenDAPDB')
-            datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === record.JSON.Series.Type && dd.Phase === record.JSON.Series.Phase && dd.Characteristic === record.JSON.Series.Characteristic);
+        if (dataSource?.DataSource.Type === 'OpenHistorian') {
+            let s = record.JSON.Series as TrenDAP.iTemplateSeriesOpenHistorian;
+            datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === s.Type && dd.Phase === s.Phase);
+        }
+        else if (dataSource?.DataSource.Type === 'TrenDAPDB') {
+            let s = record.JSON.Series as TrenDAP.iTemplateSeriesXDA;
+            datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === s.Type && dd.Phase === s.Phase && dd.Characteristic === s.Characteristic);
+        }
+        else if (dataSource?.DataSource.Type === 'Sapphire') {
+            let s = record.JSON.Series as TrenDAP.iTemplateSeriesSapphire;
+            datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd[props.By] === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement);
+        }
         else
             datum = {Data:[]};
 

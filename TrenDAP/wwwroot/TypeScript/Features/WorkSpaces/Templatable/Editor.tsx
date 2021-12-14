@@ -27,24 +27,28 @@ import Row from './Row';
 import { useDispatch, useSelector } from 'react-redux';
 import { UpdateWorkSpace } from './../WorkSpacesSlice';
 
-export default function Editor(props: { WorkSpace: TrenDAP.iWorkSpace, Data: TrenDAP.iDataSetReturn[] }) {
+export default function Editor(props: { WorkSpace: TrenDAP.iWorkSpace, Data: TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>[] }) {
     const dispatch = useDispatch();
     const workSpaceJSON: TrenDAP.WorkSpaceJSON = JSON.parse(props.WorkSpace.JSONString);
-    const dataSet = props.Data.find(d => d.DataSource.Type === workSpaceJSON.Type)?.Data ?? [];
-    const options = [...new Set(dataSet.map( ds => ds[workSpaceJSON.By]))].sort();
-    const [selection, setSelection] = React.useState<string>(options[0]);
+    const [options, setOptions] = React.useState<string[]>([]);
+
+    const [selection, setSelection] = React.useState<string>('');
 
     React.useEffect(() => {
-        if(selection == undefined)
-            setSelection(options[0])
-    }, [options.length])
+        if (props.Data?.length > 0) {
+            const dataSet = props.Data.find(d => d.DataSource.Type === workSpaceJSON.Type)?.Data ?? [];
+            setOptions([...new Set(dataSet.map(ds => ds[workSpaceJSON.By]))].sort())
+        }
+    }, [props.Data.length])
 
 
     return (
         <div className={styles["tab-content"]}>
             <div className='row'>
                 <div className='col'>
-                    <select className='pull-right form-control' value={selection} style={{ width: 300 }} onChange={(evt) => setSelection(evt.target.value) }>{
+                    <select className='pull-right form-control' value={selection} style={{ width: 300 }} onChange={(evt) => setSelection(evt.target.value)}>
+                        <option value=''></option>
+                        {
                         options.map((option,i ) => <option key={i } value={option}>{option}</option>) 
                     }</select>
                     <label className='pull-right' style={{ padding: 7 }}>{workSpaceJSON.By }:</label>

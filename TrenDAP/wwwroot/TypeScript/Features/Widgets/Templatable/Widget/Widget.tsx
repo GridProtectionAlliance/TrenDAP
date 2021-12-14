@@ -26,9 +26,10 @@ import * as React from 'react';
 import { TrenDAP } from '../../../../global';
 import styles from '../../../../../Styles/app.scss';
 import ReactDOM from 'react-dom';
-import { Widget, Histogram, Trend, Stats, Table, XvsY } from '../Implementations';
+import { Widget } from '../Implementations';
 import SeriesSelectXDA from './XDA/SeriesSelect';
 import SeriesSelectOpenHistorian from './OpenHistorian/SeriesSelect';
+import SeriesSelectSapphire from './Sapphire/SeriesSelect';
 
 
 interface Props extends TrenDAP.iWidget {
@@ -88,6 +89,9 @@ export function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass>, DataS
 
     else if (dataSource?.DataSource.Type === 'OpenHistorian')
         return <SeriesSelectOpenHistorian {...props} />;
+    else if (dataSource?.DataSource.Type === 'Sapphire')
+        return <SeriesSelectSapphire {...props} Widget={ props.Widget as Widget<TrenDAP.WidgetClass,TrenDAP.iSapphireReturnData>} />;
+
     else
         return null;
 }

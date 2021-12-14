@@ -43,7 +43,7 @@ const NavMargin = 85;
 const NavWidth = 200;
 
 const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
-    const [data, setData] = React.useState<TrenDAP.iDataSetReturn[]>([]);
+    const [data, setData] = React.useState<TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>[]>([]);
     const dispatch = useDispatch();
     const { id } = useParams<{ id }>();
     const workSpace = useSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, parseInt(id)));
@@ -159,6 +159,7 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
                                     <select className='form-control' value={workSpaceJSON.Type} onChange={(evt) => setWorkSpaceJSON({ ...workSpaceJSON, Type: evt.target.value as TrenDAP.DataSourceType })}>
                                         <option value=''> </option>
                                         <option value='TrenDAPDB'>TrenDAPDB</option>
+                                        <option value='Sapphire'>Sapphire</option>
                                         <option value='OpenHistorian'>OpenHistorian</option>
                                     </select>
 
