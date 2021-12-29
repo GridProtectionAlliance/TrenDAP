@@ -32,28 +32,30 @@ export default function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass
     const [dataSource, setDataSource] = React.useState<TrenDAP.iDataSetReturn>(undefined)
     const [phase, setPhase] = React.useState<OpenXDA.Types.PhaseName>('AN');
     const [phases, setPhases] = React.useState<OpenXDA.Types.PhaseName[]>(OpenXDA.Lists.Phases);
-    const channelGroupsTypes: Redux.OpenXDATableSlice = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSourceID, 'ChannelGroupDetails'));
+    const channelGroupsTypes: any[] = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSourceID, 'ChannelGroupDetails'));
+    const cgtStatus: TrenDAP.Status = useSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSourceID, 'ChannelGroupDetails'));
+
     const [channelGroupType, setChannelGroupType] = React.useState<OpenXDAExt.ChannelGroupDetails>(undefined);
     const [reducedChannelGroupTypes, setReducedChannelGroupTypes] = React.useState<OpenXDAExt.ChannelGroupDetails[]>([]);
 
     const dispatch = useDispatch();
 
     React.useEffect(() => {
-        if (channelGroupsTypes === undefined || channelGroupsTypes?.Status === 'unitiated' || channelGroupsTypes?.Status === 'changed')
+        if (cgtStatus === 'unitiated' || cgtStatus=== 'changed')
             dispatch(FetchOpenXDA({ dataSourceID: props.DataSourceID, table: 'ChannelGroupDetails' }));
-        else if (channelGroupsTypes?.Status === 'idle')
+        else if (cgtStatus === 'idle')
         {
             if ((props.Widget?.Data ?? []).length === 0)
-                setReducedChannelGroupTypes(channelGroupsTypes.Data);
+                setReducedChannelGroupTypes(channelGroupsTypes);
             else {
                 let channels = props.Widget.Data.find(d => d.DataSource.ID === props.DataSourceID).Data;
-                let reduced = channelGroupsTypes.Data.filter(d => channels.find((c: TrenDAP.iXDAReturnData) => c.Type === d.MeasurementType && c.Characteristic === d.MeasurementCharacteristic) != undefined)
+                let reduced = channelGroupsTypes.filter(d => channels.find((c: TrenDAP.iXDAReturnData) => c.Type === d.MeasurementType && c.Characteristic === d.MeasurementCharacteristic) != undefined)
                 setReducedChannelGroupTypes(reduced);
             }
         }
         return function () {
         }
-    }, [dispatch, channelGroupsTypes?.Status]);
+    }, [dispatch, cgtStatus]);
 
     React.useEffect(() => {
         const dataSource = props.Widget.Data.find(d => d.DataSource.ID === props.DataSourceID);
@@ -66,7 +68,7 @@ export default function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass
 
       return (
         <div className="input-group">
-              <select className="form-control" value={channelGroupType?.DisplayName ?? ''} onChange={(evt) => setChannelGroupType(channelGroupsTypes.Data.find(c => c.DisplayName === evt.target.value))}>
+              <select className="form-control" value={channelGroupType?.DisplayName ?? ''} onChange={(evt) => setChannelGroupType(channelGroupsTypes.find(c => c.DisplayName === evt.target.value))}>
                   {reducedChannelGroupTypes.map(mts => <option key={mts.DisplayName} value={mts.DisplayName}>{mts.DisplayName}</option>)}
             </select>
             <select className="form-control" value={phase} onChange={(evt) => setPhase(evt.target.value as any)}>

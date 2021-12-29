@@ -29,6 +29,8 @@ import { Table } from './Implementations';
 import Widget, { SeriesSelect } from './Widget/Widget';
 import AdditionalInfoXDA from './Widget/XDA/AdditionalInfo';
 import AdditionalInfoOpenHistorian from './Widget/OpenHistorian/AdditionalInfo';
+import AdditionalInfoSapphire from './Widget/Sapphire/AdditionalInfo';
+
 import { Input } from '@gpa-gemstone/react-forms';
 import _ from 'lodash';
 
@@ -137,6 +139,22 @@ export default function TableJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
                                                     </div>
                                                 </li>
                                                 : null}
+                                            {d.DataSource.Type === 'Sapphire' && record.JSON.Series != undefined ?
+                                                <li key={i} className="list-group-item">
+                                                    <div className="row">
+                                                        <div className="col-3">
+                                                            <label>{(info as TrenDAP.iSapphireReturnData)?.Name ?? ''}</label>
+                                                            <AdditionalInfoSapphire Index={i} Data={(info as TrenDAP.iSapphireReturnData)} />
+                                                        </div>
+                                                        <div className="col">
+                                                            <label className="form-label">Precision</label>
+                                                            <input className="form-control" type="number" value={record.JSON.Precision} onChange={(evt) => setRecord(record.SetPrecsision(parseInt(evt.target.value)))} />
+                                                        </div>
+
+                                                    </div>
+                                                </li>
+                                                : null}
+
 
                                             {d.DataSource.Type === 'OpenHistorian' && record.JSON.Series != undefined ?
                                                 <li key={i} className="list-group-item">

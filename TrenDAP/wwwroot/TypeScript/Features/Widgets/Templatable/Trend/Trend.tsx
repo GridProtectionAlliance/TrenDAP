@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-import * as d3 from 'd3';
+import { axisBottom, axisLeft, axisRight, brushX, format, line, scaleLinear, scaleUtc, select } from 'd3';
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../../../global';
 import styles from '../../../../../Styles/app.scss';
@@ -69,7 +69,7 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
 
 
         React.useEffect(() => {
-            return () => { d3.select(ref.current).selectAll('svg').remove(); }
+            return () => { select(ref.current).selectAll('svg').remove(); }
         }, []);
 
 
@@ -78,33 +78,52 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
         console.log(ex);
     }
 
-    function GetDataSeries(settings: Trend, series: TrenDAP.iTrendTemplateSeries) {
+    function GetDataSeries(series: TrenDAP.iTrendTemplateSeries): TrenDAP.iDataSetReturnType {
         const dataSource = record.Data.find(dd => dd.DataSource.ID === series?.DataSourceID ?? 0)
         const data = dataSource?.Data ?? [];
         let datum;
-        //if (dataSource?.DataSource.Type === 'OpenHistorian')
-        //    datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === (series as TrenDAP.iTrendTemplateSeriesOpenHistorian).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesOpenHistorian).Phase)?.Data ?? [];
-        //if (dataSource?.DataSource.Type === 'TrenDAPDB')
-        //    datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === (series as TrenDAP.iTrendTemplateSeriesXDA).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesXDA).Phase && dd.Characteristic === (series as TrenDAP.iTrendTemplateSeriesXDA).Characteristic)?.Data ?? [];
-        //else
-        //    datum = [];
 
         if (dataSource?.DataSource.Type === 'OpenHistorian') {
             let s = series as TrenDAP.iTrendTemplateSeriesOpenHistorian;
-            datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === s.Type && dd.Phase === s.Phase)?.Data ?? [];
+            datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === s.Type && dd.Phase === s.Phase);
         }
         else if (dataSource?.DataSource.Type === 'TrenDAPDB') {
             let s = series as TrenDAP.iTrendTemplateSeriesXDA;
-            datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === s.Type && dd.Phase === s.Phase && dd.Characteristic === s.Characteristic)?.Data ?? [];
+            datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === s.Type && dd.Phase === s.Phase && dd.Characteristic === s.Characteristic);
         }
         else if (dataSource?.DataSource.Type === 'Sapphire') {
             let s = series as TrenDAP.iTrendTemplateSeriesSapphire;
-            datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement)?.Data ?? [];
+            datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement);
         }
         else
-            datum = [] ;
+            datum = {Data: []};
 
-        return datum.map(d => [new Date(d.Timestamp).getTime(), d[series.Field]]);
+        return datum;
+    }
+
+    function GetDataSeriesForD3(series: TrenDAP.iTrendTemplateSeries) {
+        return (GetDataSeries(series)?.Data ?? []).map(d => [new Date(d.Timestamp).getTime(), d[series.Field]]);
+    }
+
+    function GetDataSeriesName(series: TrenDAP.iTrendTemplateSeries): string {
+        const dataSeries = GetDataSeries(series);
+        if (series == undefined) return '';
+        const dataSource = record.Data.find(dd => dd.DataSource.ID === series?.DataSourceID ?? 0)
+        
+        if (dataSource?.DataSource.Type === 'OpenHistorian') {
+            let d = dataSeries as TrenDAP.iOpenHistorianReturn;
+            return d?.PointTag ?? ''
+        }
+        else if (dataSource?.DataSource.Type === 'TrenDAPDB') {
+            let d = dataSeries as TrenDAP.iXDAReturnData;
+            return d?.Name ?? ''
+        }
+        else if (dataSource?.DataSource.Type === 'Sapphire') {
+            let d = dataSeries as TrenDAP.iSapphireReturnData;
+            return d?.Name ?? ''
+        }
+        else
+            return '';
     }
 
     function Initialize(settings: Trend) {
@@ -132,9 +151,9 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
 
         if (svgs.current.length !== svgCount) {
             svgs.current = [];
-            d3.select(ref.current).selectAll('svg').remove()
+            select(ref.current).selectAll('svg').remove()
             for (let i = 0; i < svgCount; i++) {
-                const svg = d3.select(ref.current).append('svg')
+                const svg = select(ref.current).append('svg')
                 svg.attr('width', settings.Width).attr('height', svgHeight)
 
                 svgs.current.push(svg);
@@ -166,26 +185,16 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
 
         AddXAxis(svg, x);
 
-        const y = GetYScale(settings, svgHeight, axis);
+        const y = GetYScale(settings, svgHeight, series.Axis);
         svg.selectAll('g.yaxis').remove();
         AddYAxisLeft(axis, svg, y);
 
-        //const dataSource = record.Data.find(dd => dd.DataSource.ID ===series?.DataSourceID ?? 0)
-        //const data = dataSource?.Data ?? [];
-        //let datum;
-        //if (dataSource?.DataSource.Type === 'OpenHistorian')
-        //    datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === (series as TrenDAP.iTrendTemplateSeriesOpenHistorian).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesOpenHistorian).Phase);
-        //if (dataSource?.DataSource.Type === 'TrenDAPDB')
-        //    datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === (series as TrenDAP.iTrendTemplateSeriesXDA).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesXDA).Phase && dd.Characteristic === (series as TrenDAP.iTrendTemplateSeriesXDA).Characteristic);
-        //else
-        //    datum = {Data: []};
-
-        let lineFunc = d3.line<TrenDAP.iXDATrendDataPoint>().x(dd => x(dd[0])).y(dd => y(dd[1]));
-        let data = GetDataSeries(settings, series);
+        let lineFunc = line<number[]>().x(dd => x(dd[0])).y(dd => y(dd[1]));
+        let data = GetDataSeriesForD3(series);
 
         svg.selectAll("g.line").remove();
         svg.selectAll('g.line')
-            .data([data] as TrenDAP.iXDATrendDataPoint[][])
+            .data([data])
             .enter()
             .append('g')
             .classed('line', true)
@@ -218,25 +227,17 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
         const series = (settings.JSON.Series as any[]).filter((s) => s.Axis === i).map((s: TrenDAP.iTrendTemplateSeries) => {
             const dataSource = record.Data.find(dd => dd.DataSource.ID === s?.DataSourceID ?? 0)
             const data = dataSource?.Data ?? [];
-            let datum;
-            if (dataSource?.DataSource.Type === 'OpenHistorian')
-                datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === (s as TrenDAP.iTrendTemplateSeriesOpenHistorian).Type && dd.Phase === (s as TrenDAP.iTrendTemplateSeriesOpenHistorian).Phase);
-            if (dataSource?.DataSource.Type === 'TrenDAPDB')
-                datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === (s as TrenDAP.iTrendTemplateSeriesXDA).Type && dd.Phase === (s as TrenDAP.iTrendTemplateSeriesXDA).Phase && dd.Characteristic === (s as TrenDAP.iTrendTemplateSeriesXDA).Characteristic);
-            else
-                datum = {Data: []};
-
-            datum = datum?.Data ?? [];
+            let datum = GetDataSeries(s);
 
             return {
                 ...s,
-                Data: datum.filter(ds => moment(ds.Timestamp).toDate().getTime() >= settings.JSON.Min && moment(ds.Timestamp).toDate().getTime() <= settings.JSON.Max && ds[s.Field] >= axis.Min && ds[s.Field] <= axis.Max).map(point => [point.Timestamp, point[s.Field]])
+                Data: (datum?.Data ?? []).filter(ds => moment(ds.Timestamp).toDate().getTime() >= settings.JSON.Min && moment(ds.Timestamp).toDate().getTime() <= settings.JSON.Max && ds[s.Field] >= axis.Min && ds[s.Field] <= axis.Max).map(point => [point.Timestamp, point[s.Field]])
             }
         });
 
         AddXAxis(svg, x);
 
-        const y = GetYScale(settings, svgHeight, axis);
+        const y = GetYScale(settings, svgHeight, i);
         svg.selectAll('g.yaxis').remove();
         AddYAxisLeft(axis, svg, y);
 
@@ -251,8 +252,8 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
             .attr("stroke-width", 1.5)
             .attr("stroke", (s) => s.Color)
             .attr("d", (s) => {
-                let lineFunc = d3.line<TrenDAP.iXDATrendDataPoint>().x(dd => x(dd[0])).y(dd => y(dd[1]));
-                let data = GetDataSeries(settings, s);
+                let lineFunc = line<number[]>().x(dd => x(dd[0])).y(dd => y(dd[1]));
+                let data = GetDataSeriesForD3(s);
                 return lineFunc(data);
 
             })
@@ -271,7 +272,7 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
 
     function InitializeNotSplit(settings: Trend, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, x: d3.ScaleTime<number, number>) {
         AddXAxis(svg, x);
-        const y = settings.JSON.YAxis.map(axis => GetYScale(settings, settings.Height, axis));
+        const y = settings.JSON.YAxis.map((axis,index) => GetYScale(settings, settings.Height, index));
         svg.selectAll('g.yaxis').remove();
         const yAxis = settings.JSON.YAxis.map((axis, index) => {
             let a;
@@ -305,8 +306,8 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
             .attr("stroke", (d: TrenDAP.iTrendSeries) => d.Color)
             .attr("d", (d: TrenDAP.iTrendSeries) => {
                 let yScale = y[d.Axis];
-                let lineFunc = d3.line<TrenDAP.iXDATrendDataPoint>().x(dd => x(dd[0])).y(dd => yScale(dd[1]));
-                let data = GetDataSeries(settings, d);
+                let lineFunc = line<number[]>().x(dd => x(dd[0])).y(dd => yScale(dd[1]));
+                let data = GetDataSeriesForD3(d);
                 return lineFunc(data);
             })
 
@@ -317,7 +318,7 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
 
     }
 
-    function AddLegend(svg, series: TrenDAP.iTrendTemplateSeries[]) {
+    function AddLegend(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, series: TrenDAP.iTrendTemplateSeries[]) {
         const svgHeight = parseInt(svg.attr('height'));
         const svgWidth = parseInt(svg.attr('width'));
 
@@ -329,7 +330,7 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
             .attr('transform', `translate(${svgWidth - 200},${margin.current.top})`);
 
         const legendRows = legend.selectAll('g.legendRow')
-            .data(d => d)
+            .data(d => d as TrenDAP.iTrendTemplateSeries[])
             .enter()
             .append('g')
             .attr('class', 'legendrow')
@@ -337,11 +338,14 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
 
         legendRows.append('rect').attr('height', 20).attr('width', 20).attr('fill', d => d.Color)
         legendRows.append('text').attr('x', 30).attr('y', 15)
-          .text(function(d){
-              if (d.Label.length > 15)
-                  return d.Label.slice(0, 15) + '...';
+            .text(function (s) {
+                const name = GetDataSeriesName(s);
+
+
+              if (name.length > 15)
+                  return name.slice(0, 15) + '...';
               else
-                  return d.Label;
+                  return name;
           });
         legendRows.append('title').text(d => d.Label)
     }
@@ -350,13 +354,9 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
         const svgHeight = parseInt(svg.attr('height'))
         
         const dataSource = record.Data.find(dd => dd.DataSource.ID === series?.DataSourceID ?? 0)
+        if (dataSource == undefined) return;
         const data = dataSource?.Data ?? [];
-        let datum;
-        if (dataSource.DataSource.Type === 'TrenDAPDB')
-            datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === (series as TrenDAP.iTrendTemplateSeriesXDA).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesXDA).Phase && dd.Characteristic === (series as TrenDAP.iTrendTemplateSeriesXDA).Characteristic);
-        else
-            return;
-
+        let datum = GetDataSeries(series);
         let d = (datum as TrenDAP.iXDAReturnData)?.Events ?? [];
 
         svg.selectAll('g.event-line').remove();
@@ -384,7 +384,7 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
         svg.selectAll('g.xaxis').remove();
         const xAxis = svg.append("g").classed('xaxis', true)
             .attr("transform", "translate(0," + (svgHeight - margin.current.bottom) + ")")
-            .call(d3.axisBottom(x))
+            .call(axisBottom(x))
 
         svg.append("g").classed('xaxis', true).append("text")
             .style("text-anchor", "middle")
@@ -399,7 +399,7 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
 
         const yAxis = svg.append("g").classed('yaxis', true)
             .attr("transform", "translate(" + (margin.current.left - index * 50) + ",0)")
-            .call(d3.axisLeft(y).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => d3.format("~s")(value)));
+            .call(axisLeft(y).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => format("~s")(value)));
 
         const text = svg.append("g")
             .classed('yaxis', true)
@@ -417,7 +417,7 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
 
         const yAxis = svg.append("g").classed('yaxis', true)
             .attr("transform", "translate(" + (svgWidth - margin.current.right + index * 50) + ",0)")
-            .call(d3.axisRight(y).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => d3.format("~s")(value)));
+            .call(axisRight(y).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => format("~s")(value)));
 
         const text = svg.append("g")
             .classed('yaxis', true)
@@ -427,23 +427,23 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
     }
 
     function GetXScale(settings: Trend) {
-        let d = settings.JSON.Series.map(s => GetDataSeries(settings, s))
+        let d = settings.JSON.Series.map(s => GetDataSeriesForD3(s))
         let dd = [].concat(...d)
         let ddx = dd.map(dp => new Date(dp.Timestamp).getTime());
         let xMax = Math.max(...dd.map(dp => dp[0]));
         let xMin = Math.min(...dd.map(dp => dp[0]));
-        return d3.scaleUtc()
+        return scaleUtc()
             .domain([xMin, xMax])     // can use this instead of 1000 to have the max of data: d3.max(data, function(d) { return +d.price })
             .range([margin.current.left, settings.Width - margin.current.right]);
     }
 
-    function GetYScale(settings: Trend,svgHeight: number, axis: TrenDAP.iYAxis) {
-        let d = settings.JSON.Series.map(s => GetDataSeries(settings, s))
+    function GetYScale(settings: Trend,svgHeight: number, axis: number) {
+        let d = settings.JSON.Series.filter(s => s.Axis === axis).map(s => GetDataSeriesForD3(s))
         let dd = [].concat(...d)
         let yMax = Math.max(...dd.map(dp => dp[1]));
         let yMin = Math.min(...dd.map(dp => dp[1]));
 
-        return d3.scaleLinear()
+        return scaleLinear()
             .range([svgHeight - margin.current.bottom, margin.current.top])
             .domain([yMin, yMax])
     }
@@ -519,16 +519,8 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
         record.JSON.Series.forEach((series, index) => {
             tooltip.append('rect').attr('x', 5).attr('y', `${index}em`).attr('height', '1em').attr('width', '1em').attr('fill', series.Color);
             const dataSource = record.Data.find(dd => dd.DataSource.ID === series?.DataSourceID ?? 0)
-            const data = dataSource?.Data ?? [];
-            let datum;
-            if (dataSource?.DataSource.Type === 'OpenHistorian')
-                datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === (series as TrenDAP.iTrendTemplateSeriesOpenHistorian).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesOpenHistorian).Phase);
-            if (dataSource?.DataSource.Type === 'TrenDAPDB')
-                datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === (series as TrenDAP.iTrendTemplateSeriesXDA).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesXDA).Phase && dd.Characteristic === (series as TrenDAP.iTrendTemplateSeriesXDA).Characteristic);
-            else
-                datum = { Data: [] };
-
-            datum = datum?.Data ?? [];
+            let ds = GetDataSeries(series);
+            let datum = ds?.Data ?? [];
 
             const floor = Math.floor(datum.length * evt.offsetX / props.Width * .95);
             const ceil = Math.ceil(datum.length * evt.offsetX / props.Width * 1.05);
@@ -540,7 +532,7 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
                 else return -1;
             })
 
-            const formated = d3.format('.2f')(dist[0].Value);
+            const formated = format('.2f')(dist[0].Value);
             text.append('tspan').text(series.Label + ' - ' + formated).attr('x', '1.5em').attr('y', `${index+1}em`);
             width = text.node().getBBox().width + 25 > width ? text.node().getBBox().width + 25  : width;
         });
@@ -560,7 +552,7 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
 
     function OnXZoom(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, scale: d3.ScaleTime<number, number>) {
         const start = evt.offsetX;
-        const brush = d3.brushX()
+        const brush = brushX()
             .extent([[margin.current.left, margin.current.top + 0.5], [props.Width - margin.current.right, parseInt(svg.attr('height')) - margin.current.bottom + 0.5]])
         const br = svg.append('g').call(brush)
         br.call(brush.move, [start, start + 1]);
@@ -704,16 +696,8 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
                                             {(record.JSON.Series).map((series, ind) => {
                                                 const dataSource = record.Data.find(dd => dd.DataSource.ID === series?.DataSourceID ?? 0)
                                                 const data = dataSource?.Data ?? [];
-                                                let datum;
-                                                if (dataSource.DataSource.Type === 'OpenHistorian')
-                                                    datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === (series as TrenDAP.iTrendTemplateSeriesOpenHistorian).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesOpenHistorian).Phase);
-                                                if (dataSource.DataSource.Type === 'TrenDAPDB')
-                                                    datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === (series as TrenDAP.iTrendTemplateSeriesXDA).Type && dd.Phase === (series as TrenDAP.iTrendTemplateSeriesXDA).Phase && dd.Characteristic === (series as TrenDAP.iTrendTemplateSeriesXDA).Characteristic);
-                                                else
-                                                    datum = { Data: [] };
+                                                let datum = GetDataSeries(series);
 
-
-                                                let d = datum?.Data ?? [];
                                                 if (datum === undefined) return null;
                                                 return (
                                                     <li key={ind} className="list-group-item">                                                            

@@ -94,7 +94,7 @@ export namespace TrenDAP{
     type ChartAction = 'Click' | 'Pan' | 'ZoomX' | 'ZoomY' | 'ZoomXY';
     type WorkSpaceType = 'Regular' | 'Templatable';
     type TemplateBy = 'Meter' | 'Asset' | 'Device';
-
+    type iTrendDataPoint = iXDATrendDataPoint | iOpenHistorianAggregationPoint | iSapphireTrendDataPoint;
     // TrenDAP 
     interface iDataSourceType { ID: number, Name: DataSourceType }
     interface iDataSource { ID: number, Name: string, DataSourceTypeID: number, URL: string, Credential: string, Password: string, Public: boolean, User: string, OIDC: boolean }    

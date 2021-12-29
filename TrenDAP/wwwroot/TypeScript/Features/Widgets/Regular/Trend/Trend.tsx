@@ -287,10 +287,10 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
         legendRows.append('rect').attr('height', 20).attr('width', 20).attr('fill', d => d.Color)
         legendRows.append('text').attr('x', 30).attr('y', 15)
           .text(function(d){
-              if (d.Label.length > 15)
+              if ((d?.Label ?? '').length > 15)
                   return d.Label.slice(0, 15) + '...';
               else
-                  return d.Label;
+                  return d?.Label ?? '';
           });
         legendRows.append('title').text(d => d.Label)
     }

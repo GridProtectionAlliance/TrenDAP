@@ -28,6 +28,7 @@ import { Stats } from './Implementations';
 import Widget, { SeriesSelect } from './Widget/Widget';
 import AdditionalInfoXDA from './Widget/XDA/AdditionalInfo';
 import AdditionalInfoOpenHistorian from './Widget/OpenHistorian/AdditionalInfo';
+import AdditionalInfoSapphire from './Widget/Sapphire/AdditionalInfo';
 import { Input } from '@gpa-gemstone/react-forms';
 
 export default function StatsJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemplatableStats>) {
@@ -131,6 +132,30 @@ export default function StatsJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
                                                         </div>
                                                     </li>
                                                 : null}
+                                            {d.DataSource.Type === 'Sapphire' && record.JSON.Series != undefined ?
+                                                <li key={i} className="list-group-item">
+                                                    <div className="row">
+                                                        <div className="col-3">
+                                                            <label>{(datum as TrenDAP.iSapphireReturnData)?.Name}</label>
+                                                            <AdditionalInfoXDA Index={i} Data={datum as TrenDAP.iSapphireReturnData} />
+                                                        </div>
+                                                        <div className="col">
+                                                            <label className="form-label">Field</label>
+                                                            <select className="form-control" value={record.JSON.Series.Field} onChange={(evt) => setRecord(record.SetSeriesField(evt.target.value as TrenDAP.iXDATrendDataPointField))}>
+                                                                <option value="Average">Avg</option>
+                                                                <option value="Minimum">Min</option>
+                                                                <option value="Maximum">Max</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="col">
+                                                            <label className="form-label">Precision</label>
+                                                            <input className="form-control" type="number" value={record.JSON.Precision} onChange={(evt) => setRecord(record.SetPrecsision(parseInt(evt.target.value)))} />
+                                                        </div>
+
+                                                    </div>
+                                                </li>
+                                                : null}
+
                                             {d.DataSource.Type === 'OpenHistorian' && record.JSON.Series != undefined ?
                                                 <li key={i} className="list-group-item">
                                                     <div className="row">

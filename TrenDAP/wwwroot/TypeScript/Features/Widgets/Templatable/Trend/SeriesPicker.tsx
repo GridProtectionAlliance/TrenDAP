@@ -27,11 +27,11 @@ import { CheckBox } from '@gpa-gemstone/react-forms';
 
 import AdditionalInfoXDA from '../Widget/XDA/AdditionalInfo';
 import AdditionalInfoOpenHistorian from '../Widget/OpenHistorian/AdditionalInfo';
+import AdditionalInfoSapphire from '../Widget/Sapphire/AdditionalInfo';
 
 import { CrossMark } from '@gpa-gemstone/gpa-symbols';
 import { Trend } from './../Implementations';
 import "react-datetime/css/react-datetime.css";
-import AdditionalInfo from '../Widget/OpenHistorian/AdditionalInfo';
 
 export default function SeriesPicker(props: { Index: number, Type: TrenDAP.DataSourceType, Series: TrenDAP.iTrendTemplateSeries, Data: TrenDAP.iDataSetReturnType, Widget: Trend, Callback: () => void }){
     const [axis, setAxis] = React.useState<number>(props.Series.Axis);
@@ -64,13 +64,38 @@ export default function SeriesPicker(props: { Index: number, Type: TrenDAP.DataS
             return <AdditionalInfoXDA Index={props.Index} Data={props.Data as TrenDAP.iXDAReturnData } />;
         else if (props.Type === 'OpenHistorian')
             return <AdditionalInfoOpenHistorian Data={props.Data as TrenDAP.iOpenHistorianReturn} />;
+        else if (props.Type === 'Sapphire')
+            return <AdditionalInfoSapphire Index={props.Index} Data={props.Data as TrenDAP.iSapphireReturnData} />;
         return null;
     }
+
+    function GetName() {
+        if (props.Series == undefined) return '';
+
+        let name;
+        if (props.Type === 'OpenHistorian') {
+            let d = props.Data as TrenDAP.iOpenHistorianReturn;
+            return d.PointTag
+        }
+        else if (props.Type === 'TrenDAPDB') {
+            let d = props.Data as TrenDAP.iXDAReturnData;
+            return d.Name
+        }
+        else if (props.Type === 'Sapphire') {
+            let d = props.Data as TrenDAP.iSapphireReturnData;
+            return d.Name
+        }
+        else
+            name = '';
+
+        return name;
+    }
+
     return (
         <>
             <div className='row'>
                 <div className="col-3">
-                    <label>{props.Series.Label}</label>
+                    <label>{GetName()}</label>
                     {ShowAdditionInfo()}
                 </div>
 

@@ -30,6 +30,7 @@ import { Input } from '@gpa-gemstone/react-forms';
 import Widget, { SeriesSelect } from './Widget/Widget';
 import AdditionalInfoXDA from './Widget/XDA/AdditionalInfo';
 import AdditionalInfoOpenHistorian from './Widget/OpenHistorian/AdditionalInfo';
+import AdditionalInfoSapphire from './Widget/Sapphire/AdditionalInfo';
 
 import { CrossMark } from '@gpa-gemstone/gpa-symbols';
 import { Histogram } from './Implementations';
@@ -295,6 +296,22 @@ export default function HistogramJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.i
                                                             <div className="col">
                                                                 <label>{datum?.Name}</label>
                                                                 <AdditionalInfoXDA Data={datum} Index={i} />
+                                                            </div>
+                                                            <SeriesPicker Index={ind} Series={series} Widget={record} Callback={(widget) => setRecord(widget)} />
+
+                                                        </div>
+                                                    </li>
+                                                )
+                                            }) : null)}
+                                            {(d.DataSource.Type === 'Sapphire' ? ((record.JSON?.Series ?? []) as TrenDAP.iTemplatableHistogramSeriesSapphire[]).map((series, ind) => {
+                                                let datum = (d.Data as TrenDAP.iSapphireReturnData[]).find(dd => dd[props.By] === props.Device && dd.Characteristic === series.Measurement && dd.Phase === series.Phase );
+                                                //if (datum === undefined) return null;
+                                                return (
+                                                    <li key={ind} className="list-group-item">
+                                                        <div className="row">
+                                                            <div className="col">
+                                                                <label>{datum?.Name}</label>
+                                                                <AdditionalInfoSapphire Data={datum} Index={i} />
                                                             </div>
                                                             <SeriesPicker Index={ind} Series={series} Widget={record} Callback={(widget) => setRecord(widget)} />
 
