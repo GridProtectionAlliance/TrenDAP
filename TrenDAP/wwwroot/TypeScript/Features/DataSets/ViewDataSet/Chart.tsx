@@ -64,7 +64,7 @@ export default function Chart(props: { Data: TrenDAP.iXDATrendDataPoint[], SetSe
 
         const y = d3.scaleLinear()
             .range([svgHeight - margin.bottom, margin.top])
-            .domain([d3.min(props.Data, d => d.Minimum), d3.max(props.Data, d => d.Maximum)]);
+            .domain([d3.min(props.Data, d => Math.min((isNaN(d.Minimum) ? Number.POSITIVE_INFINITY : d.Minimum), (isNaN(d.Average) ? Number.POSITIVE_INFINITY : d.Average), (isNaN(d.Maximum) ? Number.POSITIVE_INFINITY : d.Maximum))), d3.max(props.Data, d => Math.max((isNaN(d.Minimum) ? Number.NEGATIVE_INFINITY : d.Minimum), (isNaN(d.Average) ? Number.NEGATIVE_INFINITY : d.Average), (isNaN(d.Maximum) ? Number.NEGATIVE_INFINITY : d.Maximum)))]);
 
         svg.selectAll('g.yaxis').remove();
         const yAxis = svg.append("g").classed('yaxis', true)
@@ -77,17 +77,15 @@ export default function Chart(props: { Data: TrenDAP.iXDATrendDataPoint[], SetSe
             .text("Channel Output");
         text.attr("transform", "rotate(-90) translate(-" + svgHeight / 2 + "," + ((margin.left) / 3) + ")").style("text-anchor", "middle");
 
-        svg.selectAll('g.max').data([props.Data]).enter().append('g').attr('class', 'max').append('path').attr('stroke', 'red').attr('fill', 'none').attr('d', d3.line<TrenDAP.iXDATrendDataPoint>().x(d => x(moment.utc(d.Timestamp).toDate().getTime())).y(d => y(d.Maximum)))
-        svg.selectAll('g.min').data([props.Data]).enter().append('g').attr('class', 'min').append('path').attr('stroke', 'red').attr('fill', 'none').attr('d', d3.line<TrenDAP.iXDATrendDataPoint>().x(d => x(moment.utc(d.Timestamp).toDate().getTime())).y(d => y(d.Minimum)))
+        svg.selectAll('g.max').data([props.Data.filter(d=> !isNaN(d.Maximum))] ).enter().append('g').attr('class', 'max').append('path').attr('stroke', 'red').attr('fill', 'none').attr('d', d3.line<TrenDAP.iXDATrendDataPoint>().x(d => x(moment.utc(d.Timestamp).toDate().getTime())).y(d => y(d.Maximum)))
+        svg.selectAll('g.min').data([props.Data.filter(d => !isNaN(d.Minimum))] ).enter().append('g').attr('class', 'min').append('path').attr('stroke', 'red').attr('fill', 'none').attr('d', d3.line<TrenDAP.iXDATrendDataPoint>().x(d => x(moment.utc(d.Timestamp).toDate().getTime())).y(d => y(d.Minimum)))
 
         const points = svg.selectAll("g.points")
-            .data([props.Data])
+            .data([props.Data.filter(d => !isNaN(d.Average))])
             .enter().append('g').attr('class', 'points');
 
 
         const point = points.selectAll('point').data(d => d).enter().append('g').attr('class', 'point');
-        //point.append('path').attr('stroke', 'lightgray').attr('d', d => `M ${x(moment.utc(d.Timestamp).toDate().getTime())}, ${y(d.Average)} V ${y(d.Maximum)}Z`);
-        //point.append('path').attr('stroke', 'lightgray').attr('d', d => `M ${x(moment.utc(d.Timestamp).toDate().getTime())}, ${y(d.Average)} V ${y(d.Minimum)}Z`)
         point.append("circle")
             .attr("r", 3.5)
             .attr("cx", function (d) { return x(moment.utc(d.Timestamp).toDate().getTime()); })

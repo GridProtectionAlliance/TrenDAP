@@ -47,10 +47,10 @@ export default function Histogram(props: { Data: TrenDAP.iXDATrendDataPoint[] })
 
         let histogram = d3.histogram<number, number>()
             .value(function (d) { return d; })   // I need to give the vector of value
-            .domain(d3.extent(props.Data, d => d[type]) as [number, number])  // then the domain of the graphic
+            .domain(d3.extent(props.Data.filter(d => !isNaN(d[type])), d => d[type]) as [number, number])  // then the domain of the graphic
             .thresholds(40); // then the numbers of bins
 
-        const bins = histogram(props.Data.map(d => d[type]));
+        const bins = histogram(props.Data.map(d => d[type]).filter(d => !isNaN(d)));
 
         let yMax = Math.max(...bins.map(b => b.length));
 

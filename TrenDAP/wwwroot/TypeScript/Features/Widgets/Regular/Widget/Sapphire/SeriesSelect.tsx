@@ -47,7 +47,7 @@ export default function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass
 
             <select className="form-control" value={selected?.ID ?? '0'} onChange={(evt) => setSelected(dataSource.Data.find((datum) => datum.ID === parseInt(evt.target.value)))}>
                 <option value='-1'></option>
-                {(dataSource?.Data ?? []).filter(datum => datum.Meter.indexOf(delimeter) >= 0).map((datum, index) => <option key={index} value={datum.ID}>{datum.Name}</option>)}
+                {(dataSource?.Data ?? []).filter(datum => datum.Meter.indexOf(delimeter) >= 0).map((datum, index) => <option key={index} value={datum.ID}>{datum.Name + (datum.Characteristic.indexOf('HRMS') >= 0 ? ' HG: ' + datum.Harmonic : '')}</option>)}
             </select>
             <div className="input-group-append">
                 <button className="btn btn-outline-secondary dropdown-toggle" type="button" id={"dropdownMenuButton"} data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Info</button>
@@ -68,8 +68,10 @@ export default function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass
                         let label = '';
                         if (selected.Characteristic === 'Frequency')
                             label = 'Freq - ' + selected.Meter;
+                        else if (selected.Characteristic.indexOf('HRMS') >= 0)
+                            label = `${selected.Characteristic}-${selected.Phase} HG: ${selected.Harmonic} - ${selected.Meter}`;
                         else if (selected.Characteristic === 'RMS')
-                            label = `${selected.Phase} - ${selected.Meter}`;
+                            label = `${selected.Characteristic}-${selected.Phase} - ${selected.Meter}`;
                         else label = `${selected.Phase} ${selected.Characteristic} - ${selected.Meter}`;
                         (props.Widget as Trend).AddSeries(selected.ID, props.DataSourceID, label)
                     }

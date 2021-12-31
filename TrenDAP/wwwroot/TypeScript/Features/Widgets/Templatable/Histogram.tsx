@@ -83,7 +83,7 @@ export default function HistogramJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.i
             }
             else if (dataSource?.DataSource.Type === 'Sapphire') {
                 let s = series as TrenDAP.iTemplatableHistogramSeriesSapphire;
-                datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement)?.Data ?? [];
+                datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement && dd.Harmonic === s.Harmonic)?.Data ?? [];
             }
             else
                 datum = [];
@@ -106,7 +106,7 @@ export default function HistogramJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.i
             }
             else if (dataSource?.DataSource.Type === 'Sapphire') {
                 let s = series as TrenDAP.iTemplatableHistogramSeriesSapphire;
-                datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement);
+                datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement && dd.Harmonic === s.Harmonic);
             }
             else
                 datum = {Data: []};
@@ -183,8 +183,10 @@ export default function HistogramJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.i
                 let datum;
                 if (dataSource?.DataSource.Type === 'OpenHistorian')
                     datum = data.find((dd: TrenDAP.iOpenHistorianReturn) => dd[props.By] === props.Device && dd.SignalType === (series as TrenDAP.iTemplatableHistogramSeriesOpenHistorian).Type && dd.Phase === (series as TrenDAP.iTemplatableHistogramSeriesOpenHistorian).Phase);
-                if (dataSource?.DataSource.Type === 'TrenDAPDB')
+                else if (dataSource?.DataSource.Type === 'TrenDAPDB')
                     datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === (series as TrenDAP.iTemplatableHistogramSeriesXDA).Type && dd.Phase === (series as TrenDAP.iTemplatableHistogramSeriesXDA).Phase && dd.Characteristic === (series as TrenDAP.iTemplatableHistogramSeriesXDA).Characteristic);
+                else if (dataSource?.DataSource.Type === 'Sapphire')
+                    datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Harmonic === (series as TrenDAP.iTemplatableHistogramSeriesSapphire).Harmonic && dd.Phase === (series as TrenDAP.iTemplatableHistogramSeriesSapphire).Phase && dd.Characteristic === (series as TrenDAP.iTemplatableHistogramSeriesSapphire).Measurement);
                 else
                     datum = {Data: []};
 
@@ -304,7 +306,7 @@ export default function HistogramJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.i
                                                 )
                                             }) : null)}
                                             {(d.DataSource.Type === 'Sapphire' ? ((record.JSON?.Series ?? []) as TrenDAP.iTemplatableHistogramSeriesSapphire[]).map((series, ind) => {
-                                                let datum = (d.Data as TrenDAP.iSapphireReturnData[]).find(dd => dd[props.By] === props.Device && dd.Characteristic === series.Measurement && dd.Phase === series.Phase );
+                                                let datum = (d.Data as TrenDAP.iSapphireReturnData[]).find(dd => dd[props.By] === props.Device && dd.Characteristic === series.Measurement && dd.Phase === series.Phase  && dd.Harmonic === series.Harmonic);
                                                 //if (datum === undefined) return null;
                                                 return (
                                                     <li key={ind} className="list-group-item">

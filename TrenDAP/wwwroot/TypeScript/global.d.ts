@@ -117,10 +117,10 @@ export namespace TrenDAP{
     interface iOpenHistorianAggregationPoint extends iXDATrendDataPoint { }
 
     // Sapphire
-    interface iSapphireDataSet { IDs: number[], Phases: number[], Types: number[], Aggregate: '' | '1h' | '1d' | '1w'}
-    interface iSapphireReturn extends iXDAReturn { }
-    interface iSapphireReturnWithDataSource extends iXDAReturnWithDataSource {  }
-    interface iSapphireReturnData extends iXDAReturnData { }
+    interface iSapphireDataSet { IDs: number[], Phases: number[], Types: number[], Aggregate: string, Harmonics: string}
+    interface iSapphireReturn { ID: number, Meter: string, Name: string, Station: string, Phase: string, Type: string, Harmonic: number, Latitude: number, Longitude: number, Asset: string, Characteristic: string, Unit: string }
+    interface iSapphireReturnWithDataSource extends iSapphireReturnData { DataSourceID: number, DataSource: string }
+    interface iSapphireReturnData extends iSapphireReturn { Data: iSapphireTrendDataPoint[], Events: { ID: number, ChannelID: number, StartTime: string }[] }
     interface iSapphireTrendDataPoint extends iXDATrendDataPoint { }
     type iSapphireTrendDataPointField = iXDATrendDataPointField ;
 
@@ -140,7 +140,7 @@ export namespace TrenDAP{
     interface iSeries { DataSourceID: number, ID: string, Field: iXDATrendDataPointField }
     interface iTemplateSeries { DataSourceID: number, Field: iXDATrendDataPointField }
     interface iTemplateSeriesXDA extends iTemplateSeries { Phase: OpenXDA.Types.PhaseName, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Type: OpenXDA.Types.MeasurementTypeName }
-    interface iTemplateSeriesSapphire extends iTemplateSeries { Phase: string, Measurement: string}
+    interface iTemplateSeriesSapphire extends iTemplateSeries { Phase: string, Measurement: string, Harmonic: number}
 
     interface iTemplateSeriesOpenHistorian extends iTemplateSeries { Phase: OpenHistorian.Types.Phase, Type: OpenHistorian.Types.SignalType }
     interface iAxis { Min: number, Max: number, Units: string }
@@ -151,7 +151,7 @@ export namespace TrenDAP{
     interface iHistogramSeries extends iSeries { Color: string, Profile: boolean, ProfileColor: string }
     interface iTemplatableHistogram { Min: number, Max: number, Units: string, BinCount: number, Series: iTemplatableHistogramSeriesXDA[] | iTemplatableHistogramSeriesOpenHistorian[] | iTemplatableHistogramSeriesSapphire[]}
     interface iTemplatableHistogramSeries extends iTemplateSeries { Color: string, Profile: boolean, ProfileColor: string }
-    interface iTemplatableHistogramSeriesSapphire extends iTemplatableHistogramSeries { Phase: string, Measurement: string }
+    interface iTemplatableHistogramSeriesSapphire extends iTemplatableHistogramSeries { Phase: string, Measurement: string, Harmonic: number }
     interface iTemplatableHistogramSeriesXDA extends iTemplatableHistogramSeries { Phase: OpenXDA.Types.PhaseName, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Type: OpenXDA.Types.MeasurementTypeName }
     interface iTemplatableHistogramSeriesOpenHistorian extends iTemplatableHistogramSeries { Phase: OpenHistorian.Types.Phase, Type: OpenHistorian.Types.SignalType }
 
@@ -183,7 +183,7 @@ export namespace TrenDAP{
     interface iTrendSeries extends iSeries { Color: string, Axis: number, Label: string, ShowEvents: boolean }
     interface iTrendTemplateSeries extends iTemplateSeries { Color: string, Axis: number, Label: string }
     interface iTrendTemplateSeriesXDA extends iTrendTemplateSeries { Phase: OpenXDA.Types.PhaseName, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Type: OpenXDA.Types.MeasurementTypeName, ShowEvents: boolean }
-    interface iTrendTemplateSeriesSapphire extends iTrendTemplateSeries { Phase: string, Measurement: string, ShowEvents: boolean }
+    interface iTrendTemplateSeriesSapphire extends iTrendTemplateSeries { Phase: string, Measurement: string, ShowEvents: boolean, Harmonic: number }
 
     interface iTrendTemplateSeriesOpenHistorian extends iTrendTemplateSeries { Phase: OpenHistorian.Types.Phase, Type: OpenHistorian.Types.SignalType }
 

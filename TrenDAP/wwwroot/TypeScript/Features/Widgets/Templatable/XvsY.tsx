@@ -98,8 +98,8 @@ export default function XvsYJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTempl
             let x = { ...settings.JSON.X.Series } as TrenDAP.iTemplateSeriesSapphire;
             let y = { ...settings.JSON.Y.Series } as TrenDAP.iTemplateSeriesSapphire;
 
-            xSeries = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter == props.Device && dd.Phase === x.Phase && dd.Characteristic === x.Measurement);
-            ySeries = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === y.Phase && dd.Characteristic === y.Measurement);
+            xSeries = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter == props.Device && dd.Phase === x.Phase && dd.Characteristic === x.Measurement && dd.Harmonic === x.Harmonic);
+            ySeries = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === y.Phase && dd.Characteristic === y.Measurement && dd.Harmonic === y.Harmonic);
         }
         else {
             xSeries = { Data: [] };
@@ -114,7 +114,7 @@ export default function XvsYJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTempl
             xMin = Math.min(...xSeries.Data.map(d => d[settings.JSON.X.Series.Field]));
         }
 
-        if (xSeries?.Data.length > 0) {
+        if (ySeries?.Data.length > 0) {
             yMax = Math.max(...ySeries.Data.map(d => d[settings.JSON.Y.Series.Field]));
             yMin = Math.min(...ySeries.Data.map(d => d[settings.JSON.Y.Series.Field]));
         }
@@ -205,7 +205,7 @@ export default function XvsYJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTempl
         }
         else if (ds?.DataSource.Type === 'Sapphire') {
             let s = record.JSON[axis].Series as TrenDAP.iTemplateSeriesSapphire;
-            datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd[props.By] === props.Device  && dd.Phase === s.Phase && dd.Characteristic === s.Measurement);
+            datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd[props.By] === props.Device  && dd.Phase === s.Phase && dd.Characteristic === s.Measurement && dd.Harmonic === s.Harmonic);
         }
         else
             datum = { Name: '' };

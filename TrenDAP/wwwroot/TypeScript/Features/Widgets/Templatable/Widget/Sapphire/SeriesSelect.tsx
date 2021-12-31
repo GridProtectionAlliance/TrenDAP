@@ -41,6 +41,8 @@ export default function TemplateSelect(props: { Widget: Widget<TrenDAP.WidgetCla
     const phases: any[] = useSelector((state) => SelectSapphire(state, props.DataSourceID, 'Phase'));
     const phStatus = useSelector((state) => SelectSapphireStatus(state, props.DataSourceID, 'Phase'));
 
+    const [harmonic, setHarmonic] = React.useState<number>(0);
+
     React.useEffect(() => {
         if (mtStatus != 'unitiated' && mtStatus != 'changed') return;
         dispatch(FetchSapphire({ dataSourceID: props.DataSourceID, table: 'ChannelGroupType'}));
@@ -67,18 +69,19 @@ export default function TemplateSelect(props: { Widget: Widget<TrenDAP.WidgetCla
                 <option value=''></option>
                 {phases.map(mts => <option key={mts.ID} value={mts.Name}>{mts.Name}</option>)}
             </select>
+            <input className='form-control' value={harmonic} type='number' onChange={(evt) => setHarmonic(parseInt(evt.target.value)) } placeholder='harmonic'/>
             <div className="input-group-append">
                 <button className="btn btn-outline-secondary" type="button" onClick={() => {
                     if (props.Widget.Type === 'Histogram')
-                        (props.Widget as Histogram).AddSeriesSapphire(props.DataSourceID, phase, measurement)
+                        (props.Widget as Histogram).AddSeriesSapphire(props.DataSourceID, phase, measurement, harmonic)
                     else if (props.Widget.Type === 'Trend') 
-                        (props.Widget as Trend).AddSeriesSapphire(props.DataSourceID, phase, measurement)
+                        (props.Widget as Trend).AddSeriesSapphire(props.DataSourceID, phase, measurement, harmonic)
                     else if (props.Widget.Type === 'Stats')
-                        (props.Widget as Stats).SetSeriesSapphire(props.DataSourceID, phase, measurement);
+                        (props.Widget as Stats).SetSeriesSapphire(props.DataSourceID, phase, measurement, harmonic);
                     else if (props.Widget.Type === 'Table')
-                        (props.Widget as Table).SetSeriesSapphire(props.DataSourceID, phase, measurement);
+                        (props.Widget as Table).SetSeriesSapphire(props.DataSourceID, phase, measurement, harmonic);
                     else if (props.Widget.Type === 'XvsY')
-                        (props.Widget as XvsY).SetSeriesSapphire(props.Axis, props.DataSourceID, phase, measurement)
+                        (props.Widget as XvsY).SetSeriesSapphire(props.Axis, props.DataSourceID, phase, measurement, harmonic)
 
                     props.Callback();
                 }}>Select</button >

@@ -27,6 +27,7 @@ import { CheckBox } from '@gpa-gemstone/react-forms';
 
 import AdditionalInfoXDA from '../Widget/XDA/AdditionalInfo';
 import AdditionalInfoOpenHistorian from '../Widget/OpenHistorian/AdditionalInfo';
+import AdditionalInfoSapphire from '../Widget/Sapphire/AdditionalInfo';
 
 import { CrossMark } from '@gpa-gemstone/gpa-symbols';
 import { Trend } from '../Implementations';
@@ -61,7 +62,9 @@ export default function SeriesPicker(props: { Index: number, Type: TrenDAP.DataS
 
     function ShowAdditionInfo() {
         if (props.Type === 'TrenDAPDB')
-            return <AdditionalInfoXDA Index={props.Index} Data={props.Data as TrenDAP.iXDAReturnData } />;
+            return <AdditionalInfoXDA Index={props.Index} Data={props.Data as TrenDAP.iXDAReturnData} />;
+        else if (props.Type === 'Sapphire')
+            return <AdditionalInfoSapphire Index={props.Index} Data={props.Data as TrenDAP.iXDAReturnData} />;
         else if (props.Type === 'OpenHistorian')
             return <AdditionalInfoOpenHistorian Data={props.Data as TrenDAP.iOpenHistorianReturn} />;
         return null;

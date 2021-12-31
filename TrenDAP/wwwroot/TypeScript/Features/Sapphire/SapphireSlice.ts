@@ -98,9 +98,9 @@ export const SapphireSlice = createSlice({
 
 export const { } = SapphireSlice.actions;
 export default SapphireSlice.reducer;
-export const SelectSapphire = (state: Redux.StoreState, dsid: number, table: string) => (state.Sapphire[dsid] ? state.Sapphire[dsid][table].Data : [] );
+export const SelectSapphire = (state: Redux.StoreState, dsid: number, table: string) => (state.Sapphire[dsid] ? state.Sapphire[dsid][table]?.Data ?? [] : [] );
 export const SelectSapphireStatus = (state: Redux.StoreState, dsid: number, table: string) => (state.Sapphire[dsid] ? state.Sapphire[dsid][table]?.Status ?? 'unitiated' : 'unitiated') as TrenDAP.Status
-export const NewSapphireDataSet = () => ({ IDs: [], Phases: [], Types: [], Aggregate: '' }) as TrenDAP.iSapphireDataSet;
+export const NewSapphireDataSet = () => ({ IDs: [], Phases: [], Types: [], Aggregate: 'IS10MIN', Harmonics: '0-100' }) as TrenDAP.iSapphireDataSet;
 
 function GetSapphire(dataSourceID: number, table: string): JQuery.jqXHR<string> {
     return ajax({

@@ -101,6 +101,7 @@ namespace TrenDAP.Controllers.Sapphire
         public List<int> Phases { get; set; }
         public List<int> Types { get; set; }
         public string Aggregate { get; set; }
+        public string Harmonics { get; set; }
     }
 
     public class Search
@@ -127,11 +128,12 @@ namespace TrenDAP.Controllers.Sapphire
         public List<int> IDs { get; set; }
         public List<int> Phases { get; set; }
         public List<int> Types { get; set; }
+        public string Harmonics { get; set; }
         public ulong Hours { get; set; }
         public ulong Days { get; set; }
         public ulong Weeks { get; set; }
         public ulong Months { get; set; }
-
+        
     }
 
 
@@ -271,6 +273,19 @@ namespace TrenDAP.Controllers.Sapphire
             else return "Unknown";
         }
 
+        private List<Tuple<string, string>> Resolution = new List<Tuple<string, string>>()
+        {
+            new Tuple<string, string>("IS10MIN", "Point each 10 minutes"),
+            new Tuple<string, string>("IS15MIN", "Point each 15 minutes"),
+            new Tuple<string, string>("IS30MIN", "Point each half hour"),
+            new Tuple<string, string>("IS1HOUR", "Point every round hour"),
+            new Tuple<string, string>("IS2HOUR", "Point every 2 hours"),
+            new Tuple<string, string>("IS1DAY", "Point every one day"),
+            new Tuple<string, string>("IS1WEEK", "Point every one week "),
+            new Tuple<string, string>("IS1MONTH", "Point each month"),
+            new Tuple<string, string>("IS1YEAR", "Point every one year"),
+        };
+
         const string DateTimeFormat = "yyyy-M-dTH:m:s.fffffff00Z";
 
 
@@ -308,6 +323,7 @@ namespace TrenDAP.Controllers.Sapphire
             try
             {
                 if (table == "Phase") return Ok(Phases.Select((x,i) => new { ID = i, Name = x.Item2, Description = x.Item1}).ToList());
+                else if (table == "Resolution") return Ok(Resolution.Select((x, i) => new { ID = i, DisplayName = x.Item2, Description = x.Item1 }).ToList());
                 else if (table == "ChannelGroupType") return Ok(ChannelGroupTypes.Select((x, i) => new { ID = i, DisplayName = x.Item1 + " - " + x.Item2, Description = x.Item1 }).ToList());
                 else if (table == "Meter") return GetMeters(dataSourceID);
                 return GetOpenXDA(dataSourceID, table);
@@ -605,25 +621,43 @@ namespace TrenDAP.Controllers.Sapphire
         }
 
         private IEnumerable<string> CreateChannels(SapphirePost post) {
-            //return post.Types.SelectMany(type => {
-            //    return post.Phases.SelectMany(phase =>
-            //    {
-            //        return new List<string>() {
-            //            $"STD_{ChannelGroupTypes[type].Item1}_IS10MIN_B10MIN_QMIN_{Phases[phase].Item2}_FEEDER_1",
-            //            $"STD_{ChannelGroupTypes[type].Item1}_IS10MIN_B10MIN_QMAX_{Phases[phase].Item2}_FEEDER_1",
-            //            $"STD_{ChannelGroupTypes[type].Item1}_IS10MIN_B10MIN_QAVG_{Phases[phase].Item2}_FEEDER_1",
-            //        };
-            //    });
-            //});
             List<string> channels = new List<string>();
-            foreach(int type in post.Types)
+            foreach(int type in post.Types.Where(t => !ChannelGroupTypes[t].Item1.Contains("HRMS")))
             {
                 foreach (int phase in post.Phases) {
-                    channels.Add($"STD_{ChannelGroupTypes[type].Item1}_IS10MIN_BAUTO_QMIN_{Phases[phase].Item1}_FEEDER_1");
-                    channels.Add($"STD_{ChannelGroupTypes[type].Item1}_IS10MIN_BAUTO_QMAX_{Phases[phase].Item1}_FEEDER_1");
-                    channels.Add($"STD_{ChannelGroupTypes[type].Item1}_IS10MIN_BAUTO_QAVG_{Phases[phase].Item1}_FEEDER_1");
+                    channels.Add($"STD_{ChannelGroupTypes[type].Item1}_{post.Aggregate}_BAUTO_QMIN_{Phases[phase].Item1}_FEEDER_1");
+                    channels.Add($"STD_{ChannelGroupTypes[type].Item1}_{post.Aggregate}_BAUTO_QMAX_{Phases[phase].Item1}_FEEDER_1");
+                    channels.Add($"STD_{ChannelGroupTypes[type].Item1}_{post.Aggregate}_BAUTO_QAVG_{Phases[phase].Item1}_FEEDER_1");
                 }
             }
+            foreach (int type in post.Types.Where(t => ChannelGroupTypes[t].Item1.Contains("HRMS")))
+            {
+                foreach (int phase in post.Phases)
+                {
+                    foreach(string hg in post.Harmonics.Split(","))
+                    {
+                        if (hg.Contains("-"))
+                        {
+                            int group1 = int.Parse(hg.Split("-")[0]);
+                            int group2 = int.Parse(hg.Split("-")[1]);
+                            channels.Add($"MULTI_STD_{ChannelGroupTypes[type].Item1}_{group1}:{group2}_{post.Aggregate}_BAUTO_QMIN_{Phases[phase].Item1}_FEEDER_1");
+                            channels.Add($"MULTI_STD_{ChannelGroupTypes[type].Item1}_{group1}:{group2}_{post.Aggregate}_BAUTO_QMAX_{Phases[phase].Item1}_FEEDER_1");
+                            channels.Add($"MULTI_STD_{ChannelGroupTypes[type].Item1}_{group1}:{group2}_{post.Aggregate}_BAUTO_QAVG_{Phases[phase].Item1}_FEEDER_1");
+
+                        }
+                        else {
+                            int group = int.Parse(hg);
+
+                            channels.Add($"STD_{ChannelGroupTypes[type].Item1}_{group}_{post.Aggregate}_BAUTO_QMIN_{Phases[phase].Item1}_FEEDER_1");
+                            channels.Add($"STD_{ChannelGroupTypes[type].Item1}_{group}_{post.Aggregate}_BAUTO_QMAX_{Phases[phase].Item1}_FEEDER_1");
+                            channels.Add($"STD_{ChannelGroupTypes[type].Item1}_{group}_{post.Aggregate}_BAUTO_QAVG_{Phases[phase].Item1}_FEEDER_1");
+
+                        }
+
+                    }
+                }
+            }
+
             return channels;
         }
 
@@ -702,19 +736,19 @@ namespace TrenDAP.Controllers.Sapphire
                             if (itemStatus != "OK") continue;
 
                             // pull out channel info from tag and use it to build channel record 
-                            Regex regex = new Regex("^[a-zA-Z0-9]+_(?<Characteristic>[a-zA-Z0-9]+)_IS10MIN_BAUTO_Q(?<Series>[A-Z]+)_(?<Phase>[a-zA-Z0-9]+)\\w*$");
+                            Regex regex = new Regex("^[a-zA-Z0-9]+_(?<Characteristic>[a-zA-Z0-9]+)_?(?<Harmonic>[0-9]+)?_(?<Aggregation>[a-zA-Z0-9]+)_BAUTO_Q(?<Series>[A-Z]+)_(?<Phase>[a-zA-Z0-9]+)\\w*$");
                             var match = regex.Match(channelTag);
                             string characteristic = match.Groups["Characteristic"].Value;
                             string phase = match.Groups["Phase"].Value;
                             string type = GetType(phase);
                             string channel = $"{characteristic}-{GetPhase(phase)}";
-
+                            int harmonic = int.Parse(match.Groups["Harmonic"]?.Value ?? "0");
                             // get the series node and parse out the itemvalues/values
                             string series = match.Groups["Series"].Value;
                             List<string> datapoints = item?.SelectSingleNode("ItemValues")?.SelectSingleNode("Values")?.InnerText?.Split(',')?.ToList();
 
                             // if the channel has already been seen, 
-                            if (values.ContainsKey(channel))
+                            if (values.ContainsKey(channel + harmonic))
                             {
                                 // check if each timestamp has been excluded then add if approiate
                                 for (int j = 0; j < timestamps.Count(); j++)
@@ -729,11 +763,11 @@ namespace TrenDAP.Controllers.Sapphire
                                     else if (months.Any(x => x == timestamp.Month)) continue;
 
                                     if (series == "AVG")
-                                        values[channel].Data[j].Average = double.Parse(datapoints[j]);
+                                        values[channel + harmonic].Data[j].Average = double.Parse(datapoints[j]);
                                     else if (series == "MIN")
-                                        values[channel].Data[j].Minimum = double.Parse(datapoints[j]);
+                                        values[channel + harmonic].Data[j].Minimum = double.Parse(datapoints[j]);
                                     else if (series == "MAX")
-                                        values[channel].Data[j].Maximum = double.Parse(datapoints[j]);
+                                        values[channel + harmonic].Data[j].Maximum = double.Parse(datapoints[j]);
                                 }
                             }
                             // if the channel has not been seen
@@ -747,7 +781,7 @@ namespace TrenDAP.Controllers.Sapphire
                                     Station = station["Name"].ToString(),
                                     Latitude = double.Parse(station["Latitude"].ToString()),
                                     Longitude = double.Parse(station["Longitude"].ToString()),
-                                    Harmonic = 0,
+                                    Harmonic = harmonic,
                                     Name = channel,
                                     Phase = GetPhase(phase),
                                     Type = type,
@@ -755,7 +789,7 @@ namespace TrenDAP.Controllers.Sapphire
                                     Events = events
 
                                 };
-                                values.Add(channel, row);
+                                values.Add(channel+harmonic, row);
                                 // check if each timestamp has been excluded then add if approiate
                                 for (int j = 0; j < timestamps.Count(); j++)
                                 {
@@ -769,11 +803,11 @@ namespace TrenDAP.Controllers.Sapphire
                                     else if (months.Any(x => x == timestamp.Month)) continue;
 
                                     if (series == "AVG")
-                                        values[channel].Data.Add(new Point() { Tag = channel, Timestamp = timestamp, Average = double.Parse(datapoints[j]) });
+                                        values[channel + harmonic].Data.Add(new Point() { Tag = channel, Timestamp = timestamp, Average = double.Parse(datapoints[j]) });
                                     else if (series == "MIN")
-                                        values[channel].Data.Add(new Point() { Tag = channel, Timestamp = timestamp, Minimum = double.Parse(datapoints[j]) });
+                                        values[channel + harmonic].Data.Add(new Point() { Tag = channel, Timestamp = timestamp, Minimum = double.Parse(datapoints[j]) });
                                     else if (series == "MAX")
-                                        values[channel].Data.Add(new Point() { Tag = channel, Timestamp = timestamp, Maximum = double.Parse(datapoints[j]) });
+                                        values[channel + harmonic].Data.Add(new Point() { Tag = channel, Timestamp = timestamp, Maximum = double.Parse(datapoints[j]) });
                                 }
                             }
                         }
@@ -871,7 +905,8 @@ namespace TrenDAP.Controllers.Sapphire
                 Days = (ulong)dataSet.Days,
                 Weeks = (ulong)dataSet.Weeks,
                 Months = (ulong)dataSet.Months,
-                Aggregate = data.Aggregate
+                Aggregate = data.Aggregate,
+                Harmonics = data.Harmonics
             };
 
 

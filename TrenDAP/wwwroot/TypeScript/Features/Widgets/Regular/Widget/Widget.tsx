@@ -85,7 +85,6 @@ export function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass>, DataS
 
     if (dataSource?.DataSource.Type === 'TrenDAPDB')
         return <SeriesSelectXDA {...props} />;
-
     else if (dataSource?.DataSource.Type === 'OpenHistorian')
         return <SeriesSelectOpenHistorian {...props} />;
     else if (dataSource?.DataSource.Type === 'Sapphire')

@@ -54,7 +54,7 @@ export default function StatsJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
     }
     else if (dataSource?.DataSource.Type === 'Sapphire') {
         let s = record.JSON.Series as TrenDAP.iTemplateSeriesSapphire;
-        datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement);
+        datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement && dd.Harmonic === s.Harmonic);
     }
     else
         datum = { Data: [] };
@@ -137,7 +137,7 @@ export default function StatsJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
                                                     <div className="row">
                                                         <div className="col-3">
                                                             <label>{(datum as TrenDAP.iSapphireReturnData)?.Name}</label>
-                                                            <AdditionalInfoXDA Index={i} Data={datum as TrenDAP.iSapphireReturnData} />
+                                                            <AdditionalInfoSapphire Index={i} Data={datum as TrenDAP.iSapphireReturnData} />
                                                         </div>
                                                         <div className="col">
                                                             <label className="form-label">Field</label>

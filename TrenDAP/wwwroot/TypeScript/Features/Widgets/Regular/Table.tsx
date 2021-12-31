@@ -29,6 +29,8 @@ import { Table } from './Implementations';
 import Widget, { SeriesSelect } from './Widget/Widget';
 import AdditionalInfoXDA from './Widget/XDA/AdditionalInfo';
 import AdditionalInfoOpenHistorian from './Widget/OpenHistorian/AdditionalInfo';
+import AdditionalInfoSapphire from './Widget/Sapphire/AdditionalInfo';
+
 import { Input } from '@gpa-gemstone/react-forms';
 import _ from 'lodash';
 import { Sort } from '../../WorkSpaces/WorkSpacesSlice';
@@ -69,9 +71,9 @@ export default function TableJSX(props: TrenDAP.iWidget<TrenDAP.iTable>) {
                 </div>
                 <TableForm<TrenDAP.iXDATrendDataPoint> tableClass='table' cols={[
                     { key: 'Timestamp', field: 'Timestamp',label: 'Timestamp' },
-                    { key: 'Minimum', field: 'Minimum', label: 'Min', content: (item,key, style) => item.Minimum.toFixed(record.JSON.Precision)},
-                    { key: 'Average', field: 'Average', label: 'Avg', content: (item, key, style) => item.Average.toFixed(record.JSON.Precision)},
-                    { key: 'Maximum', field: 'Maximum', label: 'Max', content: (item, key, style) => item.Maximum.toFixed(record.JSON.Precision)},
+                    { key: 'Minimum', field: 'Minimum', label: 'Min', content: (item,key, style) => item?.Minimum.toFixed(record.JSON.Precision) ?? ''},
+                    { key: 'Average', field: 'Average', label: 'Avg', content: (item, key, style) => item?.Average.toFixed(record.JSON.Precision) ?? ''},
+                    { key: 'Maximum', field: 'Maximum', label: 'Max', content: (item, key, style) => item?.Maximum.toFixed(record.JSON.Precision) ?? ''},
                 ]} data={data} sortKey={sortField} onClick={(data) => { }} ascending={ascending} onSort={(data) => {
                     if (data.colField === sortField)
                         setAscending(!ascending)
@@ -113,6 +115,21 @@ export default function TableJSX(props: TrenDAP.iWidget<TrenDAP.iTable>) {
                                                         <div className="col-3">
                                                             <label>{(info as TrenDAP.iXDAReturnData)?.Name ?? ''}</label>
                                                             <AdditionalInfoXDA Index={i} Data={(info as TrenDAP.iXDAReturnData)} />
+                                                        </div>
+                                                        <div className="col">
+                                                            <label className="form-label">Precision</label>
+                                                            <input className="form-control" type="number" value={record.JSON.Precision} onChange={(evt) => setRecord(record.SetPrecsision(parseInt(evt.target.value)))} />
+                                                        </div>
+
+                                                    </div>
+                                                </li>
+                                                : null}
+                                            {d.DataSource.Type === 'Sapphire' && record.JSON.Series != undefined ?
+                                                <li key={record.JSON.Series.ID} className="list-group-item">
+                                                    <div className="row">
+                                                        <div className="col-3">
+                                                            <label>{(info as TrenDAP.iSapphireReturnData)?.Name ?? ''}</label>
+                                                            <AdditionalInfoSapphire Index={i} Data={(info as TrenDAP.iSapphireReturnData)} />
                                                         </div>
                                                         <div className="col">
                                                             <label className="form-label">Precision</label>

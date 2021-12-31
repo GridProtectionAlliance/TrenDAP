@@ -271,7 +271,10 @@ const TrenDAPDBChannel = (props: { channel: TrenDAP.iXDAReturnData }) => {
 }
 
 const SapphireChannel = (props: { channel: TrenDAP.iSapphireReturnData }) => {
-    return <option value={props.channel.ID}>{props.channel.Meter + ' - ' + props.channel.Name}</option>
+    if (props.channel.Characteristic.indexOf('HRMS') >= 0)
+        return <option value={props.channel.ID}>{`${props.channel.Meter} - ${props.channel.Name} Harmonic: ${props.channel.Harmonic}`}</option>
+    else
+        return <option value={props.channel.ID}>{props.channel.Meter + ' - ' + props.channel.Name}</option>
 }
 
 const OpenHistorianChannel = (props: { channel: TrenDAP.iOpenHistorianReturn }) => {

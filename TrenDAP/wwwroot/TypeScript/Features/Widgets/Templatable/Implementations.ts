@@ -91,8 +91,9 @@ export class Histogram<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetRe
         return new Histogram(this);
     }
 
-    public AddSeriesSapphire = (dataSourceID: number, phase: string, measurement:string) => {
-        let label = `${phase} ${measurement}`;
+    public AddSeriesSapphire = (dataSourceID: number, phase: string, measurement: string, harmonic: number) => {
+
+        let label = `${phase} ${measurement}${(measurement.indexOf('HRMS') >=0 ? ' HG: ' + harmonic.toString(): '')}`;
 
         let series = {
             Phase: phase,
@@ -101,7 +102,8 @@ export class Histogram<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetRe
             Field: "Average",
             Color: GetColor(),
             Profile: false,
-            ProfileColor: GetColor(label)
+            ProfileColor: GetColor(label),
+            Harmonic: harmonic
         } as TrenDAP.iTemplatableHistogramSeriesSapphire
 
         (this.JSON.Series as TrenDAP.iTemplatableHistogramSeriesSapphire[]).push(series);
@@ -162,6 +164,17 @@ export class Histogram<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetRe
             this.JSON.Max = this.JSON.Max + buffer;
             this.JSON.Min = this.JSON.Min - buffer;
         }
+        else if (ds.DataSource.Type === 'Sapphire') {
+            let dd: TrenDAP.iSapphireReturnData[] = [].concat(...this.Data.map(d => d.Data));
+            let ss = (this.JSON.Series as TrenDAP.iTemplatableHistogramSeriesSapphire[]).map((series) => (dd.find(d => d[this.By] === this.Device && d.Phase === series.Phase && d.Characteristic === series.Measurement && d.Harmonic == series.Harmonic)?.Data ?? []).map(d => d[series.Field]));
+            let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
+            this.JSON.Max = Math.max(...[].concat(...mm));
+            this.JSON.Min = Math.min(...[].concat(...mm));
+            let buffer = (this.JSON.Max - this.JSON.Min) * .10;
+            this.JSON.Max = this.JSON.Max + buffer;
+            this.JSON.Min = this.JSON.Min - buffer;
+        }
+
         else { }
         return new Histogram(this);
     };
@@ -188,33 +201,6 @@ export class Trend<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturn
     };
     public UpdateAxis = (index: keyof TrenDAP.iYAxis[], field: keyof TrenDAP.iYAxis, value: TrenDAP.iYAxis[keyof TrenDAP.iYAxis]) => { this.JSON.YAxis[index][field] = value; };
 
-    private GetDataSeries(series: TrenDAP.iTrendTemplateSeries): TrenDAP.iDataSetReturnType {
-        let ds = this.Data.find(ds => ds.DataSource.ID === this.JSON.Series[0].DataSourceID)
-        let dd: TrenDAP.iDataSetReturnType[] = [].concat(...this.Data.map(d => d.Data));
-
-        if (ds.DataSource.Type === 'TrenDAPDB') {
-            let phases = this.JSON.Series.map((s: TrenDAP.iTrendTemplateSeriesXDA) => s.Phase)
-            let types = this.JSON.Series.map((s: TrenDAP.iTrendTemplateSeriesXDA) => s.Type)
-            let characteristics = this.JSON.Series.map((s: TrenDAP.iTrendTemplateSeriesXDA) => s.Characteristic)
-
-            return dd.find((d: TrenDAP.iXDAReturnData) => d[this.By] === this.Device && phases.indexOf(d.Phase) >= 0 && characteristics.indexOf(d.Characteristic) >= 0 && types.indexOf(d.Type) >= 0)
-        }
-        else if (ds.DataSource.Type === 'OpenHistorian') {
-            let phases = this.JSON.Series.map((s: TrenDAP.iTrendTemplateSeriesOpenHistorian) => s.Phase)
-            let types = this.JSON.Series.map((s: TrenDAP.iTrendTemplateSeriesOpenHistorian) => s.Type)
-
-            return dd.find((d: TrenDAP.iOpenHistorianReturn) => d[this.By] === this.Device && phases.indexOf(d.Phase) >= 0 && types.indexOf(d.SignalType) >= 0)
-        }
-        else if (ds.DataSource.Type === 'Sapphire') {
-            let phases = this.JSON.Series.map((s: TrenDAP.iTrendTemplateSeriesSapphire) => s.Phase)
-            let types = this.JSON.Series.map((s: TrenDAP.iTrendTemplateSeriesSapphire) => s.Measurement)
-
-            return dd.find((d: TrenDAP.iSapphireReturnData) => d.Meter === this.Device && phases.indexOf(d.Phase) >= 0 && types.indexOf(d.Type) >= 0)
-        }
-        else
-            return undefined;
-    }
-
     public CalculateAxisRange = (type: 'x' | 'y', index?: number) => {
         if (this.JSON.Series.length == 0) return;
 
@@ -225,44 +211,10 @@ export class Trend<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturn
         else {
             if (index == undefined) {
                 for (let index = 0; index < this.JSON.YAxis.length; index++) {
-                    //let ss;
-
-                    //if (ds.DataSource.Type === 'TrenDAPDB')
-                    //    ss = (this.JSON.Series as TrenDAP.iTrendTemplateSeriesXDA[]).filter(series => series.Axis === index).map(series => (dd.find(d => d[this.By] === this.Device && d.Phase === series.Phase && d.Characteristic === series.Characteristic && d.Type === series.Type)?.Data ?? []).map(d => d[series.Field]));
-                    //else if (ds.DataSource.Type === 'OpenHistorian')
-                    //    ss = (this.JSON.Series as TrenDAP.iTrendTemplateSeriesOpenHistorian[]).filter(series => series.Axis === index).map(series => (dd.find(d => d[this.By] === this.Device && d.Phase === series.Phase && d.SignalType === series.Type)?.Data ?? []).map(d => d[series.Field]));
-                    //else if (ds.DataSource.Type === 'Sapphire') 
-                    //    ss = (this.JSON.Series as TrenDAP.iTrendTemplateSeriesSapphire[]).filter(series => series.Axis === index).map(series => (dd.find((d: TrenDAP.iSapphireReturnData) => d.Meter === this.Device && d.Phase === series.Phase && d.Type === series.Measurement)?.Data ?? []).map(d => d[series.Field]));
-                    //else
-                    //    ss = [];
-
-                    //let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
-                    //this.JSON.YAxis[index]['Max'] = Math.max(...[].concat(...mm));
-                    //this.JSON.YAxis[index]['Min'] = Math.min(...[].concat(...mm));
-                    //let buffer = (this.JSON.YAxis[index]['Max'] - this.JSON.YAxis[index]['Min']) * .10;
-                    //this.JSON.YAxis[index]['Max'] = this.JSON.YAxis[index]['Max'] + buffer;
-                    //this.JSON.YAxis[index]['Min'] = this.JSON.YAxis[index]['Min'] - buffer;
-
                     this.CalculateYAxis(ds, dd, index);
-
                 }
             }
             else {
-                //let ss;
-                //if (ds.DataSource.Type === 'TrenDAPDB')
-                //    ss = (this.JSON.Series as TrenDAP.iTrendTemplateSeriesXDA[]).filter(series => series.Axis === index).map(series => (dd.find(d => d[this.By] === this.Device && d.Phase === series.Phase && d.Characteristic === series.Characteristic && d.Type === series.Type)?.Data ?? []).map(d => d[series.Field]));
-                //else if (ds.DataSource.Type === 'OpenHistorian')
-                //    ss = (this.JSON.Series as TrenDAP.iTrendTemplateSeriesOpenHistorian[]).filter(series => series.Axis === index).map(series => (dd.find(d => d[this.By] === this.Device && d.Phase === series.Phase && d.SignalType === series.Type)?.Data ?? []).map(d => d[series.Field]));
-                //else if (ds.DataSource.Type === 'Sapphire')
-                //    ss = (this.JSON.Series as TrenDAP.iTrendTemplateSeriesSapphire[]).filter(series => series.Axis === index).map(series => (dd.find((d: TrenDAP.iSapphireReturnData) => d.Meter === this.Device && d.Phase === series.Phase && d.Type === series.Measurement)?.Data ?? []).map(d => d[series.Field]));
-                //else
-                //    ss = [];
-                //let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
-                //this.JSON.YAxis[index]['Max'] = Math.max(...[].concat(...mm));
-                //this.JSON.YAxis[index]['Min'] = Math.min(...[].concat(...mm));
-                //let buffer = (this.JSON.YAxis[index]['Max'] - this.JSON.YAxis[index]['Min']) * .10;
-                //this.JSON.YAxis[index]['Max'] = this.JSON.YAxis[index]['Max'] + buffer;
-                //this.JSON.YAxis[index]['Min'] = this.JSON.YAxis[index]['Min'] - buffer;
                 this.CalculateYAxis(ds, dd, index);
             }
         }
@@ -290,7 +242,8 @@ export class Trend<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturn
         else if (ds.DataSource.Type === 'Sapphire') {
             let phases = this.JSON.Series.map((s: TrenDAP.iTrendTemplateSeriesSapphire) => s.Phase)
             let types = this.JSON.Series.map((s: TrenDAP.iTrendTemplateSeriesSapphire) => s.Measurement)
-            let series = dd.find((d) => d[this.By] === this.Device && phases.indexOf((d as TrenDAP.iSapphireReturnData).Phase) >= 0 && types.indexOf((d as TrenDAP.iSapphireReturnData).Characteristic) >= 0);
+            let harmonics = this.JSON.Series.map((s: TrenDAP.iTrendTemplateSeriesSapphire) => s.Harmonic);
+            let series = dd.find((d) => d[this.By] === this.Device && phases.indexOf((d as TrenDAP.iSapphireReturnData).Phase) >= 0 && types.indexOf((d as TrenDAP.iSapphireReturnData).Characteristic) >= 0 && harmonics.indexOf((d as TrenDAP.iSapphireReturnData).Harmonic) >= 0);
 
             ss = (series?.Data ?? []).map(d => new Date(d.Timestamp).getTime());
         }
@@ -320,7 +273,7 @@ export class Trend<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturn
             }
             else if (ds.DataSource.Type === 'Sapphire') {
                 const axis = a as TrenDAP.iTrendTemplateSeriesSapphire;
-                const series = dd.find((d) => d[this.By] === this.Device && axis.Phase === (d as TrenDAP.iSapphireReturnData).Phase && axis.Measurement === (d as TrenDAP.iSapphireReturnData).Characteristic);
+                const series = dd.find((d) => d[this.By] === this.Device && axis.Phase === (d as TrenDAP.iSapphireReturnData).Phase && axis.Measurement === (d as TrenDAP.iSapphireReturnData).Characteristic && (d as TrenDAP.iSapphireReturnData).Harmonic === axis.Harmonic);
                 return (series?.Data ?? []).map(d => d[axis.Field]);
             }
             else
@@ -375,8 +328,9 @@ export class Trend<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturn
         return new Trend(this);
     }
 
-    public AddSeriesSapphire = (dataSourceID: number, phase: string, measurement: string) => {
-        let label = `${phase} ${measurement}`;
+    public AddSeriesSapphire = (dataSourceID: number, phase: string, measurement: string, harmonic: number) => {
+        let label = `${phase} ${measurement}${(measurement.indexOf('HRMS') >= 0 ? ' HG: ' + harmonic.toString() : '')}`;
+
         let dd: TrenDAP.iSapphireReturnData[] = [].concat(...this.Data.map(d => d.Data));
         let channel = dd.find(d => d.Characteristic === measurement &&d.Phase === phase);
         let unit = channel?.Unit ?? ''
@@ -393,7 +347,8 @@ export class Trend<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturn
             Field: "Average",
             Color: GetColor(label),
             Axis: axisIndex,
-            ShowEvents: false
+            ShowEvents: false,
+            Harmonic: harmonic
         } as TrenDAP.iTrendTemplateSeriesSapphire
 
         (this.JSON.Series as TrenDAP.iTrendTemplateSeriesSapphire[]).push(series);
@@ -572,7 +527,7 @@ export class Stats<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturn
     }
     public SetSeriesXDA = (dataSourceID: number, phase: OpenXDA.Types.PhaseName, type: OpenXDA.Types.MeasurementTypeName, characteristic: OpenXDA.Types.MeasurementCharacteristicName) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Characteristic: characteristic, Field: 'Average' };
     public SetSeriesOH = (dataSourceID: number, phase: OpenHistorian.Types.Phase, type: OpenHistorian.Types.SignalType) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Field: 'Average' };
-    public SetSeriesSapphire = (dataSourceID: number, phase: string, measurement: string) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Measurement: measurement, Field: 'Average' };
+    public SetSeriesSapphire = (dataSourceID: number, phase: string, measurement: string, harmonic: number) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Measurement: measurement, Field: 'Average', Harmonic: harmonic};
 
     public SetSeriesField = (field: TrenDAP.iXDATrendDataPointField) => {
         this.JSON.Series.Field = field;
@@ -613,7 +568,7 @@ export class Stats<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturn
         }
         else if (dataSourceData?.DataSource.Type === 'Sapphire') {
             let s = series as TrenDAP.iTemplateSeriesSapphire;
-            dataSeries = ((dataSourceData?.Data ?? []) as TrenDAP.iSapphireReturnData[]).find(d => d.Meter === this.Device && d.Phase === s.Phase && s.Measurement === d.Characteristic)?.Data ?? [];
+            dataSeries = ((dataSourceData?.Data ?? []) as TrenDAP.iSapphireReturnData[]).find(d => d.Meter === this.Device && d.Phase === s.Phase && s.Measurement === d.Characteristic && d.Harmonic === s.Harmonic)?.Data ?? [];
         }
         else if (dataSourceData?.DataSource.Type === 'OpenHistorian') {
             let s = series as TrenDAP.iTemplateSeriesOpenHistorian;
@@ -666,7 +621,7 @@ export class Table<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturn
     }
     public SetSeriesXDA = (dataSourceID: number, phase: OpenXDA.Types.PhaseName, type: OpenXDA.Types.MeasurementTypeName, characteristic: OpenXDA.Types.MeasurementCharacteristicName) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Characteristic: characteristic, Field: 'Average' };
     public SetSeriesOH = (dataSourceID: number, phase: OpenHistorian.Types.Phase, type: OpenHistorian.Types.SignalType) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Type: type, Field: 'Average' };
-    public SetSeriesSapphire = (dataSourceID: number, phase: string, measurement: string) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Measurement: measurement, Field: 'Average' };
+    public SetSeriesSapphire = (dataSourceID: number, phase: string, measurement: string, harmonic: number) => this.JSON.Series = { DataSourceID: dataSourceID, Phase: phase, Measurement: measurement, Field: 'Average', Harmonic: harmonic };
 
     public SetSeriesField = (field: TrenDAP.iXDATrendDataPointField) => {
         this.JSON.Series.Field = field;
@@ -720,7 +675,7 @@ export class XvsY<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnT
             }
             else if (ds.DataSource.Type === 'Sapphire') {
                 let s = this.JSON[type].Series as TrenDAP.iTrendTemplateSeriesSapphire;
-                ss = (dd as TrenDAP.iSapphireReturnData[]).find(d => d.Meter === this.Device && d.Phase === s.Phase && d.Characteristic === s.Measurement).Data.map(d => new Date(d.Timestamp).getTime());
+                ss = (dd as TrenDAP.iSapphireReturnData[]).find(d => d.Meter === this.Device && d.Phase === s.Phase && d.Characteristic === s.Measurement && d.Harmonic === s.Harmonic).Data.map(d => new Date(d.Timestamp).getTime());
             }
             else if (ds.DataSource.Type === 'OpenHistorian') {
                 let s = this.JSON[type].Series as TrenDAP.iTrendTemplateSeriesOpenHistorian;
@@ -739,7 +694,7 @@ export class XvsY<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnT
             }
             else if (ds.DataSource.Type === 'Sapphire') {
                 let s = this.JSON[type].Series as TrenDAP.iTrendTemplateSeriesSapphire;
-                ss = (dd as TrenDAP.iSapphireReturnData[]).find(d => d.Meter === this.Device && d.Phase === ss.Phase && d.Characteristic === s.Measurement ).Data.map(d => d[s.Field]);
+                ss = (dd as TrenDAP.iSapphireReturnData[]).find(d => d.Meter === this.Device && d.Phase === ss.Phase && d.Characteristic === s.Measurement && d.Harmonic === s.Harmonic ).Data.map(d => d[s.Field]);
             }
             else if (ds.DataSource.Type === 'OpenHistorian') {
                 let s = this.JSON[type].Series as TrenDAP.iTrendTemplateSeriesOpenHistorian;
@@ -778,8 +733,8 @@ export class XvsY<U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnT
         return new XvsY(this);
     };
 
-    public SetSeriesSapphire = (axis: 'X' | 'Y', dataSourceID: number, phase: string, measurement: string) => {
-        this.JSON[axis].Series = { DataSourceID: dataSourceID, Phase: phase, Measurement: measurement, Field: 'Average' }
+    public SetSeriesSapphire = (axis: 'X' | 'Y', dataSourceID: number, phase: string, measurement: string, harmonic: number) => {
+        this.JSON[axis].Series = { DataSourceID: dataSourceID, Phase: phase, Measurement: measurement, Field: 'Average', Harmonic: harmonic }
         return new XvsY(this);
     };
 

@@ -93,7 +93,7 @@ export default function TrendJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
         }
         else if (dataSource?.DataSource.Type === 'Sapphire') {
             let s = series as TrenDAP.iTrendTemplateSeriesSapphire;
-            datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement);
+            datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd.Meter === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement && dd.Harmonic == s.Harmonic);
         }
         else
             datum = {Data: []};

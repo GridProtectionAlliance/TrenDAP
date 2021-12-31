@@ -23,13 +23,11 @@
 
 import * as d3 from 'd3';
 import * as React from 'react';
-import { TrenDAP, Redux } from '../../../../global';
+import { TrenDAP } from '../../../../global';
 import styles from '../../../../../Styles/app.scss';
-import { Input, CheckBox, Select } from '@gpa-gemstone/react-forms';
+import { Input, Select } from '@gpa-gemstone/react-forms';
 
 import Widget, { SeriesSelect } from '../Widget/Widget';
-import AdditionalInfoXDA from '../Widget/XDA/AdditionalInfo';
-import AdditionalInfoOpenHistorian from '../Widget/OpenHistorian/AdditionalInfo';
 import { CrossMark, Plus } from '../../../../Constants';
 import { Trend } from '../Implementations';
 import moment from 'moment';

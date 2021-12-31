@@ -56,11 +56,11 @@ export default function TableJSX(props: TrenDAP.iTemplatableWidget<TrenDAP.iTemp
         }
         else if (dataSource?.DataSource.Type === 'TrenDAPDB') {
             let s = record.JSON.Series as TrenDAP.iTemplateSeriesXDA;
-            datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === s.Type && dd.Phase === s.Phase && dd.Characteristic === s.Characteristic);
+            datum = data.find((dd: TrenDAP.iXDAReturnData) => dd[props.By] === props.Device && dd.Type === s.Type && dd.Phase === s.Phase && dd.Characteristic === s.Characteristic );
         }
         else if (dataSource?.DataSource.Type === 'Sapphire') {
             let s = record.JSON.Series as TrenDAP.iTemplateSeriesSapphire;
-            datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd[props.By] === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement);
+            datum = data.find((dd: TrenDAP.iSapphireReturnData) => dd[props.By] === props.Device && dd.Phase === s.Phase && dd.Characteristic === s.Measurement && s.Harmonic === dd.Harmonic);
         }
         else
             datum = {Data:[]};
