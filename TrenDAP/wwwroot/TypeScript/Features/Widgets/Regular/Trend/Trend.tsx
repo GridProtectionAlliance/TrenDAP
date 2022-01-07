@@ -42,6 +42,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
     const ref = React.useRef(null);
     const [toggle, setToggle] = React.useState<boolean>(false);
     const [record, setRecord] = React.useState<Trend>(new Trend(props));
+    const [editRecord, setEditRecord] = React.useState<Trend>(new Trend(props));
     const hover = React.useRef<number>(-10);
     const svgs = React.useRef<d3.Selection<SVGSVGElement, unknown, null, undefined>[]>([]);
     const margin = React.useRef<{ bottom: number, left: number, top: number, right: number }>({ bottom: 50, left: 50, top: 40, right: 50 });
@@ -63,6 +64,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
 
         React.useEffect(() => {
             Initialize(record)
+            setEditRecord(record);
         }, [record])
 
         React.useEffect(() => {
@@ -72,6 +74,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
         React.useEffect(() => {
             setRecord(new Trend({ ...record, Data: props.Data }));
         }, [props.Data]);
+
 
         React.useEffect(() => {
             return () => { d3.select(ref.current).selectAll('svg').remove(); }
@@ -541,30 +544,30 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
                 </div>
             </div>
 
-            <Widget {...props} Record={record} Toggle={toggle} SetToggle={(bool) => setToggle(bool)}>
+            <Widget {...props} Record={record} Toggle={toggle} SetToggle={(bool) => setToggle(bool)} EditRecord={editRecord }>
                 <div className="col">
-                    <Input<TrenDAP.iWidget> Field='Label' Record={record} Type='text' Setter={(r) => setRecord(new Trend(r))} Valid={(field) => true} />
+                    <Input<TrenDAP.iWidget> Field='Label' Record={editRecord} Type='text' Setter={(r) => setEditRecord(new Trend(r))} Valid={(field) => true} />
 
                     <label>Width</label>
                     <div className="input-group">
-                        <input type="number" className="form-control" value={record?.Width} onChange={(evt) => setRecord(new Trend({ ...record,Width: parseInt(evt.target.value)}))} />
+                        <input type="number" className="form-control" value={editRecord?.Width} onChange={(evt) => setEditRecord(new Trend({ ...editRecord,Width: parseInt(evt.target.value)}))} />
                         <div className="input-group-prepend">
-                            <button className="btn btn-outline-secondary" type="button" onClick={(evt) => setRecord(new Trend({ ...record, Width: window.innerWidth - 200})) }>Full Width</button>
+                            <button className="btn btn-outline-secondary" type="button" onClick={(evt) => setEditRecord(new Trend({ ...editRecord, Width: window.innerWidth - 200})) }>Full Width</button>
                         </div>
                     </div>
                     <div className='row'>
                         <div className='col-1'>
                             <label>Split</label>
                             <br/>
-                            <SwitchButton checked={record?.JSON?.Split ?? false} onChange={(checked: boolean) => setRecord(record.UpdateJSON('Split', checked))} />
+                            <SwitchButton checked={editRecord?.JSON?.Split ?? false} onChange={(checked: boolean) => setEditRecord(editRecord.UpdateJSON('Split', checked))} />
                         </div>
                         <div className='col-2'>
-                            <Select<TrenDAP.iTrend> Label='Split On' Field='SplitType' Record={record?.JSON} Setter={(r) => setRecord(new Trend({ ...record, JSON: r }))} Options={[{ Value: 'Axis', Label: 'Axis' }, { Value: 'Series', Label: 'Series' }]} />
+                            <Select<TrenDAP.iTrend> Label='Split On' Field='SplitType' Record={editRecord?.JSON} Setter={(r) => setEditRecord(new Trend({ ...editRecord, JSON: r }))} Options={[{ Value: 'Axis', Label: 'Axis' }, { Value: 'Series', Label: 'Series' }]} />
                         </div>
                         <div className='col-2'>
                             <label>Legend</label>
                             <br />
-                            <SwitchButton checked={record.JSON?.Legend ?? false} onChange={(checked: boolean) => setRecord(record.UpdateJSON('Legend', checked))} />
+                            <SwitchButton checked={editRecord.JSON?.Legend ?? false} onChange={(checked: boolean) => setEditRecord(editRecord.UpdateJSON('Legend', checked))} />
                         </div>
 
                     </div>
@@ -573,29 +576,29 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
                     <div className="row">
                         <div className="col">
                             <label>Min</label>
-                            <Datetime value={moment(record.JSON.Min)} onChange={(value) => setRecord(new Trend({ ...record, JSON: { ...record.JSON,Min: moment(value).toDate().getTime()}}))}/>
+                            <Datetime value={moment(editRecord.JSON.Min)} onChange={(value) => setEditRecord(new Trend({ ...editRecord, JSON: { ...editRecord.JSON,Min: moment(value).toDate().getTime()}}))}/>
                         </div>
                         <div className="col">
-                            <label>Min</label>
-                            <Datetime value={moment(record.JSON.Max)} onChange={(value) => setRecord(new Trend({ ...record, JSON: { ...record.JSON, Max: moment(value).toDate().getTime() }}))}/>
+                            <label>Max</label>
+                            <Datetime value={moment(editRecord.JSON.Max)} onChange={(value) => setEditRecord(new Trend({ ...editRecord, JSON: { ...editRecord.JSON, Max: moment(value).toDate().getTime() }}))}/>
                         </div>
                         <div className="col-2" style={{ position: 'relative' }}>
                             <button className="btn btn-outline-secondary" style={{ position: 'absolute', bottom: 16 }} type="button" onClick={() => {
-                                record.CalculateAxisRange('x', 0);
-                                setRecord(new Trend(record));
+                                editRecord.CalculateAxisRange('x', 0);
+                                setEditRecord(new Trend(editRecord));
                             }}>Use Data</button>
                         </div>
 
                     </div>
                     <h6>Y Axis</h6> <button style={{position: 'relative', float: 'right', top: -30}} className='btn btn-link' onClick={() => {
-                        record.AddAxis()
-                        setRecord(new Trend(record));
+                        editRecord.AddAxis()
+                        setEditRecord(new Trend(editRecord));
                     }}>{Plus}</button>
                     <hr />
                     <ul className="list-group list-group-flush" style={{maxHeight: window.innerHeight - 625, overflowY: 'auto', overflowX: 'hidden', width: '100%' }}>
 
-                        {record.JSON.YAxis.map((axis, index) => (
-                            <li key={index} className='list-group-item'><Axis Axis={axis} Index={index} Widget={record} Callback={() => setRecord(new Trend(record)) }/></li>
+                        {editRecord.JSON.YAxis.map((axis, index) => (
+                            <li key={index} className='list-group-item'><Axis Axis={axis} Index={index} Widget={editRecord} Callback={() => setEditRecord(new Trend(editRecord)) }/></li>
                         ))}
                     </ul>
                 </div>
@@ -603,7 +606,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
                     <h6>Series</h6>
                     <hr />
                     <div id="accordion" style={{ overflowY: 'auto', maxHeight: window.innerHeight - 250}}>
-                        {record.Data.map((d, i) =>
+                        {editRecord.Data.map((d, i) =>
                             <React.Fragment key={i}>
                                 <div className="card-header">
                                     <a className="card-link" data-toggle="collapse" href={"#collapse" + i}>{d.DataSource.Name}</a>
@@ -612,19 +615,19 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
                                     <div className="card-body">
                                         {(d.DataSource.Type === 'TrenDAPDB' ?
                                         <>
-                                            <button className='btn btn-primary' onClick={() => setRecord(record.QuickAddVoltageRMS(d.DataSource.ID))}>Quick Add VRMS</button>
-                                            <button className='btn btn-primary' onClick={() => setRecord(record.QuickAddCurrentRMS(d.DataSource.ID))}>Quick Add IRMS</button>
-                                            <button className='btn btn-primary' onClick={() => setRecord(record.RemoveAll(d.DataSource.ID))}>Remove All</button> 
+                                            <button className='btn btn-primary' onClick={() => setEditRecord(editRecord.QuickAddVoltageRMS(d.DataSource.ID))}>Quick Add VRMS</button>
+                                            <button className='btn btn-primary' onClick={() => setEditRecord(editRecord.QuickAddCurrentRMS(d.DataSource.ID))}>Quick Add IRMS</button>
+                                            <button className='btn btn-primary' onClick={() => setEditRecord(editRecord.RemoveAll(d.DataSource.ID))}>Remove All</button> 
                                         </>: null)
                                     }
-                                        <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Callback={() => setRecord(new Trend(record))} />
+                                        <SeriesSelect Widget={editRecord} DataSourceID={d.DataSource.ID} Callback={() => setEditRecord(new Trend(editRecord))} />
                                         <ul className="list-group">
-                                            {record.JSON.Series.map((series, ind) => {
+                                            {editRecord.JSON.Series.map((series, ind) => {
                                                 let datum = d.Data.find(dd => dd.ID.toString() === series.ID);
                                                 if (datum === undefined) return null;
                                                 return (
                                                     <li key={series.ID} className="list-group-item">                                                            
-                                                        <SeriesPicker Type={d.DataSource.Type} Index={ind} Series={series} Data={datum as TrenDAP.iXDAReturnData} Widget={record} Callback={() => setRecord(new Trend(record))} />
+                                                        <SeriesPicker Type={d.DataSource.Type} Index={ind} Series={series} Data={datum as TrenDAP.iXDAReturnData} Widget={editRecord} Callback={() => setEditRecord(new Trend(editRecord))} />
                                                     </li>
                                                 )
                                             })}

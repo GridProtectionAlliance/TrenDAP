@@ -48,7 +48,7 @@ const AddNewWorkSpace: React.FunctionComponent<{}> = (props) => {
                     </div>
 
                   <div className="modal-body">
-                            <WorkSpace Record={ws} SetWorkSpace={setWorkSpace } />
+                            <WorkSpace Record={ws} SetWorkSpace={setWorkSpace} Edit={false}/>
                   </div>
 
                     <div className="modal-footer">

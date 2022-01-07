@@ -52,7 +52,7 @@ const EditWorkSpace: React.FunctionComponent<{ WorkSpace: TrenDAP.iWorkSpace}> =
                         </div>
 
                       <div className="modal-body">
-                        <WorkSpace Record={ws} SetWorkSpace={setWorkSpace } />
+                            <WorkSpace Record={ws} SetWorkSpace={setWorkSpace} Edit={true } />
                       </div>
 
                         <div className="modal-footer">

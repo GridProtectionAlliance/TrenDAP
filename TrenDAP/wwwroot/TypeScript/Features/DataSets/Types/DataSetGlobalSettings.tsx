@@ -91,7 +91,7 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Days" Label="Day of Week" Setter={(record) => props.SetDataSet(record)} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} />
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Weeks" Label="Week of Year" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 53 }, (_, i) => i.toString())} />
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Months" Label="Month of Year" Setter={(record) => props.SetDataSet(record)} Enum={['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']} />
-            <CheckBox<TrenDAP.iDataSet> Record={props.Record} Field="Public" Label='Global' Setter={(record) => props.SetDataSet(record)} />
+            <CheckBox<TrenDAP.iDataSet> Record={props.Record} Field="Public" Label='Shared' Setter={(record) => props.SetDataSet(record)} />
             <div className="form-group">
                 <div className="dropup">
                     <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -100,7 +100,7 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
                     <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
                         <div className="dropdown-header">Your DataSources</div>
                         {dataSources.map(ds => <a key={ds.ID} className="dropdown-item" onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
-                        <div className="dropdown-header">Global DataSources</div>
+                        <div className="dropdown-header">Shared DataSources</div>
                         {publicDataSources.map(ds => <a key={ds.ID} className="dropdown-item" onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
                     </div>
                 </div>

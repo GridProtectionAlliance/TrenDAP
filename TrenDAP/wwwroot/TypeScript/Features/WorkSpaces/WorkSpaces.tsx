@@ -63,7 +63,7 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                                 { key: 'DataSetID', label: 'Data Set',  field: 'DataSetID',content: (item, key, style) => dataSets.find(ds => ds.ID === item.DataSetID)?.Name },
                                 { key: 'Type', label: 'Type', field: 'Type' },
 
-                                { key: 'Public', label: 'Global', field: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
+                                { key: 'Public', label: 'Shared', field: 'Public', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
                                 { key: 'UpdatedOn', field: 'UpdatedOn',label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
                                     {
                                         key: null, label: '', content: (item, key, style) =>
@@ -92,7 +92,7 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
             </div>
             <div className="col-4" style={{ padding: '0 0 0 0' }}>
                 <div className="card ">
-                    <div className="card-header">Global Workspaces</div>
+                    <div className="card-header">Shared Workspaces</div>
                     <div className="card-body">
                         <Table<TrenDAP.iWorkSpace>
                             cols={[
@@ -108,7 +108,10 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                             tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             sortKey={sortField}
-                            onClick={() => { }}
+                            onClick={() => (data, evt) => {
+                                if (evt.target.tagName.toLowerCase() === 'td')
+                                    window.location.href = `${homePath}WorkSpaceEditor/${data.row.ID}`
+                            }}
                             onSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             data={publicWorkSpaces}
                             ascending={ascending}

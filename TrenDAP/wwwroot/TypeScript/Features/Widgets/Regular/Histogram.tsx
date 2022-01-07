@@ -51,12 +51,16 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
     const ref = React.useRef(null);
     const [toggle, setToggle] = React.useState<boolean>(false);
     const [record, setRecord] = React.useState<Histogram>(new Histogram(props));
+    const [editRecord, setEditRecord] = React.useState<Histogram>(new Histogram(props));
 
     React.useEffect(() => {
-    }, [toggle, props.JSON]);
+        setRecord(new Histogram(props));
+
+    }, [props.JSON]);
 
     React.useEffect(() => {
         Initialize(record);
+        setEditRecord(record);
     }, [record])
 
     React.useEffect(() => {
@@ -66,6 +70,7 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
     React.useEffect(() => {
         setRecord(new Histogram({ ...record, Height: props.Height }))
     }, [props.Height])
+
 
     function Initialize(settings: TrenDAP.iWidget<TrenDAP.iHistogram>) {
         const profile = settings.JSON.Series.map(series => series.Profile).reduce((prev, curr) => prev || curr, false);
@@ -191,36 +196,36 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
                 <div ref={ref}></div>
             </div>
 
-            <Widget {...props} Record={record} Toggle={toggle} SetToggle={(bool) => setToggle(bool) }>
+            <Widget {...props} Record={record} Toggle={toggle} SetToggle={(bool) => setToggle(bool)} EditRecord={editRecord }>
                 <div className="col-4">
-                    <Input<TrenDAP.iWidget> Field='Label' Record={record} Type='text' Setter={(r) => setRecord(new Histogram(r))} Valid={(field) => true} />
+                    <Input<TrenDAP.iWidget> Field='Label' Record={editRecord} Type='text' Setter={(r) => setEditRecord(new Histogram({ ...r}))} Valid={(field) => true} />
 
                     <label>Width</label>
                     <div className="input-group">
-                        <input type="number" className="form-control" value={record?.Width ?? 0} onChange={(evt) => setRecord(new Histogram({ ...record, Width: parseInt(evt.target.value) }))} />
+                        <input type="number" className="form-control" value={editRecord?.Width ?? 0} onChange={(evt) => setEditRecord(new Histogram({ ...editRecord, Width: parseInt(evt.target.value) }))} />
                         <div className="input-group-prepend">
-                            <button className="btn btn-outline-secondary" type="button" onClick={(evt) => setRecord(new Histogram({ ...record, Width: window.innerWidth - 200 }))}>Full Width</button>
+                            <button className="btn btn-outline-secondary" type="button" onClick={(evt) => setEditRecord(new Histogram({ ...editRecord, Width: window.innerWidth - 200 }))}>Full Width</button>
                         </div>
                     </div>
                     <div className='row'>
                         <div className='col'>
-                            <Input<TrenDAP.iHistogram> Field='Units' Record={record.JSON} Type='text' Setter={(r) => setRecord(new Histogram({ ...record, JSON: r }))} Valid={(field) => true} />
+                            <Input<TrenDAP.iHistogram> Field='Units' Record={editRecord.JSON} Type='text' Setter={(r) => setEditRecord(new Histogram({ ...editRecord, JSON: r }))} Valid={(field) => true} />
                         </div>
                         <div className='col'>
-                            <Input<TrenDAP.iHistogram> Field='BinCount' Label='Bins' Record={record.JSON} Type='number' Setter={(r) => setRecord(new Histogram({ ...record, JSON: r }))} Valid={(field) => true} />
+                            <Input<TrenDAP.iHistogram> Field='BinCount' Label='Bins' Record={editRecord.JSON} Type='number' Setter={(r) => setEditRecord(new Histogram({ ...editRecord, JSON: r }))} Valid={(field) => true} />
 
                         </div>
                     </div>
                     
                     <div className="row">
                         <div className="col">
-                            <Input<TrenDAP.iHistogram> Field='Min' Label='Min' Record={record.JSON as TrenDAP.iHistogram} Type='number' Setter={(r) => setRecord({ ...record, JSON: r })} Valid={(field) => true} />
+                            <Input<TrenDAP.iHistogram> Field='Min' Label='Min' Record={editRecord.JSON as TrenDAP.iHistogram} Type='number' Setter={(r) => setEditRecord({ ...editRecord, JSON: r })} Valid={(field) => true} />
                         </div>
                         <div className="col">
-                            <Input<TrenDAP.iHistogram> Field='Max' Record={record.JSON as TrenDAP.iHistogram} Type='number' Setter={(r) => setRecord({ ...record, JSON: r })} Valid={(field) => true} />
+                            <Input<TrenDAP.iHistogram> Field='Max' Record={editRecord.JSON as TrenDAP.iHistogram} Type='number' Setter={(r) => setEditRecord({ ...editRecord, JSON: r })} Valid={(field) => true} />
                         </div>
                         <div className="col-2" style={{position: 'relative'}}>
-                            <button className="btn btn-outline-secondary" style={{ position: 'absolute', bottom: 16 }} type="button" onClick={() => setRecord(record.CalculateAxisRange())}>Use Data</button>
+                            <button className="btn btn-outline-secondary" style={{ position: 'absolute', bottom: 16 }} type="button" onClick={() => setEditRecord(editRecord.CalculateAxisRange())}>Use Data</button>
                         </div>
 
                     </div>
@@ -230,17 +235,17 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
                     <h6>Series</h6>
                     <hr />
                     <div id="accordion" style={{overflowY: 'auto', maxHeight: window.innerHeight - 300, height: window.innerHeight/2}}>
-                        {record.Data.map((d, i) =>
+                        {editRecord.Data.map((d, i) =>
                         <React.Fragment key={i}>
                             <div className="card-header">
                                 <a className="card-link" data-toggle="collapse" href={"#collapse" + i}>{d.DataSource.Name}</a>
                             </div>
                             <div id={"collapse" + i} className="collapse show" data-parent="#accordion">
                                     <div className="card-body">
-                                        <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Callback={() => setRecord(new Histogram(record))} />
+                                        <SeriesSelect Widget={editRecord} DataSourceID={d.DataSource.ID} Callback={() => setEditRecord(new Histogram(editRecord))} />
 
                                         <ul className="list-group">
-                                            {(d.DataSource.Type === 'TrenDAPDB' ? (record.JSON?.Series ?? []).map((series,ind) => {
+                                            {(d.DataSource.Type === 'TrenDAPDB' ? (editRecord.JSON?.Series ?? []).map((series,ind) => {
                                                 let datum = (d.Data as TrenDAP.iXDAReturnData[]).find(dd => dd.ID.toString() === series.ID);
                                                 if (datum === undefined) return null;
                                                 return (
@@ -250,13 +255,13 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
                                                                 <label>{datum.Name}</label>
                                                                 <AdditionalInfoXDA Data={datum} Index={i} />
                                                             </div>
-                                                            <SeriesPicker Index={ind} Series={series} Widget={record} Callback={(widget) => setRecord(widget)} />
+                                                            <SeriesPicker Index={ind} Series={series} Widget={editRecord} Callback={(widget) => setEditRecord(widget)} />
 
                                                         </div>
                                                     </li>
                                                 )
                                             }) : null)}
-                                            {(d.DataSource.Type === 'Sapphire' ? (record.JSON?.Series ?? []).map((series, ind) => {
+                                            {(d.DataSource.Type === 'Sapphire' ? (editRecord.JSON?.Series ?? []).map((series, ind) => {
                                                 let datum = (d.Data as TrenDAP.iSapphireReturnData[]).find(dd => dd.ID.toString() === series.ID);
                                                 if (datum === undefined) return null;
                                                 return (
@@ -266,13 +271,13 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
                                                                 <label>{datum.Name}</label>
                                                                 <AdditionalInfoSapphire Data={datum} Index={i} />
                                                             </div>
-                                                            <SeriesPicker Index={ind} Series={series} Widget={record} Callback={(widget) => setRecord(widget)} />
+                                                            <SeriesPicker Index={ind} Series={series} Widget={editRecord} Callback={(widget) => setEditRecord(widget)} />
 
                                                         </div>
                                                     </li>
                                                 )
                                             }) : null)}
-                                            {(d.DataSource.Type === 'OpenHistorian' ? (record.JSON?.Series ?? []).map((series, ind) => {
+                                            {(d.DataSource.Type === 'OpenHistorian' ? (editRecord.JSON?.Series ?? []).map((series, ind) => {
                                                 let datum = (d.Data as TrenDAP.iOpenHistorianReturn[]).find(dd => dd.ID.toString() === series.ID);
                                                 if (datum === undefined) return null;
                                                 return (
@@ -282,7 +287,7 @@ export default function HistogramJSX(props: TrenDAP.iWidget<TrenDAP.iHistogram>)
                                                                 <label>{datum.Device + ' - ' + datum.Description }</label>
                                                                 <AdditionalInfoOpenHistorian Data={datum} />
                                                             </div>
-                                                            <SeriesPicker Index={ind} Series={series} Widget={record} Callback={(widget) => setRecord(widget)} />
+                                                            <SeriesPicker Index={ind} Series={series} Widget={editRecord} Callback={(widget) => setEditRecord(widget)} />
 
                                                         </div>
                                                     </li>

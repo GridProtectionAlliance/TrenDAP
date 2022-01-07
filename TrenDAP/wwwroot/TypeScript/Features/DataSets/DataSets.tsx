@@ -63,7 +63,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                         <Table<TrenDAP.iDataSet>
                         cols={[
                                 { key: 'Name', field: 'Name', label: 'Name' },
-                                { key: 'Public', field: 'Public', label: 'Global', headerStyle: { width: 75 }, rowStyle: { width: 75 },content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
+                                { key: 'Public', field: 'Public', label: 'Shared', headerStyle: { width: 75 }, rowStyle: { width: 75 },content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
                                 { key: 'UpdatedOn', field: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
                                 {
                                     key: null,
@@ -96,7 +96,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
             </div>
             <div className="col-4" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header">Global DataSets</div>
+                    <div className="card-header">Shared DataSets</div>
                     <div className="card-body">
                         <Table<TrenDAP.iDataSet>
                             cols={[

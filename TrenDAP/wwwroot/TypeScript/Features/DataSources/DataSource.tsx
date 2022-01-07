@@ -63,7 +63,7 @@ const DataSource: React.FunctionComponent<{ DataSource: TrenDAP.iDataSource, Set
 
             <div className="row">
                 <div className='col'>
-                    <CheckBox<TrenDAP.iDataSource> Record={props.DataSource} Field="Public" Label='Global' Setter={props.SetDataSource} />
+                    <CheckBox<TrenDAP.iDataSource> Record={props.DataSource} Field="Public" Label='Shared' Setter={props.SetDataSource} />
                 </div>
                 <div className='col'>
 

@@ -257,6 +257,8 @@ namespace TrenDAP.Model
                 else
                     jObject["Data"] = JArray.FromObject(new List<int> () { });
 
+                jObject["Data"] = JArray.FromObject(((JArray)jObject["Data"]).Where((row, index) => row["Data"].Count() > 0));
+
                 return jObject;
             });
 

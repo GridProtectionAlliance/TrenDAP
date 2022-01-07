@@ -41,13 +41,15 @@ export default function XvsYJSX(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
     const ref = React.useRef(null);
     const [toggle, setToggle] = React.useState<boolean>(false);
     const [record, setRecord] = React.useState<XvsY>(new XvsY(props));
+    const [editRecord, setEditRecord] = React.useState<XvsY>(new XvsY(props));
 
     React.useEffect(() => {
         //record.current = new Trend(props);
     }, [toggle, props.JSON]);
 
     React.useEffect(() => {
-            Initialize(record)
+        Initialize(record)
+        setEditRecord(record);
     }, [record])
 
     React.useEffect(() => {
@@ -182,34 +184,34 @@ export default function XvsYJSX(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
                 <div ref={ref}></div>
             </div>
 
-            <Widget {...props} Record={record} Toggle={toggle} SetToggle={(bool) => setToggle(bool)}>
+            <Widget {...props} Record={record} Toggle={toggle} SetToggle={(bool) => setToggle(bool)} EditRecord={editRecord }>
                 <div className="col">
-                    <Input<TrenDAP.iWidget> Field='Label' Record={record} Type='text' Setter={(r) => setRecord(new XvsY(r))} Valid={(field) => true} />
+                    <Input<TrenDAP.iWidget> Field='Label' Record={editRecord} Type='text' Setter={(r) => setEditRecord(new XvsY(r))} Valid={(field) => true} />
 
                     <label>Width</label>
                     <div className="input-group">
-                        <input type="number" className="form-control" value={record?.Width} onChange={(evt) => setRecord(new XvsY({ ...record, Width: parseInt(evt.target.value) }))} />
+                        <input type="number" className="form-control" value={editRecord?.Width} onChange={(evt) => setEditRecord(new XvsY({ ...editRecord, Width: parseInt(evt.target.value) }))} />
                         <div className="input-group-prepend">
-                            <button className="btn btn-outline-secondary" type="button" onClick={(evt) => setRecord(new XvsY({ ...record, Width: window.innerWidth - 200 }))}>Full Width</button>
+                            <button className="btn btn-outline-secondary" type="button" onClick={(evt) => setEditRecord(new XvsY({ ...editRecord, Width: window.innerWidth - 200 }))}>Full Width</button>
                         </div>
                     </div>
                     <div className="row">
                         <div className="col">
                             <label>Min</label>
-                            <Datetime value={moment(record.JSON.TimeMin)} onChange={(value) => setRecord(new XvsY(record.UpdateJSON('TimeMin', moment(value).toDate().getTime())))} />
+                            <Datetime value={moment(editRecord.JSON.TimeMin)} onChange={(value) => setEditRecord(new XvsY(editRecord.UpdateJSON('TimeMin', moment(value).toDate().getTime())))} />
                         </div>
                         <div className="col">
                             <label>Min</label>
-                            <Datetime value={moment(record.JSON.TimeMax)} onChange={(value) => setRecord(new XvsY(record.UpdateJSON('TimeMax', moment(value).toDate().getTime())))} />
+                            <Datetime value={moment(editRecord.JSON.TimeMax)} onChange={(value) => setEditRecord(new XvsY(editRecord.UpdateJSON('TimeMax', moment(value).toDate().getTime())))} />
                         </div>
                         <div className="col-2" style={{ position: 'relative' }}>
-                            <button className="btn btn-outline-secondary" style={{ position: 'absolute', bottom: 16 }} type="button" onClick={() => setRecord(record.CalculateRange('time'))}>Use Data</button>
+                            <button className="btn btn-outline-secondary" style={{ position: 'absolute', bottom: 16 }} type="button" onClick={() => setEditRecord(editRecord.CalculateRange('time'))}>Use Data</button>
                         </div>
 
                     </div>
                     <div className="row">
                         <div className="col">
-                            <CheckBox<TrenDAP.iXvsY> Record={record.JSON} Field='RegressionLine' Label='Add Regression' Setter={(r) => setRecord(new XvsY(record.UpdateJSON('RegressionLine', r.RegressionLine)))} />
+                            <CheckBox<TrenDAP.iXvsY> Record={editRecord.JSON} Field='RegressionLine' Label='Add Regression' Setter={(r) => setEditRecord(new XvsY(editRecord.UpdateJSON('RegressionLine', r.RegressionLine)))} />
                         </div>
                     </div>
                     <br/>
@@ -218,16 +220,16 @@ export default function XvsYJSX(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
                     <hr />
                     <div className="row">
                         <div className="col">
-                            <Input<TrenDAP.iAxis> Record={record.JSON.X} Field='Units' Valid={() => true} Setter={(r) => setRecord(record.SetAxis('x', 'Units', r.Units))} />
+                            <Input<TrenDAP.iAxis> Record={editRecord.JSON.X} Field='Units' Valid={() => true} Setter={(r) => setEditRecord(editRecord.SetAxis('x', 'Units', r.Units))} />
                         </div>
                         <div className="col">
-                            <Input<TrenDAP.iAxis> Record={record.JSON.X} Field='Min' Valid={() => true} Setter={(r) => setRecord(record.SetAxis('x', 'Min', r.Min))} />
+                            <Input<TrenDAP.iAxis> Record={editRecord.JSON.X} Field='Min' Valid={() => true} Setter={(r) => setEditRecord(editRecord.SetAxis('x', 'Min', r.Min))} />
                         </div>
                         <div className="col">
-                            <Input<TrenDAP.iAxis> Record={record.JSON.X} Field='Max' Valid={() => true} Setter={(r) => setRecord(record.SetAxis('x', 'Max', r.Max))} />
+                            <Input<TrenDAP.iAxis> Record={editRecord.JSON.X} Field='Max' Valid={() => true} Setter={(r) => setEditRecord(editRecord.SetAxis('x', 'Max', r.Max))} />
                         </div>
                         <div className="col-2" style={{ position: 'relative' }}>
-                            <button className="btn btn-outline-secondary" style={{ position: 'absolute', bottom: 16 }} type="button" onClick={() => setRecord(record.CalculateRange('x'))}>Use Data</button>
+                            <button className="btn btn-outline-secondary" style={{ position: 'absolute', bottom: 16 }} type="button" onClick={() => setEditRecord(editRecord.CalculateRange('x'))}>Use Data</button>
                         </div>
 
                     </div>
@@ -235,16 +237,16 @@ export default function XvsYJSX(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
                     <hr />
                     <div className="row">
                         <div className="col">
-                            <Input<TrenDAP.iAxis> Record={record.JSON.Y} Field='Units' Valid={() => true} Setter={(r) => setRecord(record.SetAxis('y', 'Units', r.Units))} />
+                            <Input<TrenDAP.iAxis> Record={editRecord.JSON.Y} Field='Units' Valid={() => true} Setter={(r) => setEditRecord(editRecord.SetAxis('y', 'Units', r.Units))} />
                         </div>
                         <div className="col">
-                            <Input<TrenDAP.iAxis> Record={record.JSON.Y} Field='Min' Valid={() => true} Setter={(r) => setRecord(record.SetAxis('y', 'Min', r.Min))} />
+                            <Input<TrenDAP.iAxis> Record={editRecord.JSON.Y} Field='Min' Valid={() => true} Setter={(r) => setEditRecord(editRecord.SetAxis('y', 'Min', r.Min))} />
                         </div>
                         <div className="col">
-                            <Input<TrenDAP.iAxis> Record={record.JSON.Y} Field='Max' Valid={() => true} Setter={(r) => setRecord(record.SetAxis('y', 'Max', r.Max))} />
+                            <Input<TrenDAP.iAxis> Record={editRecord.JSON.Y} Field='Max' Valid={() => true} Setter={(r) => setEditRecord(editRecord.SetAxis('y', 'Max', r.Max))} />
                         </div>
                         <div className="col-2" style={{ position: 'relative' }}>
-                            <button className="btn btn-outline-secondary" style={{ position: 'absolute', bottom: 16 }} type="button" onClick={() => setRecord(record.CalculateRange('y'))}>Use Data</button>
+                            <button className="btn btn-outline-secondary" style={{ position: 'absolute', bottom: 16 }} type="button" onClick={() => setEditRecord(editRecord.CalculateRange('y'))}>Use Data</button>
                         </div>
 
                     </div>
@@ -253,7 +255,7 @@ export default function XvsYJSX(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
                     <h6>Series</h6>
                     <hr />
                     <div id="accordion" style={{ overflowY: 'auto', maxHeight: window.innerHeight - 300, height: window.innerHeight / 2 }}>
-                        {record.Data.map((d, i) =>
+                        {editRecord.Data.map((d, i) =>
                             <React.Fragment key={i}>
                                 <div className="card-header">
                                     <a className="card-link" data-toggle="collapse" href={"#collapse" + i}>{d.DataSource.Name}</a>
@@ -262,25 +264,25 @@ export default function XvsYJSX(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
                                     <div className="card-body">
                                         <h6>X Series</h6>
                                         <hr/>
-                                        <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Axis='x' Callback={() => setRecord(new XvsY(record))}  />
-                                        {(record.JSON.X.Series != undefined ?
+                                        <SeriesSelect Widget={editRecord} DataSourceID={d.DataSource.ID} Axis='x' Callback={() => setEditRecord(new XvsY(editRecord))}  />
+                                        {(editRecord.JSON.X.Series != undefined ?
                                             <div className="row">
                                                 <div className="col-3">
                                                     <label>{GetDatum('x')?.Name ?? ''}</label>
                                                     <AdditionalInfoXDA Index={i} Data={GetDatum('x')} />
                                                 </div>
-                                                <SeriesPicker Axis='x' Series={record.JSON.X.Series} Widget={record} Callback={() => setRecord(new XvsY(record))} />
+                                                <SeriesPicker Axis='x' Series={editRecord.JSON.X.Series} Widget={editRecord} Callback={() => setEditRecord(new XvsY(editRecord))} />
                                             </div> : null)}
                                         <h6>Y Series</h6>
                                         <hr />
-                                        <SeriesSelect Widget={record} DataSourceID={d.DataSource.ID} Axis='y' Callback={() => setRecord(new XvsY(record))}  />
-                                        {(record.JSON.Y.Series != undefined ?
+                                        <SeriesSelect Widget={editRecord} DataSourceID={d.DataSource.ID} Axis='y' Callback={() => setEditRecord(new XvsY(editRecord))}  />
+                                        {(editRecord.JSON.Y.Series != undefined ?
                                             <div className="row">
                                                 <div className="col-3">
                                                     <label>{GetDatum('y')?.Name ?? ''}</label>
                                                     <AdditionalInfoXDA Index={i} Data={GetDatum('y')} />
                                                 </div>
-                                                <SeriesPicker Axis='y' Series={record.JSON.Y.Series} Widget={record} Callback={() => setRecord(new XvsY(record))} />
+                                                <SeriesPicker Axis='y' Series={editRecord.JSON.Y.Series} Widget={editRecord} Callback={() => setEditRecord(new XvsY(editRecord))} />
                                             </div> : null)}
                                     </div>
                                 </div>

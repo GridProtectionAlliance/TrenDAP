@@ -35,7 +35,8 @@ interface Props extends TrenDAP.iWidget {
     children: JSX.Element | JSX.Element[],
     Record: TrenDAP.iWidget,
     Toggle: boolean,
-    SetToggle: (boolean) => void
+    SetToggle: (boolean) => void,
+    EditRecord?: TrenDAP.iWidget,
 }
 export default function Widgit(props: Props) {
 
@@ -56,8 +57,12 @@ export default function Widgit(props: Props) {
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-primary" onClick={() => {
+                            if (props.EditRecord == undefined)
                                 props.Update(props.Record);
-                                props.SetToggle(false);
+                            else
+                                props.Update(props.EditRecord);
+
+                            props.SetToggle(false);
                             }}>Save changes</button>
                             <button type="button" className="btn btn-danger" onClick={() => {
                                 props.Remove();
