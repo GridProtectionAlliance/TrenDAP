@@ -472,7 +472,7 @@ namespace TrenDAP.Controllers.Sapphire
                     throw new Exception(response.ReasonPhrase);
 
                 Task<string> rsp = response.Content.ReadAsStringAsync();
-                return rsp.Result;
+                return rsp.Result.Replace("\"", "");
             }
 
         }
@@ -742,7 +742,7 @@ namespace TrenDAP.Controllers.Sapphire
                             string phase = match.Groups["Phase"].Value;
                             string type = GetType(phase);
                             string channel = $"{characteristic}-{GetPhase(phase)}";
-                            int harmonic = int.Parse(match.Groups["Harmonic"]?.Value ?? "0");
+                            int harmonic = int.Parse((match.Groups["Harmonic"]?.Value ?? "") == string.Empty ? "0" : match.Groups["Harmonic"].Value);
                             // get the series node and parse out the itemvalues/values
                             string series = match.Groups["Series"].Value;
                             List<string> datapoints = item?.SelectSingleNode("ItemValues")?.SelectSingleNode("Values")?.InnerText?.Split(',')?.ToList();
