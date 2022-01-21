@@ -213,7 +213,6 @@ namespace TrenDAP.Controllers
         [HttpGet, Route("HIDS/{dataSourceID:int}/{dataSetID:int}")]
         public ActionResult Get(int dataSourceID, int dataSetID, CancellationToken cancellationToken)
         {
-            string token = GenerateAntiForgeryToken(dataSourceID, Configuration);
             JsonContent content = JsonContent.Create("");
 
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
@@ -222,6 +221,7 @@ namespace TrenDAP.Controllers
             {
                 try
                 {
+                    string token = GenerateAntiForgeryToken(dataSourceID, Configuration);
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                     DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", dataSetID);
 
@@ -333,7 +333,6 @@ namespace TrenDAP.Controllers
 
 
         public static DataTable GetDataTable(int dataSourceID, HIDSPost post, IConfiguration configuration, CancellationToken cancellationToken) {
-            string token = GenerateAntiForgeryToken(dataSourceID, configuration);
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
                 List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
@@ -344,11 +343,13 @@ namespace TrenDAP.Controllers
                     Timeout = TimeSpan.FromMinutes(10)
                 })
                 {
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), $"api/HIDS/Table", JsonContent.Create(post), token, cancellationToken);
 
 
                     try
                     {
+                        string token = GenerateAntiForgeryToken(dataSourceID, configuration);
+
+                        HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), $"api/HIDS/Table", JsonContent.Create(post), token, cancellationToken);
 
                         if (!response.IsSuccessStatusCode)
                             throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
@@ -370,7 +371,6 @@ namespace TrenDAP.Controllers
 
         public static Task<string> GetEvents(int dataSourceID, HIDSPost post, IConfiguration configuration, CancellationToken cancellationToken)
         {
-            string token = GenerateAntiForgeryToken(dataSourceID, configuration);
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
                 List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
@@ -381,10 +381,13 @@ namespace TrenDAP.Controllers
                     Timeout = TimeSpan.FromMinutes(10)
                 })
                 {
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), $"api/Event/TrenDAP", JsonContent.Create(post), token, cancellationToken);
 
                     try
                     {
+                        string token = GenerateAntiForgeryToken(dataSourceID, configuration);
+
+                        HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), $"api/Event/TrenDAP", JsonContent.Create(post), token, cancellationToken);
+
 
                         if (!response.IsSuccessStatusCode)
                             throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
@@ -403,7 +406,6 @@ namespace TrenDAP.Controllers
 
         public static async Task<string> GetAlarms(int dataSourceID, HIDSPost post, IConfiguration configuration, CancellationToken cancellationToken)
         {
-            string token = GenerateAntiForgeryToken(dataSourceID, configuration);
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
                 List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
@@ -414,10 +416,12 @@ namespace TrenDAP.Controllers
                     Timeout = TimeSpan.FromMinutes(10)
                 })
                 {
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), "api/AlarmLimits", JsonContent.Create(post), token);
 
                     try
                     {
+
+                        string token = GenerateAntiForgeryToken(dataSourceID, configuration);
+                        HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), "api/AlarmLimits", JsonContent.Create(post), token);
 
                         if (!response.IsSuccessStatusCode)
                             throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
@@ -472,38 +476,27 @@ namespace TrenDAP.Controllers
 
         }
 
-        public static string GenerateAntiForgeryToken(int dataSourceID, IConfiguration configuration)
+        private static string GenerateAntiForgeryToken(int dataSourceID, IConfiguration configuration)
         {
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             using (HttpClientHandler handler = new HttpClientHandler())
             using (HttpClient client = new HttpClient(handler))
             {
+                handler.ServerCertificateCustomValidationCallback = ServerCertificateCustomValidation;
 
+                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
+                HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), "api/rvht");
 
-                try
-                {
-                    handler.ServerCertificateCustomValidationCallback = ServerCertificateCustomValidation;
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"{response.StatusCode}: {response.ReasonPhrase}");
 
-                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), "api/rvht");
-
-                    if (!response.IsSuccessStatusCode)
-                        return "";
-
-                    Task<string> rsp = response.Content.ReadAsStringAsync();
-                    return response.Content.ReadAsStringAsync().Result;
-                }
-                catch (Exception ex)
-                {
-                    return ex.Message;
-                }
-
+                Task<string> rsp = response.Content.ReadAsStringAsync();
+                return response.Content.ReadAsStringAsync().Result;
             }
         }
 
         public static string GetHIDSSettings(int dataSourceID, IConfiguration configuration)
         {
-            string token = GenerateAntiForgeryToken(dataSourceID, configuration);
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             using (HttpClientHandler handler = new HttpClientHandler())
             using (HttpClient client = new HttpClient(handler))
@@ -512,13 +505,15 @@ namespace TrenDAP.Controllers
 
                 try
                 {
+                    string token = GenerateAntiForgeryToken(dataSourceID, configuration);
+
                     handler.ServerCertificateCustomValidationCallback = ServerCertificateCustomValidation;
 
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                     HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), "api/Setting/Category/HIDS");
 
                     if (!response.IsSuccessStatusCode)
-                        return "";
+                        throw new Exception($"{response.StatusCode}: {response.ReasonPhrase}");
 
                     Task<string> rsp = response.Content.ReadAsStringAsync();
                     return response.Content.ReadAsStringAsync().Result;
@@ -533,7 +528,6 @@ namespace TrenDAP.Controllers
 
         public static async Task<string> GetOpenSEEURL(int dataSourceID, IConfiguration configuration)
         {
-            string token = GenerateAntiForgeryToken(dataSourceID, configuration);
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             using (HttpClientHandler handler = new HttpClientHandler())
             using (HttpClient client = new HttpClient(handler))
@@ -542,13 +536,14 @@ namespace TrenDAP.Controllers
 
                 try
                 {
+                    string token = GenerateAntiForgeryToken(dataSourceID, configuration);
                     handler.ServerCertificateCustomValidationCallback = ServerCertificateCustomValidation;
 
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                     HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), "api/Setting/OpenSEE.URL");
 
                     if (!response.IsSuccessStatusCode)
-                        throw new Exception(response.ReasonPhrase);
+                        throw new Exception($"{response.StatusCode}: {response.ReasonPhrase}");
 
                     string url = await response.Content.ReadAsStringAsync();
                     return url;
@@ -565,6 +560,8 @@ namespace TrenDAP.Controllers
             client.BaseAddress = new Uri(dataSource.URL);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(mtwqhv);
+
+            client.DefaultRequestHeaders.Remove("Authorization");
 
             if (!dataSource.OIDC)
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
