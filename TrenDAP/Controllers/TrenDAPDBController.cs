@@ -265,20 +265,12 @@ namespace TrenDAP.Controllers
                 }) {
                     HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), $"api/HIDS", content, token, cancellationToken);
 
-                    try
-                    {
-                        if (!response.IsSuccessStatusCode)
-                            throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
+                    if (!response.IsSuccessStatusCode)
+                        throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
 
-                        var stream = response.Content.ReadAsStreamAsync().Result;
-                        IFormatter formatter = new BinaryFormatter();
-                        return (IEnumerable<Point>)formatter.Deserialize(stream);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw ex;
-                    }
-
+                    var stream = response.Content.ReadAsStreamAsync().Result;
+                    IFormatter formatter = new BinaryFormatter();
+                    return (IEnumerable<Point>)formatter.Deserialize(stream);
                 }
 
             }
@@ -343,26 +335,16 @@ namespace TrenDAP.Controllers
                     Timeout = TimeSpan.FromMinutes(10)
                 })
                 {
+                    string token = GenerateAntiForgeryToken(dataSourceID, configuration);
 
+                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), $"api/HIDS/Table", JsonContent.Create(post), token, cancellationToken);
 
-                    try
-                    {
-                        string token = GenerateAntiForgeryToken(dataSourceID, configuration);
-
-                        HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), $"api/HIDS/Table", JsonContent.Create(post), token, cancellationToken);
-
-                        if (!response.IsSuccessStatusCode)
-                            throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                        var stream = response.Content.ReadAsStreamAsync().Result;
-                        BinaryFormatter formatter = new BinaryFormatter();
-                        DataTable table =  (DataTable)formatter.Deserialize(stream);
-                        return table;
-                    }
-                    catch (Exception ex)
-                    {
-                        throw ex;
-                    }
-
+                    if (!response.IsSuccessStatusCode)
+                        throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
+                    var stream = response.Content.ReadAsStreamAsync().Result;
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    DataTable table =  (DataTable)formatter.Deserialize(stream);
+                    return table;
                 }
 
             }
@@ -382,8 +364,6 @@ namespace TrenDAP.Controllers
                 })
                 {
 
-                    try
-                    {
                         string token = GenerateAntiForgeryToken(dataSourceID, configuration);
 
                         HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), $"api/Event/TrenDAP", JsonContent.Create(post), token, cancellationToken);
@@ -392,12 +372,6 @@ namespace TrenDAP.Controllers
                         if (!response.IsSuccessStatusCode)
                             throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
                         return response.Content.ReadAsStringAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw ex;
-                    }
-
                 }
 
             }
@@ -417,21 +391,13 @@ namespace TrenDAP.Controllers
                 })
                 {
 
-                    try
-                    {
+                    string token = GenerateAntiForgeryToken(dataSourceID, configuration);
+                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), "api/AlarmLimits", JsonContent.Create(post), token);
 
-                        string token = GenerateAntiForgeryToken(dataSourceID, configuration);
-                        HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), "api/AlarmLimits", JsonContent.Create(post), token);
-
-                        if (!response.IsSuccessStatusCode)
-                            throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                        return await response.Content.ReadAsStringAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw ex;
-                    }
-
+                    if (!response.IsSuccessStatusCode)
+                        throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
+                    return await response.Content.ReadAsStringAsync();
+                   
                 }
 
             }
