@@ -29,7 +29,6 @@ import Table from '@gpa-gemstone/react-table/lib/index'
 import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, FetchDataSetData, CloneDataSet } from './DataSetsSlice';
 import EditDataSet from './EditDataSet';
 import { TrashCan, HeavyCheckMark, Pencil, Wrench, CrossMark, Spinner } from './../../Constants'
-import { useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 import DataSetData from './DataSetData';

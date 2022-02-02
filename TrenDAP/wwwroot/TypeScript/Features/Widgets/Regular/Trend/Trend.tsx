@@ -28,13 +28,12 @@ import styles from '../../../../../Styles/app.scss';
 import { Input, Select } from '@gpa-gemstone/react-forms';
 
 import Widget, { SeriesSelect } from '../Widget/Widget';
-import { CrossMark, Plus } from '../../../../Constants';
+import {  Plus } from '../../../../Constants';
 import { Trend } from '../Implementations';
 import moment from 'moment';
 import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
 import SwitchButton from 'bootstrap-switch-button-react';
-import { Switch } from 'react-router';
 import Axis from './Axis';
 import SeriesPicker from './SeriesPicker';
 

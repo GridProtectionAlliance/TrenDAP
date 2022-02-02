@@ -28,8 +28,9 @@ import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import store from './Store/Store';
 import styles from '../Styles/app.scss';
-import { BrowserRouter as Router, Route, Switch, Redirect} from 'react-router-dom';
+import { BrowserRouter as Router, Route } from 'react-router-dom';
 import SideNavBar from './SideNavBar';
+import { Navigate, Routes } from 'react-router';
 
 const TrenDAP: React.FunctionComponent = (props: {}) => {
 
@@ -67,17 +68,19 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
             <SideNavBar />
             <div className={styles['main-window']}>
                 <React.Suspense fallback={<div>Loading...</div>}>
-                    <Switch>
-                        <Route exact path={`${homePath}WorkSpaces`}><WorkSpaces /></Route>
-                        <Route path={`${homePath}DataSources`}><DataSources /></Route>
-                        <Route path={`${homePath}DataSets`}><DataSets /></Route>
-                        <Route path={`${homePath}AddNewDataSet`}><AddNewDataSet /></Route>
-                        <Route path={`${homePath}EditDataSet/:id`}><EditDataSet /></Route>
-                        <Route path={`${homePath}WorkSpaceEditor/:id`}><WorkSpaceEditor /></Route>
-                        <Route path={`${homePath}ViewDataSet/:id`}><ViewDataSet /></Route>
-                        <Route path={`${homePath}QuickViewOpenXDA`}><QuickViewOpenXDA /></Route>
-                        <Redirect to={`${homePath}WorkSpaces`} />
-                    </Switch>
+                        <Routes>
+                            <Route path={`${homePath}`} >
+                                <Route index element={<Navigate to={`${homePath}WorkSpaces`} />} />
+                                <Route path={`${homePath}WorkSpaces`} element={<WorkSpaces />} />
+                                <Route path={`${homePath}DataSources`} element={<DataSources />} />
+                                <Route path={`${homePath}DataSets`} element={<DataSets />} />
+                                <Route path={`${homePath}AddNewDataSet`} element={<AddNewDataSet />} />
+                                <Route path={`${homePath}EditDataSet/:id`} element={<EditDataSet />} />
+                                <Route path={`${homePath}WorkSpaceEditor/:id`} element={<WorkSpaceEditor />} />
+                                <Route path={`${homePath}ViewDataSet/:id`} element={<ViewDataSet />} />
+                                <Route path={`${homePath}QuickViewOpenXDA`} element={<QuickViewOpenXDA />} />
+                            </Route>
+                    </Routes >
                 </React.Suspense>
             </div>
             </div>

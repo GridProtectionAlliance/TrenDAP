@@ -24,7 +24,7 @@
 
 import { OpenXDA } from '@gpa-gemstone/application-typings';
 import * as React from 'react';
-import { TrenDAP } from '../../../../../global';
+import { Redux, TrenDAP } from '../../../../../global';
 import { Histogram, Stats, Table, Trend, Widget, XvsY } from '../../Implementations';
 import { useDispatch, useSelector } from 'react-redux';
 import { FetchSapphire, SelectSapphire, SelectSapphireStatus } from '../../../../Sapphire/SapphireSlice';
@@ -35,11 +35,11 @@ export default function TemplateSelect(props: { Widget: Widget<TrenDAP.WidgetCla
 
     const dispatch = useDispatch();
 
-    const measurements: any[] = useSelector((state) => SelectSapphire(state, props.DataSourceID, 'ChannelGroupType'));
-    const mtStatus = useSelector((state) => SelectSapphireStatus(state, props.DataSourceID, 'ChannelGroupType'));
+    const measurements: any[] = useSelector((state: Redux.StoreState) => SelectSapphire(state, props.DataSourceID, 'ChannelGroupType'));
+    const mtStatus = useSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.DataSourceID, 'ChannelGroupType'));
 
-    const phases: any[] = useSelector((state) => SelectSapphire(state, props.DataSourceID, 'Phase'));
-    const phStatus = useSelector((state) => SelectSapphireStatus(state, props.DataSourceID, 'Phase'));
+    const phases: any[] = useSelector((state: Redux.StoreState) => SelectSapphire(state, props.DataSourceID, 'Phase'));
+    const phStatus = useSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.DataSourceID, 'Phase'));
 
     const [harmonic, setHarmonic] = React.useState<number>(0);
 
