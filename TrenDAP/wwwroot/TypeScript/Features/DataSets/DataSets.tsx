@@ -26,8 +26,7 @@ import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
 import Table from '@gpa-gemstone/react-table/lib/index'
-import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, FetchDataSetData, CloneDataSet } from './DataSetsSlice';
-import EditDataSet from './EditDataSet';
+import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, CloneDataSet, New } from './DataSetsSlice';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 import DataSetData from './DataSetData';
@@ -59,7 +58,18 @@ const DataSets: React.FunctionComponent = (props: {}) => {
         <div className="row" style={{ margin: 10 }}>
             <div className="col-8" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header">My DataSets</div>
+                    <div className="card-header">
+                        <div className="row">
+                            <div className="col">
+                                <h4>My DataSets:</h4>
+                            </div>
+                            <div className="col">
+                                <Link to={`${homePath}AddNewDataSet`}>
+                                    <button className="btn btn-primary pull-right" onClick={() => dispatch(New({}))}>Add New</button>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
                     <div className="card-body">
                         <Table<TrenDAP.iDataSet>
                         cols={[
