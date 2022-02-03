@@ -28,17 +28,19 @@ import { useSelector, useDispatch } from 'react-redux';
 import Table from '@gpa-gemstone/react-table/lib/index'
 import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, FetchDataSetData, CloneDataSet } from './DataSetsSlice';
 import EditDataSet from './EditDataSet';
-import { TrashCan, HeavyCheckMark, Pencil, Wrench, CrossMark, Spinner } from './../../Constants'
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 import DataSetData from './DataSetData';
-import { DNA } from '@gpa-gemstone/gpa-symbols';
+import { DNA, TrashCan, HeavyCheckMark, Pencil, Wrench } from '@gpa-gemstone/gpa-symbols';
+import { Warning } from '@gpa-gemstone/react-interactive'
 
 const DataSets: React.FunctionComponent = (props: {}) => {
 
     const dispatch = useDispatch();
     const DataSets = useSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
     const publicDataSets = useSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
+
+    const [deleteItem, setDeleteItem] = React.useState<TrenDAP.iDataSet>(null);
 
     const dsStatus = useSelector(SelectDataSetsStatus);
 
@@ -75,7 +77,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                             {item.Data?.Status === 'idle' ? <Link to={`${homePath}ViewDataSet/${item.ID}`} title='View/Edit DataSet Data.' className='btn'>{Wrench}</Link> : null}
                                             <Link to={`${homePath}EditDataSet/${item.ID}`} title='Edit DataSet Parameters.' className='btn'>{Pencil}</Link>
                                             <a title='Clone DataSet.' className="btn" onClick={() => dispatch(CloneDataSet(item))}>{DNA}</a>
-                                            <a title='Delete DataSet.' className="btn" onClick={() => dispatch(RemoveDataSet(item))}>{TrashCan}</a>
+                                            <a title='Delete DataSet.' className="btn" onClick={() => setDeleteItem(item)}>{TrashCan}</a>
                                     </span>
                                 }
 
@@ -119,9 +121,10 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                     </div>
                 </div>
             </div>
-
+            <Warning Title={'Delete ' + deleteItem?.Name} Show={deleteItem != null}
+                Message={"This will remove the Dataset and can not be undone."} CallBack={(c) => { if (c) dispatch(RemoveDataSet(deleteItem)); setDeleteItem(null); }} />
         </div>
-
+        
     );
 }
 
