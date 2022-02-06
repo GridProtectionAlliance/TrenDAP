@@ -24,36 +24,97 @@
 import * as React from 'react';
 import { TrenDAP } from '../../global';
 import { useDispatch, useSelector } from 'react-redux';
-import { AddDataSet, SelectRecord, New, Update } from './DataSetsSlice'
+import { AddDataSet, SelectRecord, New, Update, SelectDataSets } from './DataSetsSlice'
 import DataSet from './DataSet';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { ToolTip } from '@gpa-gemstone/react-interactive';
+import { Warning } from '@gpa-gemstone/gpa-symbols';
+import moment from 'moment';
+import { CrossMark } from '../../Constants';
 
 const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
     const dispatch = useDispatch();
+    let navigate = useNavigate();
 
     const dataSet = useSelector(SelectRecord);
+    const allDataSets = useSelector(SelectDataSets);
 
+    const [warnings, setWarning] = React.useState<string[]>([]);
+    const [errors, setErrors] = React.useState<string[]>([]);
+    const [hover, setHover] = React.useState<boolean>(false);
     //React.useEffect(() => {
     //    dispatch(New);
     //});
 
+    React.useEffect(() => {
+        const w = [];
+        if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Day' && dataSet.RelativeValue < 7)
+            w.push("With the current Time Context and Day of Week Filter it is possible for the dataset to be empty at times.")
+        if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Week' && dataSet.RelativeValue < 53)
+            w.push("With the current Time Context and Week of Year Filter it is possible for the dataset to be empty at times.")
+        if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Day' && dataSet.RelativeValue < 366)
+            w.push("With the current Time Context and Week of Year Filter it is possible for the dataset to be empty at times.")
+        setWarning(w);
+    }, [dataSet])
+
+    React.useEffect(() => {
+        const e = [];
+
+        if (dataSet.Name == null || dataSet.Name.trim().length == 0)
+            e.push("A Name has to be entered.")
+        if (dataSet.Name != null && dataSet.Name.length > 200)
+            e.push("Name has to be less than 200 characters.");
+        if (dataSet.Name != null && allDataSets.findIndex(ds => ds.ID !== dataSet.ID && ds.Name.toLowerCase() == dataSet.Name.toLowerCase()) > -1)
+            e.push("A DataSet with this name already exists.");
+        if (dataSet.Context == 'Fixed Dates' && moment(dataSet.From).isAfter(moment(dataSet.To)))
+            e.push("A valid Timeframe has to be selected.")
+        if (dataSet.Hours == 0)
+            e.push("At least 1 Hour has to be selected.")
+        if (dataSet.Days == 0)
+            e.push("At least 1 Day has to be selected.")
+        if (dataSet.Months == 0)
+            e.push("At least 1 Month has to be selected.")
+        if (dataSet.Weeks == 0)
+            e.push("At least 1 Week has to be selected.")
+        if (JSON.parse(dataSet.JSONString).length == 0)
+            e.push("At least 1 DataSource needs to be added.");
+        setErrors(e);
+    }, [dataSet])
+
+   
     return (
+        <>
         <div className="row" style={{margin: 10}}>
             <div className="card" style={{ width: '100%', height: window.innerHeight - 60 }}>
-                <div className="card-header">
-                    New Data Set
+                    <div className="card-header">
+                        New Data Set {dataSet.Name !== null && dataSet.Name.trim().length > 0 ? ('(' + dataSet.Name + ')') : ''}
                 </div>
                 <div className="card-body" style={{ overflowY: 'auto' }}>
                     <DataSet Record={dataSet} SetDataSet={(record) => dispatch(Update(record))} />
                 </div>
                 <div className="card-footer">
-                    <Link to={`${homePath}DataSets`} type="button" className="btn btn-primary" onClick={() => {
-                        dispatch(AddDataSet(dataSet));
-                    }}>Save</Link>
-
+                    <div className="btn-group mr-2">
+                            <button type="button" data-tooltip="newBtn"
+                                className={"btn btn-primary" + (errors.length > 0 ? ' disabled' : '')}
+                                onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+                                onClick={() => {
+                                    if (errors.length > 0)
+                                        return;
+                                    dispatch(AddDataSet(dataSet));
+                                    navigate(`${homePath}DataSets`);
+                                }}
+                            > Save</button>
+                        </div>
+                        <ToolTip Target="newBtn" Show={hover && (warnings.length > 0 || errors.length > 0)} Position={'top'}>
+                            {warnings.map((w,i) => <p key={2*i}>{Warning} {w} </p>)}
+                            {errors.map((e,i) => <p key={2*i+1}>{CrossMark} {e} </p>)}
+                        </ToolTip>
                 </div>
+               
             </div>
         </div>
+           
+            </>
     );
 }
 

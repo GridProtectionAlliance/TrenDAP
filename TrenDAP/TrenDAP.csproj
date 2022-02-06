@@ -23,6 +23,7 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSets\DataSets.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\DataSetsSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\EditDataSet.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSets\HelperFunctions.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\TrenDAPDB.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\Types\DataSetGlobalSettings.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\Types\DataSetSapphire.tsx" />
@@ -145,6 +146,7 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\DataSetData.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\HelperFunctions.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\TrenDAPDB.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\Types\DataSetGlobalSettings.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Sapphire\DataSetSapphire.tsx">

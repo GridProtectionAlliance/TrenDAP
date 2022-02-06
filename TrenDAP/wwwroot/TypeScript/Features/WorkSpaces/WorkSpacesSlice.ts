@@ -153,7 +153,7 @@ export const WorkSpacesSlice = createSlice({
 export const { Sort, OpenWorkSpace, CloseWorkSpace } = WorkSpacesSlice.actions;
 export default WorkSpacesSlice.reducer; 
 export const SelectWorkSpaces = (state: Redux.StoreState) => state.WorkSpaces.Data;
-export const SelectWorkSpaceByID = createSelector((state: Redux.StoreState) => state.WorkSpaces.Data, (_,id: number) => id, (ws, id) => ws.Data.find(ds => ds.ID === id);
+export const SelectWorkSpaceByID = createSelector((state: Redux.StoreState) => state.WorkSpaces.Data, (_,id: number) => id, (ws, id) => ws.Data.find(ds => ds.ID === id));
 export const SelectNewWorkSpace = () => ({ ID: 0, Name: '', DataSetID: 0,  User: '', JSON: '' });
 export const SelectWorkSpacesStatus = (state: Redux.StoreState) => state.WorkSpaces.Status;
 export const SelectWorkSpacesForUser = createSelector((state: Redux.StoreState) => state.WorkSpaces.Data, (_, user: string) => user, (ws, user) => ws.filter(w => w.User === user));
