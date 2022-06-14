@@ -190,8 +190,8 @@ export default function ViewDataSet() {
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-primary pull-left" onClick={() => {
-                                let points = selectedData.filter(f => (f.QualityFlags/Math.pow(2,4) & 1) !== 0);
-                                points.forEach(p => p.QualityFlags = p.QualityFlags- Math.pow(2, 4));
+                                let points = selectedData.filter(f => (f.QualityFlags/Math.pow(2,3) & 1) !== 0);
+                                points.forEach(p => p.QualityFlags = p.QualityFlags- Math.pow(2, 3));
                                 FlagData(points);
                                 setToggle(false);
                             }}>Unflag All</button>
@@ -218,7 +218,7 @@ export default function ViewDataSet() {
                                         else return a && b.Value;
                                     },undefined);
                                 });
-                                points.forEach(p => p.QualityFlags = p.QualityFlags + Math.pow(2, 4));
+                                points.forEach(p => p.QualityFlags = p.QualityFlags + Math.pow(2, 3));
                                 FlagData(points);
                                 setToggle(false);
                             }}>Process</button>

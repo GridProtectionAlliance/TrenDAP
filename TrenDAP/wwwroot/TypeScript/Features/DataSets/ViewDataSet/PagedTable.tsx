@@ -114,7 +114,7 @@ export default function PagedTable(props: { Data: TrenDAP.iXDATrendDataPoint[], 
                                     <li>Max: {record?.Maximum}</li>
                                     <li>Avg: {record?.Average}</li>
                                     <li>Min: {record?.Minimum}</li>
-                                    <li>Flag: <input type='checkbox' checked={(record?.QualityFlags / Math.pow(2, 4) & 1) !== 0} onChange={(evt) => setRecord({ ...record, QualityFlags: evt.target.checked ? record.QualityFlags + Math.pow(2, 4) : record.QualityFlags - Math.pow(2, 4)}) }/></li>
+                                    <li>Flag: <input type='checkbox' checked={(record?.QualityFlags / Math.pow(2, 3) & 1) !== 0} onChange={(evt) => setRecord({ ...record, QualityFlags: evt.target.checked ? record.QualityFlags + Math.pow(2, 3) : record.QualityFlags - Math.pow(2, 3)}) }/></li>
                                 </ul>
                             </div>
                         </div>
