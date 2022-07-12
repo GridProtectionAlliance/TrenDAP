@@ -105,7 +105,7 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
 
                 <div className={styles.navbarbuttons}>
 
-                    <span style={{ padding: '6px 12px', position: 'relative' }}>Data Set: <Link to={`${homePath}EditDataSet/${dataSet?.ID}`}>{dataSet?.Name}</Link><DataSetData {...dataSet} /></span>
+                    <span style={{ padding: '6px 12px', position: 'relative' }}>Data Set: <Link to={`${homePath}AddEditDataSet/${dataSet?.ID}`}>{dataSet?.Name}</Link><DataSetData {...dataSet} /></span>
                     <div className="btn-group">
                         <button className="btn" title='Add Object' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-plus" ></i></button>
                         <div className="dropdown-menu" >

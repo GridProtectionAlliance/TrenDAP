@@ -64,7 +64,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                 <h4>My DataSets:</h4>
                             </div>
                             <div className="col">
-                                <Link to={`${homePath}AddNewDataSet`}>
+                                <Link to={`${homePath}AddEditDataSet/-1`}>
                                     <button className="btn btn-primary pull-right" onClick={() => dispatch(New({}))}>Add New</button>
                                 </Link>
                             </div>
@@ -85,7 +85,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                     <span>
                                             <DataSetData {...item} />
                                             {item.Data?.Status === 'idle' ? <Link to={`${homePath}ViewDataSet/${item.ID}`} title='View/Edit DataSet Data.' className='btn'>{Wrench}</Link> : null}
-                                            <Link to={`${homePath}EditDataSet/${item.ID}`} title='Edit DataSet Parameters.' className='btn'>{Pencil}</Link>
+                                            <Link to={`${homePath}AddEditDataSet/${item.ID}`} title='Edit DataSet Parameters.' className='btn'>{Pencil}</Link>
                                             <a title='Clone DataSet.' className="btn" onClick={() => dispatch(CloneDataSet(item))}>{DNA}</a>
                                             <a title='Delete DataSet.' className="btn" onClick={() => setDeleteItem(item)}>{TrashCan}</a>
                                     </span>
@@ -112,10 +112,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                         <Table<TrenDAP.iDataSet>
                             cols={[
                                 { key: 'Name', field: 'Name', label: 'Name' },
-                                { key: 'UpdatedOn', field: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> },
-
-                                //{ key: null, label: '', content: (item, key, style) => <span><EditDataSet DataSet={item} /><button className="btn" onClick={() => dispatch(RemoveDataSet(item))}>{TrashCan}</button></span> }
-
+                                { key: 'UpdatedOn', field: 'UpdatedOn', label: 'Updated', content: (item, key, style) => <span>{moment(item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span> }
                             ]}
                             tableClass="table table-hover"
                             theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}

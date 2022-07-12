@@ -28,7 +28,7 @@ import styles from '../Styles/app.scss';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Link, useLocation, NavLink } from 'react-router-dom';
-import AddNewDataSet from './Features/DataSets/AddNewDataSet';
+import AddEditDataSet from './Features/DataSets/AddEditDataSet';
 import AddNewDataSource from './Features/DataSources/AddNewDataSource';
 import AddNewWorkSpace from './Features/WorkSpaces/AddNewWorkSpace';
 import { SelectWorkSpacesForUser, SelectWorkSpacesStatus, FetchWorkSpaces, OpenCloseWorkSpace } from './Features/WorkSpaces/WorkSpacesSlice';
@@ -78,7 +78,7 @@ const SideNavBar: React.FunctionComponent = (props: {}) => {
                                 <span>Data Sets</span>
 
                             </Link>
-                        {location.pathname === `${homePath}DataSets` ? <NavLink style={{ position: 'absolute', top: 10, right: 10 }} to={`${homePath}AddNewDataSet`} onClick={() => dispatch(New({})) }>{CirclePlusSVG() }</NavLink>: null}
+                        {location.pathname === `${homePath}DataSets` ? <NavLink style={{ position: 'absolute', top: 10, right: 10 }} to={`${homePath}AddEditDataSet/-1`}>{CirclePlusSVG() }</NavLink>: null}
                         </li>
                         <li className="nav-item" style={{ position: 'relative' }}>
                             <Link className="nav-link" to={`${homePath}WorkSpaces`}>

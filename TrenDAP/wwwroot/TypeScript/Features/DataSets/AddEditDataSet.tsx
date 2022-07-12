@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  AddNewDataSet.tsx - Gbtc
+//  AddEditDataSet.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -17,24 +17,31 @@
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
 //  09/25/2020 - Billy Ernest
-//       Generated original version of source code.
+//       Generated original version of source code. (AddNewDataSet.tsx)
+//  07/11/2022 - Gabriel Santos
+//       Combined this and EditDataSet to make component that handles both, since they are similar
+//          actions with similar error checking needs.
 //
 //******************************************************************************************************
 
 import * as React from 'react';
 import { TrenDAP } from '../../global';
 import { useDispatch, useSelector } from 'react-redux';
-import { AddDataSet, SelectRecord, New, Update, SelectDataSets } from './DataSetsSlice'
+import { AddDataSet, SelectRecord, New, Update, SelectDataSets, SetRecordByID, SelectDataSetsStatus, FetchDataSets, UpdateDataSet } from './DataSetsSlice'
 import DataSet from './DataSet';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ToolTip } from '@gpa-gemstone/react-interactive';
 import { Warning } from '@gpa-gemstone/gpa-symbols';
 import moment from 'moment';
 import { CrossMark } from '../../Constants';
+import { IsNumber } from '@gpa-gemstone/helper-functions';
 
-const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
+const AddEditDataSet: React.FunctionComponent<{}> = (props) => {
     const dispatch = useDispatch();
     let navigate = useNavigate();
+
+    const { id } = useParams<{ id }>();
+    const wsStatus = useSelector(SelectDataSetsStatus);
 
     const dataSet = useSelector(SelectRecord);
     const allDataSets = useSelector(SelectDataSets);
@@ -42,9 +49,20 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
     const [warnings, setWarning] = React.useState<string[]>([]);
     const [errors, setErrors] = React.useState<string[]>([]);
     const [hover, setHover] = React.useState<boolean>(false);
-    //React.useEffect(() => {
-    //    dispatch(New);
-    //});
+
+    React.useEffect(() => {
+        if (wsStatus === 'unitiated' || wsStatus === 'changed') {
+            dispatch(FetchDataSets());
+            return function () {
+            }
+        }
+
+        if (id > 0)
+            dispatch(SetRecordByID(parseInt(id)));
+        else
+            dispatch(New({}));
+
+    }, [dispatch, wsStatus, id]);
 
     React.useEffect(() => {
         const w = [];
@@ -52,8 +70,10 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
             w.push("With the current Time Context and Day of Week Filter it is possible for the dataset to be empty at times.")
         if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Week' && dataSet.RelativeValue < 53)
             w.push("With the current Time Context and Week of Year Filter it is possible for the dataset to be empty at times.")
-        if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Day' && dataSet.RelativeValue < 366)
-            w.push("With the current Time Context and Week of Year Filter it is possible for the dataset to be empty at times.")
+        if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Month' && dataSet.RelativeValue < 12)
+            w.push("With the current Time Context and Month of Year Filter it is possible for the dataset to be empty at times.")
+        if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Year' && dataSet.RelativeValue < 366)
+            w.push("With the current Time Context and Year Filter it is possible for the dataset to be empty at times.")
         setWarning(w);
     }, [dataSet])
 
@@ -61,13 +81,19 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
         const e = [];
 
         if (dataSet.Name == null || dataSet.Name.trim().length == 0)
-            e.push("A Name has to be entered.")
+            e.push("A name must be entered.")
         if (dataSet.Name != null && dataSet.Name.length > 200)
-            e.push("Name has to be less than 200 characters.");
+            e.push("Name must be less than 200 characters.");
         if (dataSet.Name != null && allDataSets.findIndex(ds => ds.ID !== dataSet.ID && ds.Name.toLowerCase() == dataSet.Name.toLowerCase()) > -1)
             e.push("A DataSet with this name already exists.");
         if (dataSet.Context == 'Fixed Dates' && moment(dataSet.From).isAfter(moment(dataSet.To)))
             e.push("A valid Timeframe has to be selected.")
+        if (dataSet.RelativeValue == null || !IsNumber(dataSet.RelativeValue))
+            e.push("A valid number must be entered for relative value.")
+        if (dataSet.From == '')
+            e.push("A valid start date is required.")
+        if (dataSet.To == '')
+            e.push("A valid end date is required.")
         if (dataSet.Hours == 0)
             e.push("At least 1 Hour has to be selected.")
         if (dataSet.Days == 0)
@@ -87,7 +113,7 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
         <div className="row" style={{margin: 10}}>
             <div className="card" style={{ width: '100%', height: window.innerHeight - 60 }}>
                     <div className="card-header">
-                        New Data Set {dataSet.Name !== null && dataSet.Name.trim().length > 0 ? ('(' + dataSet.Name + ')') : ''}
+                        {dataSet.Name !== null && dataSet.Name.trim().length > 0 ? ('Edit Data Set (' + dataSet.Name + ')') : 'New Data Set'}
                 </div>
                 <div className="card-body" style={{ overflowY: 'auto' }}>
                     <DataSet Record={dataSet} SetDataSet={(record) => dispatch(Update(record))} />
@@ -100,7 +126,10 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
                                 onClick={() => {
                                     if (errors.length > 0)
                                         return;
-                                    dispatch(AddDataSet(dataSet));
+                                    if (dataSet.ID > 0)
+                                        dispatch(UpdateDataSet(dataSet));
+                                    else
+                                        dispatch(AddDataSet(dataSet));
                                     navigate(`${homePath}DataSets`);
                                 }}
                             > Save</button>
@@ -118,4 +147,4 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
     );
 }
 
-export default AddNewDataSet;
+export default AddEditDataSet;

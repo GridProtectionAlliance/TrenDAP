@@ -37,8 +37,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
     const DataSources = React.lazy(() => import(/* webpackChunkName: "DataSources" */ './Features/DataSources/DataSources'));
     const DataSets = React.lazy(() => import(/* webpackChunkName: "DataSets" */ './Features/DataSets/DataSets'));
     const WorkSpaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/WorkSpaces/WorkSpaces'));
-    const EditDataSet = React.lazy(() => import(/* webpackChunkName: "EditDataSet" */ './Features/DataSets/EditDataSet'));
-    const AddNewDataSet = React.lazy(() => import(/* webpackChunkName: "AddNewDataSet" */ './Features/DataSets/AddNewDataSet'));
+    const AddEditDataSet = React.lazy(() => import(/* webpackChunkName: "AddNewDataSet" */ './Features/DataSets/AddEditDataSet'));
     const WorkSpaceEditor = React.lazy(() => import(/* webpackChunkName: "WorkSpaceEditor" */ './Features/WorkSpaces/WorkSpaceEditor'));
     const ViewDataSet = React.lazy(() => import(/* webpackChunkName: "ViewDataSet" */ './Features/DataSets/ViewDataSet/ViewDataSet'));
     const QuickViewOpenXDA = React.lazy(() => import(/* webpackChunkName: "QuickViewXDA" */ './Features/OpenXDA/QuickViewOpenXDA'));
@@ -74,8 +73,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                                 <Route path={`${homePath}WorkSpaces`} element={<WorkSpaces />} />
                                 <Route path={`${homePath}DataSources`} element={<DataSources />} />
                                 <Route path={`${homePath}DataSets`} element={<DataSets />} />
-                                <Route path={`${homePath}AddNewDataSet`} element={<AddNewDataSet />} />
-                                <Route path={`${homePath}EditDataSet/:id`} element={<EditDataSet />} />
+                                <Route path={`${homePath}AddEditDataSet/:id`} element={<AddEditDataSet />} />
                                 <Route path={`${homePath}WorkSpaceEditor/:id`} element={<WorkSpaceEditor />} />
                                 <Route path={`${homePath}ViewDataSet/:id`} element={<ViewDataSet />} />
                                 <Route path={`${homePath}QuickViewOpenXDA`} element={<QuickViewOpenXDA />} />

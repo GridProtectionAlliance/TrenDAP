@@ -23,7 +23,7 @@
 
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../../global';
-import { Input, CheckBox, EnumCheckBoxes } from '@gpa-gemstone/react-forms';
+import { Input, CheckBox, EnumCheckBoxes, Select } from '@gpa-gemstone/react-forms';
 import { Plus } from '../../../Constants';
 import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from '../../DataSources/DataSourcesSlice';
 import { useSelector, useDispatch } from 'react-redux';
@@ -100,10 +100,34 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
         return Math.floor(ComputeValidWeeks(props.Record)/ Math.pow(2, i))%2 == 0
     }
 
+    const ShowRelative = <>
+        <div className='col'>
+            <Input<TrenDAP.iDataSet> Record={props.Record} Field="RelativeWindow" Label="Time Window Size" Setter={(record) => props.SetDataSet(record)} Valid={(field) => { return true } } />
+        </div>
+        <div className='col'>
+            <Select<TrenDAP.iDataSet> Record={props.Record} Field="RelativeWindow" Label="Time Window Units" Setter={(record) => props.SetDataSet(record)}
+                Options={[{ Value: "Day", Label: "Day(s)" }, { Value: "Week", Label: "Week(s)" }, { Value: "Month", Label: "Month(s)" }, { Value: "Year", Label: "Year(s)" }]} />
+        </div>
+    </>
+
+    const ShowFixed = <>
+        <div className='col'>
+            <Input<TrenDAP.iDataSet> Record={props.Record} Field="From" Label="Start Date" Setter={(record) => props.SetDataSet(record)} Valid={(field) => { return true }} />
+        </div>
+        <div className='col'>
+            <Input<TrenDAP.iDataSet> Record={props.Record} Field="To" Label="End Date" Setter={(record) => props.SetDataSet(record)} Valid={(field) => { return true }} />
+        </div>
+    </>
+
     return (
         <form>
-            <Input<TrenDAP.iDataSet> Record={props.Record} Field="Name" Setter={(record) => props.SetDataSet(record)} Valid={valid} Feedback={"A unique Name has to be specified"} />
-            <RelativeDateRangePicker Record={props.Record} Setter={(record) => props.SetDataSet(record)} />
+            <Input<TrenDAP.iDataSet> Record={props.Record} Field="Name" Setter={(record) => props.SetDataSet(record)} Valid={valid} Feedback={"A unique name must be specified"} />
+            <div className='row'>
+                <div className='col'>
+                    <Select<TrenDAP.iDataSet> Record={props.Record} Field="Context" Setter={(record) => props.SetDataSet(record)} Label="Time Context" Options={[{ Value: "Relative", Label: "Relative" }, { Value: "Fixed Dates", Label: "Fixed Dates" }]} />
+                </div>
+                {props.Record.Context == 'Relative' ? ShowRelative : ShowFixed}
+            </div>
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Hours" Label="Hour of Day" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Days" Label="Day of Week" Setter={(record) => props.SetDataSet(record)} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} IsDisabled={validDay} />
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.Record} Field="Weeks" Label="Week of Year" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 53 }, (_, i) => i.toString())} IsDisabled={validWeek} />
@@ -128,114 +152,3 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
 }
 
 export default DataSetGlobalSettings;
-
-const RelativeDateRangePicker = (props: { Record: TrenDAP.iDataSet, Setter: (record: TrenDAP.iDataSet) => void }) => {
-    const [context, setContext] = React.useState<'Relative' | 'Fixed Dates'>(props.Record.Context);
-    const [relativeValue, setRelativeValue] = React.useState<number>(props.Record.RelativeValue);
-    const [relativeWindow, setRelativeWindow] = React.useState<'Day' | 'Week' | 'Month' | 'Year'>(props.Record.RelativeWindow)
-    const [startDate, setStartDate] = React.useState<string>(props.Record.From);
-    const [endDate, setEndDate] = React.useState<string>(props.Record.To);
-
-    React.useEffect(() => {
-        if (context !== props.Record.Context) setContext(props.Record.Context);
-        if (relativeValue !== props.Record.RelativeValue) setRelativeValue(props.Record.RelativeValue);
-        if (relativeWindow !== props.Record.RelativeWindow) setRelativeWindow(props.Record.RelativeWindow);
-        if (startDate !== props.Record.From) setStartDate(props.Record.From);
-        if (endDate !== props.Record.To) setEndDate(props.Record.To);
-    }, [props.Record]);
-
-    React.useEffect(() => {
-        if (context !== props.Record.Context) {
-            const newRecord = { ...props.Record };
-            newRecord.Context = context;
-            props.Setter(newRecord);
-        }
-    }, [context]);
-
-    React.useEffect(() => {
-        if (relativeValue !== props.Record.RelativeValue) {
-            const newRecord = { ...props.Record };
-            newRecord.RelativeValue = relativeValue;
-            props.Setter(newRecord);
-        }
-    }, [relativeValue]);
-
-    React.useEffect(() => {
-        if (relativeWindow !== props.Record.RelativeWindow) {
-            const newRecord = { ...props.Record };
-            newRecord.RelativeWindow = relativeWindow;
-            props.Setter(newRecord);
-        }
-    }, [relativeWindow]);
-
-    React.useEffect(() => {
-        if (startDate !== props.Record.From) {
-            const newRecord = { ...props.Record };
-            newRecord.From = startDate;
-            props.Setter(newRecord);
-        }
-    }, [startDate]);
-
-    React.useEffect(() => {
-        if (endDate !== props.Record.To) {
-            const newRecord = { ...props.Record };
-            newRecord.To = endDate;
-            props.Setter(newRecord);
-        }
-    }, [endDate]);
-
-
-    const ShowContent = () => {
-        if (context == 'Relative')
-            return ShowRelative();
-        else return ShowFixed();
-    }
-
-    const ShowRelative = () => {
-        return (
-            <>
-                <div className='col'>
-                    <label>Time Window Size</label>
-                    <input value={relativeValue} type='number' className='form-control' onChange={(evt) => setRelativeValue(parseFloat(evt.target.value))} />
-                </div>
-                <div className='col'>
-                    <label>Time Window Units</label>
-                    <select className='form-control' value={relativeWindow} onChange={(evt) => setRelativeWindow(evt.target.value as any)}>
-                        <option value='Day'>Day(s)</option>
-                        <option value='Week'>Week(s)</option>
-                        <option value='Month'>Month(s)</option>
-                        <option value='Year'>Year(s)</option>
-                    </select>
-                </div>
-            </>
-        );
-    }
-    const ShowFixed = () => {
-        return (
-            <>
-                <div className='col'>
-                    <label>Start Date</label>
-                    <input value={startDate} type='date' className='form-control' onChange={(evt) => setStartDate(evt.target.value)} />
-                </div>
-                <div className='col'>
-                    <label>End Date</label>
-                    <input value={endDate} type='date' className='form-control' onChange={(evt) => setEndDate(evt.target.value)} />
-                </div>
-            </>
-        );
-    }
-
-
-    return (
-        <div className='row'>
-            <div className='col'>
-                <label>Time Context</label>
-                <select className='form-control' value={context} onChange={(evt) => setContext(evt.target.value as any)}>
-                    <option value='Relative'>Relative</option>
-                    <option value='Fixed Dates'>Fixed Dates</option>
-                </select>
-            </div>
-            {ShowContent()}
-        </div>
-    );
-}
