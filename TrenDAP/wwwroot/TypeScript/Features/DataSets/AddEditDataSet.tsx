@@ -36,11 +36,17 @@ import moment from 'moment';
 import { CrossMark } from '../../Constants';
 import { IsNumber } from '@gpa-gemstone/helper-functions';
 
-const AddEditDataSet: React.FunctionComponent<{}> = (props) => {
-    const dispatch = useDispatch();
-    let navigate = useNavigate();
+interface IProps {
+    show: boolean;
+    setShow: (evt: boolean) => void;
+    id: number;
+    onComplete?: (evt: TrenDAP.iDataSet) => void;
+    onCancel?: () => void;
+}
 
-    const { id } = useParams<{ id }>();
+const AddEditDataSet = (props: IProps) => {
+    const dispatch = useDispatch();
+
     const wsStatus = useSelector(SelectDataSetsStatus);
 
     const dataSet = useSelector(SelectRecord);
@@ -57,12 +63,12 @@ const AddEditDataSet: React.FunctionComponent<{}> = (props) => {
             }
         }
 
-        if (id > 0)
-            dispatch(SetRecordByID(parseInt(id)));
+        if (props.id > 0)
+            dispatch(SetRecordByID(props.id));
         else
             dispatch(New({}));
 
-    }, [dispatch, wsStatus, id]);
+    }, [dispatch, wsStatus, props.id]);
 
     React.useEffect(() => {
         const w = [];
@@ -109,28 +115,35 @@ const AddEditDataSet: React.FunctionComponent<{}> = (props) => {
 
    
     return (
-        <>
-        <div className="row" style={{margin: 10}}>
-            <div className="card" style={{ width: '100%', height: window.innerHeight - 60 }}>
-                    <div className="card-header">
-                        {dataSet.Name !== null && dataSet.Name.trim().length > 0 ? ('Edit Data Set (' + dataSet.Name + ')') : 'New Data Set'}
-                </div>
-                <div className="card-body" style={{ overflowY: 'auto' }}>
-                    <DataSet Record={dataSet} SetDataSet={(record) => dispatch(Update(record))} />
-                </div>
-                <div className="card-footer">
-                    <div className="btn-group mr-2">
+        <div className="modal" style={{ display: props.show ? 'block' : null, backgroundColor: 'rgba(0,0,0,0.4)' }}>
+            <div className="modal-dialog-xl">
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h4 className="modal-title">{dataSet.Name !== null && dataSet.Name.trim().length > 0 ? ('Edit Data Set (' + dataSet.Name + ')') : 'New Data Set'}</h4>
+                        <button type="button" className="close" onClick={() => {
+                            if (props.onCancel !== undefined && props.onCancel !== null) props.onCancel();
+                            props.setShow(false)
+                        }}>&times;</button>
+                    </div>
+                        
+                    <div className="modal-body">
+                        <DataSet Record={dataSet} SetDataSet={(record) => dispatch(Update(record))} />
+                    </div>
+
+                    <div className="modal-footer">
+                        <div className="btn-group mr-2">
                             <button type="button" data-tooltip="newBtn"
                                 className={"btn btn-primary" + (errors.length > 0 ? ' disabled' : '')}
                                 onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
                                 onClick={() => {
+                                    if (props.onComplete !== undefined && props.onComplete !== null) props.onComplete(dataSet);
+                                    props.setShow(false);
                                     if (errors.length > 0)
                                         return;
                                     if (dataSet.ID > 0)
                                         dispatch(UpdateDataSet(dataSet));
                                     else
                                         dispatch(AddDataSet(dataSet));
-                                    navigate(`${homePath}DataSets`);
                                 }}
                             > Save</button>
                         </div>
@@ -138,12 +151,15 @@ const AddEditDataSet: React.FunctionComponent<{}> = (props) => {
                             {warnings.map((w,i) => <p key={2*i}>{Warning} {w} </p>)}
                             {errors.map((e,i) => <p key={2*i+1}>{CrossMark} {e} </p>)}
                         </ToolTip>
+                        <button type="button" className="btn btn-danger" onClick={() => {
+                            if (props.onCancel !== undefined && props.onCancel !== null) props.onCancel();
+                            props.setShow(false)
+                        }}>Close</button>
+                    </div>
+
                 </div>
-               
             </div>
         </div>
-           
-            </>
     );
 }
 

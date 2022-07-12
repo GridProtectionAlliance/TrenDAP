@@ -32,6 +32,7 @@ import moment from 'moment';
 import DataSetData from './DataSetData';
 import { DNA, TrashCan, HeavyCheckMark, Pencil, Wrench } from '@gpa-gemstone/gpa-symbols';
 import { Warning } from '@gpa-gemstone/react-interactive'
+import AddEditDataSet from './AddEditDataSet';
 
 const DataSets: React.FunctionComponent = (props: {}) => {
 
@@ -45,6 +46,9 @@ const DataSets: React.FunctionComponent = (props: {}) => {
 
     const sortField = useSelector(SelectDataSetsSortField);
     const ascending = useSelector(SelectDataSetsAscending);
+
+    const [showAddNew, setShowAddNew] = React.useState<boolean>(false);
+    const [id, setId] = React.useState<number>(0); 
 
     React.useEffect(() => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
@@ -61,12 +65,13 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                     <div className="card-header">
                         <div className="row">
                             <div className="col">
-                                <h4>My DataSets:</h4>
+                                <h4>My DataSets</h4>
                             </div>
                             <div className="col">
-                                <Link to={`${homePath}AddEditDataSet/-1`}>
-                                    <button className="btn btn-primary pull-right" onClick={() => dispatch(New({}))}>Add New</button>
-                                </Link>
+                                <button className="btn btn-primary pull-right" onClick={() => {
+                                    setId(0);
+                                    setShowAddNew(true);
+                                }}>Add New</button>
                             </div>
                         </div>
                     </div>
@@ -85,7 +90,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                     <span>
                                             <DataSetData {...item} />
                                             {item.Data?.Status === 'idle' ? <Link to={`${homePath}ViewDataSet/${item.ID}`} title='View/Edit DataSet Data.' className='btn'>{Wrench}</Link> : null}
-                                            <Link to={`${homePath}AddEditDataSet/${item.ID}`} title='Edit DataSet Parameters.' className='btn'>{Pencil}</Link>
+                                            <button onClick={(evt) => { setShowAddNew(true); setId(item.ID) } } title='Edit DataSet Parameters.' className='btn'>{Pencil}</button>
                                             <a title='Clone DataSet.' className="btn" onClick={() => dispatch(CloneDataSet(item))}>{DNA}</a>
                                             <a title='Delete DataSet.' className="btn" onClick={() => setDeleteItem(item)}>{TrashCan}</a>
                                     </span>
@@ -101,7 +106,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                         onSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                         data={DataSets}
                         ascending={ascending}
-                            />
+                        />
                     </div>
                 </div>
             </div>
@@ -128,6 +133,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                     </div>
                 </div>
             </div>
+            <AddEditDataSet show={showAddNew} setShow={setShowAddNew} id={id} />
             <Warning Title={'Delete ' + deleteItem?.Name} Show={deleteItem != null}
                 Message={"This will remove the Dataset and can not be undone."} CallBack={(c) => { if (c) dispatch(RemoveDataSet(deleteItem)); setDeleteItem(null); }} />
         </div>
