@@ -28,10 +28,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import Table from '@gpa-gemstone/react-table'
 import { Sort, FetchWorkSpaces, SelectWorkSpacesStatus, RemoveWorkSpace, SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, SelectWorkSpacesSortField, SelectWorkSpacesAscending } from './WorkSpacesSlice';
 import EditWorkSpace from './EditWorkSpace';
-import { TrashCan, HeavyCheckMark } from './../../Constants'
+import { TrashCan, HeavyCheckMark } from './../../Constants';
 import { Link, useParams } from 'react-router-dom';
 import moment from 'moment';
 import { SelectDataSets } from '../DataSets/DataSetsSlice';
+import AddNewWorkSpace from './AddNewWorkSpace';
 
 const WorkSpaces: React.FunctionComponent = (props: {}) => {
     const dispatch = useDispatch();
@@ -42,6 +43,8 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
 
     const sortField = useSelector(SelectWorkSpacesSortField);
     const ascending = useSelector(SelectWorkSpacesAscending);
+
+    const [showAddNew, setShowAddNew] = React.useState<boolean>(false); 
 
     React.useEffect(() => {
         if (wsStatus != 'unitiated' && wsStatus != 'changed') return;
@@ -55,7 +58,16 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
         <div className="row" style={{ margin: 10 }}>
             <div className="col-8" style={{padding: '0 0 0 0'}}>
                 <div className="card">
-                    <div className="card-header">My Workspaces</div>
+                    <div className="card-header">
+                        <div className="row">
+                            <div className="col">
+                                <h4>My Workspaces</h4>
+                            </div>
+                            <div className="col">
+                                <button className="btn btn-primary pull-right" onClick={() => setShowAddNew(true)}>Add New</button>
+                            </div>
+                        </div>
+                    </div>
                     <div className="card-body">
                         <Table<TrenDAP.iWorkSpace>
                             cols={[
@@ -86,7 +98,8 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                             onSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             data={workSpaces}
                             ascending={ascending}
-                            />
+                        />
+                        <AddNewWorkSpace show={showAddNew} setShow={setShowAddNew} />
                     </div>
                 </div>
             </div>

@@ -29,6 +29,7 @@ import Table from '@gpa-gemstone/react-table'
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 import EditDataSource from './EditDataSource';
 import { TrashCan, HeavyCheckMark } from './../../Constants'
+import AddNewDataSource from './AddNewDataSource';
 
 const DataSources: React.FunctionComponent = (props: {}) => {
     const dispatch = useDispatch();
@@ -41,6 +42,8 @@ const DataSources: React.FunctionComponent = (props: {}) => {
 
     const sortField = useSelector(SelectDataSourcesSortField);
     const ascending = useSelector(SelectDataSourcesAscending);
+
+    const [showAddNew, setShowAddNew] = React.useState<boolean>(false); 
 
     React.useEffect(() => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
@@ -61,7 +64,17 @@ const DataSources: React.FunctionComponent = (props: {}) => {
     return (
     <div className="row" style={{ margin: 10}}>
             <div className="col-6" style={{ padding: '0 0 0 0' }}>
-            <div className="card">
+                <div className="card">
+                    <div className="card-header">
+                        <div className="row">
+                            <div className="col">
+                                <h4>My DataSets</h4>
+                            </div>
+                            <div className="col">
+                                <button className="btn btn-primary pull-right" onClick={() => setShowAddNew(true)}>Add New</button>
+                            </div>
+                        </div>
+                    </div>
                 <div className="card-header">My DataSources</div>
                 <div className="card-body">
                     <Table<TrenDAP.iDataSource>
@@ -83,7 +96,7 @@ const DataSources: React.FunctionComponent = (props: {}) => {
                         data={dataSources}
                         ascending={ascending}
                     />
-
+                    <AddNewDataSource show={showAddNew} setShow={setShowAddNew} />
                 </div>
             </div>
         </div>

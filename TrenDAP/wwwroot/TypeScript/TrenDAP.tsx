@@ -18,31 +18,25 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/08/2020 - Billy Ernest
 //       Generated original version of source code.
+//  07/12/2022 - Gabriel Santos
+//       Updated to use GPA-Gemstone version of the code
 //
 //******************************************************************************************************
-
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
+import * as ReactDOM from 'react-dom';
+import * as React from 'react';
 import store from './Store/Store';
-import styles from '../Styles/app.scss';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
-import SideNavBar from './SideNavBar';
-import { Navigate, Routes } from 'react-router';
+import { Application as App, Page } from '@gpa-gemstone/react-interactive';
+import { SVGIcons } from '@gpa-gemstone/gpa-symbols';
+import DataSets from './Features/DataSets/DataSets';
+import DataSources from './Features/DataSources/DataSources';
+import WorkSpaces from './Features/WorkSpaces/WorkSpaces';
 
-const TrenDAP: React.FunctionComponent = (props: {}) => {
+declare var homePath;
 
-    const DataSources = React.lazy(() => import(/* webpackChunkName: "DataSources" */ './Features/DataSources/DataSources'));
-    const DataSets = React.lazy(() => import(/* webpackChunkName: "DataSets" */ './Features/DataSets/DataSets'));
-    const WorkSpaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/WorkSpaces/WorkSpaces'));
-    const AddEditDataSet = React.lazy(() => import(/* webpackChunkName: "AddNewDataSet" */ './Features/DataSets/AddEditDataSet'));
-    const WorkSpaceEditor = React.lazy(() => import(/* webpackChunkName: "WorkSpaceEditor" */ './Features/WorkSpaces/WorkSpaceEditor'));
-    const ViewDataSet = React.lazy(() => import(/* webpackChunkName: "ViewDataSet" */ './Features/DataSets/ViewDataSet/ViewDataSet'));
-    const QuickViewOpenXDA = React.lazy(() => import(/* webpackChunkName: "QuickViewXDA" */ './Features/OpenXDA/QuickViewOpenXDA'));
-
-
+const TrenDAPMainPage = (props: {}) => {
     const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
 
     React.useEffect(() => {
@@ -53,37 +47,18 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
         }
     }, [])
 
-    return (
-        <Router>
 
-        <div style={{ width: window.innerWidth, height: window.innerHeight, position: "absolute" }}>
-            <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
-                <a className="navbar-brand col-sm-3 col-md-2 mr-0" href={homePath}>TrenDAP</a>
-                    <ul className="navbar-nav px-3">
-                        <li className="nav-item text-nowrap">
-                        </li>
-                    </ul>
-            </nav>
-            <SideNavBar />
-            <div className={styles['main-window']}>
-                <React.Suspense fallback={<div>Loading...</div>}>
-                        <Routes>
-                            <Route path={`${homePath}`} >
-                                <Route index element={<Navigate to={`${homePath}WorkSpaces`} />} />
-                                <Route path={`${homePath}WorkSpaces`} element={<WorkSpaces />} />
-                                <Route path={`${homePath}DataSources`} element={<DataSources />} />
-                                <Route path={`${homePath}DataSets`} element={<DataSets />} />
-                                <Route path={`${homePath}AddEditDataSet/:id`} element={<AddEditDataSet />} />
-                                <Route path={`${homePath}WorkSpaceEditor/:id`} element={<WorkSpaceEditor />} />
-                                <Route path={`${homePath}ViewDataSet/:id`} element={<ViewDataSet />} />
-                                <Route path={`${homePath}QuickViewOpenXDA`} element={<QuickViewOpenXDA />} />
-                            </Route>
-                    </Routes >
-                </React.Suspense>
-            </div>
-            </div>
-        </Router>
+    return (
+        <App
+            DefaultPath={'WorkSpaces'}
+            HomePath={homePath}
+            Logo={homePath + 'Images/TrenDAP.png'}
+            AllowCollapsed={true}>
+            <Page Name='DataSources' Label='Data Sources' Icon={SVGIcons.DataContainer} > <DataSources /> </Page>
+            <Page Name='DataSets' Label='Data Sets' Icon={SVGIcons.Cube} > <DataSets /> </Page>
+            <Page Name='Workspaces' Label='Workspaces' Icon={SVGIcons.House} > <WorkSpaces /> </Page>
+        </App>
     );
 }
 
-ReactDOM.render(<Provider store={store}><TrenDAP/></Provider>, document.getElementById('window'));
+ReactDOM.render(<Provider store={store}><TrenDAPMainPage /></Provider>, document.getElementById('window'));

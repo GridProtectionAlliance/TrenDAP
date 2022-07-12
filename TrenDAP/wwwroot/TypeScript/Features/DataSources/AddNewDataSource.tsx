@@ -26,43 +26,50 @@ import { TrenDAP } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
 import { AddDataSource, SelectNewDataSource } from './DataSourcesSlice'
 import DataSource from './DataSource';
-import CirclePlusSVG from '../../CirclePlusSVG';
 
-const AddNewDataSource: React.FunctionComponent<{}> = (props) => {
+interface IProps {
+    show: boolean;
+    setShow: (evt: boolean) => void;
+    onComplete?: (evt: TrenDAP.iDataSource) => void;
+    onCancel?: () => void;
+}
+
+const AddNewDataSource = (props : IProps) => {
     const dispatch = useDispatch();
     const [dataSource, setDataSource]= React.useState<TrenDAP.iDataSource>( useSelector(SelectNewDataSource) as TrenDAP.iDataSource);
-    const [show, setShow] = React.useState<boolean>(false);
 
     return (
-        <>
-        <button style={{ backgroundColor: '#F8F9FA', border: 'none', position: 'absolute', right: 10, top: 15 }} className="align-items-center text-muted" onClick={() => setShow(true)}>
-            {CirclePlusSVG()}
-        </button>
-        <div className="modal" style={{display: show ? 'block' : null, backgroundColor: 'rgba(0,0,0,0.4)' }}>
+        <div className="modal" style={{display: props.show ? 'block' : null, backgroundColor: 'rgba(0,0,0,0.4)' }}>
             <div className="modal-dialog">
                 <div className="modal-content">
 
-                  <div className="modal-header">
+                    <div className="modal-header">
                         <h4 className="modal-title">DataSource</h4>
-                        <button type="button" className="close" onClick={() => setShow(false)}>&times;</button>
+                        <button type="button" className="close" onClick={() => {
+                            if (props.onCancel !== undefined && props.onCancel !== null) props.onCancel();
+                            props.setShow(false)
+                        }}>&times;</button>
                     </div>
 
-                  <div className="modal-body">
+                    <div className="modal-body">
                         <DataSource DataSource={dataSource} SetDataSource={setDataSource}/>
-                  </div>
+                    </div>
 
                     <div className="modal-footer">
                         <button type="button" className="btn btn-primary" onClick={() => {
+                            if (props.onComplete !== undefined && props.onComplete !== null) props.onComplete(dataSource);
                             dispatch(AddDataSource(dataSource));
-                            setShow(false);
+                            props.setShow(false);
                         }}>Save</button>
-                        <button type="button" className="btn btn-danger" onClick={() => setShow(false)}>Close</button>
+                        <button type="button" className="btn btn-danger" onClick={() => {
+                            if (props.onCancel !== undefined && props.onCancel !== null) props.onCancel();
+                            props.setShow(false)
+                        }}>Close</button>
                     </div>
 
                 </div>
             </div>
-            </div>
-        </>
+        </div>
     );
 }
 
