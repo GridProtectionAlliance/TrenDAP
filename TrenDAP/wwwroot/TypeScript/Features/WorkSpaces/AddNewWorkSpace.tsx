@@ -38,16 +38,15 @@ interface IProps {
 const AddNewWorkSpace = (props: IProps) => {
     const dispatch = useDispatch();
     const [ws, setWorkSpace] = React.useState<TrenDAP.iWorkSpace>(useSelector(SelectNewWorkSpace) as TrenDAP.iWorkSpace);
-    const [show, setShow] = React.useState<boolean>(false);
 
     return (
-        <div className="modal" style={{display: show ? 'block' : null, backgroundColor: 'rgba(0,0,0,0.4)' }}>
+        <div className="modal" style={{display: props.show ? 'block' : null, backgroundColor: 'rgba(0,0,0,0.4)' }}>
             <div className="modal-dialog">
                 <div className="modal-content">
 
                     <div className="modal-header">
                         <h4 className="modal-title">Workspace</h4>
-                        <button type="button" className="close" onClick={() => setShow(false)}>&times;</button>
+                        <button type="button" className="close" onClick={() => props.setShow(false)}>&times;</button>
                     </div>
 
                     <div className="modal-body">
