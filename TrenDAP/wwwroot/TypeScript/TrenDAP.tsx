@@ -33,6 +33,10 @@ import { SVGIcons } from '@gpa-gemstone/gpa-symbols';
 import DataSets from './Features/DataSets/DataSets';
 import DataSources from './Features/DataSources/DataSources';
 import WorkSpaces from './Features/WorkSpaces/WorkSpaces';
+import { Route } from 'react-router-dom';
+import WorkSpaceEditor from './Features/WorkSpaces/WorkSpaceEditor';
+import ViewDataSet from './Features/DataSets/ViewDataSet/ViewDataSet';
+import QuickViewOpenXDA from './Features/OpenXDA/QuickViewOpenXDA';
 
 declare var homePath;
 
@@ -57,6 +61,9 @@ const TrenDAPMainPage = (props: {}) => {
             <Page Name='DataSources' Label='Data Sources' Icon={SVGIcons.DataContainer} > <DataSources /> </Page>
             <Page Name='DataSets' Label='Data Sets' Icon={SVGIcons.Cube} > <DataSets /> </Page>
             <Page Name='Workspaces' Label='Workspaces' Icon={SVGIcons.House} > <WorkSpaces /> </Page>
+            <Page Name={`WorkSpaceEditor/:id`}> <WorkSpaceEditor /> </Page>
+            <Page Name={`ViewDataSet/:id`}> <ViewDataSet /> </Page>
+            <Page Name={`QuickViewOpenXDA`}> <QuickViewOpenXDA /> </Page>
         </App>
     );
 }
