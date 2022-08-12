@@ -29,7 +29,6 @@ import Table from '@gpa-gemstone/react-table'
 import { Sort, FetchWorkSpaces, SelectWorkSpacesStatus, RemoveWorkSpace, SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, SelectWorkSpacesSortField, SelectWorkSpacesAscending } from './WorkSpacesSlice';
 import EditWorkSpace from './EditWorkSpace';
 import { TrashCan, HeavyCheckMark } from './../../Constants';
-import { Link, useParams } from 'react-router-dom';
 import moment from 'moment';
 import { SelectDataSets } from '../DataSets/DataSetsSlice';
 import AddNewWorkSpace from './AddNewWorkSpace';

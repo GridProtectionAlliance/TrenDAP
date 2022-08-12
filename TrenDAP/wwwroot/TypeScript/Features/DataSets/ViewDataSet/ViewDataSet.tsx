@@ -33,9 +33,8 @@ import Histogram from './Histogram';
 import { InputNumbers } from '@gpa-gemstone/gpa-symbols';
 import { Plus } from '../../../Constants';
 
-export default function ViewDataSet() {
+export default function ViewDataSet(props) {
     const dispatch = useDispatch();
-    const { id } = useParams<{id}>();
     const dataSet = useSelector(SelectRecord)
     const wsStatus = useSelector(SelectDataSetsStatus);
     const [data, setData] = React.useState<TrenDAP.iDataSetReturn[]>([]);
@@ -59,7 +58,7 @@ export default function ViewDataSet() {
             dispatch(FetchDataSets());
         }
 
-        dispatch(SetRecordByID(parseInt(id)));
+        dispatch(SetRecordByID(parseInt(props.useParams.id)));
     }, [dispatch, wsStatus]);
 
     React.useEffect(() => {
@@ -74,7 +73,7 @@ export default function ViewDataSet() {
 
 
     React.useEffect(() => {
-        GetDataSetDataFromIDB(id).then(d => {
+        GetDataSetDataFromIDB(props.useParams.id).then(d => {
             setData(d);
         });
     }, [flag]);

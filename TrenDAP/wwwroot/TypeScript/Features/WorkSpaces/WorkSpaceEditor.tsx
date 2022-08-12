@@ -38,20 +38,20 @@ import { CreateWidget as CreateTemplatableWidget } from './../Widgets/Templatabl
 
 import RegularEditor from './Regular/Editor';
 import TemplatableEditor from './Templatable/Editor';
+import AddEditDataSet from '../DataSets/AddEditDataSet';
 
 const NavMargin = 85;
 const NavWidth = 200;
-
-const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
+export default function WorkSpaceEditor(props) {
     const [data, setData] = React.useState<TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>[]>([]);
     const dispatch = useDispatch();
-    const { id } = useParams<{ id }>();
-    const workSpace = useSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, parseInt(id)));
+    const workSpace = useSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, props.useParams.id));
     const dataSet = useSelector((state: Redux.StoreState) => SelectDataSetByID(state, workSpace?.DataSetID ?? 0));
     const wsStatus = useSelector(SelectWorkSpacesStatus);
     const dsStatus = useSelector(SelectDataSetsStatus);
     const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [], By: 'Meter' });
-    const [toggle, setToggle] = React.useState<boolean>(false);
+    const [toggle, setToggle] = React.useState<boolean>(false); 
+    const [showEditDataSet, setShowEditDataSet] = React.useState<boolean>(false);
 
 
     React.useEffect(() => {
@@ -105,7 +105,7 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
 
                 <div className={styles.navbarbuttons}>
 
-                    <span style={{ padding: '6px 12px', position: 'relative' }}>Data Set: <Link to={`${homePath}AddEditDataSet/${dataSet?.ID}`}>{dataSet?.Name}</Link><DataSetData {...dataSet} /></span>
+                    <span style={{ padding: '6px 12px', position: 'relative' }} onClick={(e) => setShowEditDataSet(true)}>Data Set:  <DataSetData {...dataSet} /></span>
                     <div className="btn-group">
                         <button className="btn" title='Add Object' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-plus" ></i></button>
                         <div className="dropdown-menu" >
@@ -141,7 +141,7 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
                 <RegularEditor WorkSpace={workSpace} Data={data} /> : 
                 <TemplatableEditor WorkSpace={workSpace} Data={data} />
             }
-
+            <AddEditDataSet id={dataSet?.ID} show={showEditDataSet} setShow={setShowEditDataSet} />
             <div className="modal" role="dialog" style={{ display: toggle ? 'block' : 'none', backgroundColor: 'rgba(0,0,0,0.4)' }}>
                 <div className="modal-dialog" role="document" style={{ maxWidth: 525 }}>
                     <div className="modal-content">
@@ -187,6 +187,3 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
         </>
     );
 }
-
-
-export default WorkSpaceEditor;
