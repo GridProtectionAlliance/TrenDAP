@@ -309,7 +309,7 @@ export default function TrendJSX(props: TrenDAP.iWidget<TrenDAP.iTrend>) {
         g.append('path')
             .attr('stroke-width', '2px')
             .attr("d", d => `M0,${svgHeight - margin.current.bottom - margin.current.top}L-10,${svgHeight - margin.current.bottom - margin.current.top + 10},L10,${svgHeight - margin.current.bottom - margin.current.top + 10}L0,${svgHeight - margin.current.bottom - margin.current.top}Z`)
-            .attr("transform", d => `translate(${x(moment(d.StartTime, 'YYYY-MM-DDTHH:mm:ss.fff'))},${margin.current.top})`)
+            .attr("transform", d => `translate(${x(moment.utc(d.StartTime, 'YYYY-MM-DDTHH:mm:ss.fff'))},${margin.current.top})`)
             .attr('stroke', 'red')
             .attr('fill', 'red')
             .style('cursor', 'pointer')
