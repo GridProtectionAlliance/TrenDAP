@@ -107,7 +107,7 @@
     <PackageReference Include="Gemstone.Common" Version="1.0.57" />
     <PackageReference Include="Gemstone.Data" Version="1.0.57" />
     <PackageReference Include="Gemstone.Web" Version="1.0.57" />
-    <PackageReference Include="HIDS" Version="1.0.2" />
+    <PackageReference Include="HIDS" Version="1.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.7" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor" Version="2.2.0" />
