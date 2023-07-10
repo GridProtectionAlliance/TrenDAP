@@ -27,7 +27,6 @@ import { TrenDAP, Redux } from '../../global';
 import { useSelector, useDispatch } from 'react-redux';
 import Table from '@gpa-gemstone/react-table/lib/index'
 import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, CloneDataSet, New } from './DataSetsSlice';
-import { Link } from 'react-router-dom';
 import moment from 'moment';
 import DataSetData from './DataSetData';
 import { DNA, TrashCan, HeavyCheckMark, Pencil, Wrench } from '@gpa-gemstone/gpa-symbols';
@@ -89,7 +88,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                     content: (item, key, style) =>
                                     <span>
                                             <DataSetData {...item} />
-                                            {item.Data?.Status === 'idle' ? <Link to={`${homePath}ViewDataSet/${item.ID}`} title='View/Edit DataSet Data.' className='btn'>{Wrench}</Link> : null}
+                                            {item.Data?.Status === 'idle' ? <a title='View/Edit DataSet Data.' className="btn" onClick={() => { window.location.href = `${homePath}ViewDataSet/${item.ID}`}}>{Wrench}</a> : null}
                                             <button onClick={(evt) => { setShowAddNew(true); setId(item.ID) } } title='Edit DataSet Parameters.' className='btn'>{Pencil}</button>
                                             <a title='Clone DataSet.' className="btn" onClick={() => dispatch(CloneDataSet(item))}>{DNA}</a>
                                             <a title='Delete DataSet.' className="btn" onClick={() => setDeleteItem(item)}>{TrashCan}</a>

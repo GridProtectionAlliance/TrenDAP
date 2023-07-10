@@ -65,7 +65,7 @@ export default function ViewDataSet(props) {
         if(dataSourceID === 0)
             setDataSourceID(data[0]?.DataSource.ID ?? 0);
         if(channelID == '0')
-            setChannelID((data[0]?.Data ?? [{ ID:'0' }])[0].ID.toString());
+            setChannelID(GetFirstID().toString());
 
         const d = (data.find(ds => ds.DataSource.ID === dataSourceID)?.Data ?? []).find(dd => dd.ID == channelID)?.Data ?? [];
         setSelectedData(d);
@@ -113,10 +113,14 @@ export default function ViewDataSet(props) {
             })
         }
 
-        setChannelID(dataSource.Data[0].ID.toString());
+        setChannelID(GetFirstID().toString());
         setSelectedChannels(dataSource);
 
     }, [dataSourceID]);
+
+    function GetFirstID(){
+        return (data[0]?.Data[0]?.ID ?? 0);
+    }
 
     function FlagData(record: TrenDAP.iXDATrendDataPoint | TrenDAP.iXDATrendDataPoint[]) {
         UpdateDataSetData(dataSet, dataSourceID, channelID, record).then(() => setFlag(1));
