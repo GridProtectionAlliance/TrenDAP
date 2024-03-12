@@ -23,17 +23,17 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../global';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { UpdateDataSet, AddDataSet,SelectDataSetByID, SelectDataSetsStatus, FetchDataSets, SelectRecord, SetRecordByID, Update } from './DataSetsSlice'
 import DataSet from './DataSet';
 import { Pencil } from '../../Constants'
 import { Link, useParams } from 'react-router-dom';
 
 const EditDataSet: React.FunctionComponent<{}> = (props) => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
+    const dataSet = useAppSelector(SelectRecord)
+    const wsStatus = useAppSelector(SelectDataSetsStatus);
     const { id } = useParams<{ id }>();
-    const dataSet = useSelector(SelectRecord)
-    const wsStatus = useSelector(SelectDataSetsStatus);
 
     React.useEffect(() => {
         if (wsStatus === 'unitiated' || wsStatus === 'changed') {

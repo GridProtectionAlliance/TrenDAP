@@ -25,9 +25,8 @@
 
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
-
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { useParams, Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import styles from '../../../Styles/app.scss';
 import { SelectWorkSpaceByID, UpdateWorkSpace, SelectWorkSpacesStatus, FetchWorkSpaces } from './WorkSpacesSlice';
 import { FetchDataSets, SelectDataSetsStatus, GetDataSetDataFromIDB, SelectDataSetByID } from '../DataSets/DataSetsSlice';
@@ -44,12 +43,12 @@ const NavWidth = 200;
 
 const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
     const [data, setData] = React.useState<TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>[]>([]);
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const { id } = useParams<{ id }>();
-    const workSpace = useSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, parseInt(id)));
-    const dataSet = useSelector((state: Redux.StoreState) => SelectDataSetByID(state, workSpace?.DataSetID ?? 0));
-    const wsStatus = useSelector(SelectWorkSpacesStatus);
-    const dsStatus = useSelector(SelectDataSetsStatus);
+    const workSpace = useAppSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, parseInt(props['useParams']?.id ?? -1)));
+    const dataSet = useAppSelector((state: Redux.StoreState) => SelectDataSetByID(state, workSpace?.DataSetID ?? 0));
+    const wsStatus = useAppSelector(SelectWorkSpacesStatus);
+    const dsStatus = useAppSelector(SelectDataSetsStatus);
     const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [], By: 'Meter' });
     const [toggle, setToggle] = React.useState<boolean>(false);
 

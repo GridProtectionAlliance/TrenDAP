@@ -24,7 +24,7 @@
 
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '../../hooks';
 import Table from '@gpa-gemstone/react-table'
 import { Sort, FetchWorkSpaces, SelectWorkSpacesStatus, RemoveWorkSpace, SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, SelectWorkSpacesSortField, SelectWorkSpacesAscending } from './WorkSpacesSlice';
 import EditWorkSpace from './EditWorkSpace';
@@ -34,14 +34,14 @@ import moment from 'moment';
 import { SelectDataSets } from '../DataSets/DataSetsSlice';
 
 const WorkSpaces: React.FunctionComponent = (props: {}) => {
-    const dispatch = useDispatch();
-    const workSpaces = useSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
-    const publicWorkSpaces = useSelector((state: Redux.StoreState) => SelectWorkSpacesAllPublicNotUser(state, userName));
-    const dataSets = useSelector(SelectDataSets);
-    const wsStatus = useSelector(SelectWorkSpacesStatus);
+    const dispatch = useAppDispatch();
+    const workSpaces = useAppSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
+    const publicWorkSpaces = useAppSelector((state: Redux.StoreState) => SelectWorkSpacesAllPublicNotUser(state, userName));
+    const dataSets = useAppSelector(SelectDataSets);
+    const wsStatus = useAppSelector(SelectWorkSpacesStatus);
 
-    const sortField = useSelector(SelectWorkSpacesSortField);
-    const ascending = useSelector(SelectWorkSpacesAscending);
+    const sortField = useAppSelector(SelectWorkSpacesSortField);
+    const ascending = useAppSelector(SelectWorkSpacesAscending);
 
     React.useEffect(() => {
         if (wsStatus != 'unitiated' && wsStatus != 'changed') return;

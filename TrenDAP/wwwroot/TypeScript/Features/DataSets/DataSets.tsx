@@ -24,7 +24,7 @@
 
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '../../hooks';
 import Table from '@gpa-gemstone/react-table/lib/index'
 import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, CloneDataSet, New } from './DataSetsSlice';
 import { Link } from 'react-router-dom';
@@ -34,17 +34,16 @@ import { DNA, TrashCan, HeavyCheckMark, Pencil, Wrench } from '@gpa-gemstone/gpa
 import { Warning } from '@gpa-gemstone/react-interactive'
 
 const DataSets: React.FunctionComponent = (props: {}) => {
-
-    const dispatch = useDispatch();
-    const DataSets = useSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
-    const publicDataSets = useSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
+    const dispatch = useAppDispatch();
+    const DataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
+    const publicDataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
 
     const [deleteItem, setDeleteItem] = React.useState<TrenDAP.iDataSet>(null);
 
-    const dsStatus = useSelector(SelectDataSetsStatus);
+    const dsStatus = useAppSelector(SelectDataSetsStatus);
 
-    const sortField = useSelector(SelectDataSetsSortField);
-    const ascending = useSelector(SelectDataSetsAscending);
+    const sortField = useAppSelector(SelectDataSetsSortField);
+    const ascending = useAppSelector(SelectDataSetsAscending);
 
     React.useEffect(() => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;

@@ -92,6 +92,7 @@
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpacesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Forms\MultiCheckBoxSelect.tsx" />
     <Content Remove="wwwroot\TypeScript\global.d.ts" />
+    <Content Remove="wwwroot\TypeScript\hooks.ts" />
     <Content Remove="wwwroot\TypeScript\Implementations.ts" />
     <Content Remove="wwwroot\TypeScript\LoadingSpinner.tsx" />
     <Content Remove="wwwroot\TypeScript\SideNavBar.tsx" />
@@ -139,6 +140,7 @@
 
   <ItemGroup>
     <TypeScriptCompile Include="wwwroot\TypeScript\CirclePlusSVG.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\hooks.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Constants.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\declarations.d.ts">
       <SubType>Code</SubType>

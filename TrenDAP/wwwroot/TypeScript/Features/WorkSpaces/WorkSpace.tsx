@@ -24,15 +24,15 @@
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { Input, CheckBox, Select } from '@gpa-gemstone/react-forms';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsStatus, FetchDataSets } from '../DataSets/DataSetsSlice';
 
 
 const WorkSpace: React.FunctionComponent<{ Record: TrenDAP.iWorkSpace, SetWorkSpace: (ws: TrenDAP.iWorkSpace) => void, Edit: boolean }> = (props) => {
-    const dispatch = useDispatch();
-    const usersDataSets = useSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
-    const publicDataSets = useSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
-    const dsStatus = useSelector(SelectDataSetsStatus);
+    const dispatch = useAppDispatch();
+    const usersDataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
+    const publicDataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
+    const dsStatus = useAppSelector(SelectDataSetsStatus);
 
     React.useEffect(() => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;

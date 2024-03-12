@@ -23,7 +23,7 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../global';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 import styles from '../../../Styles/app.scss';
 import DataSetOpenHistorian from '../OpenHistorian/DataSetOpenHistorian';
@@ -33,9 +33,9 @@ import DataSetSapphire from '../Sapphire/DataSetSapphire';
 
 
 const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
-    const dataSourceTypes = useSelector(SelectDataSourceTypes) as TrenDAP.iDataSourceType[];
-    const dstStatus = useSelector(SelectDataSourceTypesStatus);
-    const dispatch = useDispatch();
+    const dataSourceTypes = useAppSelector(SelectDataSourceTypes) as TrenDAP.iDataSourceType[];
+    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
+    const dispatch = useAppDispatch();
 
 
     React.useEffect(() => {

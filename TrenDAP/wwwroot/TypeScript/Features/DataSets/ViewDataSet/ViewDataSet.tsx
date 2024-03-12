@@ -23,7 +23,7 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../../global';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../../hooks';
 import { UpdateDataSetData, SelectDataSetsStatus, FetchDataSets, SelectRecord, SetRecordByID, GetDataSetDataFromIDB, UpdateDataSetDataFlag } from '../DataSetsSlice'
 import {  useParams } from 'react-router-dom';
 
@@ -34,10 +34,10 @@ import { InputNumbers } from '@gpa-gemstone/gpa-symbols';
 import { Plus } from '../../../Constants';
 
 export default function ViewDataSet() {
-    const dispatch = useDispatch();
-    const { id } = useParams<{id}>();
-    const dataSet = useSelector(SelectRecord)
-    const wsStatus = useSelector(SelectDataSetsStatus);
+    const dispatch = useAppDispatch();
+    const { id } = useParams<{ id }>();
+    const dataSet = useAppSelector(SelectRecord)
+    const wsStatus = useAppSelector(SelectDataSetsStatus);
     const [data, setData] = React.useState<TrenDAP.iDataSetReturn[]>([]);
     const [dataSourceID, setDataSourceID] = React.useState<number>(0);
     const [channelID, setChannelID] = React.useState<string>('0');
