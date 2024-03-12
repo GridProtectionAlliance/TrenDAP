@@ -27,7 +27,6 @@ import { useAppDispatch, useAppSelector } from '../../hooks';
 import { UpdateDataSet, AddDataSet,SelectDataSetByID, SelectDataSetsStatus, FetchDataSets, SelectRecord, SetRecordByID, Update } from './DataSetsSlice'
 import DataSet from './DataSet';
 import { Pencil } from '../../Constants'
-import { Link, useParams } from 'react-router-dom';
 
 const EditDataSet: React.FunctionComponent<{}> = (props) => {
     const dispatch = useAppDispatch();
@@ -56,10 +55,12 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
                     <DataSet Record={dataSet} SetDataSet={(record) => dispatch(Update(record))} />
                 </div>
                 <div className="card-footer">
-                    <Link to={`${homePath}DataSets`} type="button" className="btn btn-primary" onClick={() => {
-                        dispatch(UpdateDataSet(dataSet));
-                    }}>Save</Link>
-
+                    <button className='btn btn-link'
+                        onClick={() => {
+                            dispatch(UpdateDataSet(dataSet));
+                            window.location.href = `${homePath}DataSets`;
+                        }}
+                    >Save</button>
                 </div>
             </div>
         </div>

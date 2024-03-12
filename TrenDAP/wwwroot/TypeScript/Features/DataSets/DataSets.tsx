@@ -27,7 +27,6 @@ import { TrenDAP, Redux } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import Table from '@gpa-gemstone/react-table/lib/index'
 import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, CloneDataSet, New } from './DataSetsSlice';
-import { Link } from 'react-router-dom';
 import moment from 'moment';
 import DataSetData from './DataSetData';
 import { DNA, TrashCan, HeavyCheckMark, Pencil, Wrench } from '@gpa-gemstone/gpa-symbols';
@@ -63,9 +62,12 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                 <h4>My DataSets:</h4>
                             </div>
                             <div className="col">
-                                <Link to={`${homePath}AddNewDataSet`}>
-                                    <button className="btn btn-primary pull-right" onClick={() => dispatch(New({}))}>Add New</button>
-                                </Link>
+                                <button className="btn btn-primary pull-right"
+                                    onClick={() => {
+                                        dispatch(New({}));
+                                        window.location.href = `${homePath}/AddNewDataSet`;
+                                    }}
+                                >Add New</button>
                             </div>
                         </div>
                     </div>
@@ -83,8 +85,18 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                     content: (item, key, style) =>
                                     <span>
                                             <DataSetData {...item} />
-                                            {item.Data?.Status === 'idle' ? <Link to={`${homePath}ViewDataSet/${item.ID}`} title='View/Edit DataSet Data.' className='btn'>{Wrench}</Link> : null}
-                                            <Link to={`${homePath}EditDataSet/${item.ID}`} title='Edit DataSet Parameters.' className='btn'>{Pencil}</Link>
+                                            {item.Data?.Status === 'idle' ?
+                                                <button className="btn" title='View/Edit DataSet Data.'
+                                                    onClick={() => {
+                                                        window.location.href = `${homePath}ViewDataSet/${item.ID}`;
+                                                    }}
+                                                >{Wrench}</button>
+                                                : null}
+                                            <button className="btn" title='Edit DataSet Parameters.'
+                                                onClick={() => {
+                                                    window.location.href = `${homePath}EditDataSet/${item.ID}`;
+                                                }}
+                                            >{Pencil}</button>
                                             <a title='Clone DataSet.' className="btn" onClick={() => dispatch(CloneDataSet(item))}>{DNA}</a>
                                             <a title='Delete DataSet.' className="btn" onClick={() => setDeleteItem(item)}>{TrashCan}</a>
                                     </span>
