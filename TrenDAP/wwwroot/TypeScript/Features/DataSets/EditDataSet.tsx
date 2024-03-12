@@ -33,7 +33,6 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
     const dispatch = useAppDispatch();
     const dataSet = useAppSelector(SelectRecord)
     const wsStatus = useAppSelector(SelectDataSetsStatus);
-    const { id } = useParams<{ id }>();
 
     React.useEffect(() => {
         if (wsStatus === 'unitiated' || wsStatus === 'changed') {
@@ -42,10 +41,9 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
             }
         }
         
-        dispatch(SetRecordByID(parseInt(id)));
+        dispatch(SetRecordByID(parseInt(props['useParams']?.id ?? -1)));
 
     }, [dispatch, wsStatus]);
-
 
     if (dataSet === undefined) return null;
     return (
