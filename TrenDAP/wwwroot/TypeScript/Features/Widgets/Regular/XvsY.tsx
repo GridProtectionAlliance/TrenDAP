@@ -201,7 +201,7 @@ export default function XvsYJSX(props: TrenDAP.iWidget<TrenDAP.iXvsY>) {
                             <Datetime value={moment(editRecord.JSON.TimeMin)} onChange={(value) => setEditRecord(new XvsY(editRecord.UpdateJSON('TimeMin', moment(value).toDate().getTime())))} />
                         </div>
                         <div className="col">
-                            <label>Min</label>
+                            <label>Max</label>
                             <Datetime value={moment(editRecord.JSON.TimeMax)} onChange={(value) => setEditRecord(new XvsY(editRecord.UpdateJSON('TimeMax', moment(value).toDate().getTime())))} />
                         </div>
                         <div className="col-2" style={{ position: 'relative' }}>
