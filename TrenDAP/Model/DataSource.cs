@@ -23,23 +23,42 @@
 
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using GSF.Data.Model;
+using GSF.Security.Model;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
+using System;
 using System.Security;
 using TrenDAP.Controllers;
+using PrimaryKeyAttribute = Gemstone.Data.Model.PrimaryKeyAttribute;
+using UseEscapedNameAttribute = Gemstone.Data.Model.UseEscapedNameAttribute;
 
 namespace TrenDAP.Model
 {
-
+    // Todo: ParentKey & Custom view not respected by custom model controller implementation
+    [CustomView(@"
+        SELECT
+            ID,
+            Name,
+            DataSourceTypeID,
+            URL,
+            RegistrationKey,
+            Expires
+        FROM
+	        DataSource
+    ")]
     public class DataSource
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
         public string Name { get; set; }
+        [ParentKey(typeof(DataSourceType))]
         public int DataSourceTypeID { get; set; }
         public string URL { get; set; }
-        public string Credential { get; set; }
-        public string Password { get; set; }
+        // Todo: maybe we want to break datasource from api auth? two tables where a source is linked to an auth row?
+        public string RegistrationKey { get; set; }
+        public string APIToken { get; set; }
+        public DateTime Expires { get; set; }
         [UseEscapedName]
         public bool Public { get; set; }
         [UseEscapedName]
@@ -50,12 +69,11 @@ namespace TrenDAP.Model
         {
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
-                return new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", id);
+                return new Gemstone.Data.Model.TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", id);
             }
         }
 
     }
-
 
     public class DataSourceController: ModelController<DataSource>
     {
