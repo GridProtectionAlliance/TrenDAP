@@ -73,13 +73,12 @@ CREATE TABLE DataSource
     DataSourceTypeID INT NOT NULL REFERENCES DataSourceType(ID),
     URL VARCHAR(MAX) NULL,
     [Public] bit NULL DEFAULT 0,
-    Credential varchar(max) NULL,
-    Password varchar(max) NULL,
+    RegistrationKey VARCHAR(50) NOT NULL UNIQUE,
+    APIToken VARCHAR(50) NOT NULL,
+    Expires DATETIME NULL,
     OIDC bit NOT NULL DEFAULT 0
-
 )
 GO
-
 
 CREATE TABLE DataSet
 (
