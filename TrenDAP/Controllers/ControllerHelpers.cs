@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  ControllerHelpers.cs - Gbtc
+//  ControllerHelper.cs - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -18,76 +18,63 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/08/2021 - Billy Ernest
 //       Generated original version of source code.
+//  03/16/2024 - Gabriel Santos
+//       Rewrite to use API auth
 //
 //******************************************************************************************************
 using Gemstone.Data;
-using Gemstone.Data.Model;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Net.Http;
+using openXDA.APIAuthentication;
 using System.Net.Http.Headers;
+using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using System;
 using TrenDAP.Model;
+using Gemstone.Data.Model;
 
 namespace TrenDAP.Controllers
 {
-    public class ControllerHelpers
+    public class ControllerHelper: XDAAPIHelper
     {
-        public static string GenerateAntiForgeryToken(int dataSourceID, IConfiguration configuration)
+
+        private DataSource m_dataSource;
+        private IConfiguration m_config;
+
+        public ControllerHelper(IConfiguration config, int dataSourceId)
         {
-            using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
-            using (HttpClientHandler handler = new HttpClientHandler())
-            using (HttpClient client = new HttpClient(handler))
+            m_config = config;
+            using (AdoDataConnection connection = new AdoDataConnection(config["SystemSettings:ConnectionString"], config["SystemSettings:DataProviderString"]))
             {
-
-
-                try
-                {
-                    handler.ServerCertificateCustomValidationCallback = ServerCertificateCustomValidation;
-
-                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-
-                    client.BaseAddress = new Uri(dataSource.URL);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-
-
-
-                    HttpResponseMessage response = client.GetAsync($"api/rvht").Result;
-
-                    if (!response.IsSuccessStatusCode)
-                        return "";
-
-                    Task<string> rsp = response.Content.ReadAsStringAsync();
-                    return response.Content.ReadAsStringAsync().Result;
-                }
-                catch (Exception ex)
-                {
-                    return ex.Message;
-                }
-
+                m_dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceId);
             }
         }
 
-
-        private static bool ServerCertificateCustomValidation(HttpRequestMessage requestMessage, X509Certificate2 certificate, X509Chain chain, SslPolicyErrors sslErrors)
+        protected override string Token
         {
-            // It is possible inpect the certificate provided by server
-            Console.WriteLine($"Requested URI: {requestMessage.RequestUri}");
-            Console.WriteLine($"Effective date: {certificate.GetEffectiveDateString()}");
-            Console.WriteLine($"Exp date: {certificate.GetExpirationDateString()}");
-            Console.WriteLine($"Issuer: {certificate.Issuer}");
-            Console.WriteLine($"Subject: {certificate.Subject}");
+            get 
+            {
+                return m_dataSource.APIToken;
+            }
 
-            // Based on the custom logic it is possible to decide whether the client considers certificate valid or not
-            Console.WriteLine($"Errors: {sslErrors}");
-            return sslErrors == SslPolicyErrors.None;
         }
+        protected override string Key
+        {
+            get
+            {
+                return m_dataSource.RegistrationKey;
+            }
 
+        }
+        protected override string Host
+        {
+            get
+            {
+                return m_dataSource.URL;
+            }
 
+        }
     }
 }
