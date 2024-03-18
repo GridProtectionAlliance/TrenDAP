@@ -108,7 +108,7 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                             tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
                             rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             sortKey={sortField}
-                            onClick={() => (data, evt) => {
+                            onClick={(data, evt) => {
                                 if (evt.target.tagName.toLowerCase() === 'td')
                                     window.location.href = `${homePath}WorkSpaceEditor/${data.row.ID}`
                             }}
