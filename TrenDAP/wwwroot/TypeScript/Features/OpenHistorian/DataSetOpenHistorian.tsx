@@ -24,13 +24,13 @@
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { Select, ArrayCheckBoxes, ArrayMultiSelect } from '@gpa-gemstone/react-forms';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '../../hooks';
 import { SelectOpenHistorian, FetchOpenHistorian } from './OpenHistorianSlice';
 import { OpenHistorian } from '@gpa-gemstone/application-typings';
 
 const DataSetOpenHistorian: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: { DataSource: TrenDAP.iDataSource, Data: TrenDAP.iOpenHistorianDataSet }, Index: number, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
-    const dispatch = useDispatch();
-    const devices: Redux.OpenHistorianState = useSelector((state: Redux.StoreState) => SelectOpenHistorian(state, props.Data.DataSource.ID));
+    const dispatch = useAppDispatch();
+    const devices: Redux.OpenHistorianState = useAppSelector((state: Redux.StoreState) => SelectOpenHistorian(state, props.Data.DataSource.ID));
 
     function UpdateDS(...params: { field: keyof TrenDAP.iOpenHistorianDataSet, value: any }[]) {
         let json = JSON.parse(props.Record.JSONString);

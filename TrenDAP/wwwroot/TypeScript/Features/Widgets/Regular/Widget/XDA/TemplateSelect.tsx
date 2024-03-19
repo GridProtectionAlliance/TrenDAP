@@ -26,7 +26,7 @@ import { OpenXDA } from '@gpa-gemstone/application-typings';
 import * as React from 'react';
 import { Redux, TrenDAP } from '../../../../../global';
 import { Histogram, Stats, Table, Trend, Widget, XvsY } from '../../Implementations';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../../../../hooks';
 import { FetchOpenXDA, SelectOpenXDA, SelectOpenXDAStatus } from '../../../../OpenXDA/OpenXDASlice';
 
 export default function TemplateSelect(props: { Widget: Widget<TrenDAP.WidgetClass>, DataSourceID: number, Callback: () => void, Axis?: 'x' | 'y' }) {
@@ -39,16 +39,16 @@ export default function TemplateSelect(props: { Widget: Widget<TrenDAP.WidgetCla
 
     const [delimeter, setDelimeter] = React.useState<string>('');
 
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
 
-    const measurementTypes: OpenXDA.Types.MeasurementType[] = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSourceID, 'MeasurementType'));
-    const mtStatus = useSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSourceID, 'MeasurementType'));
+    const measurementTypes: OpenXDA.Types.MeasurementType[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSourceID, 'MeasurementType'));
+    const mtStatus = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSourceID, 'MeasurementType'));
 
-    const measurementCharacteristics: OpenXDA.Types.MeasurementCharacteristic[] = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSourceID, 'MeasurementCharacteristic'));
-    const mcStatus = useSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSourceID, 'MeasurementCharacteristic'));
+    const measurementCharacteristics: OpenXDA.Types.MeasurementCharacteristic[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSourceID, 'MeasurementCharacteristic'));
+    const mcStatus = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSourceID, 'MeasurementCharacteristic'));
 
-    const phases: OpenXDA.Types.Phase[] = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSourceID, 'Phase'));
-    const phStatus = useSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSourceID, 'Phase'));
+    const phases: OpenXDA.Types.Phase[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSourceID, 'Phase'));
+    const phStatus = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSourceID, 'Phase'));
 
 
     React.useEffect(() => {

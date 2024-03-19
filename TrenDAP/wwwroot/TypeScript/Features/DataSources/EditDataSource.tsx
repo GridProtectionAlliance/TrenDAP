@@ -24,12 +24,12 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../global';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../hooks';
 import { UpdateDataSource } from './DataSourcesSlice'
 import DataSource from './DataSource';
 import { Pencil } from './../../Constants'
 const EditDataSource: React.FunctionComponent<{ DataSource: TrenDAP.iDataSource}> = (props) => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const [dataSource, setDataSource] = React.useState<TrenDAP.iDataSource>(props.DataSource);
     const [show, setShow] = React.useState<boolean>(false);
 

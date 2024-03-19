@@ -23,7 +23,7 @@
 
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '../../hooks';
 import { Sort, SelectDataSourcesForUser, FetchDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSourcesAllPublicNotUser, SelectDataSourcesSortField, SelectDataSourcesAscending } from './DataSourcesSlice'
 import Table from '@gpa-gemstone/react-table'
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
@@ -31,16 +31,16 @@ import EditDataSource from './EditDataSource';
 import { TrashCan, HeavyCheckMark } from './../../Constants'
 
 const DataSources: React.FunctionComponent = (props: {}) => {
-    const dispatch = useDispatch();
-    const dataSources = useSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName));
-    const publicDataSources = useSelector((state: Redux.StoreState)  => SelectDataSourcesAllPublicNotUser(state,userName));
+    const dispatch = useAppDispatch();
+    const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName));
+    const publicDataSources = useAppSelector((state: Redux.StoreState)  => SelectDataSourcesAllPublicNotUser(state,userName));
 
-    const dsStatus = useSelector(SelectDataSourcesStatus);
-    const dataSourceTypes = useSelector(SelectDataSourceTypes);
-    const dstStatus = useSelector(SelectDataSourceTypesStatus);
+    const dsStatus = useAppSelector(SelectDataSourcesStatus);
+    const dataSourceTypes = useAppSelector(SelectDataSourceTypes);
+    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
 
-    const sortField = useSelector(SelectDataSourcesSortField);
-    const ascending = useSelector(SelectDataSourcesAscending);
+    const sortField = useAppSelector(SelectDataSourcesSortField);
+    const ascending = useAppSelector(SelectDataSourcesAscending);
 
     React.useEffect(() => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;

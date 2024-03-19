@@ -24,21 +24,21 @@
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { Select, ArrayCheckBoxes, ArrayMultiSelect, Input } from '@gpa-gemstone/react-forms';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '../../hooks';
 import { SelectSapphire, FetchSapphire, SelectSapphireStatus } from './SapphireSlice';
 
 const DataSetSapphire: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: { DataSource: TrenDAP.iDataSource, Data: TrenDAP.iSapphireDataSet }, Index: number, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
 
-    const resolutions: any[] = useSelector((state: Redux.StoreState) => SelectSapphire(state, props.Data.DataSource.ID, 'Resolution'));
-    const rStatus: TrenDAP.Status = useSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.Data.DataSource.ID, 'Resolution'));
+    const resolutions: any[] = useAppSelector((state: Redux.StoreState) => SelectSapphire(state, props.Data.DataSource.ID, 'Resolution'));
+    const rStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.Data.DataSource.ID, 'Resolution'));
 
-    const phases: any[] = useSelector((state: Redux.StoreState) => SelectSapphire(state, props.Data.DataSource.ID, 'Phase'));
-    const phStatus: TrenDAP.Status = useSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.Data.DataSource.ID, 'Phase'));
-    const meters: any[] = useSelector((state: Redux.StoreState) => SelectSapphire(state, props.Data.DataSource.ID, 'Meter'));
-    const mStatus: TrenDAP.Status = useSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.Data.DataSource.ID, 'Meter'));
-    const channelTypes: any[] = useSelector((state: Redux.StoreState) => SelectSapphire(state, props.Data.DataSource.ID, 'ChannelGroupType'));
-    const ctStatus: TrenDAP.Status = useSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.Data.DataSource.ID, 'ChannelGroupType'));
+    const phases: any[] = useAppSelector((state: Redux.StoreState) => SelectSapphire(state, props.Data.DataSource.ID, 'Phase'));
+    const phStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.Data.DataSource.ID, 'Phase'));
+    const meters: any[] = useAppSelector((state: Redux.StoreState) => SelectSapphire(state, props.Data.DataSource.ID, 'Meter'));
+    const mStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.Data.DataSource.ID, 'Meter'));
+    const channelTypes: any[] = useAppSelector((state: Redux.StoreState) => SelectSapphire(state, props.Data.DataSource.ID, 'ChannelGroupType'));
+    const ctStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.Data.DataSource.ID, 'ChannelGroupType'));
 
     function UpdateDS(...params: { field: keyof TrenDAP.iSapphireDataSet, value: any }[]) {
         let json = JSON.parse(props.Record.JSONString);

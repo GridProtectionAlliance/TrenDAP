@@ -23,12 +23,12 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../global';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../hooks';
 import { UpdateWorkSpace } from './WorkSpacesSlice'
 import WorkSpace from './WorkSpace';
 import { Pencil } from './../../Constants'
 const EditWorkSpace: React.FunctionComponent<{ WorkSpace: TrenDAP.iWorkSpace}> = (props) => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const [ws, setWorkSpace] = React.useState<TrenDAP.iWorkSpace>({ ...props.WorkSpace });
     const [show, setShow] = React.useState<boolean>(false);
 

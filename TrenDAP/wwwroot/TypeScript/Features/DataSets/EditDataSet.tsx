@@ -23,17 +23,15 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../global';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { UpdateDataSet, AddDataSet,SelectDataSetByID, SelectDataSetsStatus, FetchDataSets, SelectRecord, SetRecordByID, Update } from './DataSetsSlice'
 import DataSet from './DataSet';
 import { Pencil } from '../../Constants'
-import { Link, useParams } from 'react-router-dom';
 
 const EditDataSet: React.FunctionComponent<{}> = (props) => {
-    const dispatch = useDispatch();
-    const { id } = useParams<{ id }>();
-    const dataSet = useSelector(SelectRecord)
-    const wsStatus = useSelector(SelectDataSetsStatus);
+    const dispatch = useAppDispatch();
+    const dataSet = useAppSelector(SelectRecord)
+    const wsStatus = useAppSelector(SelectDataSetsStatus);
 
     React.useEffect(() => {
         if (wsStatus === 'unitiated' || wsStatus === 'changed') {
@@ -42,10 +40,9 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
             }
         }
         
-        dispatch(SetRecordByID(parseInt(id)));
+        dispatch(SetRecordByID(parseInt(props['useParams']?.id ?? -1)));
 
     }, [dispatch, wsStatus]);
-
 
     if (dataSet === undefined) return null;
     return (
@@ -58,10 +55,12 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
                     <DataSet Record={dataSet} SetDataSet={(record) => dispatch(Update(record))} />
                 </div>
                 <div className="card-footer">
-                    <Link to={`${homePath}DataSets`} type="button" className="btn btn-primary" onClick={() => {
-                        dispatch(UpdateDataSet(dataSet));
-                    }}>Save</Link>
-
+                    <button className='btn btn-link'
+                        onClick={() => {
+                            dispatch(UpdateDataSet(dataSet));
+                            window.location.href = `${homePath}DataSets`;
+                        }}
+                    >Save</button>
                 </div>
             </div>
         </div>

@@ -23,14 +23,14 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../global';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '../../hooks';
 import { AddDataSource, SelectNewDataSource } from './DataSourcesSlice'
 import DataSource from './DataSource';
 import CirclePlusSVG from '../../CirclePlusSVG';
 
 const AddNewDataSource: React.FunctionComponent<{}> = (props) => {
-    const dispatch = useDispatch();
-    const [dataSource, setDataSource]= React.useState<TrenDAP.iDataSource>( useSelector(SelectNewDataSource) as TrenDAP.iDataSource);
+    const dispatch = useAppDispatch();
+    const [dataSource, setDataSource]= React.useState<TrenDAP.iDataSource>( useAppSelector(SelectNewDataSource) as TrenDAP.iDataSource);
     const [show, setShow] = React.useState<boolean>(false);
 
     return (

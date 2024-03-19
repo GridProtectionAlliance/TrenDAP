@@ -24,11 +24,11 @@ import * as React from 'react';
 import { TrenDAP, Redux } from '../../../global';
 import styles from '../../../../Styles/app.scss';
 import Row from './Row';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../../hooks';
 import { UpdateWorkSpace } from './../WorkSpacesSlice';
 
 export default function Editor(props: { WorkSpace: TrenDAP.iWorkSpace, Data: TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>[] }) {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const workSpaceJSON: TrenDAP.WorkSpaceJSON = JSON.parse(props.WorkSpace.JSONString);
     const [options, setOptions] = React.useState<string[]>([]);
 

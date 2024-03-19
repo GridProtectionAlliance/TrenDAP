@@ -13,6 +13,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\Scripts\**" />
+    <Content Remove="wwwroot\Scripts\**" />
+    <EmbeddedResource Remove="wwwroot\Scripts\**" />
+    <None Remove="wwwroot\Scripts\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="wwwroot\Images\trendaplogo.png" />
     <Content Remove="wwwroot\TypeScript\CirclePlusSVG.tsx" />
     <Content Remove="wwwroot\TypeScript\Constants.ts" />
@@ -92,15 +99,11 @@
     <Content Remove="wwwroot\TypeScript\Features\WorkSpaces\WorkSpacesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Forms\MultiCheckBoxSelect.tsx" />
     <Content Remove="wwwroot\TypeScript\global.d.ts" />
+    <Content Remove="wwwroot\TypeScript\hooks.ts" />
     <Content Remove="wwwroot\TypeScript\Implementations.ts" />
     <Content Remove="wwwroot\TypeScript\LoadingSpinner.tsx" />
-    <Content Remove="wwwroot\TypeScript\SideNavBar.tsx" />
     <Content Remove="wwwroot\TypeScript\Store\Store.ts" />
     <Content Remove="wwwroot\TypeScript\TrenDAP.tsx" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\Scripts\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -129,9 +132,6 @@
     <None Include="wwwroot\TypeScript\global.d.ts">
       <SubType>Code</SubType>
     </None>
-    <None Include="wwwroot\TypeScript\SideNavBar.tsx">
-      <SubType>Code</SubType>
-    </None>
     <None Include="wwwroot\TypeScript\TrenDAP.tsx">
       <SubType>Code</SubType>
     </None>
@@ -139,6 +139,7 @@
 
   <ItemGroup>
     <TypeScriptCompile Include="wwwroot\TypeScript\CirclePlusSVG.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\hooks.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Constants.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\declarations.d.ts">
       <SubType>Code</SubType>

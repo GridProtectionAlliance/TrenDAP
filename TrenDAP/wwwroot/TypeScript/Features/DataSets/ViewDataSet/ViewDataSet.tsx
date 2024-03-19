@@ -23,21 +23,18 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../../global';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../../hooks';
 import { UpdateDataSetData, SelectDataSetsStatus, FetchDataSets, SelectRecord, SetRecordByID, GetDataSetDataFromIDB, UpdateDataSetDataFlag } from '../DataSetsSlice'
-import {  useParams } from 'react-router-dom';
-
 import PagedTable from './PagedTable';
 import Chart from './Chart';
 import Histogram from './Histogram';
 import { InputNumbers } from '@gpa-gemstone/gpa-symbols';
 import { Plus } from '../../../Constants';
 
-export default function ViewDataSet() {
-    const dispatch = useDispatch();
-    const { id } = useParams<{id}>();
-    const dataSet = useSelector(SelectRecord)
-    const wsStatus = useSelector(SelectDataSetsStatus);
+export default function ViewDataSet(props) {
+    const dispatch = useAppDispatch();
+    const dataSet = useAppSelector(SelectRecord)
+    const wsStatus = useAppSelector(SelectDataSetsStatus);
     const [data, setData] = React.useState<TrenDAP.iDataSetReturn[]>([]);
     const [dataSourceID, setDataSourceID] = React.useState<number>(0);
     const [channelID, setChannelID] = React.useState<string>('0');
@@ -47,8 +44,8 @@ export default function ViewDataSet() {
     const [criteria, setCriteria] = React.useState<{ Field: any, Condition: any, Value: number, AndOr }[]>([{ Field: 'Average', Condition: '>', Value: 0, AndOr: 'None' }]);
     const [showFlagged, setShowFlagged] = React.useState<boolean>(false);
     const [selectedPoint, setSelectedPoint] = React.useState<TrenDAP.iXDATrendDataPoint>(null);
-    const [selectedChannels, setSelectedChannels] = React.useState<TrenDAP.iDataSetReturn>({} as TrenDAP.iDataSetReturn );
-
+    const [selectedChannels, setSelectedChannels] = React.useState<TrenDAP.iDataSetReturn>({} as TrenDAP.iDataSetReturn);
+    
     React.useEffect(() => {
         setCriteria([{ Field: 'Average', Condition: '>', Value: 0, AndOr: 'None' }]);
     }, [toggle]);
@@ -59,7 +56,7 @@ export default function ViewDataSet() {
             dispatch(FetchDataSets());
         }
 
-        dispatch(SetRecordByID(parseInt(id)));
+        dispatch(SetRecordByID(parseInt(props['useParams']?.id ?? -1)));
     }, [dispatch, wsStatus]);
 
     React.useEffect(() => {
@@ -74,7 +71,7 @@ export default function ViewDataSet() {
 
 
     React.useEffect(() => {
-        GetDataSetDataFromIDB(id).then(d => {
+        GetDataSetDataFromIDB(props['useParams']?.id ?? -1).then(d => {
             setData(d);
         });
     }, [flag]);

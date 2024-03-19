@@ -25,9 +25,7 @@
 
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
-
-import { useParams, Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import styles from '../../../Styles/app.scss';
 import { SelectWorkSpaceByID, UpdateWorkSpace, SelectWorkSpacesStatus, FetchWorkSpaces } from './WorkSpacesSlice';
 import { FetchDataSets, SelectDataSetsStatus, GetDataSetDataFromIDB, SelectDataSetByID } from '../DataSets/DataSetsSlice';
@@ -44,12 +42,11 @@ const NavWidth = 200;
 
 const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
     const [data, setData] = React.useState<TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>[]>([]);
-    const dispatch = useDispatch();
-    const { id } = useParams<{ id }>();
-    const workSpace = useSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, parseInt(id)));
-    const dataSet = useSelector((state: Redux.StoreState) => SelectDataSetByID(state, workSpace?.DataSetID ?? 0));
-    const wsStatus = useSelector(SelectWorkSpacesStatus);
-    const dsStatus = useSelector(SelectDataSetsStatus);
+    const dispatch = useAppDispatch();
+    const workSpace = useAppSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, parseInt(props['useParams']?.id ?? -1)));
+    const dataSet = useAppSelector((state: Redux.StoreState) => SelectDataSetByID(state, workSpace?.DataSetID ?? 0));
+    const wsStatus = useAppSelector(SelectWorkSpacesStatus);
+    const dsStatus = useAppSelector(SelectDataSetsStatus);
     const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [], By: 'Meter' });
     const [toggle, setToggle] = React.useState<boolean>(false);
 
@@ -105,7 +102,14 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
 
                 <div className={styles.navbarbuttons}>
 
-                    <span style={{ padding: '6px 12px', position: 'relative' }}>Data Set: <Link to={`${homePath}EditDataSet/${dataSet?.ID}`}>{dataSet?.Name}</Link><DataSetData {...dataSet} /></span>
+                    <span style={{ padding: '6px 12px', position: 'relative' }}>Data Set:
+                        <button className='btn btn-link'
+                            onClick={() => {
+                                `${homePath}EditDataSet/${dataSet?.ID}`;
+                            }}
+                        >{dataSet?.Name}</button>
+                        <DataSetData {...dataSet} />
+                    </span>
                     <div className="btn-group">
                         <button className="btn" title='Add Object' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-plus" ></i></button>
                         <div className="dropdown-menu" >

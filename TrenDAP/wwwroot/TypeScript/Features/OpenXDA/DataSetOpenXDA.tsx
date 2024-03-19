@@ -24,25 +24,25 @@
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { Select, ArrayCheckBoxes, ArrayMultiSelect } from '@gpa-gemstone/react-forms';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '../../hooks';
 import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../OpenXDA/OpenXDASlice';
 import moment from 'moment';
 import { OpenXDA } from '@gpa-gemstone/application-typings';
 
 const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: { DataSource: TrenDAP.iDataSource, Data: TrenDAP.iXDADataSet }, Index: number, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
-    const dispatch = useDispatch();
-    const phases: OpenXDA.Types.Phase[] = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'Phase'));
-    const phStatus: TrenDAP.Status = useSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.Data.DataSource.ID, 'Phase'));
-    const meters: OpenXDA.Types.Meter[] = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'Meter'));
-    const meterStatus: TrenDAP.Status = useSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.Data.DataSource.ID, 'Meter'));
-    const assets: OpenXDA.Types.Asset[] = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'Asset'));
-    const assetStatus: TrenDAP.Status = useSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.Data.DataSource.ID, 'Asset'));
+    const dispatch = useAppDispatch();
+    const phases: OpenXDA.Types.Phase[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'Phase'));
+    const phStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.Data.DataSource.ID, 'Phase'));
+    const meters: OpenXDA.Types.Meter[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'Meter'));
+    const meterStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.Data.DataSource.ID, 'Meter'));
+    const assets: OpenXDA.Types.Asset[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'Asset'));
+    const assetStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.Data.DataSource.ID, 'Asset'));
 
-    const channelGroups: any[] = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'ChannelGroup'));
-    const cgStatus: TrenDAP.Status = useSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.Data.DataSource.ID, 'ChannelGroup'));
+    const channelGroups: any[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'ChannelGroup'));
+    const cgStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.Data.DataSource.ID, 'ChannelGroup'));
 
-    const channelTypes: any[] = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'ChannelGroupType'));
-    const cgtStatus: TrenDAP.Status = useSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.Data.DataSource.ID, 'ChannelGroupType'));
+    const channelTypes: any[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'ChannelGroupType'));
+    const cgtStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.Data.DataSource.ID, 'ChannelGroupType'));
 
 
     function UpdateDS(...params: { field: keyof TrenDAP.iXDADataSet, value: any }[]) {

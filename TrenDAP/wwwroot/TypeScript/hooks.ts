@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  Store.ts - Gbtc
+//  hooks.ts - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2022, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,33 +16,13 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  08/10/2022 - G. Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-import { configureStore } from '@reduxjs/toolkit';
-import DataSourcesReducuer from '../Features/DataSources/DataSourcesSlice';
-import DataSourceTypesReducer from '../Features/DataSourceTypes/DataSourceTypesSlice';
-import WorkSpaceReducer from '../Features/WorkSpaces/WorkSpacesSlice';
-import DataSetReducer from '../Features/DataSets/DataSetsSlice';
-import OpenXDAReducer from '../Features/OpenXDA/OpenXDASlice';
-import OpenHistorianReducer from '../Features/OpenHistorian/OpenHistorianSlice';
-import SapphireReducer from '../Features/Sapphire/SapphireSlice';
+import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from './Store/Store';
 
-//Dispatch and Selector Typed
-export type AppDispatch = typeof store.dispatch;
-export type RootState = ReturnType<typeof store.getState>
-
-const reducer = {
-    DataSets: DataSetReducer,
-    WorkSpaces: WorkSpaceReducer,
-    DataSources: DataSourcesReducuer,
-    DataSourceTypes: DataSourceTypesReducer,
-    OpenXDA: OpenXDAReducer,
-    OpenHistorian: OpenHistorianReducer,
-    Sapphire: SapphireReducer
-}
-
-const store = configureStore({ reducer });
-export default store;
+export const useAppDispatch: () => AppDispatch = useDispatch;
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

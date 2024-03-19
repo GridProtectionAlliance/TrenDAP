@@ -25,20 +25,20 @@ import { OpenXDA } from '@gpa-gemstone/application-typings';
 import * as React from 'react';
 import { Redux, TrenDAP, OpenXDAExt } from '../../../../../global';
 import { Histogram, Stats, Table, Trend, Widget, XvsY } from './../../Implementations';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../../../../hooks';
 import { FetchOpenXDA, SelectOpenXDA, SelectOpenXDAStatus } from '../../../../OpenXDA/OpenXDASlice';
 
 export default function SeriesSelect(props: { Widget: Widget<TrenDAP.WidgetClass>, DataSourceID: number, Callback: () => void, Axis?: 'X' | 'Y' }) {
     const [dataSource, setDataSource] = React.useState<TrenDAP.iDataSetReturn>(undefined)
     const [phase, setPhase] = React.useState<OpenXDA.Types.PhaseName>('AN');
     const [phases, setPhases] = React.useState<OpenXDA.Types.PhaseName[]>(OpenXDA.Lists.Phases);
-    const channelGroupsTypes: any[] = useSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSourceID, 'ChannelGroupDetails'));
-    const cgtStatus: TrenDAP.Status = useSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSourceID, 'ChannelGroupDetails'));
+    const channelGroupsTypes: any[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSourceID, 'ChannelGroupDetails'));
+    const cgtStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSourceID, 'ChannelGroupDetails'));
 
     const [channelGroupType, setChannelGroupType] = React.useState<OpenXDAExt.ChannelGroupDetails>(undefined);
     const [reducedChannelGroupTypes, setReducedChannelGroupTypes] = React.useState<OpenXDAExt.ChannelGroupDetails[]>([]);
 
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
 
     React.useEffect(() => {
         if (cgtStatus === 'unitiated' || cgtStatus=== 'changed')
