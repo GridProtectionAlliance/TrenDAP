@@ -46,10 +46,6 @@ const DataSource: React.FunctionComponent<{ DataSource: TrenDAP.iDataSource, Set
             return props.DataSource.Name != null && props.DataSource.Name.length > 0 && props.DataSource.Name.length <= 200;
         else if (field == 'URL')
             return true;
-        else if (field == 'Credential')
-            return true;
-        else if (field == 'Password')
-            return true;
         return false;
     }
 
@@ -58,8 +54,6 @@ const DataSource: React.FunctionComponent<{ DataSource: TrenDAP.iDataSource, Set
             <Input<TrenDAP.iDataSource> Record={props.DataSource} Field="Name" Setter={props.SetDataSource} Valid={valid} />
             <Select<TrenDAP.iDataSource> Record={props.DataSource} Label="DataSource Type" Field="DataSourceTypeID" Setter={props.SetDataSource} Options={dataSourceTypes.map(x => ({Value: x.ID.toString(), Label: x.Name })) } />
             <Input<TrenDAP.iDataSource> Record={props.DataSource} Field="URL" Setter={props.SetDataSource} Valid={valid} />
-            <Input<TrenDAP.iDataSource> Record={props.DataSource} Field="Credential" Setter={props.SetDataSource} Valid={valid} />
-            <Input<TrenDAP.iDataSource> Record={props.DataSource} Field="Password" Type="password" Setter={props.SetDataSource} Valid={valid} />
 
             <div className="row">
                 <div className='col'>
