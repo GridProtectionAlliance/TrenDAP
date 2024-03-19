@@ -27,6 +27,7 @@ using GSF.Data.Model;
 using GSF.Security.Model;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
+using openXDA.APIAuthentication;
 using System;
 using System.Security;
 using TrenDAP.Controllers;
@@ -93,4 +94,45 @@ namespace TrenDAP.Model
         public DataSourceTypeController(IConfiguration configuration) : base(configuration) {} 
     }
 
+    public class DataSourceHelper : XDAAPIHelper
+    {
+        private DataSource m_dataSource;
+
+        public DataSourceHelper(IConfiguration config, int dataSourceId)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(config["SystemSettings:ConnectionString"], config["SystemSettings:DataProviderString"]))
+            {
+                m_dataSource = new Gemstone.Data.Model.TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceId);
+            }
+        }
+
+        public DataSourceHelper(DataSource dataSource)
+        {
+            m_dataSource = dataSource;
+        }
+
+        protected override string Token
+        {
+            get
+            {
+                return m_dataSource.APIToken;
+            }
+
+        }
+        protected override string Key
+        {
+            get
+            {
+                return m_dataSource.RegistrationKey;
+            }
+
+        }
+        protected override string Host
+        {
+            get
+            {
+                return m_dataSource.URL;
+            }
+        }
+    }
 }

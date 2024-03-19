@@ -24,7 +24,7 @@
 using Gemstone.Data;
 using Gemstone.Data.Model;
 using Gemstone.Reflection.MemberInfoExtensions;
-using HIDS;
+using GSF;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -339,45 +339,29 @@ namespace TrenDAP.Controllers.Sapphire
         {
             using (HttpClient client = new HttpClient())
             {
-
                 try
                 {
                     DataSource dataSource = GetDataSource(dataSourceID);
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), $"api/Meter/Sapphire");
-
-                    if (!response.IsSuccessStatusCode)
-                        return StatusCode((int)response.StatusCode, response.ReasonPhrase);
-
-                    Task<string> rsp = response.Content.ReadAsStringAsync();
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    Task<string> rsp = helper.Get("api/Meter/Sapphire");
                     return Ok(rsp.Result);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
-
                 }
                 catch (Exception ex)
                 {
                     return StatusCode(StatusCodes.Status500InternalServerError, ex);
                 }
             }
-
         }
 
         private JObject GetMeter(int dataSourceID, int meterID)
         {
             using (HttpClient client = new HttpClient())
             {
-
                 try
                 {
                     DataSource dataSource = GetDataSource(dataSourceID);
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), $"api/Meter/One/{meterID}");
-
-                    if (!response.IsSuccessStatusCode)
-                        return new JObject(new JProperty("Name", "None"));
-
-                    Task<string> rsp = response.Content.ReadAsStringAsync();
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    Task<string> rsp = helper.Get($"api/Meter/One/{meterID}");
                     return JObject.Parse(rsp.Result);
                 }
                 catch (Exception ex)
@@ -385,23 +369,17 @@ namespace TrenDAP.Controllers.Sapphire
                     return new JObject(new JProperty("Name", "None"));
                 }
             }
-
         }
 
         private JObject GetAsset(int dataSourceID, int meterID)
         {
             using (HttpClient client = new HttpClient())
             {
-
                 try
                 {
                     DataSource dataSource = GetDataSource(dataSourceID);
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), $"api/Meter/Sapphire/Asset/{meterID}");
-
-                    if (!response.IsSuccessStatusCode)
-                        return new JObject(new JProperty("AssetName", "None"));
-
-                    Task<string> rsp = response.Content.ReadAsStringAsync();
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    Task<string> rsp = helper.Get($"api/Meter/Sapphire/Asset/{meterID}");
                     return JObject.Parse(rsp.Result);
                 }
                 catch (Exception ex)
@@ -409,23 +387,17 @@ namespace TrenDAP.Controllers.Sapphire
                     return new JObject(new JProperty("AssetName", "None"));
                 }
             }
-
         }
 
         private JObject GetStation(int dataSourceID, int meterID)
         {
             using (HttpClient client = new HttpClient())
             {
-
                 try
                 {
                     DataSource dataSource = GetDataSource(dataSourceID);
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), $"api/Meter/Sapphire/Station/{meterID}");
-
-                    if (!response.IsSuccessStatusCode)
-                        return new JObject(new JProperty("Name", "None"), new JProperty("Latitude", "0.0"), new JProperty("Longitude", "0.0"));
-
-                    Task<string> rsp = response.Content.ReadAsStringAsync();
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    Task<string> rsp = helper.Get($"api/Meter/Sapphire/Station/{meterID}");
                     return JObject.Parse(rsp.Result);
                 }
                 catch (Exception ex)
@@ -433,76 +405,52 @@ namespace TrenDAP.Controllers.Sapphire
                     return new JObject(new JProperty("Name", "None"), new JProperty("Latitude", "0.0"), new JProperty("Longitude", "0.0"));
                 }
             }
-
         }
 
         private List<Event> GetEvents(int dataSourceID, int meterID, DateTime startTime, DateTime endTime)
         {
             using (HttpClient client = new HttpClient())
             {
-
                 try
                 {
                     DataSource dataSource = GetDataSource(dataSourceID);
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), $"api/Meter/Sapphire/Events/{meterID}/{startTime.ToString("MM-dd-yyyy HH:mm:ss")}/{endTime.ToString("MM-dd-yyyy HH:mm:ss")}");
-
-                    if (!response.IsSuccessStatusCode)
-                        return new List<Event>();
-
-                    Task<string> rsp = response.Content.ReadAsStringAsync();
-                    return JArray.Parse(rsp.Result).ToObject<List<Event>>();
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    Task<List<Event>> rsp = helper.GetAll<Event>($"api/Meter/Sapphire/Events/{meterID}/{startTime.ToString("MM-dd-yyyy HH:mm:ss")}/{endTime.ToString("MM-dd-yyyy HH:mm:ss")}");
+                    return rsp.Result;
                 }
                 catch (Exception ex)
                 {
                     return new List<Event>();
                 }
             }
-
         }
 
         private string GetSapphireID(int dataSourceID, int meterID)
         {
             using (HttpClient client = new HttpClient())
             {
-
                 DataSource dataSource = GetDataSource(dataSourceID);
-                HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), $"api/Meter/Sapphire/{meterID}");
-
-                if (!response.IsSuccessStatusCode)
-                    throw new Exception(response.ReasonPhrase);
-
-                Task<string> rsp = response.Content.ReadAsStringAsync();
+                DataSourceHelper helper = new DataSourceHelper(dataSource);
+                Task<string> rsp = helper.Get($"api/Meter/Sapphire/{meterID}");
                 return rsp.Result.Replace("\"", "");
             }
-
         }
 
         private ActionResult GetOpenXDA(int dataSourceID, string table) {
             using (HttpClient client = new HttpClient())
             {
-
                 try
                 {
                     DataSource dataSource = GetDataSource(dataSourceID);
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), $"api/{table}");
-
-                    if (!response.IsSuccessStatusCode)
-                        return StatusCode((int)response.StatusCode, response.ReasonPhrase);
-
-                    Task<string> rsp = response.Content.ReadAsStringAsync();
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    Task<string> rsp = helper.Get($"api/{table}");
                     return Ok(rsp.Result);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
-
                 }
                 catch (Exception ex)
                 {
                     return StatusCode(StatusCodes.Status500InternalServerError, ex);
                 }
             }
-
         }
 
         private DataSource GetDataSource(int id)
@@ -846,35 +794,12 @@ namespace TrenDAP.Controllers.Sapphire
 
         public static Task<string> GetEvents(int dataSourceID, SapphirePost post, IConfiguration configuration, CancellationToken cancellationToken)
         {
-            string token = GenerateAntiForgeryToken(dataSourceID, configuration);
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
-                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-
-                using (HttpClient client = new HttpClient()
-                {
-                    Timeout = TimeSpan.FromMinutes(10)
-                })
-                {
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/octet-stream"), $"api/Event/TrenDAP", JsonContent.Create(post), token, cancellationToken);
-
-                    try
-                    {
-
-                        if (!response.IsSuccessStatusCode)
-                            throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                        return response.Content.ReadAsStringAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw ex;
-                    }
-
-                }
-
+                DataSourceHelper helper = new DataSourceHelper(dataSource);
+                return helper.Get($"api/Event/TrenDAP");
             }
-
         }
 
         public static SapphirePost CreatePost(DataSet dataSet, SapphireDataSetData data)
@@ -912,127 +837,38 @@ namespace TrenDAP.Controllers.Sapphire
 
         }
 
-        public static string GenerateAntiForgeryToken(int dataSourceID, IConfiguration configuration)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
-            using (HttpClientHandler handler = new HttpClientHandler())
-            using (HttpClient client = new HttpClient(handler))
-            {
-
-
-                try
-                {
-                    handler.ServerCertificateCustomValidationCallback = ServerCertificateCustomValidation;
-
-                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), "api/rvht");
-
-                    if (!response.IsSuccessStatusCode)
-                        return "";
-
-                    Task<string> rsp = response.Content.ReadAsStringAsync();
-                    return response.Content.ReadAsStringAsync().Result;
-                }
-                catch (Exception ex)
-                {
-                    return ex.Message;
-                }
-
-            }
-        }
-
         public static string GetSapphireSettings(int dataSourceID, IConfiguration configuration)
         {
-            string token = GenerateAntiForgeryToken(dataSourceID, configuration);
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
-            using (HttpClientHandler handler = new HttpClientHandler())
-            using (HttpClient client = new HttpClient(handler))
             {
-
-
                 try
                 {
-                    handler.ServerCertificateCustomValidationCallback = ServerCertificateCustomValidation;
-
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), "api/Setting/Category/Sapphire");
-
-                    if (!response.IsSuccessStatusCode)
-                        return "";
-
-                    Task<string> rsp = response.Content.ReadAsStringAsync();
-                    return response.Content.ReadAsStringAsync().Result;
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    return helper.Get($"api/Setting/Category/Sapphire").Result;
                 }
                 catch (Exception ex)
                 {
                     return ex.Message;
                 }
-
             }
         }
 
         public static async Task<string> GetOpenSEEURL(int dataSourceID, IConfiguration configuration)
         {
-            string token = GenerateAntiForgeryToken(dataSourceID, configuration);
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
-            using (HttpClientHandler handler = new HttpClientHandler())
-            using (HttpClient client = new HttpClient(handler))
             {
-
-
                 try
                 {
-                    handler.ServerCertificateCustomValidationCallback = ServerCertificateCustomValidation;
-
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    HttpResponseMessage response = SetHeaders(client, dataSource, new MediaTypeWithQualityHeaderValue("application/json"), "api/Setting/OpenSEE.URL");
-
-                    if (!response.IsSuccessStatusCode)
-                        throw new Exception(response.ReasonPhrase);
-
-                    string url = await response.Content.ReadAsStringAsync();
-                    return url;
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    return await helper.Get($"api/Setting/OpenSEE.URL").ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
                     return ex.Message;
                 }
-
             }
-        }
-
-        private static HttpResponseMessage SetHeaders(HttpClient client, DataSource dataSource, MediaTypeWithQualityHeaderValue mtwqhv, string path, JsonContent post = null, string token = null, CancellationToken cancellationToken = new CancellationToken()) {
-            client.BaseAddress = new Uri(dataSource.URL);
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(mtwqhv);
-
-            if (!dataSource.OIDC)
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-            else
-                path += $"?code={dataSource.Password}";
-
-            if (post != null)
-            {
-                client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
-                return client.PostAsync(path, post, cancellationToken).Result;
-            }
-            else
-                return client.GetAsync(path, cancellationToken).Result;
-
-        }
-
-        private static bool ServerCertificateCustomValidation(HttpRequestMessage requestMessage, X509Certificate2 certificate, X509Chain chain, SslPolicyErrors sslErrors)
-        {
-            // It is possible inpect the certificate provided by server
-            Console.WriteLine($"Requested URI: {requestMessage.RequestUri}");
-            Console.WriteLine($"Effective date: {certificate.GetEffectiveDateString()}");
-            Console.WriteLine($"Exp date: {certificate.GetExpirationDateString()}");
-            Console.WriteLine($"Issuer: {certificate.Issuer}");
-            Console.WriteLine($"Subject: {certificate.Subject}");
-
-            // Based on the custom logic it is possible to decide whether the client considers certificate valid or not
-            Console.WriteLine($"Errors: {sslErrors}");
-            return sslErrors == SslPolicyErrors.None;
         }
 
 
