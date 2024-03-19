@@ -32,13 +32,49 @@
             <param name="content"> The <see cref="T:System.Net.Http.HttpContent"/> of the request </param>
             <returns> response as a <see cref="T:System.IO.Stream"/></returns>
         </member>
+        <member name="M:openXDA.APIAuthentication.XDAAPIHelper.Get(System.String)">
+            <summary>
+            Makes a Get Request to OpenXDA to obtain a string
+            </summary>
+            <param name="requestURI">Path to specific API request</param>
+            <returns>string</returns>
+        </member>
+        <member name="M:openXDA.APIAuthentication.XDAAPIHelper.GetStream(System.String)">
+            <summary>
+            Makes a Get Request to OpenXDA to obtain a stream
+            </summary>
+            <param name="requestURI">Path to specific API request</param>
+            <returns>stream</returns>
+        </member>
+        <member name="M:openXDA.APIAuthentication.XDAAPIHelper.Get``1(System.String)">
+            <summary>
+            Makes a Get Request to OpenXDA to obtain an object
+            </summary>
+            <param name="requestURI">Path to specific API request</param>
+            <returns> a <see cref="!:&lt;T&gt;"/> object</returns>
+        </member>
         <member name="M:openXDA.APIAuthentication.XDAAPIHelper.Post(System.String,System.Net.Http.HttpContent)">
             <summary>
             Makes Post request on OpenXDA
             </summary>
             <param name="requestURI">Path to specific API request</param>
             <param name="content"> The <see cref="T:System.Net.Http.HttpContent"/> of the request </param>
-            <returns> response as a <see cref="T:System.IO.Stream"/></returns>
+            <returns> response as a <see cref="T:System.String"/></returns>
+        </member>
+        <member name="M:openXDA.APIAuthentication.XDAAPIHelper.PostAll``1(System.String,System.Net.Http.HttpContent)">
+            <summary>
+            Makes Post request on OpenXDA
+            </summary>
+            <param name="endpoint">Path to specific API request</param>
+            <param name="content"> The <see cref="T:System.Net.Http.HttpContent"/> of the request </param>
+            <returns> response as a <see cref="T:System.Collections.Generic.IEnumerable`1"/></returns>
+        </member>
+        <member name="M:openXDA.APIAuthentication.XDAAPIHelper.GetAll``1(System.String)">
+            <summary>
+            Makes a Get Request to OpenXDA to obtain a <see cref="!:List&lt;T&gt; of Objects"/> objects
+            </summary>
+            <param name="requestURI">Path to specific API request</param>
+            <returns> a <see cref="!:&lt;T&gt;"/> object</returns>
         </member>
         <member name="T:openXDA.APIAuthentication.APIAuthenticationMiddleware">
             <summary>
