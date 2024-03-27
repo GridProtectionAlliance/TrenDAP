@@ -47,7 +47,6 @@
     <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\DataSetOpenXDA.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts" />
-    <Content Remove="wwwroot\TypeScript\Features\OpenXDA\QuickViewOpenXDA.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Histogram.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Profile.tsx" />
@@ -194,7 +193,6 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\QuickViewOpenXDA.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Widget\Sapphire\AdditionalInfo.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>

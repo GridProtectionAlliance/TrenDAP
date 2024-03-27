@@ -97,11 +97,6 @@ const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: 
         <form>
             <div className="row">
                 <div className="col">
-                    <button className='btn btn-primary' onClick={(evt) => {
-                        evt.preventDefault();
-                        window.open(`${homePath}QuickViewOpenXDA`, `_blank`)
-                        localStorage.setItem('QuickViewOpenXDA', JSON.stringify({ DataSourceID: props.Data.DataSource.ID, PostData: CreatePost(props.Record, props.Data.Data) }));
-                    }}>Quick View</button>
                     <Select<TrenDAP.iXDADataSet> Record={props.Data.Data} Field="Aggregate" Options={[{ Value: '', Label: 'None' }, { Value: '1h', Label: 'Hour' }, { Value: '1d', Label: 'Day' }, { Value: '1w', Label: 'Week' }]} Setter={(record) => UpdateDS({ field: 'Aggregate', value: record.Aggregate })} />
                     <Select<TrenDAP.iXDADataSet> Record={props.Data.Data} Field="By" Options={[{ Value: 'Meter', Label: 'Meter' }, { Value: 'Asset', Label: 'Asset' }]} Setter={(record) => UpdateDS({ field: 'By', value: record.By }, { field: 'IDs', value: [] })} />
                     <ArrayMultiSelect<TrenDAP.iXDADataSet> Style={{ height: window.innerHeight - 560 }} Record={props.Data.Data} Options={(props.Data.Data.By == 'Meter' ? meters?.map(m => ({ Value: m.ID.toString(), Label: m.Name })) : assets?.map(m => ({ Value: m.ID.toString(), Label: m.AssetName }))) ?? []} Field="IDs" Setter={(record) => UpdateDS({ field: 'IDs', value: record.IDs })} />

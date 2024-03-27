@@ -42,7 +42,6 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
     const AddNewDataSet = React.lazy(() => import(/* webpackChunkName: "AddNewDataSet" */ './Features/DataSets/AddNewDataSet'));
     const WorkSpaceEditor = React.lazy(() => import(/* webpackChunkName: "WorkSpaceEditor" */ './Features/WorkSpaces/WorkSpaceEditor'));
     const ViewDataSet = React.lazy(() => import(/* webpackChunkName: "ViewDataSet" */ './Features/DataSets/ViewDataSet/ViewDataSet'));
-    const QuickViewOpenXDA = React.lazy(() => import(/* webpackChunkName: "QuickViewXDA" */ './Features/OpenXDA/QuickViewOpenXDA'));
 
     const workSpaces = useAppSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
 
@@ -82,9 +81,6 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                 </Page>
                 <Page Name={'ViewDataSet/:id'}>
                     <ViewDataSet />
-                </Page>
-                <Page Name={'QuickViewOpenXDA'}>
-                    <QuickViewOpenXDA />
                 </Page>
                 <Section Label={"Recent Workspaces"}>
                     {workSpaces.map((item, i) =>

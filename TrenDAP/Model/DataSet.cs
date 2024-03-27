@@ -156,45 +156,6 @@ namespace TrenDAP.Model
             }
         }
 
-        [HttpPost, Route("QuickView/{dataSourceID:int}")]
-        public ActionResult GetQuickViewData([FromRoute]int dataSourceID, [FromBody] TrenDAPDBController.HIDSPost post,  CancellationToken cancellationToken)
-        {
-            try
-            {
-                using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
-                {
-
-                    DataTable table = TrenDAPDBController.GetDataTable(dataSourceID, post, Configuration, cancellationToken);
-
-                    if (table.Rows.Count > 0)
-                    {
-                        Task<HttpResponseMessage> rsp = TrenDAPDBController.QueryHids(dataSourceID, post, Configuration, cancellationToken);
-                        IEnumerable<HIDSPoint> points = ParsePoints(rsp, cancellationToken);
-                        IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
-
-                        var groupjoin = tableJson.GroupJoin(points.ToArray(), row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) =>
-                        {
-                            row["Data"] = JArray.FromObject(resultcollection);
-                            return row;
-                        });
-
-                        return Ok(groupjoin);
-                    }
-                    else
-                        return Ok(JArray.FromObject(new List<int>() { }));
-                }
-            }
-            catch (AggregateException ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex);
-            }
-        }
-
-
         private Task<JObject> Query(DataSet dataset, DataSetJson json, string type, CancellationToken cancellationToken)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
