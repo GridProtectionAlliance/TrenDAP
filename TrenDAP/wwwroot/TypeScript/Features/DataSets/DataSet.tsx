@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP } from '../../global';
+import { TrenDAP, DataSourceTypes } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 import styles from '../../../Styles/app.scss';
@@ -33,7 +33,7 @@ import DataSetSapphire from '../Sapphire/DataSetSapphire';
 
 
 const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
-    const dataSourceTypes = useAppSelector(SelectDataSourceTypes) as TrenDAP.iDataSourceType[];
+    const dataSourceTypes = useAppSelector(SelectDataSourceTypes) as DataSourceTypes.IDataSourceType[];
     const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
     const dispatch = useAppDispatch();
 

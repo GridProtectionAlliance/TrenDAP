@@ -23,7 +23,7 @@
 
 import * as React from 'react';
 import _ from 'lodash';
-import { TrenDAP, Redux } from '../../global';
+import { DataSourceTypes, Redux } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { SelectDataSourcesForUser, FetchDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSourcesAllPublicNotUser } from './DataSourcesSlice'
 import { ReactTable } from '@gpa-gemstone/react-table';
@@ -61,7 +61,7 @@ interface ITableProps {
 const DataSourceTable = React.memo((props: ITableProps) => {
     const [sortField, setSortField] = React.useState<string>('Name');
     const [ascending, setAscending] = React.useState<boolean>(true);
-    const [dataSources, setDataSources] = React.useState<TrenDAP.iDataSource[]>([]);
+    const [dataSources, setDataSources] = React.useState<DataSourceTypes.IDataSourceView[]>([]);
 
     const dispatch = useAppDispatch();
     const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
@@ -87,7 +87,7 @@ const DataSourceTable = React.memo((props: ITableProps) => {
     }, [sortField, ascending, dataSourcesUnsorted]);
 
     return (
-        <ReactTable.Table<TrenDAP.iDataSource>
+        <ReactTable.Table<DataSourceTypes.IDataSourceView>
             TableClass="table table-hover"
             TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
             TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
@@ -102,14 +102,14 @@ const DataSourceTable = React.memo((props: ITableProps) => {
             Data={dataSources}
             KeySelector={source => source.ID}
             Ascending={ascending}>
-            <ReactTable.Column<TrenDAP.iDataSource> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
-            <ReactTable.Column<TrenDAP.iDataSource> Key={'DataSourceTypeID'} Field={'DataSourceTypeID'}
+            <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
+            <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'DataSourceTypeID'} Field={'DataSourceTypeID'}
                 Content={row => dataSourceTypes.find(dst => row.item.DataSourceTypeID === dst.ID)?.Name}>Type</ReactTable.Column>
-            <ReactTable.Column<TrenDAP.iDataSource> AllowSort={false} Key={'Edit'} Field={'Public'}
+            <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}
                 Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</ReactTable.Column>
             {
                 props.OwnedByUser ?
-                    <ReactTable.Column<TrenDAP.iDataSource> AllowSort={false} Key={'Delete'} Field={'Public'}
+                    <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Delete'} Field={'Public'}
                         Content={row =>
                             <span>
                                 <EditDataSource DataSource={row.item} />

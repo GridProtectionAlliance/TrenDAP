@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP, Redux } from '../../../global';
+import { TrenDAP, Redux, DataSourceTypes } from '../../../global';
 import { Input, CheckBox, EnumCheckBoxes } from '@gpa-gemstone/react-forms';
 import { Plus } from '../../../Constants';
 import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from '../../DataSources/DataSourcesSlice';
@@ -37,10 +37,10 @@ import { ComputeValidDays, ComputeValidWeeks } from '../HelperFunctions';
 
 const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
     const dispatch = useAppDispatch();
-    const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as TrenDAP.iDataSource[];
-    const publicDataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as TrenDAP.iDataSource[];
+    const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as DataSourceTypes.IDataSourceView[];
+    const publicDataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as DataSourceTypes.IDataSourceView[];
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
-    const dataSourceTypes = useAppSelector(SelectDataSourceTypes) as TrenDAP.iDataSourceType[];
+    const dataSourceTypes = useAppSelector(SelectDataSourceTypes) as DataSourceTypes.IDataSourceType[];
     const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
     const allDataSets = useAppSelector(SelectDataSets);
 
@@ -69,13 +69,13 @@ const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet,
             return true;
     }
 
-    function AddDS(dataSource: TrenDAP.iDataSource) {
+    function AddDS(dataSource: DataSourceTypes.IDataSourceView) {
         let json = JSON.parse(props.Record.JSONString);
         json.push({ DataSource: dataSource, Data: GetDS(dataSource) });
         props.SetDataSet({ ...props.Record, JSONString: JSON.stringify(json) });
     }
 
-    function GetDS(dataSource: TrenDAP.iDataSource) {
+    function GetDS(dataSource: DataSourceTypes.IDataSourceView) {
         if (dataSourceTypes.find(dst => dst.ID === dataSource.DataSourceTypeID).Name === "TrenDAPDB")
             return SelectNewXDADataSet();
         if (dataSourceTypes.find(dst => dst.ID === dataSource.DataSourceTypeID).Name === "Sapphire")

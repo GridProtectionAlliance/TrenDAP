@@ -38,8 +38,8 @@ declare global {
 export namespace Redux {
     interface StoreState {
         DataSets: State<TrenDAP.iDataSet>,
-        DataSources: State<TrenDAP.iDataSource>,
-        DataSourceTypes: State<TrenDAP.iDataSourceType>,
+        DataSources: State<DataSourceTypes.IDataSourceView>,
+        DataSourceTypes: State<DataSourceTypes.IDataSourceType>,
         WorkSpaces: State<TrenDAP.iWorkSpace>,
         OpenHistorian: { ID: number, State: OpenHistorianState }[],
         Sapphire: { [instance: number]: { [table: string]: Redux.SapphireTableSlice } },
@@ -83,21 +83,56 @@ export namespace OpenXDAExt {
     }
 }
 
+export namespace DataSourceTypes {
+    // The following are how datasources are stored in DB
+    type DataSourceType = 'TrenDAPDB' | 'OpenHistorian' | 'None' | 'Sapphire';
+    interface IDataSourceType { ID: number, Name: DataSourceType }
+    interface IDataSourceView {
+        ID: number,
+        Name: string,
+        DataSourceTypeID: number,
+        URL: string,
+        RegistrationKey: string,
+        Expires: string,
+        Public: boolean,
+        User: string,
+        OtherSettings: string
+    }
+
+    // Datasource as tsx needs them
+    interface IDataSourceProps<T> {
+        Settings: T,
+        HomePath: string,
+        Roles: string[],
+        Name: string
+    }
+
+    interface IDataSourceSettingsProps<T> {
+        Settings: T,
+        SetSettings: (settings: T) => void,
+    }
+
+    // Datasource coding interface, uses props to get the datasource
+    interface IDataSource<T> {
+        DataSource: React.FC<IDataSourceProps<T>>,
+        Settings: React.FC<IDataSourceSettingsProps<T>>,
+        DefaultSettings: T,
+        Name: string,
+    }
+}
+
 export namespace TrenDAP{
     type Status = 'loading' | 'idle' | 'error' | 'changed' | 'unitiated';
     type WidgetType = 'Histogram' | 'Profile' | 'Stats' | 'Table' | 'Text' | 'Trend' | 'XvsY';
     type WidgetClass = iHistogram | iTrend | iProfile | iStats | iTable | iText | iXvsY;
     type TemplatableWidgetClass = iTemplatableHistogram | iTemplatableTrend | iTemplatableProfile | iTemplatableStats | iTemplatableTable | iTemplatableText | iTemplatableXvsY;
     type TemplateSeries = iTemplateSeriesXDA | iTemplateSeriesOpenHistorian;
-    type DataSourceType = 'TrenDAPDB' | 'OpenHistorian' |'None' | 'Sapphire';
     type iDataSetReturnType = iXDAReturnData | iOpenHistorianReturn | iSapphireReturnData;
     type ChartAction = 'Click' | 'Pan' | 'ZoomX' | 'ZoomY' | 'ZoomXY';
     type WorkSpaceType = 'Regular' | 'Templatable';
     type TemplateBy = 'Meter' | 'Asset' | 'Device';
     type iTrendDataPoint = iXDATrendDataPoint | iOpenHistorianAggregationPoint | iSapphireTrendDataPoint;
-    // TrenDAP 
-    interface iDataSourceType { ID: number, Name: DataSourceType }
-    interface iDataSource { ID: number, Name: string, DataSourceTypeID: number, URL: string, RegistrationKey: string, Expires: string, Public: boolean, User: string, OIDC: boolean }    
+    // TrenDAP     
     interface iWorkSpace { ID: number, Type: WorkSpaceType, Name: string, User: string, DataSetID: number, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Open: boolean }    
     interface iDataSet { ID: number, Name: string, Context: 'Relative' | 'Fixed Dates', RelativeValue: number, RelativeWindow: 'Day' | 'Week' | 'Month' | 'Year',From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Data?: { Status: Status, Error?: string } }    
     interface iDataSetSource { ID: number, Name: string, DataSourceTypeID: number, JSON: object }

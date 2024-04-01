@@ -23,7 +23,7 @@
 
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { TrenDAP, Redux } from '../../global';
+import { DataSourceTypes, Redux } from '../../global';
 import { ajax } from 'jquery';
 
 export const FetchDataSourceTypes = createAsyncThunk('DataSources/FetchDataSourceTypes', async (_,{ dispatch }) => {
@@ -39,7 +39,7 @@ export const DataSourceTypesSlice = createSlice({
         SortField: 'Name',
         Ascending: true,
         Error: null
-    } as Redux.State<TrenDAP.iDataSourceType>,
+    } as Redux.State<DataSourceTypes.IDataSourceType>,
     reducers: {
         Add: (state, action) => {
             state.Data.push(action.payload);
@@ -77,7 +77,7 @@ export default DataSourceTypesSlice.reducer;
 export const SelectDataSourceTypes = (state: Redux.StoreState) => state.DataSourceTypes.Data;
 export const SelectDataSourceTypesStatus = (state: Redux.StoreState) => state.DataSourceTypes.Status;
 
-function GetDataSourceTypes(): JQuery.jqXHR<TrenDAP.iDataSourceType[]> {
+function GetDataSourceTypes(): JQuery.jqXHR<DataSourceTypes.IDataSourceType[]> {
     return ajax({
         type: "GET",
         url: `${homePath}api/DataSourceType`,

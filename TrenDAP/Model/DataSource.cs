@@ -46,7 +46,7 @@ namespace TrenDAP.Model
         public bool Public { get; set; }
         [UseEscapedName]
         public string User { get; set; }
-        public bool OIDC { get; set; }
+        public string OtherSettings { get; set; }
 
         public static DataSource GetDataSource(IConfiguration configuration, int id)
         {

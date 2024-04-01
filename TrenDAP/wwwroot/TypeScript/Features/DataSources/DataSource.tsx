@@ -22,14 +22,14 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP } from '../../global';
+import { DataSourceTypes } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { Input, Select, CheckBox } from '@gpa-gemstone/react-forms';
 
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 
-const DataSource: React.FunctionComponent<{ DataSource: TrenDAP.iDataSource, SetDataSource: (ds: TrenDAP.iDataSource) => void }> = (props) => {
-    const dataSourceTypes: TrenDAP.iDataSourceType[] = useAppSelector(SelectDataSourceTypes);
+const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSourceView, SetDataSource: (ds: DataSourceTypes.IDataSourceView) => void }> = (props) => {
+    const dataSourceTypes: DataSourceTypes.IDataSourceType[] = useAppSelector(SelectDataSourceTypes);
     const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
     const dispatch = useAppDispatch();
 
@@ -41,7 +41,7 @@ const DataSource: React.FunctionComponent<{ DataSource: TrenDAP.iDataSource, Set
         }
     }, [dispatch]);
 
-    function valid(field: keyof(TrenDAP.iDataSource)): boolean {
+    function valid(field: keyof(DataSourceTypes.IDataSourceView)): boolean {
         if (field == 'Name')
             return props.DataSource.Name != null && props.DataSource.Name.length > 0 && props.DataSource.Name.length <= 200;
         else if (field == 'URL')
@@ -51,19 +51,14 @@ const DataSource: React.FunctionComponent<{ DataSource: TrenDAP.iDataSource, Set
 
     return (
         <form>
-            <Input<TrenDAP.iDataSource> Record={props.DataSource} Field="Name" Setter={props.SetDataSource} Valid={valid} />
-            <Select<TrenDAP.iDataSource> Record={props.DataSource} Label="DataSource Type" Field="DataSourceTypeID" Setter={props.SetDataSource} Options={dataSourceTypes.map(x => ({Value: x.ID.toString(), Label: x.Name })) } />
-            <Input<TrenDAP.iDataSource> Record={props.DataSource} Field="URL" Setter={props.SetDataSource} Valid={valid} />
+            <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="Name" Setter={props.SetDataSource} Valid={valid} />
+            <Select<DataSourceTypes.IDataSourceView> Record={props.DataSource} Label="DataSource Type" Field="DataSourceTypeID" Setter={props.SetDataSource} Options={dataSourceTypes.map(x => ({Value: x.ID.toString(), Label: x.Name })) } />
+            <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="URL" Setter={props.SetDataSource} Valid={valid} />
 
             <div className="row">
                 <div className='col'>
-                    <CheckBox<TrenDAP.iDataSource> Record={props.DataSource} Field="Public" Label='Shared' Setter={props.SetDataSource} />
+                    <CheckBox<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="Public" Label='Shared' Setter={props.SetDataSource} />
                 </div>
-                <div className='col'>
-
-                <CheckBox<TrenDAP.iDataSource> Record={props.DataSource} Field="OIDC" Label='XDA OIDC Credential' Setter={props.SetDataSource} />
-                </div>
-
             </div>
         </form>
     );

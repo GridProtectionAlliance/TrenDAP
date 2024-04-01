@@ -22,12 +22,12 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP, Redux } from '../../../global';
+import { TrenDAP, Redux, DataSourceTypes } from '../../../global';
 import { Select, ArrayCheckBoxes, ArrayMultiSelect } from '@gpa-gemstone/react-forms';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../../OpenXDA/OpenXDASlice';
 
-const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: { DataSource: TrenDAP.iDataSource, Data: TrenDAP.iXDADataSet }, Index: number, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
+const DataSetOpenXDA: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: { DataSource: DataSourceTypes.IDataSourceView, Data: TrenDAP.iXDADataSet }, Index: number, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
     const dispatch = useAppDispatch();
     const phases = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'Phase'));
     const meters = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.Data.DataSource.ID, 'Meter'));

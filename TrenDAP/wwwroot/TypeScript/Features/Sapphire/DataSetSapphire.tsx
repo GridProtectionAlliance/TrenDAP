@@ -22,12 +22,12 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP, Redux } from '../../global';
+import { TrenDAP, Redux, DataSourceTypes } from '../../global';
 import { Select, ArrayCheckBoxes, ArrayMultiSelect, Input } from '@gpa-gemstone/react-forms';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { SelectSapphire, FetchSapphire, SelectSapphireStatus } from './SapphireSlice';
 
-const DataSetSapphire: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: { DataSource: TrenDAP.iDataSource, Data: TrenDAP.iSapphireDataSet }, Index: number, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
+const DataSetSapphire: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data: { DataSource: DataSourceTypes.IDataSourceView, Data: TrenDAP.iSapphireDataSet }, Index: number, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
     const dispatch = useAppDispatch();
 
     const resolutions: any[] = useAppSelector((state: Redux.StoreState) => SelectSapphire(state, props.Data.DataSource.ID, 'Resolution'));
