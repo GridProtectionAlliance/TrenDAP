@@ -76,7 +76,7 @@ CREATE TABLE DataSource
     RegistrationKey VARCHAR(50) NOT NULL UNIQUE,
     APIToken VARCHAR(50) NOT NULL,
     Expires DATETIME NULL,
-    OIDC bit NOT NULL DEFAULT 0
+    OtherSettings VARCHAR(MAX) NOT NULL DEFAULT '{}'
 )
 GO
 
