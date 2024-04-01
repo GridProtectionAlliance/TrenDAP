@@ -25,7 +25,7 @@ import * as React from 'react';
 import _ from 'lodash';
 import { DataSourceTypes, Redux } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { SelectDataSourcesForUser, FetchDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSourcesAllPublicNotUser } from './DataSourcesSlice'
+import { FetchDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSources } from './DataSourcesSlice'
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 import EditDataSource from './EditDataSource';
@@ -67,12 +67,7 @@ const DataSourceTable = React.memo((props: ITableProps) => {
     const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
     const dataSourceTypes = useAppSelector(SelectDataSourceTypes);
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
-    const dataSourcesUnsorted = useAppSelector((state: Redux.StoreState) => {
-        if (props.OwnedByUser)
-            return SelectDataSourcesForUser(state, userName);
-        else
-            return SelectDataSourcesAllPublicNotUser(state, userName);
-    });
+    const allDataSources = useAppSelector(SelectDataSources);
 
     React.useEffect(() => {
         if (dstStatus === 'unitiated' || dstStatus === 'changed') dispatch(FetchDataSourceTypes());
@@ -83,8 +78,11 @@ const DataSourceTable = React.memo((props: ITableProps) => {
     }, [dsStatus]);
 
     React.useEffect(() => {
-        setDataSources(_.orderBy(dataSourcesUnsorted, [sortField], [ascending ? 'asc' : 'desc']));
-    }, [sortField, ascending, dataSourcesUnsorted]);
+        setDataSources(_.orderBy(allDataSources.filter(source => {
+            if (props.OwnedByUser) return source.User === userName;
+            else return source.Public && source.User !== userName;
+        }), [sortField], [ascending ? 'asc' : 'desc']));
+    }, [sortField, ascending, allDataSources, props.OwnedByUser]);
 
     return (
         <ReactTable.Table<DataSourceTypes.IDataSourceView>
@@ -105,8 +103,12 @@ const DataSourceTable = React.memo((props: ITableProps) => {
             <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
             <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'DataSourceTypeID'} Field={'DataSourceTypeID'}
                 Content={row => dataSourceTypes.find(dst => row.item.DataSourceTypeID === dst.ID)?.Name}>Type</ReactTable.Column>
-            <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}
-                Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</ReactTable.Column>
+            {
+                props.OwnedByUser ?
+                    <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}
+                        Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</ReactTable.Column>
+                    : <></>
+            }
             {
                 props.OwnedByUser ?
                     <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Delete'} Field={'Public'}
