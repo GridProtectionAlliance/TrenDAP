@@ -22,100 +22,104 @@
 //******************************************************************************************************
 
 import * as React from 'react';
+import _ from 'lodash';
 import { TrenDAP, Redux } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { Sort, SelectDataSourcesForUser, FetchDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSourcesAllPublicNotUser, SelectDataSourcesSortField, SelectDataSourcesAscending } from './DataSourcesSlice'
-import Table from '@gpa-gemstone/react-table'
+import { SelectDataSourcesForUser, FetchDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSourcesAllPublicNotUser } from './DataSourcesSlice'
+import { ReactTable } from '@gpa-gemstone/react-table';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 import EditDataSource from './EditDataSource';
 import { TrashCan, HeavyCheckMark } from './../../Constants'
 
 const DataSources: React.FunctionComponent = (props: {}) => {
-    const dispatch = useAppDispatch();
-    const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName));
-    const publicDataSources = useAppSelector((state: Redux.StoreState)  => SelectDataSourcesAllPublicNotUser(state,userName));
-
-    const dsStatus = useAppSelector(SelectDataSourcesStatus);
-    const dataSourceTypes = useAppSelector(SelectDataSourceTypes);
-    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
-
-    const sortField = useAppSelector(SelectDataSourcesSortField);
-    const ascending = useAppSelector(SelectDataSourcesAscending);
-
-    React.useEffect(() => {
-        if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
-        dispatch(FetchDataSources());
-
-        return function () {
-        }
-    }, [dispatch, dsStatus]);
-
-    React.useEffect(() => {
-        if (dstStatus != 'unitiated') return;
-
-        dispatch(FetchDataSourceTypes());
-        return function () {
-        }
-    }, [dispatch, dstStatus]);
-
     return (
-    <div className="row" style={{ margin: 10}}>
+        <div className="row" style={{ margin: 10}}>
             <div className="col-6" style={{ padding: '0 0 0 0' }}>
-            <div className="card">
-                <div className="card-header">My DataSources</div>
-                <div className="card-body">
-                    <Table<TrenDAP.iDataSource>
-                        cols={[
-                            { key: 'Name', field: 'Name', label: 'Name' },
-                            { key: 'DataSourceTypeID', field: 'DataSourceTypeID', label: 'Type', content: (item, key, style) => dataSourceTypes.find(dst => item.DataSourceTypeID === dst.ID)?.Name },
-                            { key: 'URL',field: 'URL', label: 'Url' },
-                            { key: 'Public',field: 'Public', label: 'Shared', content: (item, key, style) => <span>{item[key] ? HeavyCheckMark : null}</span> },
-                            { key: null, label: '', content: (item, key, style) => <span><EditDataSource DataSource={item} /><button className="btn" onClick={() => dispatch(RemoveDataSource(item))}>{TrashCan}</button></span> }
-
-                        ]}
-                        tableClass="table table-hover"
-                        theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
-                        tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
-                        rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                        sortKey={sortField}
-                        onClick={() => { }}
-                        onSort={data => dispatch(Sort({SortField: data.colField, Ascending: data.ascending}))}
-                        data={dataSources}
-                        ascending={ascending}
-                    />
-
+                <div className="card">
+                    <div className="card-header">My DataSources</div>
+                    <div className="card-body">
+                        <DataSourceTable OwnedByUser={true}/>
+                    </div>
                 </div>
             </div>
-        </div>
             <div className="col-6" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
                     <div className="card-header">Shared DataSources</div>
                     <div className="card-body">
-                        <Table<TrenDAP.iDataSource>
-                            cols={[
-                                { key: 'Name', field: 'Name', label: 'Name' },
-                                { key: 'DataSourceTypeID', field: 'DataSourceTypeID', label: 'Type', content: (item, key, style) => dataSourceTypes.find(dst => item.DataSourceTypeID === dst.ID)?.Name },
-                                { key: 'URL', field: 'URL', label: 'Url' },
-                                //{ key: null, label: '', content: (item, key, style) => <span><EditDataSource DataSource={item} /><button className="btn" onClick={() => dispatch(RemoveDataSource(item))}>{TrashCan}</button></span> }
-
-                            ]}
-                            tableClass="table table-hover"
-                            theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
-                            tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
-                            rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            sortKey={sortField}
-                            onClick={() => { }}
-                            onSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
-                            data={publicDataSources}
-                            ascending={ascending}
-                        />
-
+                        <DataSourceTable OwnedByUser={false} />
                     </div>
                 </div>
-
+            </div>
         </div>
-    </div>
     );
 }
+
+interface ITableProps {
+    OwnedByUser: boolean
+}
+
+const DataSourceTable = React.memo((props: ITableProps) => {
+    const [sortField, setSortField] = React.useState<string>('Name');
+    const [ascending, setAscending] = React.useState<boolean>(true);
+    const [dataSources, setDataSources] = React.useState<TrenDAP.iDataSource[]>([]);
+
+    const dispatch = useAppDispatch();
+    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
+    const dataSourceTypes = useAppSelector(SelectDataSourceTypes);
+    const dsStatus = useAppSelector(SelectDataSourcesStatus);
+    const dataSourcesUnsorted = useAppSelector((state: Redux.StoreState) => {
+        if (props.OwnedByUser)
+            return SelectDataSourcesForUser(state, userName);
+        else
+            return SelectDataSourcesAllPublicNotUser(state, userName);
+    });
+
+    React.useEffect(() => {
+        if (dstStatus === 'unitiated' || dstStatus === 'changed') dispatch(FetchDataSourceTypes());
+    }, [dstStatus]);
+
+    React.useEffect(() => {
+        if (dsStatus === 'unitiated' || dsStatus === 'changed') dispatch(FetchDataSources());
+    }, [dsStatus]);
+
+    React.useEffect(() => {
+        setDataSources(_.orderBy(dataSourcesUnsorted, [sortField], [ascending ? 'asc' : 'desc']));
+    }, [sortField, ascending, dataSourcesUnsorted]);
+
+    return (
+        <ReactTable.Table<TrenDAP.iDataSource>
+            TableClass="table table-hover"
+            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
+            TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
+            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+            // Small note: ReactTable gives the key as sort, but here we wanna use field. This is not an issue if they match.
+            SortKey={sortField}
+            OnClick={() => { }}
+            OnSort={data => {
+                if (data.colKey === sortField) setAscending(s => !s);
+                else setSortField(data.colKey);
+            }}
+            Data={dataSources}
+            KeySelector={source => source.ID}
+            Ascending={ascending}>
+            <ReactTable.Column<TrenDAP.iDataSource> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
+            <ReactTable.Column<TrenDAP.iDataSource> Key={'DataSourceTypeID'} Field={'DataSourceTypeID'}
+                Content={row => dataSourceTypes.find(dst => row.item.DataSourceTypeID === dst.ID)?.Name}>Type</ReactTable.Column>
+            <ReactTable.Column<TrenDAP.iDataSource> AllowSort={false} Key={'Edit'} Field={'Public'}
+                Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</ReactTable.Column>
+            {
+                props.OwnedByUser ?
+                    <ReactTable.Column<TrenDAP.iDataSource> AllowSort={false} Key={'Delete'} Field={'Public'}
+                        Content={row =>
+                            <span>
+                                <EditDataSource DataSource={row.item} />
+                                <button className="btn" onClick={() => dispatch(RemoveDataSource(row.item))}>{TrashCan}</button>
+                            </span>}
+                    ><></></ReactTable.Column>
+                    : <></>
+            }
+        </ReactTable.Table>
+    );
+});
 
 export default DataSources;
