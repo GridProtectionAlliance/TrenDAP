@@ -100,22 +100,25 @@ export namespace DataSourceTypes {
     }
 
     // Datasource as tsx needs them
-    interface IDataSourceProps<T> {
+    interface IDataSetProps<T> {
+        DataSource: IDataSourceView,
         Settings: T,
         HomePath: string,
-        Roles: string[],
-        Name: string
+        Roles: string[]
     }
 
-    interface IDataSourceSettingsProps<T> {
+    interface IConfigProps<T> {
         Settings: T,
         SetSettings: (settings: T) => void,
     }
 
     // Datasource coding interface, uses props to get the datasource
     interface IDataSource<T> {
-        DataSource: React.FC<IDataSourceProps<T>>,
-        Settings: React.FC<IDataSourceSettingsProps<T>>,
+        DataSetUI: React.FC<IDataSourceProps<T>>,
+        ConfigUI: React.FC<IDataSourceSettingsProps<T>>,
+        LoadDataSet: (dataSet: TrenDAP.iDataSet) => Promise<TrenDAP.iDataSetReturn>,
+        ViewDataSet: (dataSet: TrenDAP.iDataSet) => string,
+        TestAuth: (dataSource: IDataSourceView) => boolean,
         DefaultSettings: T,
         Name: string,
     }
