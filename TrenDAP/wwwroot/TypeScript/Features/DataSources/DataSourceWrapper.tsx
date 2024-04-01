@@ -30,9 +30,7 @@ import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceType
 const AllSources: DataSourceTypes.IDataSource<any>[] = [];
 
 interface IPropsCommon {
-    DataSource: DataSourceTypes.IDataSourceView,
-    HomePath: string,
-    Roles: string[]
+    DataSource: DataSourceTypes.IDataSourceView
 }
 
 interface IPropsDataset extends IPropsCommon {
@@ -97,8 +95,6 @@ const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IProp
             {props.ComponentType === 'dataset' ?
                 <dataSource.DataSetUI
                     DataSource={props.DataSource}
-                    HomePath={props.HomePath}
-                    Roles={props.Roles}
                     Settings={Settings}
                 /> :
                 <dataSource.ConfigUI

@@ -102,9 +102,7 @@ export namespace DataSourceTypes {
     // Datasource as tsx needs them
     interface IDataSetProps<T> {
         DataSource: IDataSourceView,
-        Settings: T,
-        HomePath: string,
-        Roles: string[]
+        Settings: T
     }
 
     interface IConfigProps<T> {
