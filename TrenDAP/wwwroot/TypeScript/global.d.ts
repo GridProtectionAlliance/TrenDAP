@@ -112,8 +112,8 @@ export namespace DataSourceTypes {
 
     // Datasource coding interface, uses props to get the datasource
     interface IDataSource<T> {
-        DataSetUI: React.FC<IDataSourceProps<T>>,
-        ConfigUI: React.FC<IDataSourceSettingsProps<T>>,
+        DataSetUI: React.FC<IDataSetProps<T>>,
+        ConfigUI: React.FC<IConfigProps<T>>,
         LoadDataSet: (dataSet: TrenDAP.iDataSet) => Promise<TrenDAP.iDataSetReturn>,
         ViewDataSet: (dataSet: TrenDAP.iDataSet) => string,
         TestAuth: (dataSource: IDataSourceView) => boolean,
