@@ -115,7 +115,7 @@ export namespace DataSourceTypes {
         DataSetUI: React.FC<IDataSetProps<T>>,
         ConfigUI: React.FC<IConfigProps<T>>,
         LoadDataSet: (dataSet: TrenDAP.iDataSet) => Promise<TrenDAP.iDataSetReturn>,
-        ViewDataSet: (dataSet: TrenDAP.iDataSet) => string,
+        QuickViewDataSet?: (dataSet: TrenDAP.iDataSet) => string,
         TestAuth: (dataSource: IDataSourceView) => boolean,
         DefaultSettings: T,
         Name: string,
