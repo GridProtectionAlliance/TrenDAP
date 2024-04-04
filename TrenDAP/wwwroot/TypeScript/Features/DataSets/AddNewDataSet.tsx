@@ -26,7 +26,6 @@ import { TrenDAP } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { AddDataSet, SelectRecord, New, Update, SelectDataSets } from './DataSetsSlice'
 import DataSet from './DataSet';
-import { useNavigate } from 'react-router-dom';
 import { ToolTip } from '@gpa-gemstone/react-interactive';
 import { Warning } from '@gpa-gemstone/gpa-symbols';
 import moment from 'moment';
@@ -34,7 +33,6 @@ import { CrossMark } from '../../Constants';
 
 const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
     const dispatch = useAppDispatch();
-    let navigate = useNavigate();
 
     const dataSet = useAppSelector(SelectRecord);
     const allDataSets = useAppSelector(SelectDataSets);
@@ -101,7 +99,7 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
                                     if (errors.length > 0)
                                         return;
                                     dispatch(AddDataSet(dataSet));
-                                    navigate(`${homePath}DataSets`);
+                                    window.location.href = `${homePath}/DataSets`;
                                 }}
                             > Save</button>
                         </div>
