@@ -38,11 +38,18 @@ const DataSets: React.FunctionComponent = (props: {}) => {
     const publicDataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
 
     const [deleteItem, setDeleteItem] = React.useState<TrenDAP.iDataSet>(null);
+    const cardHeaderRef = React.useRef<HTMLDivElement>(null);
+    const [cardHeaderHeight, setCardHeaderHeight] = React.useState<number>(50)
 
     const dsStatus = useAppSelector(SelectDataSetsStatus);
 
     const sortField = useAppSelector(SelectDataSetsSortField);
     const ascending = useAppSelector(SelectDataSetsAscending);
+
+    React.useLayoutEffect(() => {
+        if (cardHeaderHeight !== cardHeaderRef.current?.offsetHeight)
+            setCardHeaderHeight(cardHeaderRef.current.offsetHeight)
+    })
 
     React.useEffect(() => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
@@ -56,7 +63,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
         <div className="row" style={{ margin: 10 }}>
             <div className="col-8" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header">
+                    <div className="card-header" ref={cardHeaderRef}>
                         <div className="row">
                             <div className="col">
                                 <h4>My DataSets:</h4>
@@ -115,17 +122,17 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                     <span>
                                         <DataSetData {...d.item} />
                                         {d.item.Data?.Status === 'idle' ?
-                                                <button className="btn" title='View/Edit DataSet Data.'
-                                                    onClick={() => {
-                                                    window.location.href = `${homePath}ViewDataSet/${d.item.ID}`;
-                                                    }}
-                                                >{Wrench}</button>
-                                                : null}
-                                            <button className="btn" title='Edit DataSet Parameters.'
+                                            <button className="btn" title='View/Edit DataSet Data.'
                                                 onClick={() => {
-                                                window.location.href = `${homePath}EditDataSet/${d.item.ID}`;
+                                                    window.location.href = `${homePath}ViewDataSet/${d.item.ID}`;
                                                 }}
-                                            >{Pencil}</button>
+                                            >{Wrench}</button>
+                                            : null}
+                                        <button className="btn" title='Edit DataSet Parameters.'
+                                            onClick={() => {
+                                                window.location.href = `${homePath}EditDataSet/${d.item.ID}`;
+                                            }}
+                                        >{Pencil}</button>
                                         <a title='Clone DataSet.' className="btn" onClick={() => dispatch(CloneDataSet(d.item))}>{DNA}</a>
                                         <a title='Delete DataSet.' className="btn" onClick={() => setDeleteItem(d.item)}>{TrashCan}</a>
                                     </span>
@@ -138,7 +145,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
             </div>
             <div className="col-4" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header">Shared DataSets</div>
+                    <div className="card-header" style={{ height: cardHeaderHeight }}>Shared DataSets</div>
                     <div className="card-body">
                         <ReactTable.Table<TrenDAP.iDataSet>
                             TableClass={"table table-hover"}
@@ -173,7 +180,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
             <Warning Title={'Delete ' + deleteItem?.Name} Show={deleteItem != null}
                 Message={"This will remove the Dataset and can not be undone."} CallBack={(c) => { if (c) dispatch(RemoveDataSet(deleteItem)); setDeleteItem(null); }} />
         </div>
-        
+
     );
 }
 
