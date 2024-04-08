@@ -28,9 +28,9 @@ import { useAppSelector, useAppDispatch } from '../../hooks';
 import { ReactTable } from '@gpa-gemstone/react-table'
 import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, CloneDataSet, New } from './DataSetsSlice';
 import moment from 'moment';
-import DataSetData from './DataSetData';
 import { DNA, TrashCan, HeavyCheckMark, Pencil, Wrench } from '@gpa-gemstone/gpa-symbols';
-import { Warning } from '@gpa-gemstone/react-interactive'
+import { Warning, ToolTip } from '@gpa-gemstone/react-interactive'
+type Hover = ('Pencil' | 'Clone' | 'Delete' | 'None')
 
 const DataSets: React.FunctionComponent = (props: {}) => {
     const dispatch = useAppDispatch();
@@ -38,6 +38,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
     const publicDataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
 
     const [deleteItem, setDeleteItem] = React.useState<TrenDAP.iDataSet>(null);
+    const [hover, setHover] = React.useState<Hover>('None')
     const cardHeaderRef = React.useRef<HTMLDivElement>(null);
     const [cardHeaderHeight, setCardHeaderHeight] = React.useState<number>(50)
 
@@ -120,21 +121,26 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                 AllowSort={false}
                                 Content={(d) =>
                                     <span>
-                                        <DataSetData {...d.item} />
                                         {d.item.Data?.Status === 'idle' ?
-                                            <button className="btn" title='View/Edit DataSet Data.'
-                                                onClick={() => {
-                                                    window.location.href = `${homePath}ViewDataSet/${d.item.ID}`;
-                                                }}
-                                            >{Wrench}</button>
+                                            <button className="btn" title='View/Edit DataSet Data.' onClick={() => navigate(`${homePath}ViewDataSet/${d.item.ID}`)}>
+                                                {Wrench}
+                                            </button>
                                             : null}
-                                        <button className="btn" title='Edit DataSet Parameters.'
-                                            onClick={() => {
-                                                window.location.href = `${homePath}EditDataSet/${d.item.ID}`;
-                                            }}
-                                        >{Pencil}</button>
-                                        <a title='Clone DataSet.' className="btn" onClick={() => dispatch(CloneDataSet(d.item))}>{DNA}</a>
-                                        <a title='Delete DataSet.' className="btn" onClick={() => setDeleteItem(d.item)}>{TrashCan}</a>
+                                        <button data-toggle="tooltip" data-tooltip="pencil-btn" data-placement="bottom" className="btn" onMouseEnter={() => setHover('Pencil')}
+                                            onMouseLeave={() => setHover('None')} onClick={() => navigate(`${homePath}EditDataSet/${d.item.ID}`)}>
+                                            {Pencil}
+                                        </button>
+                                        <ToolTip Show={hover === 'Pencil'} Position={'top'} Target={'pencil-btn'}><p>Edit DataSet Parameters</p></ToolTip>
+                                        <a className="btn" data-toggle="tooltip" data-tooltip="clone-btn" data-placement="bottom" onMouseEnter={() => setHover('Clone')}
+                                            onClick={() => dispatch(CloneDataSet(d.item))} onMouseLeave={() => setHover('None')}>
+                                            {DNA}
+                                        </a>
+                                        <ToolTip Show={hover === 'Clone'} Position={'top'} Target={'clone-btn'}><p>Clone DataSet</p></ToolTip>
+                                        <a className="btn" onClick={() => setDeleteItem(d.item)} data-tooltip="delete-btn" data-toggle="tooltip" data-placement="bottom"
+                                            onMouseEnter={() => setHover('Delete')} onMouseLeave={() => setHover('None')}>
+                                            {TrashCan}
+                                        </a>
+                                        <ToolTip Show={hover === 'Delete'} Position={'top'} Target={'delete-btn'}><p>Delete DataSet</p></ToolTip>
                                     </span>
                                 }
                             >
