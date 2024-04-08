@@ -31,10 +31,12 @@ import { ToolTip } from '@gpa-gemstone/react-interactive';
 import { Warning } from '@gpa-gemstone/gpa-symbols';
 import moment from 'moment';
 import { CrossMark } from '../../Constants';
+import { useNavigate } from 'react-router-dom';
 import $ from 'jquery';
 
 const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
 
     const allDataSets = useAppSelector(SelectDataSets);
     const setStatus = useAppSelector(SelectDataSetsStatus);
@@ -119,7 +121,7 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
                                         dispatch(FetchDataSourceDataSets());
                                         dispatch(FetchDataSets());
                                     }).done(() => {
-                                        window.location.href = `${homePath}DataSets`;
+                                        navigate(`${homePath}/DataSets`);
                                     });
                                     return () => { if (handle != null && handle.abort != null) handle.abort(); }
                                 }}

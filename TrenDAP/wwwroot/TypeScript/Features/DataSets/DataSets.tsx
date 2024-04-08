@@ -30,10 +30,14 @@ import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSet
 import moment from 'moment';
 import { DNA, TrashCan, HeavyCheckMark, Pencil, Wrench } from '@gpa-gemstone/gpa-symbols';
 import { Warning, ToolTip } from '@gpa-gemstone/react-interactive'
+import { useNavigate } from "react-router-dom";
+
+
 type Hover = ('Pencil' | 'Clone' | 'Delete' | 'None')
 
 const DataSets: React.FunctionComponent = (props: {}) => {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const DataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
     const publicDataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
 
@@ -73,7 +77,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                 <button className="btn btn-primary pull-right"
                                     onClick={() => {
                                         dispatch(New({}));
-                                        window.location.href = `${homePath}AddNewDataSet`;
+                                        navigate(`${homePath}AddNewDataSet`);
                                     }}
                                 >Add New</button>
                             </div>
