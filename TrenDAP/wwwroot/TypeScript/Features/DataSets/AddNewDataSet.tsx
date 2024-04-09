@@ -121,7 +121,7 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
                                         dispatch(FetchDataSourceDataSets());
                                         dispatch(FetchDataSets());
                                     }).done(() => {
-                                        navigate(`${homePath}/DataSets`);
+                                        navigate(`${homePath}DataSets`);
                                     });
                                     return () => { if (handle != null && handle.abort != null) handle.abort(); }
                                 }}
