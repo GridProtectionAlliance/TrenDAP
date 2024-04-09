@@ -94,7 +94,7 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
                         New Data Set {dataSet.Name !== null && dataSet.Name.trim().length > 0 ? ('(' + dataSet.Name + ')') : ''}
                 </div>
                 <div className="card-body" style={{ overflowY: 'auto' }}>
-                        <DataSet DataSet={dataSet} SetDataSet={setDataSet} Connections={connections} SetConnections={setConnections} />
+                        <DataSet DataSet={dataSet} SetDataSet={setDataSet} Connections={connections} SetConnections={setConnections} Tab={"settings"}/>
                 </div>
                 <div className="card-footer">
                     <div className="btn-group mr-2">
