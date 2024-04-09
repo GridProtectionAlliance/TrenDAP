@@ -26,80 +26,120 @@ import { cloneDeep } from 'lodash';
 import { DataSourceTypes, TrenDAP } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
+import XDADataSource from './ReactDataSources/XDADataSource'
 
-const AllSources: DataSourceTypes.IDataSource<any>[] = [];
+const AllSources: DataSourceTypes.IDataSource<any, any>[] = [XDADataSource];
 
 interface IPropsCommon {
     DataSource: DataSourceTypes.IDataSourceView
 }
 
 interface IPropsDataset extends IPropsCommon {
-    ComponentType: 'dataset',
+    ComponentType: 'datasetConfig',
+    DataSet: TrenDAP.iDataSet,
+    DataSetConn: DataSourceTypes.IDataSourceDataSet,
+    SetDataSetConn: (arg: DataSourceTypes.IDataSourceDataSet) => void
 }
 
 interface IPropsSetting extends IPropsCommon {
-    ComponentType: 'setting',
-    SetDataSource?: (newSource: DataSourceTypes.IDataSourceView) => void
+    ComponentType: 'sourceConfig',
+    SetDataSource: (newSource: DataSourceTypes.IDataSourceView) => void
 }
 
 const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IPropsDataset | IPropsSetting) => {
     const dispatch = useAppDispatch();
     const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
     const dataSourceTypes = useAppSelector(SelectDataSourceTypes);
+    const [dataSource, setDataSource] = React.useState<DataSourceTypes.IDataSource<any, any>>(undefined);
 
     React.useEffect(() => {
         if (dstStatus === 'unitiated' || dstStatus === 'changed') dispatch(FetchDataSourceTypes());
     }, [dstStatus]);
 
-    const dataSource = React.useMemo(() => GetReactDataSource(props.DataSource, dataSourceTypes), [props.DataSource.DataSourceTypeID, dstStatus]);
+    React.useEffect(() => {
+        if (props.DataSource == null) return;
+        setDataSource(GetReactDataSource(props.DataSource, dataSourceTypes));
+    }, [props.DataSource?.DataSourceTypeID, dstStatus]);
 
-    const Settings = React.useMemo(() => {
-        if (props.DataSource.OtherSettings == null)
-            return dataSource?.DefaultSettings ?? {};
-        const s = cloneDeep(dataSource?.DefaultSettings ?? {});
+    const SourceSettings = React.useMemo(() => {
+        if (props.DataSource?.Settings == null)
+            return dataSource?.DefaultSourceSettings ?? {};
+        const s = cloneDeep(dataSource?.DefaultSourceSettings ?? {});
         let custom = {};
-        if (props.DataSource.OtherSettings.length > 2) {
+        if (props.DataSource.Settings.length > 2) {
             try {
-                custom = JSON.parse(props.DataSource.OtherSettings);
+                custom = JSON.parse(props.DataSource.Settings);
             } catch {
                 custom = {};
-                console.warn(`Widget ${props.DataSource.Name} does not have a valid settings string`);
+                console.warn(`Data source ${props.DataSource.Name} does not have a valid settings string`);
             }
         }
 
-        for (const [k] of Object.entries(dataSource?.DefaultSettings ?? {})) {
+        for (const [k] of Object.entries(dataSource?.DefaultSourceSettings ?? {})) {
             if (custom.hasOwnProperty(k))
                 s[k] = cloneDeep(custom[k]);
         }
         return s;
-    }, [dataSource, props.DataSource.OtherSettings]);
+    }, [dataSource, props.DataSource?.Settings]);
 
-    const SetSettings = React.useCallback(newSetting => {
-        if (props.ComponentType !== 'setting') return;
+    const SetSourceSettings = React.useCallback(newSetting => {
+        if (props.DataSource == null || props.ComponentType !== 'sourceConfig') return;
         const newDataSource = { ...props.DataSource };
-        newDataSource.OtherSettings = JSON.stringify(newSetting);
+        newDataSource.Settings = JSON.stringify(newSetting);
         props.SetDataSource(newDataSource);
     }, [props.DataSource, props['SetDataSource']]);
 
+    const DataSetSettings = React.useMemo(() => {
+        if (props.DataSource == null || props.ComponentType !== 'datasetConfig') return;
+        if (props.DataSetConn?.Settings == null)
+            return dataSource?.DefaultDataSetSettings ?? {};
+        const s = cloneDeep(dataSource?.DefaultDataSetSettings ?? {});
+        let custom = {};
+        if (props.DataSetConn.Settings.length > 2) {
+            try {
+                custom = JSON.parse(props.DataSetConn.Settings);
+            } catch {
+                custom = {};
+                console.warn(`Connection does not have a valid settings string`);
+            }
+        }
+
+        for (const [k] of Object.entries(dataSource?.DefaultDataSetSettings ?? {})) {
+            if (custom.hasOwnProperty(k))
+                s[k] = cloneDeep(custom[k]);
+        }
+        return s;
+    }, [dataSource, props['DataSetConn']?.Settings]);
+
+    const SetDataSetSettings = React.useCallback(newSetting => {
+        if (props.DataSource == null || props.ComponentType !== 'datasetConfig') return;
+        const newConn = { ...props.DataSetConn };
+        newConn.Settings = JSON.stringify(newSetting);
+        props.SetDataSetConn(newConn);
+    }, [props['DataSetConn'], props['SetDataSetConn']]);
+
     return <>{dataSource == null ? <div className="card">
         <div className="card-header">
-            {props.DataSource.Name} - Error
+            {props.DataSource?.Name} - Error
         </div>
         <div className="card-body">
             <ServerErrorIcon Show={true}
-                Label={`Datasource ${props.DataSource.Name} is not available. Please contact your system administrator.`}
+                Label={`Datasource ${props.DataSource?.Name} is not available. Please contact your system administrator.`}
                 Size={150} />
         </div>
     </div>
         : <ErrorBoundary Name={props.DataSource.Name}>
-            {props.ComponentType === 'dataset' ?
+            {props.ComponentType === 'datasetConfig' ?
                 <dataSource.DataSetUI
+                    DataSet={props.DataSet}
                     DataSource={props.DataSource}
-                    Settings={Settings}
+                    DataSourceSettings={SourceSettings}
+                    DataSetSettings={DataSetSettings}
+                    SetDataSetSettings={SetDataSetSettings}
                 /> :
                 <dataSource.ConfigUI
-                    Settings={Settings}
-                    SetSettings={SetSettings}
+                    Settings={SourceSettings}
+                    SetSettings={SetSourceSettings}
                 />
             }
         </ErrorBoundary>}
