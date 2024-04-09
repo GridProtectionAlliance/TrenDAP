@@ -65,7 +65,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                 <button className="btn btn-primary pull-right"
                                     onClick={() => {
                                         dispatch(New({}));
-                                        window.location.href = `${homePath}/AddNewDataSet`;
+                                        window.location.href = `${homePath}AddNewDataSet`;
                                     }}
                                 >Add New</button>
                             </div>

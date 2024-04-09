@@ -60,7 +60,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
             <Application
                 HomePath={homePath} DefaultPath={"WorkSpaces"}
                 Logo={homePath + "Images/trendaplogo.png"}
-                OnSignOut={() => { window.location.href = `${homePath}/Logout`; }}>
+                OnSignOut={() => { window.location.href = `${homePath}Logout`; }}>
                 <Page Name={'DataSources'} Label={'Data Sources'} Icon={SVGIcons.DataContainer}>
                     <DataSources />
                 </Page>
