@@ -42,7 +42,6 @@ using System.Threading.Tasks;
 using TrenDAP.Controllers;
 using HIDSPoint = HIDS.Point;
 using TrenDAP.Controllers.Sapphire;
-using SapphirePoint = TrenDAP.Controllers.Sapphire.Point;
 using System.IO;
 using System.Net.Http;
 
@@ -94,13 +93,28 @@ namespace TrenDAP.Model
         public override ActionResult Post([FromBody] JObject record)
         {
             record["User"] = Request.HttpContext.User.Identity.Name;
-            record["JSON"] = Encoding.UTF8.GetBytes(record["JSONString"].ToString());
             return base.Post(record);
         }
-        public override ActionResult Patch([FromBody] JObject record)
+
+        [HttpPost, Route("NewWithConnections")]
+        public ActionResult PostConnections([FromBody] JObject record)
         {
-            record["JSON"] = Encoding.UTF8.GetBytes(record["JSONString"].ToString());
-            return base.Patch(record);
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                DataSet dataSetRecord = record.GetValue("DataSet").ToObject<DataSet>();
+                dataSetRecord.User = Request.HttpContext.User.Identity.Name;
+                int result = new TableOperations<DataSet>(connection).AddNewRecord(dataSetRecord);
+                int dataSetId = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
+                JArray connections = (JArray)record.GetValue("Connections");
+                foreach (JObject conn in connections)
+                {
+                    DataSourceDataSet connRecord = conn.ToObject<DataSourceDataSet>();
+                    connRecord.DataSetID = dataSetId;
+                    connRecord.SettingsBin = Encoding.UTF8.GetBytes(conn["Settings"].ToString());
+                    result += new TableOperations<DataSourceDataSet>(connection).AddNewRecord(connRecord);
+                }
+                return Ok(result);
+            }
         }
 
         [HttpGet, Route("Query/{dataSetID:int}")]
