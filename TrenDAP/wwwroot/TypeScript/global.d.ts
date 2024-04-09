@@ -39,6 +39,7 @@ export namespace Redux {
     interface StoreState {
         DataSets: State<TrenDAP.iDataSet>,
         DataSources: State<DataSourceTypes.IDataSourceView>,
+        DataSourceDataSets: State<DataSourceTypes.IDataSourceDataSet>, 
         DataSourceTypes: State<DataSourceTypes.IDataSourceType>,
         WorkSpaces: State<TrenDAP.iWorkSpace>,
         OpenHistorian: { ID: number, State: OpenHistorianState }[],
