@@ -22,27 +22,32 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP } from '../../global';
+import { DataSourceTypes, TrenDAP } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { AddDataSet, SelectRecord, New, Update, SelectDataSets } from './DataSetsSlice'
+import { SelectDataSets, SelectDataSetsStatus, SelectNewDataSet, FetchDataSets } from './DataSetsSlice';
+import { FetchDataSourceDataSets } from '../DataSources/DataSourceDataSetSlice';
 import DataSet from './DataSet';
 import { ToolTip } from '@gpa-gemstone/react-interactive';
 import { Warning } from '@gpa-gemstone/gpa-symbols';
 import moment from 'moment';
 import { CrossMark } from '../../Constants';
+import { ajax } from 'jquery';
 
 const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
     const dispatch = useAppDispatch();
 
-    const dataSet = useAppSelector(SelectRecord);
     const allDataSets = useAppSelector(SelectDataSets);
+    const setStatus = useAppSelector(SelectDataSetsStatus);
 
     const [warnings, setWarning] = React.useState<string[]>([]);
     const [errors, setErrors] = React.useState<string[]>([]);
     const [hover, setHover] = React.useState<boolean>(false);
-    //React.useEffect(() => {
-    //    dispatch(New);
-    //});
+    const [dataSet, setDataSet] = React.useState<TrenDAP.iDataSet>(SelectNewDataSet());
+    const [connections, setConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
+
+    React.useEffect(() => {
+        if (setStatus === 'unitiated' || setStatus === 'changed') dispatch(FetchDataSets());
+    }, [setStatus]);
 
     React.useEffect(() => {
         const w = [];
@@ -74,11 +79,10 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
             e.push("At least 1 Month has to be selected.")
         if (dataSet.Weeks == 0)
             e.push("At least 1 Week has to be selected.")
-        if (JSON.parse(dataSet.JSONString).length == 0)
+        if (connections.length == 0)
             e.push("At least 1 DataSource needs to be added.");
         setErrors(e);
-    }, [dataSet])
-
+    }, [dataSet, connections]);
    
     return (
         <>
@@ -88,7 +92,7 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
                         New Data Set {dataSet.Name !== null && dataSet.Name.trim().length > 0 ? ('(' + dataSet.Name + ')') : ''}
                 </div>
                 <div className="card-body" style={{ overflowY: 'auto' }}>
-                    <DataSet Record={dataSet} SetDataSet={(record) => dispatch(Update(record))} />
+                        <DataSet DataSet={dataSet} SetDataSet={setDataSet} Connections={connections} SetConnections={setConnections} />
                 </div>
                 <div className="card-footer">
                     <div className="btn-group mr-2">
@@ -98,8 +102,26 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
                                 onClick={() => {
                                     if (errors.length > 0)
                                         return;
-                                    dispatch(AddDataSet(dataSet));
-                                    window.location.href = `${homePath}/DataSets`;
+                                    const handle = ajax({
+                                        type: "POST",
+                                        url: `${homePath}api/DataSet/NewWithConnections`,
+                                        contentType: "application/json; charset=utf-8",
+                                        dataType: 'json',
+                                        data: JSON.stringify({
+                                            DataSet: {
+                                                ...dataSet, UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss')
+                                            },
+                                            Connections: connections
+                                        }),
+                                        cache: false,
+                                        async: true
+                                    }).done(() => {
+                                        dispatch(FetchDataSourceDataSets());
+                                        dispatch(FetchDataSets());
+                                    }).done(() => {
+                                        window.location.href = `${homePath}DataSets`;
+                                    });
+                                    return () => { if (handle != null && handle.abort != null) handle.abort(); }
                                 }}
                             > Save</button>
                         </div>

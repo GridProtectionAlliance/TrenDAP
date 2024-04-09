@@ -22,27 +22,37 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP } from '../../global';
+import { DataSourceTypes, TrenDAP } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { UpdateDataSet, AddDataSet,SelectDataSetByID, SelectDataSetsStatus, FetchDataSets, SelectRecord, SetRecordByID, Update } from './DataSetsSlice'
+import { UpdateDataSet, SelectDataSetsStatus, FetchDataSets, SelectDataSets, SetRecordByID, Update } from './DataSetsSlice'
+import { SelectDataSourceDataSets, SelectDataSourceDataSetStatus, FetchDataSourceDataSets, RemoveDataSourceDataSet, UpdateDataSourceDataSet, AddDataSourceDataSet } from '../DataSources/DataSourceDataSetSlice';
 import DataSet from './DataSet';
-import { Pencil } from '../../Constants'
 
 const EditDataSet: React.FunctionComponent<{}> = (props) => {
     const dispatch = useAppDispatch();
-    const dataSet = useAppSelector(SelectRecord)
+    const sourceSetConnections = useAppSelector(SelectDataSourceDataSets);
+    const dsdsStatus = useAppSelector(SelectDataSourceDataSetStatus);
+    const dataSets = useAppSelector(SelectDataSets);
     const wsStatus = useAppSelector(SelectDataSetsStatus);
+    const [connections, setConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
+    const [dataSet, setDataSet] = React.useState<TrenDAP.iDataSet>(undefined);
 
     React.useEffect(() => {
-        if (wsStatus === 'unitiated' || wsStatus === 'changed') {
-            dispatch(FetchDataSets());
-            return function () {
-            }
-        }
-        
-        dispatch(SetRecordByID(parseInt(props['useParams']?.id ?? -1)));
+        if (wsStatus === 'unitiated' || wsStatus === 'changed') dispatch(FetchDataSets());
+    }, [wsStatus]);
 
-    }, [dispatch, wsStatus]);
+    React.useEffect(() => {
+        if (wsStatus === 'idle') setDataSet(dataSets.find(set => set.ID == (props['useParams']?.id ?? -1)));
+    }, [wsStatus, props['useParams']?.id]);
+
+    React.useEffect(() => {
+        if (dsdsStatus === 'unitiated' || dsdsStatus === 'changed') dispatch(FetchDataSourceDataSets());
+    }, [dsdsStatus]);
+
+    React.useEffect(() => {
+        if (dataSet === undefined) return;
+        if (dsdsStatus === 'idle') setConnections(sourceSetConnections.filter(conn => conn.DataSetID === dataSet.ID));
+    }, [dsdsStatus, dataSet?.ID]);
 
     if (dataSet === undefined) return null;
     return (
@@ -52,12 +62,18 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
                     Edit Data Set
                 </div>
                 <div className="card-body" style={{overflowY:'auto'}}>
-                    <DataSet Record={dataSet} SetDataSet={(record) => dispatch(Update(record))} />
+                    <DataSet DataSet={dataSet} SetDataSet={setDataSet} Connections={connections} SetConnections={setConnections}/>
                 </div>
                 <div className="card-footer">
                     <button className='btn btn-link'
                         onClick={() => {
                             dispatch(UpdateDataSet(dataSet));
+                            connections.forEach(conn => {
+                                if (conn.ID !== -1) dispatch(UpdateDataSourceDataSet(conn));
+                                else dispatch(AddDataSourceDataSet(conn));
+                            });
+                            const deletedConnections = sourceSetConnections.filter(oldConn => connections.findIndex(newConn => newConn.ID === oldConn.ID) === -1);
+                            deletedConnections.forEach(conn => dispatch(RemoveDataSourceDataSet(conn)));
                             window.location.href = `${homePath}DataSets`;
                         }}
                     >Save</button>

@@ -24,31 +24,47 @@
 import * as React from 'react';
 import { TrenDAP, DataSourceTypes } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
+import { SelectDataSources, SelectDataSourcesStatus, FetchDataSources } from '../DataSources/DataSourcesSlice';
 import styles from '../../../Styles/app.scss';
-import DataSetOpenHistorian from '../OpenHistorian/DataSetOpenHistorian';
-import DataSetOpenXDA from '../OpenXDA/DataSetOpenXDA';
 import DataSetGlobalSettings from './Types/DataSetGlobalSettings';
-import DataSetSapphire from '../Sapphire/DataSetSapphire';
+import DataSourceWrapper from '../DataSources/DataSourceWrapper';
 
+interface IProps {
+    DataSet: TrenDAP.iDataSet,
+    SetDataSet: (ws: TrenDAP.iDataSet) => void,
+    Connections: DataSourceTypes.IDataSourceDataSet[],
+    SetConnections: (arg: DataSourceTypes.IDataSourceDataSet[]) => void
+}
 
-const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
-    const dataSourceTypes = useAppSelector(SelectDataSourceTypes) as DataSourceTypes.IDataSourceType[];
-    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
+const DataSet: React.FunctionComponent<IProps> = (props: IProps) => {
     const dispatch = useAppDispatch();
-
+    const dataSources = useAppSelector(SelectDataSources) as DataSourceTypes.IDataSourceView[];
+    const dsStatus = useAppSelector(SelectDataSourcesStatus);
+    const [tab, setTab] = React.useState<string>('settings');
 
     React.useEffect(() => {
-        if (dstStatus != 'unitiated') return;
+        if (dsStatus === 'unitiated' || dsStatus === 'changed') dispatch(FetchDataSources());
+    }, [dsStatus]);
 
-        dispatch(FetchDataSourceTypes());
-        return function () {
+    const changeConn = React.useCallback((index: number, conn: DataSourceTypes.IDataSourceDataSet) => {
+        const newConns = [...props.Connections];
+        if (index < 0 || index >= newConns.length) {
+            console.error(`Could not find connection ${index} in connection array.`);
+            return;
         }
-    }, [dispatch, dstStatus]);
+        newConns.splice(index, 1, conn);
+        props.SetConnections(newConns);
+    }, [props.Connections, props.SetConnections]);
 
-    const [tab, setTab] = React.useState<string>('settings');
-    const dataSources = JSON.parse(props.Record.JSONString);
-
+    const deleteConn = React.useCallback((index: number) => {
+        const newConns = [...props.Connections];
+        if (index < 0 || index >= newConns.length) {
+            console.error(`Could not find connection ${index} in connection array.`);
+            return;
+        }
+        newConns.splice(index, 1);
+        props.SetConnections(newConns);
+    }, [props.Connections, props.SetConnections]);
    
     return (
         <>
@@ -57,34 +73,26 @@ const DataSet: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (
                     <a className="nav-link active" data-toggle="tab" onClick={() => setTab('settings') }>Settings</a>
                 </li>
                 {
-                    dataSources.map((ds, index) => (
+                    props.Connections.map((conn, index) => (
                         <li className={"nav-item " + styles.workspacetab}  key={index}>
-                            <a className="nav-link" data-toggle="tab" onClick={() => setTab(index.toString())}>{ds.DataSource.Name}</a>
-                            <span onClick={() => {
-                                let json = JSON.parse(props.Record.JSONString);
-                                json.splice(index, 1);
-                                props.SetDataSet({ ...props.Record, JSONString: JSON.stringify(json) });
-                            }}>X</span>
+                            <a className="nav-link" data-toggle="tab" onClick={() => setTab(index.toString())}>
+                                {dataSources.find(ds => ds.ID === conn.DataSourceID)?.Name}
+                            </a>
+                            <span onClick={() => deleteConn(index)}>X</span>
                         </li>
                     ))
                 }
             </ul>
             <div className="tab-content">
-                <div className={"tab-pane container "+ (tab === "settings" ? 'active' : 'fade')}>
-                    <DataSetGlobalSettings {...props} />
+                <div className={"tab-pane container " + (tab === "settings" ? 'active' : 'fade')}>
+                    <DataSetGlobalSettings DataSet={props.DataSet} SetDataSet={props.SetDataSet} Connections={props.Connections} SetConnections={props.SetConnections} />
                 </div>
                 {
-                    dataSources.map((ds, index) => (
-                        <div className={"tab-pane container " + (tab === index.toString() ? 'active' : 'fade')} id={index} key={index}>
-                            {
-                                (dataSourceTypes.find(dst => dst.ID === ds.DataSource.DataSourceTypeID)?.Name === "TrenDAPDB" ? <DataSetOpenXDA {...props} Data={ds} Index={index}/>: null )
-                            }
-                            {
-                                (dataSourceTypes.find(dst => dst.ID === ds.DataSource.DataSourceTypeID)?.Name === "Sapphire" ? <DataSetSapphire {...props} Data={ds} Index={index} /> : null)
-                            }
-                            {
-                                (dataSourceTypes.find(dst => dst.ID === ds.DataSource.DataSourceTypeID)?.Name === "OpenHistorian" ? <DataSetOpenHistorian {...props} Data={ds} Index={index} /> : null)
-                            }
+                    props.Connections.map((conn, index) => (
+                        <div className={"tab-pane container " + (tab === index.toString() ? 'active' : 'fade')} id={index.toString()} key={index}>
+                            <DataSourceWrapper DataSource={dataSources.find(ds => ds.ID === conn.DataSourceID)}
+                                ComponentType='datasetConfig' DataSet={props.DataSet}
+                                DataSetConn={conn} SetDataSetConn={newConn => changeConn(index, newConn)} />
                         </div>
                     ))
 
