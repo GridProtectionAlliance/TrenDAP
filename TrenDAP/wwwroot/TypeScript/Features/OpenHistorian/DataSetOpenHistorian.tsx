@@ -33,11 +33,13 @@ const DataSetOpenHistorian: React.FunctionComponent<{ Record: TrenDAP.iDataSet, 
     const devices: Redux.OpenHistorianState = useAppSelector((state: Redux.StoreState) => SelectOpenHistorian(state, props.Data.DataSource.ID));
 
     function UpdateDS(...params: { field: keyof TrenDAP.iOpenHistorianDataSet, value: any }[]) {
+        /*
         let json = JSON.parse(props.Record.JSONString);
         json[props.Index].Data = { ...props.Data.Data };
         for (var index in params)
             json[props.Index].Data[params[index].field] = params[index].value;
         props.SetDataSet({ ...props.Record, JSONString: JSON.stringify(json) });
+        */
     }
 
     React.useEffect(() => {

@@ -96,13 +96,27 @@ export namespace DataSourceTypes {
         Expires: string,
         Public: boolean,
         User: string,
-        OtherSettings: string
+        Settings: string
+    }
+
+    interface IDataSourceDataSet {
+        ID: number,
+        DataSourceID: number,
+        DataSetID: number,
+        Settings: string
     }
 
     // Datasource as tsx needs them
-    interface IDataSetProps<T> {
+    interface IDataSetProps<T, U> {
+        // Data Source from DB
         DataSource: IDataSourceView,
-        Settings: T
+        // Data Set From DB
+        DataSet: TrenDAP.iDataSet,
+        // Additional Source Settings parsed form source view
+        DataSourceSettings: T,
+        // Additional DataSet Settings parsed from dataset
+        DataSetSettings: U,
+        SetDataSetSettings: (newDataSetSettings: U) => void
     }
 
     interface IConfigProps<T> {
@@ -111,13 +125,14 @@ export namespace DataSourceTypes {
     }
 
     // Datasource coding interface, uses props to get the datasource
-    interface IDataSource<T> {
-        DataSetUI: React.FC<IDataSetProps<T>>,
+    interface IDataSource<T, U> {
+        DataSetUI: React.FC<IDataSetProps<T, U>>,
         ConfigUI: React.FC<IConfigProps<T>>,
         LoadDataSet: (dataSet: TrenDAP.iDataSet) => Promise<TrenDAP.iDataSetReturn>,
         QuickViewDataSet?: (dataSet: TrenDAP.iDataSet) => string,
         TestAuth: (dataSource: IDataSourceView) => boolean,
-        DefaultSettings: T,
+        DefaultSourceSettings: T,
+        DefaultDataSetSettings: U,
         Name: string,
     }
 }
@@ -135,7 +150,7 @@ export namespace TrenDAP{
     type iTrendDataPoint = iXDATrendDataPoint | iOpenHistorianAggregationPoint | iSapphireTrendDataPoint;
     // TrenDAP     
     interface iWorkSpace { ID: number, Type: WorkSpaceType, Name: string, User: string, DataSetID: number, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Open: boolean }    
-    interface iDataSet { ID: number, Name: string, Context: 'Relative' | 'Fixed Dates', RelativeValue: number, RelativeWindow: 'Day' | 'Week' | 'Month' | 'Year',From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Data?: { Status: Status, Error?: string } }    
+    interface iDataSet { ID: number, Name: string, Context: 'Relative' | 'Fixed Dates', RelativeValue: number, RelativeWindow: 'Day' | 'Week' | 'Month' | 'Year',From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, Public: boolean, UpdatedOn: string, Data?: { Status: Status, Error?: string } }    
     interface iDataSetSource { ID: number, Name: string, DataSourceTypeID: number, JSON: object }
     interface iDataSetReturn<T extends iDataSetReturnType = iDataSetReturnType> { Data: T[], DataSource: { ID: number, Name: string, Type: DataSourceType, OpenSEE?: string}, From: string, To: string }
 

@@ -41,11 +41,13 @@ const DataSetSapphire: React.FunctionComponent<{ Record: TrenDAP.iDataSet, Data:
     const ctStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.Data.DataSource.ID, 'ChannelGroupType'));
 
     function UpdateDS(...params: { field: keyof TrenDAP.iSapphireDataSet, value: any }[]) {
+        /*
         let json = JSON.parse(props.Record.JSONString);
         json[props.Index].Data = { ...props.Data.Data };
         for (var index in params)
             json[props.Index].Data[params[index].field] = params[index].value;
         props.SetDataSet({ ...props.Record, JSONString: JSON.stringify(json) });
+        */
     }
 
     React.useEffect(() => {
