@@ -103,7 +103,7 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
                                         setTab('settings')
                                     }
                                 }}
-                                >Delete</button>
+                            >Remove DataSource</button>
                             </div> : null
                         }
                     </div>

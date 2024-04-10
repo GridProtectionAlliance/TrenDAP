@@ -153,7 +153,7 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
                                         setConnections(newConnections);
                                         setTab('settings');
                                     }}
-                                    >Delete</button>
+                                    >Remove DataSource</button>
                                 </div> : null
                             }
                         </div>
