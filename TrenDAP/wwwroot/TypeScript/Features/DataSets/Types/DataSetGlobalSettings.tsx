@@ -112,9 +112,9 @@ const DataSetGlobalSettings: React.FunctionComponent<IProps> = (props: IProps) =
                         </button>
                         <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <div className="dropdown-header">Your DataSources</div>
-                            {dataSources.map(ds => <a key={ds.ID} className="dropdown-item" onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
+                            {dataSources.map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
                             <div className="dropdown-header">Shared DataSources</div>
-                            {publicDataSources.map(ds => <a key={ds.ID} className="dropdown-item" onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
+                            {publicDataSources.map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
                         </div>
                     </div>
                 </div>
