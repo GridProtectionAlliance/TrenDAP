@@ -28,6 +28,7 @@ import { OpenXDA } from '@gpa-gemstone/application-typings';
 import { DataSourceTypes, TrenDAP, Redux } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../../OpenXDA/OpenXDASlice';
+import { ajax } from 'jquery';
 
 
 const XDADataSource: DataSourceTypes.IDataSource<{}, TrenDAP.iXDADataSet> = {
@@ -141,8 +142,24 @@ const XDADataSource: DataSourceTypes.IDataSource<{}, TrenDAP.iXDADataSet> = {
     QuickViewDataSet: function (dataSet: TrenDAP.iDataSet): string {
         throw new Error('Function not implemented.');
     },
-    TestAuth: function (dataSource: DataSourceTypes.IDataSourceView): boolean {
-        throw new Error('Function not implemented.');
+    TestAuth: function (dataSource: DataSourceTypes.IDataSourceView): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            ajax({
+                type: "GET",
+                url: `${homePath}api/DataSource/TestAuth/${dataSource.ID}`,
+                contentType: "application/json; charset=utf-8",
+                cache: true,
+                async: true
+            }).done((data: string) => {
+                if (data === "1") resolve(true);
+                else {
+                    console.error(data);
+                    resolve(false);
+                }
+            }).fail(() => {
+                reject("Unable to resolve auth test.");
+            });
+        });
     }
 }
 

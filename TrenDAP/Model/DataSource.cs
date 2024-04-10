@@ -1,4 +1,4 @@
-﻿//******************************************************************************************************
+//******************************************************************************************************
 //  DataSource.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
@@ -22,9 +22,14 @@
 //******************************************************************************************************
 
 using Gemstone.Data;
+using Gemstone.Data.Model;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using openXDA.APIAuthentication;
 using System;
+using System.Net;
+using System.Net.Http;
 using TrenDAP.Controllers;
 using PrimaryKeyAttribute = Gemstone.Data.Model.PrimaryKeyAttribute;
 using UseEscapedNameAttribute = Gemstone.Data.Model.UseEscapedNameAttribute;
@@ -61,6 +66,34 @@ namespace TrenDAP.Model
     public class DataSourceController: ModelController<DataSource>
     {
         public DataSourceController(IConfiguration configuration) : base(configuration){}
+    
+        [HttpGet, Route("TestAuth/{dataSourceID:int}")]
+        public ActionResult TestAuth(int dataSourceID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                try
+                {
+                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    HttpResponseMessage rsp = helper.GetResponseTask($"api/TestAuth").Result;
+                    switch (rsp.StatusCode)
+                    {
+                        default:
+                        case HttpStatusCode.Unauthorized:
+                            return Ok("Failed to authorize with datasource credentials.");
+                        case HttpStatusCode.NotFound:
+                            return Ok("Unable to find datasource.");
+                        case HttpStatusCode.OK:
+                            return Ok("1");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
+                }
+            }
+        }
     }
 
     public class DataSourceType
