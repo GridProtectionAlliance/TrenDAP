@@ -26,9 +26,11 @@ import { cloneDeep } from 'lodash';
 import { DataSourceTypes, TrenDAP } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
-import XDADataSource from './ReactDataSources/XDADataSource'
+import XDADataSource from './ReactDataSources/XDADataSource';
+import SapphireDataSource from './ReactDataSources/SapphireDataSource';
+import OpenHistorianDataSource from './ReactDataSources/OpenHistorianDataSource';
 
-const AllSources: DataSourceTypes.IDataSource<any, any>[] = [XDADataSource];
+const AllSources: DataSourceTypes.IDataSource<any, any>[] = [XDADataSource, SapphireDataSource, OpenHistorianDataSource];
 
 interface IPropsCommon {
     DataSource: DataSourceTypes.IDataSourceView

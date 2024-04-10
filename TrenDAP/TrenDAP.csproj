@@ -43,8 +43,8 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSourcesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSourceWrapper.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx" />
+    <Content Remove="wwwroot\typescript\features\datasources\reactdatasources\OpenHistorianDataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSourceTypes\DataSourceTypesSlice.ts" />
-    <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\DataSetOpenHistorian.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts" />
@@ -104,6 +104,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\typescript\features\datasources\reactdatasources\OpenHistorianDataSource.tsx" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Gemstone.Common" Version="1.0.57" />
     <PackageReference Include="Gemstone.Data" Version="1.0.57" />
     <PackageReference Include="Gemstone.Web" Version="1.0.57" />
@@ -142,6 +146,7 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\DataSourceWrapper.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\typescript\features\datasources\reactdatasources\OpenHistorianDataSource.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\hooks.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Constants.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\declarations.d.ts">
@@ -153,9 +158,6 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\HelperFunctions.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\TrenDAPDB.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\Types\DataSetGlobalSettings.tsx" />
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Sapphire\DataSetSapphire.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Chart.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\DataSlice.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Histogram.tsx" />
@@ -187,7 +189,6 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\DataSetsSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenHistorian\DataSetOpenHistorian.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
