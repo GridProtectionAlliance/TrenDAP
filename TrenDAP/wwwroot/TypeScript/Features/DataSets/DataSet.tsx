@@ -39,9 +39,8 @@ interface IProps {
 
 const DataSet: React.FunctionComponent<IProps> = (props: IProps) => {
     const dispatch = useAppDispatch();
-    const dataSources = useAppSelector(SelectDataSources) as DataSourceTypes.IDataSourceView[];
+    const dataSources = useAppSelector(SelectDataSources);
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
-    const [tab, setTab] = React.useState<string>('settings');
 
     React.useEffect(() => {
         if (dsStatus === 'unitiated' || dsStatus === 'changed') dispatch(FetchDataSources());
@@ -70,12 +69,12 @@ const DataSet: React.FunctionComponent<IProps> = (props: IProps) => {
     return (
         <>
         <div className="tab-content" style={{height: '100%', width: '100%'}}>
-                <div className={"tab-pane container " + (tab === "settings" ? 'active' : 'fade')}>
+                <div className={"tab-pane container " + (props.Tab === "settings" ? 'active' : 'fade')} style={{height: '100%', width: '100%'}}>
                     <DataSetGlobalSettings DataSet={props.DataSet} SetDataSet={props.SetDataSet} Connections={props.Connections} SetConnections={props.SetConnections} />
                 </div>
                 {
                     props.Connections.map((conn, index) => (
-                        <div className={"tab-pane container " + (tab === index.toString() ? 'active' : 'fade')} id={index.toString()} key={index}>
+                        <div className={"tab-pane container " + (dataSources.find(ds => ds.ID === conn.DataSourceID)?.Name + index.toString() === props.Tab ? 'active' : 'fade')} id={index.toString()} key={index}>
                             <DataSourceWrapper DataSource={dataSources.find(ds => ds.ID === conn.DataSourceID)}
                                 ComponentType='datasetConfig' DataSet={props.DataSet}
                                 DataSetConn={conn} SetDataSetConn={newConn => changeConn(index, newConn)} />
