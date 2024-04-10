@@ -98,7 +98,7 @@ const DataSetGlobalSettings: React.FunctionComponent<IProps> = (props: IProps) =
     return (
         <div className="d-flex flex-column h-100">
             <form className="d-flex flex-column h-100">
-                <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="Name" Setter={(record) => props.SetDataSet(record)} Valid={valid} Feedback={"A unique Name has to be specified"} />
+                <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="Name" Setter={(record) => props.SetDataSet(record)} Valid={valid} Feedback={"A Unique Name has to be specified"} />
                 <RelativeDateRangePicker Record={props.DataSet} Setter={(record) => props.SetDataSet(record)} />
                 <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Hours" Label="Hour of Day" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
                 <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Days" Label="Day of Week" Setter={(record) => props.SetDataSet(record)} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} IsDisabled={validDay} />
