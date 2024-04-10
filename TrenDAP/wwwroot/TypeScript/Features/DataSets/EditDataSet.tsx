@@ -72,7 +72,7 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
                                 if (conn.ID !== -1) dispatch(UpdateDataSourceDataSet(conn));
                                 else dispatch(AddDataSourceDataSet(conn));
                             });
-                            const deletedConnections = sourceSetConnections.filter(oldConn => connections.findIndex(newConn => newConn.ID === oldConn.ID) === -1);
+                            const deletedConnections = sourceSetConnections.filter(oldConn => oldConn.DataSetID === dataSet.ID && connections.findIndex(newConn => newConn.ID === oldConn.ID) === -1);
                             deletedConnections.forEach(conn => dispatch(RemoveDataSourceDataSet(conn)));
                             window.location.href = `${homePath}DataSets`;
                         }}
