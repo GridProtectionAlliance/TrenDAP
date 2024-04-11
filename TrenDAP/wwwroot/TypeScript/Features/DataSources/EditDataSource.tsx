@@ -27,40 +27,42 @@ import { DataSourceTypes } from '../../global';
 import { useAppDispatch } from '../../hooks';
 import { UpdateDataSource } from './DataSourcesSlice'
 import DataSource from './DataSource';
-import { Pencil } from './../../Constants'
-const EditDataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSourceView}> = (props) => {
+import { Modal } from '@gpa-gemstone/react-interactive';
+import { CrossMark, Pencil } from '@gpa-gemstone/gpa-symbols';
+
+const EditDataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSourceView }> = (props) => {
     const dispatch = useAppDispatch();
     const [dataSource, setDataSource] = React.useState<DataSourceTypes.IDataSourceView>(props.DataSource);
     const [show, setShow] = React.useState<boolean>(false);
+    const [errors, setErrors] = React.useState<string[]>([]);
+
+    React.useEffect(() => {
+        const e = [];
+        if (dataSource.Name == null || dataSource.Name.trim().length == 0)
+            e.push("A Name has to be entered.")
+        setErrors(e);
+    }, [dataSource]);
 
     return (
         <>
-        <button className="btn" onClick={() => setShow(true)}>{Pencil}</button>
-        <div className="modal" style={{display: show ? 'block' : null, backgroundColor: 'rgba(0,0,0,0.4)' }}>
-            <div className="modal-dialog">
-                <div className="modal-content">
-
-                  <div className="modal-header">
-                        <h4 className="modal-title">DataSource</h4>
-                        <button type="button" className="close" onClick={() => setShow(false)}>&times;</button>
-                    </div>
-
-                  <div className="modal-body">
-                        <DataSource DataSource={dataSource} SetDataSource={setDataSource } />
-                  </div>
-
-                    <div className="modal-footer">
-                        <button type="button" className="btn btn-primary" onClick={() => {
-                            dispatch(UpdateDataSource(dataSource));
-                            setShow(false);
-                        }}>Save</button>
-
-                        <button type="button" className="btn btn-danger" onClick={() => setShow(false)}>Close</button>
-                    </div>
-
-                </div>
-            </div>
-            </div>
+            <button className="btn" onClick={() => setShow(true)}>{Pencil}</button>
+            <Modal
+                ConfirmBtnClass={"btn btn-success mr-auto"}
+                DisableConfirm={errors.length > 0}
+                Show={show}
+                ShowX={true}
+                ConfirmText={'Save'}
+                ConfirmShowToolTip={errors.length > 0}
+                ConfirmToolTipContent={errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
+                Title={'Edit DataSource'}
+                CallBack={conf => {
+                    if (conf)
+                        dispatch(UpdateDataSource(dataSource));
+                    setShow(false);
+                }}
+            >
+                <DataSource DataSource={dataSource} SetDataSource={setDataSource} />
+            </Modal>
         </>
     );
 }
