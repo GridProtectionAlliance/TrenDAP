@@ -60,8 +60,6 @@ const DataSets: React.FunctionComponent = (props: {}) => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
         dispatch(FetchDataSets());
 
-        return function () {
-        }
     }, [dispatch, dsStatus]);
 
     return (
@@ -71,7 +69,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                     <div className="card-header" ref={cardHeaderRef}>
                         <div className="row">
                             <div className="col">
-                                <h4>My DataSets:</h4>
+                                <h4>My DataSets</h4>
                             </div>
                             <div className="col">
                                 <button className="btn btn-primary pull-right"
@@ -155,7 +153,11 @@ const DataSets: React.FunctionComponent = (props: {}) => {
             </div>
             <div className="col-4" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header" style={{ height: cardHeaderHeight }}>Shared DataSets</div>
+                    <div className="card-header" style={{ height: cardHeaderHeight }}>
+                        <h4>
+                            Shared DataSets
+                        </h4>
+                    </div>
                     <div className="card-body">
                         <ReactTable.Table<TrenDAP.iDataSet>
                             TableClass={"table table-hover"}
