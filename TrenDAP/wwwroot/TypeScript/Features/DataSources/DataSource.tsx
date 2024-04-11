@@ -23,38 +23,39 @@
 
 import * as React from 'react';
 import { DataSourceTypes } from '../../global';
-import { useAppSelector, useAppDispatch } from '../../hooks';
-import { Input, Select, CheckBox } from '@gpa-gemstone/react-forms';
+import { useAppSelector } from '../../hooks';
+import { Input, Select, CheckBox, DatePicker } from '@gpa-gemstone/react-forms';
 
-import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
+import { SelectDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 
 const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSourceView, SetDataSource: (ds: DataSourceTypes.IDataSourceView) => void }> = (props) => {
     const dataSourceTypes: DataSourceTypes.IDataSourceType[] = useAppSelector(SelectDataSourceTypes);
-    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
-    const dispatch = useAppDispatch();
+    const [useExpiredField, setUseExpiredField] = React.useState<boolean>(props.DataSource.Expires != null);
 
-    React.useEffect(() => {
-        if (dstStatus != 'unitiated') return;
-
-        dispatch(FetchDataSourceTypes());
-        return function () {
-        }
-    }, [dispatch]);
-
-    function valid(field: keyof(DataSourceTypes.IDataSourceView)): boolean {
+    function valid(field: keyof (DataSourceTypes.IDataSourceView)): boolean {
         if (field == 'Name')
             return props.DataSource.Name != null && props.DataSource.Name.length > 0 && props.DataSource.Name.length <= 200;
-        else if (field == 'URL')
-            return true;
         return false;
     }
 
     return (
         <form>
             <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="Name" Setter={props.SetDataSource} Valid={valid} />
-            <Select<DataSourceTypes.IDataSourceView> Record={props.DataSource} Label="DataSource Type" Field="DataSourceTypeID" Setter={props.SetDataSource} Options={dataSourceTypes.map(x => ({Value: x.ID.toString(), Label: x.Name })) } />
-            <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="URL" Setter={props.SetDataSource} Valid={valid} />
-
+            <Select<DataSourceTypes.IDataSourceView> Record={props.DataSource} Label="DataSource Type" Field="DataSourceTypeID" Setter={props.SetDataSource} Options={dataSourceTypes.map(x => ({ Value: x.ID.toString(), Label: x.Name }))} />
+            <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="URL" Setter={props.SetDataSource} Valid={() => true} />
+            <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="RegistrationKey" Label={'Registration Key'} Setter={props.SetDataSource} Valid={() => true} />
+            <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="Settings" Label={'Settings'} Setter={props.SetDataSource} Valid={() => true} />
+            <CheckBox<{ expires: boolean }> Record={{ expires: useExpiredField }} Field="expires" Label='Expires' Setter={item => {
+                if(!item.expires)
+                    props.SetDataSource({ ...props.DataSource, Expires: null });
+                else if (props.DataSource.Expires == null)
+                    props.SetDataSource({ ...props.DataSource, Expires: new Date().toISOString() })
+                setUseExpiredField(item.expires)
+            }} />
+            {useExpiredField ? 
+                    <DatePicker<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field={"Expires"} Type={'datetime-local'} Valid={() => true} Label={"Expiration Date"} Setter={props.SetDataSource} Feedback={"Date can not expire today."} />
+                : null
+            }
             <div className="row">
                 <div className='col'>
                     <CheckBox<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="Public" Label='Shared' Setter={props.SetDataSource} />

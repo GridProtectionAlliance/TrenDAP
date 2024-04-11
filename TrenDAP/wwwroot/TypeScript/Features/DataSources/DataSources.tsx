@@ -30,13 +30,31 @@ import { ReactTable } from '@gpa-gemstone/react-table';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 import EditDataSource from './EditDataSource';
 import { TrashCan, HeavyCheckMark } from './../../Constants'
+import AddNewDataSource from './AddNewDataSource'
 
-const DataSources: React.FunctionComponent = (props: {}) => {
+const DataSources: React.FunctionComponent = () => {
+    const dispatch = useAppDispatch();
+    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
+
+    React.useEffect(() => {
+        if (dstStatus === 'unitiated' || dstStatus === 'changed')
+            dispatch(FetchDataSourceTypes());
+    }, [dstStatus]);
+
     return (
         <div className="row" style={{ margin: 10}}>
             <div className="col-6" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header">My DataSources</div>
+                    <div className="card-header">
+                        <div className="row">
+                            <div className="d-flex col-6 justify-content-start">
+                                <h4>My DataSources</h4>
+                            </div>
+                            <div className="d-flex col-6 justify-content-end">
+                                <AddNewDataSource/>
+                            </div>
+                        </div>
+                    </div>
                     <div className="card-body">
                         <DataSourceTable OwnedByUser={true}/>
                     </div>
@@ -44,7 +62,7 @@ const DataSources: React.FunctionComponent = (props: {}) => {
             </div>
             <div className="col-6" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header">Shared DataSources</div>
+                    <div className="card-header"><h4>Shared DataSources</h4></div>
                     <div className="card-body">
                         <DataSourceTable OwnedByUser={false} />
                     </div>
@@ -64,14 +82,9 @@ const DataSourceTable = React.memo((props: ITableProps) => {
     const [dataSources, setDataSources] = React.useState<DataSourceTypes.IDataSourceView[]>([]);
 
     const dispatch = useAppDispatch();
-    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
     const dataSourceTypes = useAppSelector(SelectDataSourceTypes);
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
     const allDataSources = useAppSelector(SelectDataSources);
-
-    React.useEffect(() => {
-        if (dstStatus === 'unitiated' || dstStatus === 'changed') dispatch(FetchDataSourceTypes());
-    }, [dstStatus]);
 
     React.useEffect(() => {
         if (dsStatus === 'unitiated' || dsStatus === 'changed') dispatch(FetchDataSources());

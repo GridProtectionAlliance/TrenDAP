@@ -94,7 +94,7 @@ export namespace DataSourceTypes {
         DataSourceTypeID: number,
         URL: string,
         RegistrationKey: string,
-        Expires: string,
+        Expires: string | null,
         Public: boolean,
         User: string,
         Settings: string
