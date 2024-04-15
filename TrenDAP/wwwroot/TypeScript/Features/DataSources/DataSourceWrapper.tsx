@@ -64,22 +64,7 @@ const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IProp
     const SourceSettings = React.useMemo(() => {
         if (props.DataSource?.Settings == null)
             return dataSource?.DefaultSourceSettings ?? {};
-        const s = cloneDeep(dataSource?.DefaultSourceSettings ?? {});
-        let custom = {};
-        if (props.DataSource.Settings.length > 2) {
-            try {
-                custom = JSON.parse(props.DataSource.Settings);
-            } catch {
-                custom = {};
-                console.warn(`Data source ${props.DataSource.Name} does not have a valid settings string`);
-            }
-        }
-
-        for (const [k] of Object.entries(dataSource?.DefaultSourceSettings ?? {})) {
-            if (custom.hasOwnProperty(k))
-                s[k] = cloneDeep(custom[k]);
-        }
-        return s;
+        return ParseSettings(props.DataSource.Settings, dataSource?.DefaultSourceSettings ?? {});
     }, [dataSource, props.DataSource?.Settings]);
 
     const SetSourceSettings = React.useCallback(newSetting => {
@@ -93,22 +78,7 @@ const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IProp
         if (props.DataSource == null || props.ComponentType !== 'datasetConfig') return;
         if (props.DataSetConn?.Settings == null)
             return dataSource?.DefaultDataSetSettings ?? {};
-        const s = cloneDeep(dataSource?.DefaultDataSetSettings ?? {});
-        let custom = {};
-        if (props.DataSetConn.Settings.length > 2) {
-            try {
-                custom = JSON.parse(props.DataSetConn.Settings);
-            } catch {
-                custom = {};
-                console.warn(`Connection does not have a valid settings string`);
-            }
-        }
-
-        for (const [k] of Object.entries(dataSource?.DefaultDataSetSettings ?? {})) {
-            if (custom.hasOwnProperty(k))
-                s[k] = cloneDeep(custom[k]);
-        }
-        return s;
+        return ParseSettings(props.DataSetConn.Settings, dataSource?.DefaultDataSetSettings ?? {});
     }, [dataSource, props['DataSetConn']?.Settings]);
 
     const SetDataSetSettings = React.useCallback(newSetting => {
@@ -155,6 +125,25 @@ function GetReactDataSource(dataSource: DataSourceTypes.IDataSourceView, dataSou
     return AllSources.find(item => item.Name === dataSourceType.Name);
 }
 
+// Function to parse DataSourceDataSet Settings
+function ParseSettings<T>(settingsString: string, defaultSettings: T): T {
+    const s = cloneDeep(defaultSettings);
+    let custom = {};
+    if (settingsString.length > 2) {
+        try {
+            custom = JSON.parse(settingsString);
+        } catch {
+            custom = {};
+            console.warn(`Settings string was no able to be parsed.`);
+        }
+    }
+    for (const [k] of Object.entries(defaultSettings)) {
+        if (custom.hasOwnProperty(k))
+            s[k] = cloneDeep(custom[k]);
+    }
+    return s;
+}
+
 interface IError {
     name: string,
     message: string
@@ -194,5 +183,5 @@ class ErrorBoundary extends React.Component<{ Name: string }, IError> {
     }
 }
 
-export { AllSources, DataSourceWrapper, GetReactDataSource }
+export { AllSources, DataSourceWrapper, GetReactDataSource, ParseSettings }
 export default DataSourceWrapper;
