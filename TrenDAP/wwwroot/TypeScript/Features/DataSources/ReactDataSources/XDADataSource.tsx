@@ -41,8 +41,9 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
     Name: 'TrenDAPDB',
     DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/"},
     DefaultDataSetSettings: { By: 'Meter', IDs: [], Phases: [], Groups: [], Chans: [], Aggregate: ''},
-    ConfigUI: () => { return <></>; },
-    DataSetUI: (props: DataSourceTypes.IDataSetProps<{}, TrenDAP.iXDADataSet>) => {
+    ConfigUI: (props: DataSourceTypes.IConfigProps<TrenDAP.iXDADataSource>) => {
+        return <Input Record={props.Settings} Setter={props.SetSettings} Field='PQBrowserUrl' Label='PQ Browser URL' Valid={() => true} />;
+    },
     DataSetUI: (props: DataSourceTypes.IDataSetProps<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet>) => {
         const dispatch = useAppDispatch();
         const phases: OpenXDA.Types.Phase[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'Phase'));
