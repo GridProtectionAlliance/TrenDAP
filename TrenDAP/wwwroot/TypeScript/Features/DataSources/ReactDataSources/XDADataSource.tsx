@@ -39,7 +39,7 @@ const tdapDateFormat = 'YYYY-MM-DD';
 
 const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = {
     Name: 'TrenDAPDB',
-    DefaultSourceSettings: {},
+    DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/"},
     DefaultDataSetSettings: { By: 'Meter', IDs: [], Phases: [], Groups: [], Chans: [], Aggregate: ''},
     ConfigUI: () => { return <></>; },
     DataSetUI: (props: DataSourceTypes.IDataSetProps<{}, TrenDAP.iXDADataSet>) => {
