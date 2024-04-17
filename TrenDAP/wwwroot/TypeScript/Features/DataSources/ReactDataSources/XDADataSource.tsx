@@ -22,21 +22,28 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import moment from 'moment';
-import { Select, ArrayCheckBoxes, ArrayMultiSelect } from '@gpa-gemstone/react-forms';
+import { Select, ArrayCheckBoxes, ArrayMultiSelect, Input } from '@gpa-gemstone/react-forms';
 import { OpenXDA } from '@gpa-gemstone/application-typings';
 import { DataSourceTypes, TrenDAP, Redux } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../../OpenXDA/OpenXDASlice';
+import { ParseSettings } from '../DataSourceWrapper';
 import { ajax } from 'jquery';
+import queryString from 'querystring';
+import moment from 'moment';
+
+const encodedDateFormat = 'MM/DD/YYYY';
+const encodedTimeFormat = 'HH:mm:ss.SSS';
+const tdapDateFormat = 'YYYY-MM-DD';
 
 
-const XDADataSource: DataSourceTypes.IDataSource<{}, TrenDAP.iXDADataSet> = {
+const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = {
     Name: 'TrenDAPDB',
     DefaultSourceSettings: {},
-    DefaultDataSetSettings: { By: 'Meter', IDs: [], Phases: [], Groups: [], Types: [], Aggregate: ''},
+    DefaultDataSetSettings: { By: 'Meter', IDs: [], Phases: [], Groups: [], Chans: [], Aggregate: ''},
     ConfigUI: () => { return <></>; },
     DataSetUI: (props: DataSourceTypes.IDataSetProps<{}, TrenDAP.iXDADataSet>) => {
+    DataSetUI: (props: DataSourceTypes.IDataSetProps<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet>) => {
         const dispatch = useAppDispatch();
         const phases: OpenXDA.Types.Phase[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'Phase'));
         const phStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'Phase'));
@@ -48,8 +55,7 @@ const XDADataSource: DataSourceTypes.IDataSource<{}, TrenDAP.iXDADataSet> = {
         const channelGroups: any[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'ChannelGroup'));
         const cgStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'ChannelGroup'));
 
-        const channelTypes: any[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'ChannelGroupType'));
-        const cgtStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'ChannelGroupType'));
+        const [channels, setChannels] = React.useState<OpenXDA.Types.Channel[]>([]);
 
         React.useEffect(() => {
             if (phStatus != 'unitiated' && phStatus != 'changed') return;
@@ -84,12 +90,29 @@ const XDADataSource: DataSourceTypes.IDataSource<{}, TrenDAP.iXDADataSet> = {
         }, [dispatch, cgStatus]);
 
         React.useEffect(() => {
-            if (cgtStatus != 'unitiated' && cgtStatus != 'changed') return;
-            dispatch(FetchOpenXDA({ dataSourceID: props.DataSource.ID, table: 'ChannelGroupType' }));
+            const filter = {
+                Phases: props.DataSetSettings.Phases,
+                ChannelGroups: props.DataSetSettings.Groups,
+                MeterList: props.DataSetSettings.By === 'Meter' ? props.DataSetSettings.IDs : [],
+                AssetList: props.DataSetSettings.By === 'Asset' ? props.DataSetSettings.IDs : []
+            };
 
-            return function () {
+            const handle = ajax({
+                type: "POST",
+                url: `${homePath}api/TrenDAPDB/Channel/GetTrendChannels/${props.DataSource.ID}`,
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(filter),
+                dataType: 'json',
+                cache: true,
+                async: true
+            }).done((data: OpenXDA.Types.Channel[]) => {
+                setChannels(data);
+            });
+
+            return () => {
+                if (handle != null && handle.abort() != null) handle.abort(); 
             }
-        }, [dispatch, cgtStatus]);
+        }, [props.DataSetSettings]);
 
         return (
             <form>
@@ -105,42 +128,66 @@ const XDADataSource: DataSourceTypes.IDataSource<{}, TrenDAP.iXDADataSet> = {
                     </div>
                     <div className="col">
                         <ArrayCheckBoxes<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Checkboxes={phases?.map(m => ({ ID: m.ID.toString(), Label: m.Name })) ?? []} Field="Phases" Setter={props.SetDataSetSettings} />
-                        <ArrayCheckBoxes<TrenDAP.iXDADataSet> Label="Quick Selection" Record={props.DataSetSettings} Checkboxes={channelGroups?.map(m => ({ ID: m.ID, Label: m.Name })) ?? []} Field="Groups" Setter={(record) => {
-                            const oldGroups = props.DataSetSettings.Groups;
-                            if (oldGroups.length > record.Groups.length) { // something was taken out
-                                let a = oldGroups.map(x => record.Groups.indexOf(x));
-                                let i = a.indexOf(-1);
-                                let newa = props.DataSetSettings.Types.map(t => channelTypes.find(ct => ct.ID === t)).filter(t => t.ChannelGroupID !== oldGroups[i]).map(t => t.ID);
-                                const newSettings = { ...props.DataSetSettings };
-                                newSettings.Groups = record.Groups;
-                                newSettings.Types = newa;
-                                props.SetDataSetSettings(newSettings);
-                            }
-                            else if (oldGroups.length < record.Groups.length) { // something was put in
-                                let a = record.Groups.map(x => oldGroups.indexOf(x));
-                                let i = a.indexOf(-1);
-                                let channelGroupID = record.Groups[i];
-                                let newa = [...props.DataSetSettings.Types, ...channelTypes.filter(t => t.ChannelGroupID === channelGroupID).map(t => t.ID)];
-                                const newSettings = { ...props.DataSetSettings };
-                                newSettings.Groups = record.Groups;
-                                newSettings.Types = newa;
-                                props.SetDataSetSettings(newSettings);
-                            }
-                        }} />
+                        <ArrayCheckBoxes<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Label="Channel Groups" Checkboxes={channelGroups?.map(m => ({ ID: m.ID.toString(), Label: m.Name })) ?? []} Field="Groups" Setter={props.SetDataSetSettings} />
                         <ArrayMultiSelect<TrenDAP.iXDADataSet> Style={{ height: window.innerHeight - 520 }} Record={props.DataSetSettings}
-                            Options={channelTypes?.map(m => ({ Value: m.ID, Label: m.DisplayName })) ?? []}
-                            Field="Types" Setter={props.SetDataSetSettings} />
+                            Options={channels?.map(m => ({ Value: m.ID.toString(), Label: `${props.DataSetSettings.By === 'Meter' ? m.Meter : m.Asset} - ${m.Name}` })) ?? []}
+                            Field="Chans" Setter={props.SetDataSetSettings} />
                     </div>
                 </div>
             </form>
         );
 
     },
-    LoadDataSet: function (dataSet: TrenDAP.iDataSet): Promise<TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>> {
+    LoadDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet): Promise<TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>> {
         throw new Error('Function not implemented.');
     },
-    QuickViewDataSet: function (dataSet: TrenDAP.iDataSet): string {
-        throw new Error('Function not implemented.');
+    QuickViewDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): string {
+        const dataSetSettings = ParseSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
+        const sourceSettings = ParseSettings(dataSource.Settings, XDADataSource.DefaultSourceSettings);
+        const queryParams: any = {};
+
+        // Time filter on the other side takes center time and a unit number
+        let windowSize: number;
+        let centerTime: moment.Moment;
+        // Most granular we can do tdap side is days, so hours should be able to handle fractional middle points
+        if (dataSet.Context === 'Relative') {
+            let duration: moment.Duration;
+            switch (dataSet.RelativeWindow) {
+                case 'Day':
+                    duration = moment.duration(dataSet.RelativeValue, 'days');
+                    break;
+                case 'Week':
+                    duration = moment.duration(dataSet.RelativeValue, 'weeks');
+                    break;
+                case 'Month':
+                    duration = moment.duration(dataSet.RelativeValue, 'months');
+                    break;
+                default:
+                    console.warn("Could not match relative window to a moment value");
+                    // Falls-through
+                case 'Year':
+                    duration = moment.duration(dataSet.RelativeValue, 'years');
+                    break;
+            }
+            windowSize = duration.asHours() / 2;
+            centerTime = moment().add(-windowSize);
+        } else {
+            const duration = moment(dataSet.From, tdapDateFormat).diff(moment(dataSet.To, tdapDateFormat), 'hours', true);
+            windowSize = duration / 2;
+            centerTime = moment(dataSet.From).add(windowSize);
+        }
+        queryParams['time'] = centerTime.format(encodedTimeFormat);
+        queryParams['date'] = centerTime.format(encodedDateFormat);
+        queryParams['windowSize'] = windowSize;
+        queryParams['timeWindowUnits'] = 3; // hours
+
+        queryParams[dataSetSettings.By.toLowerCase() + 's'] = `[${dataSetSettings.IDs.join(',')}]`;
+        queryParams['phases'] = `[${dataSetSettings.Phases.join(',')}]`;
+        queryParams['groups'] = `[${dataSetSettings.Groups.join(',')}]`;
+
+        const queryUrl = queryString.stringify(queryParams, "&", "=", { encodeURIComponent: queryString.escape });
+        // Regex removes trailing /
+        return `${sourceSettings.PQBrowserUrl.replace(/[\/]$/, '')}/trenddata?${queryUrl}`;
     },
     TestAuth: function (dataSource: DataSourceTypes.IDataSourceView): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
