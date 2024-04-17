@@ -25,9 +25,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { Redux, TrenDAP } from '../../global';
 import {ajax } from 'jquery';
+import { Search } from '@gpa-gemstone/react-interactive';
 
 export const FetchOpenXDA = createAsyncThunk<string | object, { dataSourceID: number, table: string }, {}>('OpenXDA/FetchOpenXDA', async (ds ,{ dispatch }) => {
     return await GetOpenXDA(ds.dataSourceID, ds.table)
+});
+
+export const SearchOpenXDA = createAsyncThunk<string | object, { dataSourceID: number, table: string, filter: Search.IFilter<any>[] }, {}>('OpenXDA/SearchOpenXDA', async (ds, { dispatch }) => {
+    return await PostOpenXDA(ds.dataSourceID, ds.table, ds.filter)
 });
 
 export const OpenXDASlice = createSlice({
@@ -92,6 +97,59 @@ export const OpenXDASlice = createSlice({
             state[action.meta.arg.dataSourceID][action.meta.arg.table].Error = action.error.message;
         });
 
+        builder.addCase(SearchOpenXDA.fulfilled, (state, action) => {
+            if (state[action.meta.arg.dataSourceID] === undefined) {
+                state[action.meta.arg.dataSourceID] = {};
+            }
+
+            if (state[action.meta.arg.dataSourceID][action.meta.arg.table] === undefined) {
+                state[action.meta.arg.dataSourceID][action.meta.arg.table] = {
+                    Status: 'unitiated' as TrenDAP.Status,
+                    Data: [] as any,
+                    Error: null
+                };
+            }
+
+            state[action.meta.arg.dataSourceID][action.meta.arg.table].Status = 'idle';
+            state[action.meta.arg.dataSourceID][action.meta.arg.table].Error = null;
+            if (typeof (action.payload) === "string")
+                state[action.meta.arg.dataSourceID][action.meta.arg.table].Data.push(...JSON.parse(action.payload));
+            else if (typeof (action.payload) === "object")
+                state[action.meta.arg.dataSourceID][action.meta.arg.table].Data = action.payload as any[];
+        });
+        builder.addCase(SearchOpenXDA.pending, (state, action) => {
+            if (state[action.meta.arg.dataSourceID] === undefined) {
+                state[action.meta.arg.dataSourceID] = {};
+            }
+
+            if (state[action.meta.arg.dataSourceID][action.meta.arg.table] === undefined) {
+                state[action.meta.arg.dataSourceID][action.meta.arg.table] = {
+                    Status: 'unitiated' as TrenDAP.Status,
+                    Data: [] as any,
+                    Error: null
+                };
+            }
+
+
+            state[action.meta.arg.dataSourceID][action.meta.arg.table].Status = 'loading';
+        });
+        builder.addCase(SearchOpenXDA.rejected, (state, action) => {
+            if (state[action.meta.arg.dataSourceID] === undefined) {
+                state[action.meta.arg.dataSourceID] = {};
+            }
+
+            if (state[action.meta.arg.dataSourceID][action.meta.arg.table] === undefined) {
+                state[action.meta.arg.dataSourceID][action.meta.arg.table] = {
+                    Status: 'unitiated' as TrenDAP.Status,
+                    Data: [] as any,
+                    Error: null
+                };
+            }
+
+            state[action.meta.arg.dataSourceID][action.meta.arg.table].Status = 'error';
+            state[action.meta.arg.dataSourceID][action.meta.arg.table].Error = action.error.message;
+        });
+
     }
 
 });
@@ -107,6 +165,18 @@ function GetOpenXDA(dataSourceID: number, table: string): JQuery.jqXHR<string> {
         url: `${homePath}api/TrenDAPDB/${dataSourceID}/${table}`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
+        cache: true,
+        async: true
+    });
+}
+function PostOpenXDA(dataSourceID: number, table: string, filters: Search.IFilter<any>[]): JQuery.jqXHR<string> {
+    return ajax({
+        type: "Post",
+        url: `${homePath}api/TrenDAPDB/${dataSourceID}/${table}`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        // Todo: If there is no ID col, this won't work. Every single one does, but this should still be more resilient
+        data: JSON.stringify({ Searches: filters, OrderBy: "ID", Ascending: true }),
         cache: true,
         async: true
     });

@@ -1,4 +1,4 @@
-﻿//******************************************************************************************************
+//******************************************************************************************************
 //  TrenDAPDBController.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
@@ -133,14 +133,43 @@ namespace TrenDAP.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError, ex);
                 }
             }
-
         }
 
-        private ActionResult GetOpenXDA(DataSource dataSource, string table) {
+        [HttpPost, Route("Channel/GetTrendChannels/{dataSourceID:int}")]
+        public virtual ActionResult Post(int dataSourceID, [FromBody] JObject filter)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                try
+                {
+                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    string type = connection.ExecuteScalar<string>("SELECT Name FROM DataSourceType WHERE ID = {0}", dataSource.DataSourceTypeID);
+                    Task<string> rsp;
+
+                    if (type == "TrenDAPDB")
+                    {
+                        rsp = helper.PostAsync("api/Channel/GetTrendSearchData", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
+                    }
+                    else return StatusCode(StatusCodes.Status400BadRequest, "Datasource type not supported");
+
+                    return Ok(rsp.Result);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
+                }
+            }
+        }
+        
+        private ActionResult GetOpenXDA(DataSource dataSource, string table, JObject filter = null)
+        {
             try
             {
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
-                Task<string> rsp = helper.GetAsync($"api/{table}");
+                Task<string> rsp;
+                if (filter is null) rsp = helper.GetAsync($"api/{table}");
+                else rsp = helper.PostAsync($"api/{table}/SearchableList", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
                 return Ok(rsp.Result);
             }
             catch (Exception ex)
