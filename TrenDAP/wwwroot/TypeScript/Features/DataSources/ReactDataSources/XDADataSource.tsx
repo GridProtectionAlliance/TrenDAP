@@ -61,34 +61,22 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
         React.useEffect(() => {
             if (phStatus != 'unitiated' && phStatus != 'changed') return;
             dispatch(FetchOpenXDA({ dataSourceID: props.DataSource.ID, table: 'Phase' }));
-
-            return function () {
-            }
-        }, [dispatch, phStatus]);
+        }, [phStatus]);
 
         React.useEffect(() => {
             if (meterStatus != 'unitiated' && meterStatus != 'changed') return;
             dispatch(FetchOpenXDA({ dataSourceID: props.DataSource.ID, table: 'Meter' }));
-
-            return function () {
-            }
-        }, [dispatch, meterStatus]);
+        }, [meterStatus]);
 
         React.useEffect(() => {
             if (assetStatus != 'unitiated' && assetStatus != 'changed') return;
             dispatch(FetchOpenXDA({ dataSourceID: props.DataSource.ID, table: 'Asset' }));
-
-            return function () {
-            }
-        }, [dispatch, assetStatus]);
+        }, [assetStatus]);
 
         React.useEffect(() => {
             if (cgStatus != 'unitiated' && cgStatus != 'changed') return;
             dispatch(FetchOpenXDA({ dataSourceID: props.DataSource.ID, table: 'ChannelGroup' }));
-
-            return function () {
-            }
-        }, [dispatch, cgStatus]);
+        }, [cgStatus]);
 
         React.useEffect(() => {
             const filter = {
