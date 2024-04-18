@@ -42,6 +42,12 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
     DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/"},
     DefaultDataSetSettings: { By: 'Meter', IDs: [], Phases: [], Groups: [], Chans: [], Aggregate: ''},
     ConfigUI: (props: DataSourceTypes.IConfigProps<TrenDAP.iXDADataSource>) => {
+        React.useEffect(() => {
+            const errors: string[] = [];
+            if (props.Settings.PQBrowserUrl === null || props.Settings.PQBrowserUrl.length === 0)
+                errors.push("PQ Browser URL is required by datasource.");
+        }, [props.Settings]);
+
         return <Input Record={props.Settings} Setter={props.SetSettings} Field='PQBrowserUrl' Label='PQ Browser URL' Valid={() => true} />;
     },
     DataSetUI: (props: DataSourceTypes.IDataSetProps<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet>) => {
@@ -57,6 +63,18 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
         const cgStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'ChannelGroup'));
 
         const [channels, setChannels] = React.useState<OpenXDA.Types.Channel[]>([]);
+
+        React.useEffect(() => {
+            const errors: string[] = [];
+            if (props.DataSetSettings.IDs === null || props.DataSetSettings.IDs.length === 0)
+                errors.push(`${props.DataSetSettings.By === 'Meter' ? 'Meter' : 'Asset'}s must be selected to filter for channels.`);
+            if (props.DataSetSettings.Phases === null || props.DataSetSettings.Phases.length === 0)
+                errors.push(`Phases must be selected to filter for channels.`);
+            if (props.DataSetSettings.Groups === null || props.DataSetSettings.Groups.length === 0)
+                errors.push(`Channel groups must be selected to filter for channels.`);
+            if (props.DataSetSettings.Chans === null || props.DataSetSettings.Chans.length === 0)
+                errors.push(`Channels must be selected to retrieve data.`);
+        }, [props.DataSetSettings]);
 
         React.useEffect(() => {
             if (phStatus != 'unitiated' && phStatus != 'changed') return;

@@ -88,6 +88,7 @@ const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IProp
         props.SetDataSetConn(newConn);
     }, [props['DataSetConn'], props['SetDataSetConn']]);
 
+    //ToDo: Pipe Errors to outside UI
     return <>{dataSource == null ? <div className="card">
         <div className="card-header">
             {props.DataSource?.Name} - Error
@@ -106,10 +107,12 @@ const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IProp
                     DataSourceSettings={SourceSettings}
                     DataSetSettings={DataSetSettings}
                     SetDataSetSettings={SetDataSetSettings}
+                    SetErrors={() => { }}
                 /> :
                 <dataSource.ConfigUI
                     Settings={SourceSettings}
                     SetSettings={SetSourceSettings}
+                    SetErrors={() => { }}
                 />
             }
         </ErrorBoundary>}

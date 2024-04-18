@@ -117,12 +117,14 @@ export namespace DataSourceTypes {
         DataSourceSettings: T,
         // Additional DataSet Settings parsed from dataset
         DataSetSettings: U,
-        SetDataSetSettings: (newDataSetSettings: U) => void
+        SetDataSetSettings: (newDataSetSettings: U) => void,
+        SetErrors: (errors: string[]) => void
     }
 
     interface IConfigProps<T> {
         Settings: T,
         SetSettings: (settings: T) => void,
+        SetErrors: (errors: string[]) => void
     }
 
     // Datasource coding interface, uses props to get the datasource
