@@ -78,7 +78,8 @@ namespace TrenDAP.Controllers
             public string Aggregate { get; set; }
         }
 
-        public class HIDSPost
+        //ToDO: Move all to new post
+        public class HIDSPostLegacy
         {
             public DateTime StartTime { get; set; }
             public DateTime EndTime { get; set; }
@@ -92,7 +93,15 @@ namespace TrenDAP.Controllers
             public ulong Days { get; set; }
             public ulong Weeks { get; set; }
             public ulong Months { get; set; }
+        }
 
+        public class HIDSPost
+        {
+            public DateTime StartTime { get; set; }
+            public DateTime StopTime { get; set; }
+            public string AggregateDuration { get; set; }
+            public List<int> Channels { get; set; }
+            public List<TimeFilter> TimeFilters { get; set; }
         }
 
 
@@ -221,12 +230,12 @@ namespace TrenDAP.Controllers
             {
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
-                HIDSPost post = CreatePost(dataSet, data);
+                HIDSPostLegacy post = CreateLegacyPost(dataSet, data);
                 JObject jObj = (JObject) JToken.FromObject(post);
                 return helper.GetResponseTask("api/HIDS", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
             }
         }
-        public static Task<HttpResponseMessage> QueryHids(int dataSourceID, HIDSPost post, IConfiguration configuration, CancellationToken cancellationToken)
+        public static Task<HttpResponseMessage> QueryHids(int dataSourceID, HIDSPostLegacy post, IConfiguration configuration, CancellationToken cancellationToken)
         {
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
@@ -238,7 +247,7 @@ namespace TrenDAP.Controllers
         }
 
 
-        public static DataTable GetDataTable(int dataSourceID, HIDSPost post, IConfiguration configuration, CancellationToken cancellationToken) {
+        public static DataTable GetDataTable(int dataSourceID, HIDSPostLegacy post, IConfiguration configuration, CancellationToken cancellationToken) {
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
@@ -250,7 +259,7 @@ namespace TrenDAP.Controllers
             }
         }
 
-        public static Task<string> GetEvents(int dataSourceID, HIDSPost post, IConfiguration configuration, CancellationToken cancellationToken)
+        public static Task<string> GetEvents(int dataSourceID, HIDSPostLegacy post, IConfiguration configuration, CancellationToken cancellationToken)
         {
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
@@ -260,7 +269,7 @@ namespace TrenDAP.Controllers
             }
         }
 
-        public static async Task<string> GetAlarms(int dataSourceID, HIDSPost post, IConfiguration configuration, CancellationToken cancellationToken)
+        public static async Task<string> GetAlarms(int dataSourceID, HIDSPostLegacy post, IConfiguration configuration, CancellationToken cancellationToken)
         {
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
@@ -270,9 +279,46 @@ namespace TrenDAP.Controllers
             }
         }
 
-
-
         public static HIDSPost CreatePost(DataSet dataSet, XDADataSetData data)
+        {
+            DateTime startTime = dataSet.From;
+            DateTime endTime = dataSet.To;
+            if (dataSet.Context == "Relative")
+            {
+                endTime = DateTime.Now;
+                if (dataSet.RelativeWindow == "Day")
+                    startTime = endTime.AddDays(-dataSet.RelativeValue);
+                else if (dataSet.RelativeWindow == "Week")
+                    startTime = endTime.AddDays(-dataSet.RelativeValue * 7);
+                else if (dataSet.RelativeWindow == "Month")
+                    startTime = endTime.AddMonths(-int.Parse(dataSet.RelativeValue.ToString()));
+                else
+                    startTime = endTime.AddYears(-int.Parse(dataSet.RelativeValue.ToString()));
+            }
+
+            IEnumerable<TimeFilter> ReadTimeFilters(ulong flags, TimeFilter baseFilter, int size) => Enumerable
+                .Range(0, size)
+                .Where(index => (~flags & (1Lu << index)) > 0)
+                .Select(index => baseFilter + index);
+
+            List<TimeFilter> timeFilters = Enumerable.Empty<TimeFilter>()
+                .Concat(ReadTimeFilters((ulong)dataSet.Hours, TimeFilter.Hour00, 24))
+                .Concat(ReadTimeFilters((ulong)dataSet.Days, TimeFilter.Sunday, 7))
+                .Concat(ReadTimeFilters((ulong)dataSet.Weeks, TimeFilter.Week00, 53))
+                .Concat(ReadTimeFilters((ulong)dataSet.Months, TimeFilter.January, 12)).ToList();
+
+            return new HIDSPost
+            {
+                StartTime = startTime,
+                StopTime = endTime,
+                Channels = data.Chans,
+                AggregateDuration = data.Aggregate,
+                TimeFilters = timeFilters
+            };
+        }
+
+        // Todo: Remove this, replace with non-legacy
+        public static HIDSPostLegacy CreateLegacyPost(DataSet dataSet, XDADataSetData data)
         {
             DateTime startTime = dataSet.From;
             DateTime endTime = dataSet.To;
@@ -289,7 +335,7 @@ namespace TrenDAP.Controllers
                     startTime = endTime.AddYears(-int.Parse(dataSet.RelativeValue.ToString()));
             }
 
-            return new HIDSPost()
+            return new HIDSPostLegacy()
             {
                 By = data.By,
                 IDs = data.IDs,
