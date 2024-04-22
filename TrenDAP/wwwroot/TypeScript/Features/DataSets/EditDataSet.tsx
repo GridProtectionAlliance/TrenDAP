@@ -41,7 +41,7 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
     const wsStatus = useAppSelector(SelectDataSetsStatus);
     const dataSources = useAppSelector(SelectDataSources);
 
-    const [connections, setConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);    const [deletedConnections, setDeletedConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
+    const [connections, setConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
     const [deletedConnections, setDeletedConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
     const [dataSet, setDataSet] = React.useState<TrenDAP.iDataSet>(undefined);
     const [tab, setTab] = React.useState<string>('settings');
