@@ -74,7 +74,7 @@ namespace TrenDAP.Controllers
             public List<int> IDs { get; set; }
             public List<int> Phases { get; set; }
             public List<int> Groups { get; set; }
-            public List<int> Types { get; set; }
+            public List<int> Chans { get; set; }
             public string Aggregate { get; set; }
         }
 
@@ -341,7 +341,7 @@ namespace TrenDAP.Controllers
                 IDs = data.IDs,
                 Phases = data.Phases,
                 Groups = data.Groups,
-                Types = data.Types,
+                Types = data.Chans,
                 StartTime = startTime,
                 EndTime = endTime,
                 Hours = (ulong)dataSet.Hours,
