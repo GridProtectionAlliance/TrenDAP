@@ -24,7 +24,7 @@
 import * as React from 'react';
 import { Select, ArrayCheckBoxes, ArrayMultiSelect, Input } from '@gpa-gemstone/react-forms';
 import { OpenXDA } from '@gpa-gemstone/application-typings';
-import { DataSourceTypes, TrenDAP, Redux } from '../../../global';
+import { DataSourceTypes, TrenDAP, Redux, DataSetTypes } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../../OpenXDA/OpenXDASlice';
 import { ParseSettings } from '../DataSourceWrapper';
@@ -35,7 +35,16 @@ import moment from 'moment';
 const encodedDateFormat = 'MM/DD/YYYY';
 const encodedTimeFormat = 'HH:mm:ss.SSS';
 const tdapDateFormat = 'YYYY-MM-DD';
+const hidsServerFormat = "YYYY-MM-DD[T]HH:mm:ss.SSSZ";
 
+interface XDAChannel extends OpenXDA.Types.Channel {
+    AssetID: number,
+    MeterID: number,
+    ChannelGroup: string,
+    Unit: string,
+    Longitude: number,
+    Latitude: number
+}
 
 const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = {
     Name: 'TrenDAPDB',
@@ -62,7 +71,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
         const channelGroups: any[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'ChannelGroup'));
         const cgStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'ChannelGroup'));
 
-        const [channels, setChannels] = React.useState<OpenXDA.Types.Channel[]>([]);
+        const [channels, setChannels] = React.useState<XDAChannel[]>([]);
 
         React.useEffect(() => {
             const errors: string[] = [];
@@ -112,7 +121,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
                 dataType: 'json',
                 cache: true,
                 async: true
-            }).done((data: OpenXDA.Types.Channel[]) => {
+            }).done((data: XDAChannel[]) => {
                 setChannels(data);
             });
 
@@ -145,8 +154,95 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
         );
 
     },
-    LoadDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet): Promise<TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>> {
-        throw new Error('Function not implemented.');
+    LoadDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetData[]> {
+        return new Promise<DataSetTypes.IDataSetData[]>((resolve, reject) => {
+            const dataSetSettings = ParseSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
+            const returnData: DataSetTypes.IDataSetData[] = dataSetSettings.Chans.map(id => ({
+                ID: id.toString(),
+                Name: '',
+                ParentID: '',
+                ParentName: '',
+                Phase: '',
+                Type: '',
+                SeriesData: new Map<string, [...number[]][]>(),
+            }));
+
+            // Handle to query HIDS information (through XDA)
+            const dataHandle = ajax({
+                type: "Get",
+                url: `${homePath}api/DataSourceDataSet/Query/${setConn.ID}`,
+                contentType: "application/json; charset=utf-8",
+                dataType: 'text',
+                cache: true,
+                async: true
+            }).done((data: string) => {
+                const newPoints: string[] = data.split("\n");
+                newPoints.forEach(jsonPoint => {
+                    let point: TrenDAP.iXDATrendDataPoint = undefined;
+                    try {
+                        if (jsonPoint !== "") point = JSON.parse(jsonPoint);
+                    }
+                    catch {
+                        console.error("Failed to parse point: " + jsonPoint);
+                    }
+                    if (point !== undefined) {
+                        const timeStamp = moment.utc(point.Timestamp, hidsServerFormat).valueOf();
+                        const dataIndex = returnData.findIndex(data => data.ID === Number("0x" + point.Tag).toString());
+                        if (dataIndex !== -1) {
+                            ['Minimum', 'Maximum', 'Average'].forEach(key => {
+                                const dataPoint = point[key];
+                                if (dataPoint == null) return;
+                                if (returnData[dataIndex].SeriesData.has(key)) {
+                                    const data = returnData[dataIndex].SeriesData.get(key);
+                                    data.push([timeStamp, dataPoint]);
+                                } else {
+                                    const data: [...number[]][] = [[timeStamp, dataPoint]];
+                                    returnData[dataIndex].SeriesData.set(key, data);
+                                }
+                            });
+                        } else {
+                            console.warn(`Datapoint found with unexpected channel ID ${Number("0x" + point.Tag)}`);
+                        }
+                    }
+                });
+            }).fail(err => reject(err));
+
+            // Handle to query channel information
+            const infoHandle = ajax({
+                type: "POST",
+                url: `${homePath}api/TrenDAPDB/Channel/GetTrendChannels/${setConn.DataSourceID}`,
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({
+                    Phases: dataSetSettings.Phases,
+                    ChannelGroups: dataSetSettings.Groups,
+                    MeterList: dataSetSettings.By === 'Meter' ? dataSetSettings.IDs : [],
+                    AssetList: dataSetSettings.By === 'Asset' ? dataSetSettings.IDs : []
+                }),
+                dataType: 'json',
+                cache: true,
+                async: true
+            }).done((channelData: XDAChannel[]) => {
+                returnData.forEach((returnDatum, index) => {
+                    const channelDatum = channelData.find(datum => datum.ID.toString() === returnDatum.ID);
+                    if (channelDatum == null) {
+                        console.warn(`Unable to find information associated with channel ID ${returnDatum.ID}`);
+                        return;
+                    }
+                    returnData[index].ParentID = (dataSetSettings.By === 'Meter' ? channelDatum.MeterID : channelDatum.AssetID).toString();
+                    returnData[index].ParentName = dataSetSettings.By === 'Meter' ? channelDatum.Meter : channelDatum.Asset;
+                    returnData[index].Name = channelDatum.Name;
+                    returnData[index].Phase = channelDatum.Phase;
+                    returnData[index].Type = channelDatum.ChannelGroup;
+                    returnData[index].Longitude = channelDatum.Longitude;
+                    returnData[index].Latitude = channelDatum.Latitude;
+                    returnData[index].Harmonic = channelDatum.HarmonicGroup;
+                    returnData[index].Unit = channelDatum.Unit;
+
+                });
+            }).fail(err => reject(err));
+
+            Promise.all([dataHandle, infoHandle]).then(() => resolve(returnData));
+        });
     },
     QuickViewDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): string {
         const dataSetSettings = ParseSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
