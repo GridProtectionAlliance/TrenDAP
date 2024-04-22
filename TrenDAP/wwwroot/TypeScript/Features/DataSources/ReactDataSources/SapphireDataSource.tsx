@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { DataSourceTypes, TrenDAP, Redux } from '../../../global';
+import { DataSourceTypes, TrenDAP, Redux, DataSetTypes } from '../../../global';
 import { Select, ArrayCheckBoxes, ArrayMultiSelect, Input } from '@gpa-gemstone/react-forms';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectSapphire, FetchSapphire, SelectSapphireStatus } from '../../Sapphire/SapphireSlice';
@@ -93,13 +93,13 @@ const SapphireDataSource: DataSourceTypes.IDataSource<{}, TrenDAP.iSapphireDataS
         );
 
     },
-    LoadDataSet: function (dataSet: TrenDAP.iDataSet): Promise<TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>> {
+    LoadDataSetMeta: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetMetaData[]> {
         throw new Error('Function not implemented.');
     },
-    QuickViewDataSet: function (dataSet: TrenDAP.iDataSet): string {
+    LoadDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetData[]> {
         throw new Error('Function not implemented.');
     },
-    TestAuth: function (dataSource: DataSourceTypes.IDataSourceView): boolean {
+    TestAuth: function (dataSource: DataSourceTypes.IDataSourceView): Promise<boolean> {
         throw new Error('Function not implemented.');
     }
 }

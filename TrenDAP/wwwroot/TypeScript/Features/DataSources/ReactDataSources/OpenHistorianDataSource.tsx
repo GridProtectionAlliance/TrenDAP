@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import { Select, ArrayCheckBoxes, ArrayMultiSelect } from '@gpa-gemstone/react-forms';
-import { DataSourceTypes, TrenDAP, Redux } from '../../../global';
+import { DataSourceTypes, TrenDAP, Redux, DataSetTypes } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import * as React from 'react';
 import { SelectOpenHistorian, FetchOpenHistorian } from '../../OpenHistorian/OpenHistorianSlice';
@@ -65,13 +65,13 @@ const OpenHistorianDataSource: DataSourceTypes.IDataSource<{}, TrenDAP.iOpenHist
         );
 
     },
-    LoadDataSet: function (dataSet: TrenDAP.iDataSet): Promise<TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>> {
+    LoadDataSetMeta: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetMetaData[]> {
         throw new Error('Function not implemented.');
     },
-    QuickViewDataSet: function (dataSet: TrenDAP.iDataSet): string {
+    LoadDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetData[]> {
         throw new Error('Function not implemented.');
     },
-    TestAuth: function (dataSource: DataSourceTypes.IDataSourceView): boolean {
+    TestAuth: function (dataSource: DataSourceTypes.IDataSourceView): Promise<boolean> {
         throw new Error('Function not implemented.');
     }
 }
