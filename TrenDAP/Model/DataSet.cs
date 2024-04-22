@@ -25,14 +25,10 @@
 
 using Gemstone.Data;
 using Gemstone.Data.Model;
-using HIDS;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -115,112 +111,6 @@ namespace TrenDAP.Model
                 }
                 return Ok(result);
             }
-        }
-
-        [HttpGet, Route("Query/{dataSetID:int}")]
-        public async Task<ActionResult> GetData(int dataSetID, CancellationToken cancellationToken)
-        {
-            try
-            {
-                using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
-                {
-                    List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
-                    DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", dataSetID);
-                    if (dataSet == null) return BadRequest();
-                    IEnumerable<DataSourceDataSet> sourceSets = new TableOperations<DataSourceDataSet>(connection).QueryRecordsWhere("DataSetID = {0}", dataSetID);
-                    TableOperations<DataSource> sourceTable = new TableOperations<DataSource>(connection);
-
-                    IEnumerable<Task<JObject>> tasks = sourceSets.Select(sourceSet => {
-                        DataSource source = sourceTable.QueryRecordWhere("ID = {0}", sourceSet.DataSourceID);
-                        JObject data = JObject.Parse(sourceSet.Settings);
-                        return Query(dataSet, source, data, cancellationToken);
-                    });
-                    JObject[] result = await Task.WhenAll(tasks);
-                    return Ok(result);
-
-                }
-            }
-            catch (AggregateException ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex);
-            }
-        }
-
-        private Task<JObject> Query(DataSet dataset, DataSource dataSource, JObject json, CancellationToken cancellationToken)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
-            {
-                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
-                string type = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
-
-                JObject jObject = new JObject();
-                jObject["DataSource"] = new JObject();
-                jObject["DataSource"]["ID"] = dataSource.ID;
-                jObject["DataSource"]["Name"] = dataSource.Name;
-                jObject["DataSource"]["Type"] = type;
-
-                if (type == "TrenDAPDB")
-                {
-                    jObject["DataSource"]["OpenSEE"] = TrenDAPDBController.GetOpenSEEURL(dataSource.ID, Configuration).Result;
-                    return QueryTrenDAPDB(jObject, dataset, dataSource, json, cancellationToken);
-                }
-                else if (type == "OpenHistorian")
-                    return QueryOpenHistorian(jObject, dataset, dataSource, json, cancellationToken);
-                else if (type == "Sapphire")
-                {
-                    jObject["DataSource"]["OpenSEE"] = TrenDAPDBController.GetOpenSEEURL(dataSource.ID, Configuration).Result;
-                    return QuerySapphire(jObject, dataset, dataSource, json, cancellationToken);
-                }
-                else
-                    return Task.FromResult(jObject);
-            }
-        }
-
-        private Task<JObject> QueryTrenDAPDB(JObject jObject, DataSet dataset, DataSource source, JObject data, CancellationToken cancellationToken)
-        {
-            return Task.Run(async () =>
-            {                    
-                TrenDAPDBController.XDADataSetData setData = data.ToObject<TrenDAPDBController.XDADataSetData>();
-                TrenDAPDBController.HIDSPost post = TrenDAPDBController.CreatePost(dataset, setData);
-
-                jObject["Context"] = dataset.Context;
-                jObject["From"] = post.StartTime.ToString("MM/dd/yyyy");
-                jObject["To"] = post.EndTime.ToString("MM/dd/yyyy");
-
-                DataTable table = TrenDAPDBController.GetDataTable(source.ID, post, Configuration, cancellationToken);
-
-                if (table.Rows.Count > 0) {
-                    Task<string> eventsTask = TrenDAPDBController.GetEvents(source.ID, post, Configuration, cancellationToken);
-                    Task<string> alarmsTask = TrenDAPDBController.GetAlarms(source.ID, post, Configuration, cancellationToken);
-
-                    Task<HttpResponseMessage> rsp = TrenDAPDBController.QueryHids(source.ID, post, Configuration, cancellationToken);
-                    IEnumerable<HIDSPoint> points = ParsePoints(rsp, cancellationToken);
-                    IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
-
-                    string eventsString = await eventsTask;
-                    JArray events = JArray.Parse(eventsString);
-                    string alarmsString = await alarmsTask;
-                    var groupjoin = tableJson.GroupJoin(points.ToArray(), row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) =>
-                    {
-                        row["Events"] = JArray.FromObject(events.Where(token => int.Parse(token["ChannelID"].ToString()) == int.Parse(row["ID"].ToString())));
-                        row["Data"] = JArray.FromObject(resultcollection);
-                        return row;
-                    });
-
-                    jObject["Data"] = JArray.FromObject(groupjoin);
-                }
-                else
-                    jObject["Data"] = JArray.FromObject(new List<int> () { });
-
-                jObject["Data"] = JArray.FromObject(((JArray)jObject["Data"]).Where((row, index) => row["Data"].Count() > 0));
-
-                return jObject;
-            });
-
         }
 
         private Task<JObject> QueryOpenHistorian(JObject jObject, DataSet dataset, DataSource source, JObject data, CancellationToken cancellationToken)

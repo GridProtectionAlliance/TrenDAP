@@ -25,8 +25,15 @@ using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
+using System.Net.Http;
+using System;
 using System.Text;
 using TrenDAP.Controllers;
+using static TrenDAP.Controllers.TrenDAPDBController;
+using System.Threading;
+using Gemstone.Data;
+using System.Linq;
 
 namespace TrenDAP.Model
 {
@@ -62,6 +69,49 @@ namespace TrenDAP.Model
         {
             record["SettingsBin"] = Encoding.UTF8.GetBytes(record["Settings"].ToString());
             return base.Patch(record);
+        }
+
+        [HttpGet, Route("Query/{dataSourceDataSetID:int}")]
+        public IActionResult GetData(int dataSourceDataSetID, CancellationToken cancellationToken)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
+                DataSourceDataSet sourceSet = new TableOperations<DataSourceDataSet>(connection).QueryRecordWhere("ID = {0}", dataSourceDataSetID);
+                if (sourceSet == null) return BadRequest($"Could not find source set relationship with ID {dataSourceDataSetID}");
+                DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSetID);
+                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSourceID);
+                if (dataSet is null || dataSource is null) return BadRequest("Failure loading data source or data set.");
+                JObject data = JObject.Parse(sourceSet.Settings);
+                return Query(dataSet, dataSource, data, cancellationToken);
+            }
+        }
+
+        private IActionResult Query(DataSet dataset, DataSource dataSource, JObject json, CancellationToken cancellationToken)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
+                string type = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
+                DataSourceHelper helper = new DataSourceHelper(dataSource);
+
+                if (type == "TrenDAPDB")
+                {
+                    HIDSPost postData = TrenDAPDBController.CreatePost(dataset, json.ToObject<XDADataSetData>());
+                    JObject jObj = (JObject)JToken.FromObject(postData);
+                    return helper.GetActionResult("api/HIDS/QueryPoints", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
+                }
+                // ToDo: Add other types, see funcs in dataset.cs
+                /* else if (type == "OpenHistorian")
+                    return QueryOpenHistorian(jObject, dataset, dataSource, json, cancellationToken);
+                else if (type == "Sapphire")
+                {
+                    jObject["DataSource"]["OpenSEE"] = TrenDAPDBController.GetOpenSEEURL(dataSource.ID, Configuration).Result;
+                    return QuerySapphire(jObject, dataset, dataSource, json, cancellationToken);
+                } */
+                else
+                    throw new ArgumentException($"Type of {type} not supported.");
+            }
         }
     }
 }
