@@ -154,6 +154,51 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
         );
 
     },
+    LoadDataSetMeta: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetData[]> {
+        return new Promise<DataSetTypes.IDataSetData[]>((resolve, reject) => {
+            const dataSetSettings = ParseSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
+            const returnData: DataSetTypes.IDataSetData[] = dataSetSettings.Chans.map(id => ({
+                ID: id.toString(),
+                Name: '',
+                ParentID: '',
+                ParentName: '',
+                Phase: '',
+                Type: ''
+            }));
+            ajax({
+                type: "POST",
+                url: `${homePath}api/TrenDAPDB/Channel/GetTrendChannels/${setConn.DataSourceID}`,
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({
+                    Phases: dataSetSettings.Phases,
+                    ChannelGroups: dataSetSettings.Groups,
+                    MeterList: dataSetSettings.By === 'Meter' ? dataSetSettings.IDs : [],
+                    AssetList: dataSetSettings.By === 'Asset' ? dataSetSettings.IDs : []
+                }),
+                dataType: 'json',
+                cache: true,
+                async: true
+            }).done((channelData: XDAChannel[]) => {
+                returnData.forEach((returnDatum, index) => {
+                    const channelDatum = channelData.find(datum => datum.ID.toString() === returnDatum.ID);
+                    if (channelDatum == null) {
+                        console.warn(`Unable to find information associated with channel ID ${returnDatum.ID}`);
+                        return;
+                    }
+                    returnData[index].ParentID = (dataSetSettings.By === 'Meter' ? channelDatum.MeterID : channelDatum.AssetID).toString();
+                    returnData[index].ParentName = dataSetSettings.By === 'Meter' ? channelDatum.Meter : channelDatum.Asset;
+                    returnData[index].Name = channelDatum.Name;
+                    returnData[index].Phase = channelDatum.Phase;
+                    returnData[index].Type = channelDatum.ChannelGroup;
+                    returnData[index].Longitude = channelDatum.Longitude;
+                    returnData[index].Latitude = channelDatum.Latitude;
+                    returnData[index].Harmonic = channelDatum.HarmonicGroup;
+                    returnData[index].Unit = channelDatum.Unit;
+                });
+                resolve(returnData);
+            }).fail(err => reject(err));
+        });
+    },
     LoadDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetData[]> {
         return new Promise<DataSetTypes.IDataSetData[]>((resolve, reject) => {
             const dataSetSettings = ParseSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
@@ -164,8 +209,9 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
                 ParentName: '',
                 Phase: '',
                 Type: '',
-                SeriesData: new Map<string, [...number[]][]>(),
+                SeriesData: new Map<string, [...number[]][]>()
             }));
+            let metaData: DataSetTypes.IDataSetData[] = null;
 
             // Handle to query HIDS information (through XDA)
             const dataHandle = ajax({
@@ -207,41 +253,23 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
                 });
             }).fail(err => reject(err));
 
+            // Fetch meta data
+            const infoHandle = XDADataSource.LoadDataSetMeta(dataSource, dataSet, setConn).then((data) => { metaData = data; });
+
             // Handle to query channel information
-            const infoHandle = ajax({
-                type: "POST",
-                url: `${homePath}api/TrenDAPDB/Channel/GetTrendChannels/${setConn.DataSourceID}`,
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify({
-                    Phases: dataSetSettings.Phases,
-                    ChannelGroups: dataSetSettings.Groups,
-                    MeterList: dataSetSettings.By === 'Meter' ? dataSetSettings.IDs : [],
-                    AssetList: dataSetSettings.By === 'Asset' ? dataSetSettings.IDs : []
-                }),
-                dataType: 'json',
-                cache: true,
-                async: true
-            }).done((channelData: XDAChannel[]) => {
-                returnData.forEach((returnDatum, index) => {
-                    const channelDatum = channelData.find(datum => datum.ID.toString() === returnDatum.ID);
-                    if (channelDatum == null) {
-                        console.warn(`Unable to find information associated with channel ID ${returnDatum.ID}`);
-                        return;
+            Promise.all([dataHandle, infoHandle]).then(() => {
+                for (let index = 0; index < returnData.length; index++) {
+                    const metaDatum = metaData.find(chan => chan.ID === returnData[index].ID);
+                    if (metaDatum == null) {
+                        console.warn(`Unable to retrieve meta data for channel with ID ${returnData[index].ID}.`);
+                        continue;
                     }
-                    returnData[index].ParentID = (dataSetSettings.By === 'Meter' ? channelDatum.MeterID : channelDatum.AssetID).toString();
-                    returnData[index].ParentName = dataSetSettings.By === 'Meter' ? channelDatum.Meter : channelDatum.Asset;
-                    returnData[index].Name = channelDatum.Name;
-                    returnData[index].Phase = channelDatum.Phase;
-                    returnData[index].Type = channelDatum.ChannelGroup;
-                    returnData[index].Longitude = channelDatum.Longitude;
-                    returnData[index].Latitude = channelDatum.Latitude;
-                    returnData[index].Harmonic = channelDatum.HarmonicGroup;
-                    returnData[index].Unit = channelDatum.Unit;
-
-                });
-            }).fail(err => reject(err));
-
-            Promise.all([dataHandle, infoHandle]).then(() => resolve(returnData));
+                    Object.keys(metaDatum).forEach(key => {
+                        if (key !== 'SeriesData') returnData[index][key] = metaDatum[key]
+                    });
+                }
+                resolve(returnData);
+            });
         });
     },
     QuickViewDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): string {

@@ -131,6 +131,7 @@ export namespace DataSourceTypes {
     interface IDataSource<T, U> {
         DataSetUI: React.FC<IDataSetProps<T, U>>,
         ConfigUI: React.FC<IConfigProps<T>>,
+        LoadDataSetMeta: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => Promise<DataSetTypes.IDataSetData[]>,
         LoadDataSet: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => Promise<DataSetTypes.IDataSetData[]>,
         QuickViewDataSet?: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => string,
         TestAuth: (dataSource: IDataSourceView) => Promise<boolean>,
@@ -148,7 +149,7 @@ export namespace DataSetTypes {
         ParentName: string,
         Phase: string,
         Type: string,
-        SeriesData: Map<string, [...number[]][]>,
+        SeriesData?: Map<string, [...number[]][]>,
         Longitude?: number,
         Latitude?: number,
         Harmonic?: number,
