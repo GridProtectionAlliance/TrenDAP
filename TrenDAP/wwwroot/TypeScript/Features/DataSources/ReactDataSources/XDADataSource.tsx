@@ -154,10 +154,10 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
         );
 
     },
-    LoadDataSetMeta: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetData[]> {
-        return new Promise<DataSetTypes.IDataSetData[]>((resolve, reject) => {
+    LoadDataSetMeta: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetMetaData[]> {
+        return new Promise<DataSetTypes.IDataSetMetaData[]>((resolve, reject) => {
             const dataSetSettings = ParseSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
-            const returnData: DataSetTypes.IDataSetData[] = dataSetSettings.ChannelIDs.map(id => ({
+            const returnData: DataSetTypes.IDataSetMetaData[] = dataSetSettings.ChannelIDs.map(id => ({
                 ID: id.toString(),
                 Name: '',
                 ParentID: '',
@@ -211,7 +211,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
                 Type: '',
                 SeriesData: new Map<string, [...number[]][]>()
             }));
-            let metaData: DataSetTypes.IDataSetData[] = null;
+            let metaData: DataSetTypes.IDataSetMetaData[] = null;
 
             // Handle to query HIDS information (through XDA)
             const dataHandle = $.ajax({
@@ -264,9 +264,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
                         console.warn(`Unable to retrieve meta data for channel with ID ${returnData[index].ID}.`);
                         continue;
                     }
-                    Object.keys(metaDatum).forEach(key => {
-                        if (key !== 'SeriesData') returnData[index][key] = metaDatum[key]
-                    });
+                    Object.keys(metaDatum).forEach(key => returnData[index][key] = metaDatum[key]);
                 }
                 resolve(returnData);
             });
