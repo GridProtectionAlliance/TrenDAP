@@ -24,7 +24,7 @@
 
 import * as React from 'react';
 import { Redux, TrenDAP } from '../../global';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { FetchDataSetData, FetchDataSets, SelectDataSetByID, SelectDataSetsStatus, UpdateDataSetDataFlag } from './DataSetsSlice'
 import {  Spinner, Warning, CrossMark, HeavyCheckMark } from '../../Constants'
 import styles from '../../../Styles/spinner.scss';
@@ -32,9 +32,9 @@ import LoadingSpinner from '../../LoadingSpinner';
 import moment from 'moment';
 
 const DataSetData = (props: { ID: number }) => {
-    const dispatch = useDispatch();
-    const dataSet = useSelector((state: Redux.StoreState) => SelectDataSetByID(state, props.ID));
-    const dsStatus = useSelector(SelectDataSetsStatus);
+    const dispatch = useAppDispatch();
+    const dataSet = useAppSelector((state: Redux.StoreState) => SelectDataSetByID(state, props.ID));
+    const dsStatus = useAppSelector(SelectDataSetsStatus);
 
     React.useEffect(() => {
         if (dsStatus === 'idle') {

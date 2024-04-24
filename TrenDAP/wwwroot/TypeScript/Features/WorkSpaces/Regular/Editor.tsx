@@ -24,11 +24,11 @@ import * as React from 'react';
 import { TrenDAP, Redux } from '../../../global';
 import styles from '../../../../Styles/app.scss';
 import Row from './Row';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../../hooks';
 import { UpdateWorkSpace } from './../WorkSpacesSlice';
 
 export default function Editor(props: { WorkSpace: TrenDAP.iWorkSpace, Data: TrenDAP.iDataSetReturn[] }) {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const workSpaceJSON = JSON.parse(props.WorkSpace.JSONString);
     return (
         <div className={styles["tab-content"]}>

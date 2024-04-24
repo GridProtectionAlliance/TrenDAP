@@ -23,15 +23,15 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../global';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '../../hooks';
 import { Input, Select, CheckBox } from '@gpa-gemstone/react-forms';
 
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 
 const DataSource: React.FunctionComponent<{ DataSource: TrenDAP.iDataSource, SetDataSource: (ds: TrenDAP.iDataSource) => void }> = (props) => {
-    const dataSourceTypes: TrenDAP.iDataSourceType[] = useSelector(SelectDataSourceTypes);
-    const dstStatus = useSelector(SelectDataSourceTypesStatus);
-    const dispatch = useDispatch();
+    const dataSourceTypes: TrenDAP.iDataSourceType[] = useAppSelector(SelectDataSourceTypes);
+    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
+    const dispatch = useAppDispatch();
 
     React.useEffect(() => {
         if (dstStatus != 'unitiated') return;

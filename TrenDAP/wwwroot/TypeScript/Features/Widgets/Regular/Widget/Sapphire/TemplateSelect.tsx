@@ -26,7 +26,7 @@ import { OpenXDA } from '@gpa-gemstone/application-typings';
 import * as React from 'react';
 import { Redux, TrenDAP } from '../../../../../global';
 import { Histogram, Stats, Table, Trend, Widget, XvsY } from '../../Implementations';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../../../../hooks';
 import { FetchSapphire, SelectSapphire, SelectSapphireStatus } from '../../../../Sapphire/SapphireSlice';
 
 export default function TemplateSelect(props: { Widget: Widget<TrenDAP.WidgetClass, TrenDAP.iSapphireReturnData>, DataSourceID: number, Callback: () => void, Axis?: 'x' | 'y' }) {
@@ -35,13 +35,13 @@ export default function TemplateSelect(props: { Widget: Widget<TrenDAP.WidgetCla
     const [measurement, setMeasurement] = React.useState<string>('');
     const [phase, setPhase] = React.useState<string>('');
 
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
 
-    const measurements: OpenXDA.Types.MeasurementType[] = useSelector((state: Redux.StoreState) => SelectSapphire(state, props.DataSourceID, 'ChannelGroupType'));
-    const mtStatus = useSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.DataSourceID, 'ChannelGroupType'));
+    const measurements: OpenXDA.Types.MeasurementType[] = useAppSelector((state: Redux.StoreState) => SelectSapphire(state, props.DataSourceID, 'ChannelGroupType'));
+    const mtStatus = useAppSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.DataSourceID, 'ChannelGroupType'));
 
-    const phases: OpenXDA.Types.Phase[] = useSelector((state: Redux.StoreState) => SelectSapphire(state, props.DataSourceID, 'Phase'));
-    const phStatus = useSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.DataSourceID, 'Phase'));
+    const phases: OpenXDA.Types.Phase[] = useAppSelector((state: Redux.StoreState) => SelectSapphire(state, props.DataSourceID, 'Phase'));
+    const phStatus = useAppSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.DataSourceID, 'Phase'));
 
 
     React.useEffect(() => {

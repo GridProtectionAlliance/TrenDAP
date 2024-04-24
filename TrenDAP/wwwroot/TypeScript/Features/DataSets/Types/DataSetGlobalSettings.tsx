@@ -26,7 +26,7 @@ import { TrenDAP, Redux } from '../../../global';
 import { Input, CheckBox, EnumCheckBoxes } from '@gpa-gemstone/react-forms';
 import { Plus } from '../../../Constants';
 import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from '../../DataSources/DataSourcesSlice';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../../DataSourceTypes/DataSourceTypesSlice';
 import { SelectDataSets, SelectNewXDADataSet } from './../DataSetsSlice';
 import { SelectNewOpenHistorianDataSet } from '../../OpenHistorian/OpenHistorianSlice';
@@ -36,13 +36,13 @@ import { SelectWorkSpaces } from '../../WorkSpaces/WorkSpacesSlice';
 import { ComputeValidDays, ComputeValidWeeks } from '../HelperFunctions';
 
 const DataSetGlobalSettings: React.FunctionComponent<{ Record: TrenDAP.iDataSet, SetDataSet: (ws: TrenDAP.iDataSet) => void }> = (props) => {
-    const dispatch = useDispatch();
-    const dataSources = useSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as TrenDAP.iDataSource[];
-    const publicDataSources = useSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as TrenDAP.iDataSource[];
-    const dsStatus = useSelector(SelectDataSourcesStatus);
-    const dataSourceTypes = useSelector(SelectDataSourceTypes) as TrenDAP.iDataSourceType[];
-    const dstStatus = useSelector(SelectDataSourceTypesStatus);
-    const allDataSets = useSelector(SelectDataSets);
+    const dispatch = useAppDispatch();
+    const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as TrenDAP.iDataSource[];
+    const publicDataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as TrenDAP.iDataSource[];
+    const dsStatus = useAppSelector(SelectDataSourcesStatus);
+    const dataSourceTypes = useAppSelector(SelectDataSourceTypes) as TrenDAP.iDataSourceType[];
+    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
+    const allDataSets = useAppSelector(SelectDataSets);
 
     React.useEffect(() => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;

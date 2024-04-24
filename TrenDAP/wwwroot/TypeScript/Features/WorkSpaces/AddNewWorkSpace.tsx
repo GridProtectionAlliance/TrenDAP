@@ -23,14 +23,14 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../global';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { AddWorkSpace, SelectNewWorkSpace } from './WorkSpacesSlice'
 import WorkSpace from './WorkSpace';
 import CirclePlusSVG from '../../CirclePlusSVG';
 
 const AddNewWorkSpace: React.FunctionComponent<{}> = (props) => {
-    const dispatch = useDispatch();
-    const [ws, setWorkSpace] = React.useState<TrenDAP.iWorkSpace>(useSelector(SelectNewWorkSpace) as TrenDAP.iWorkSpace);
+    const dispatch = useAppDispatch();
+    const [ws, setWorkSpace] = React.useState<TrenDAP.iWorkSpace>(useAppSelector(SelectNewWorkSpace) as TrenDAP.iWorkSpace);
     const [show, setShow] = React.useState<boolean>(false);
 
     return (

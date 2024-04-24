@@ -24,27 +24,25 @@
 
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '../../hooks';
 import Table from '@gpa-gemstone/react-table/lib/index'
 import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, CloneDataSet, New } from './DataSetsSlice';
-import { Link } from 'react-router-dom';
 import moment from 'moment';
 import DataSetData from './DataSetData';
 import { DNA, TrashCan, HeavyCheckMark, Pencil, Wrench } from '@gpa-gemstone/gpa-symbols';
 import { Warning } from '@gpa-gemstone/react-interactive'
 
 const DataSets: React.FunctionComponent = (props: {}) => {
-
-    const dispatch = useDispatch();
-    const DataSets = useSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
-    const publicDataSets = useSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
+    const dispatch = useAppDispatch();
+    const DataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
+    const publicDataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
 
     const [deleteItem, setDeleteItem] = React.useState<TrenDAP.iDataSet>(null);
 
-    const dsStatus = useSelector(SelectDataSetsStatus);
+    const dsStatus = useAppSelector(SelectDataSetsStatus);
 
-    const sortField = useSelector(SelectDataSetsSortField);
-    const ascending = useSelector(SelectDataSetsAscending);
+    const sortField = useAppSelector(SelectDataSetsSortField);
+    const ascending = useAppSelector(SelectDataSetsAscending);
 
     React.useEffect(() => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
@@ -64,9 +62,12 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                 <h4>My DataSets:</h4>
                             </div>
                             <div className="col">
-                                <Link to={`${homePath}AddNewDataSet`}>
-                                    <button className="btn btn-primary pull-right" onClick={() => dispatch(New({}))}>Add New</button>
-                                </Link>
+                                <button className="btn btn-primary pull-right"
+                                    onClick={() => {
+                                        dispatch(New({}));
+                                        window.location.href = `${homePath}/AddNewDataSet`;
+                                    }}
+                                >Add New</button>
                             </div>
                         </div>
                     </div>
@@ -84,8 +85,18 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                     content: (item, key, style) =>
                                     <span>
                                             <DataSetData {...item} />
-                                            {item.Data?.Status === 'idle' ? <Link to={`${homePath}ViewDataSet/${item.ID}`} title='View/Edit DataSet Data.' className='btn'>{Wrench}</Link> : null}
-                                            <Link to={`${homePath}EditDataSet/${item.ID}`} title='Edit DataSet Parameters.' className='btn'>{Pencil}</Link>
+                                            {item.Data?.Status === 'idle' ?
+                                                <button className="btn" title='View/Edit DataSet Data.'
+                                                    onClick={() => {
+                                                        window.location.href = `${homePath}ViewDataSet/${item.ID}`;
+                                                    }}
+                                                >{Wrench}</button>
+                                                : null}
+                                            <button className="btn" title='Edit DataSet Parameters.'
+                                                onClick={() => {
+                                                    window.location.href = `${homePath}EditDataSet/${item.ID}`;
+                                                }}
+                                            >{Pencil}</button>
                                             <a title='Clone DataSet.' className="btn" onClick={() => dispatch(CloneDataSet(item))}>{DNA}</a>
                                             <a title='Delete DataSet.' className="btn" onClick={() => setDeleteItem(item)}>{TrashCan}</a>
                                     </span>

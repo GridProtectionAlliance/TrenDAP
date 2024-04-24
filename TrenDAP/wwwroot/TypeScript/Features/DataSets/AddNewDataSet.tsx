@@ -23,7 +23,7 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../global';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { AddDataSet, SelectRecord, New, Update, SelectDataSets } from './DataSetsSlice'
 import DataSet from './DataSet';
 import { useNavigate } from 'react-router-dom';
@@ -33,11 +33,11 @@ import moment from 'moment';
 import { CrossMark } from '../../Constants';
 
 const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     let navigate = useNavigate();
 
-    const dataSet = useSelector(SelectRecord);
-    const allDataSets = useSelector(SelectDataSets);
+    const dataSet = useAppSelector(SelectRecord);
+    const allDataSets = useAppSelector(SelectDataSets);
 
     const [warnings, setWarning] = React.useState<string[]>([]);
     const [errors, setErrors] = React.useState<string[]>([]);
