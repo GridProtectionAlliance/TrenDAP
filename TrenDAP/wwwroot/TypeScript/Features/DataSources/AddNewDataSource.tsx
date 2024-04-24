@@ -80,7 +80,7 @@ const AddNewDataSource: React.FunctionComponent = () => {
                     setShowModal(false);
                 }}
             >
-                <DataSource DataSource={dataSource} SetDataSource={setDataSource} />
+                <DataSource DataSource={dataSource} SetDataSource={setDataSource} SetErrors={setErrors} />
             </Modal>
         </>
     );

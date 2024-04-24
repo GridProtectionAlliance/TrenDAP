@@ -81,7 +81,7 @@ const EditDataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDat
                     setShow(false);
                 }}
             >
-                <DataSource DataSource={dataSource} SetDataSource={setDataSource} />
+                <DataSource DataSource={dataSource} SetDataSource={setDataSource} SetErrors={setErrors} />
             </Modal>
         </>
     );
