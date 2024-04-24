@@ -27,7 +27,7 @@ import { OpenXDA } from '@gpa-gemstone/application-typings';
 import { DataSourceTypes, TrenDAP, Redux, DataSetTypes } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../../OpenXDA/OpenXDASlice';
-import { ParseSettings } from '../DataSourceWrapper';
+import { TypeCorrectSettings } from '../DataSourceWrapper';
 import $ from 'jquery';
 import queryString from 'querystring';
 import moment from 'moment';
@@ -55,9 +55,15 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
             const errors: string[] = [];
             if (props.Settings.PQBrowserUrl === null || props.Settings.PQBrowserUrl.length === 0)
                 errors.push("PQ Browser URL is required by datasource.");
+            props.SetErrors(errors);
         }, [props.Settings]);
 
-        return <Input Record={props.Settings} Setter={props.SetSettings} Field='PQBrowserUrl' Label='PQ Browser URL' Valid={() => true} />;
+        function valid(field: string): boolean {
+            if (field === 'PQBrowserUrl') return (props.Settings.PQBrowserUrl !== null && props.Settings.PQBrowserUrl.length !== 0);
+            return true;
+        }
+
+        return <Input Record={props.Settings} Setter={props.SetSettings} Field='PQBrowserUrl' Label='PQ Browser URL' Valid={valid} />;
     },
     DataSetUI: (props: DataSourceTypes.IDataSetProps<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet>) => {
         const dispatch = useAppDispatch();
@@ -83,6 +89,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
                 errors.push(`Channel groups must be selected to filter for channels.`);
             if (props.DataSetSettings.ChannelIDs === null || props.DataSetSettings.ChannelIDs.length === 0)
                 errors.push(`Channels must be selected to retrieve data.`);
+            props.SetErrors(errors);
         }, [props.DataSetSettings]);
 
         React.useEffect(() => {
@@ -154,9 +161,9 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
         );
 
     },
-    LoadDataSetMeta: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetMetaData[]> {
+    LoadDataSetMeta: function (_dataSource: DataSourceTypes.IDataSourceView, _dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetMetaData[]> {
         return new Promise<DataSetTypes.IDataSetMetaData[]>((resolve, reject) => {
-            const dataSetSettings = ParseSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
+            const dataSetSettings = TypeCorrectSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
             const returnData: DataSetTypes.IDataSetMetaData[] = dataSetSettings.ChannelIDs.map(id => ({
                 ID: id.toString(),
                 Name: '',
@@ -201,7 +208,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
     },
     LoadDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetData[]> {
         return new Promise<DataSetTypes.IDataSetData[]>((resolve, reject) => {
-            const dataSetSettings = ParseSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
+            const dataSetSettings = TypeCorrectSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
             const returnData: DataSetTypes.IDataSetData[] = dataSetSettings.ChannelIDs.map(id => ({
                 ID: id.toString(),
                 Name: '',
@@ -271,8 +278,8 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
         });
     },
     QuickViewDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): string {
-        const dataSetSettings = ParseSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
-        const sourceSettings = ParseSettings(dataSource.Settings, XDADataSource.DefaultSourceSettings);
+        const dataSetSettings = TypeCorrectSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
+        const sourceSettings = TypeCorrectSettings(dataSource.Settings, XDADataSource.DefaultSourceSettings);
         const queryParams: any = {};
 
         // Time filter on the other side takes center time and a unit number
