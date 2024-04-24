@@ -65,6 +65,16 @@ GO
 INSERT INTO DataSourceType (Name) VALUES ('Sapphire')
 GO
 
+CREATE TABLE EventSourceType
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+)
+GO
+
+INSERT INTO EventSourceType (Name) VALUES ('OpenXDA')
+GO
+
 CREATE TABLE DataSource
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -77,6 +87,21 @@ CREATE TABLE DataSource
     APIToken VARCHAR(50) NOT NULL,
     Expires DATETIME NULL,
     SettingsString VARCHAR(MAX) NOT NULL DEFAULT '{}'
+)
+GO
+
+CREATE TABLE EventSource
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NULL,
+    [User] VARCHAR(MAX) NOT NULL,
+    EventSourceTypeID INT NOT NULL REFERENCES EventSourceType(ID),
+    URL VARCHAR(MAX) NULL,
+    [Public] bit NULL DEFAULT 0,
+    RegistrationKey VARCHAR(50) NOT NULL UNIQUE,
+    APIToken VARCHAR(50) NOT NULL,
+    Expires DATETIME NULL,
+    SettingsStringString VARCHAR(MAX) NOT NULL DEFAULT '{}'
 )
 GO
 
@@ -105,6 +130,15 @@ CREATE TABLE DataSourceDataSet
     DataSourceID INT NOT NULL REFERENCES DataSource(ID),
     DataSetID INT NOT NULL REFERENCES DataSet(ID),
     SettingsString VARCHAR(MAX) NOT NULL DEFAULT '{}'
+)
+GO
+
+CREATE TABLE EventSourceDataSet
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    DataSourceID INT NOT NULL REFERENCES DataSource(ID),
+    DataSetID INT NOT NULL REFERENCES DataSet(ID),
+    SettingsBin varbinary(max) NOT NULL DEFAULT '0x7B7D'
 )
 GO
 

@@ -1,5 +1,5 @@
-//******************************************************************************************************
-//  DataSource.cs - Gbtc
+﻿//******************************************************************************************************
+//  EventSource.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/10/2020 - Billy Ernest
+//  04/23/2020 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -26,55 +26,24 @@ using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
-using openXDA.APIAuthentication;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
 using TrenDAP.Controllers;
 using PrimaryKeyAttribute = Gemstone.Data.Model.PrimaryKeyAttribute;
-using UseEscapedNameAttribute = Gemstone.Data.Model.UseEscapedNameAttribute;
+using RouteAttribute = Microsoft.AspNetCore.Mvc.RouteAttribute;
 
 namespace TrenDAP.Model
 {
-    public class DataSource: Source
+    public class EventSource: Source
     {
-        public int DataSourceTypeID { get; set; }
-        public string URL { get; set; }
-        // Todo: maybe we want to break datasource from api auth? two tables where a source is linked to an auth row?
-        public string RegistrationKey { get; set; }
-        public string APIToken { get; set; }
-        public DateTime? Expires { get; set; }
-        [UseEscapedName]
-        public bool Public { get; set; }
-        [UseEscapedName]
-        public string User { get; set; }
-        public string SettingsString { get; set; }
-        [NonRecordField]
-        public JObject Settings
-        {
-            get
-            {
-                try { return JObject.Parse(SettingsString); }
-                catch { return new JObject(); }
-            }
-        }
-        public static DataSource GetDataSource(IConfiguration configuration, int id)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
-            {
-                return new Gemstone.Data.Model.TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", id);
-            }
-        }
+        public int EventSourceTypeID { get; set; }
     }
 
-    public class DataSourceController: ModelController<DataSource>
+    public class EventSourceController: ModelController<EventSource>
     {
-        public DataSourceController(IConfiguration configuration) : base(configuration){ }
+        public EventSourceController(IConfiguration configuration) : base(configuration){ }
 
         public override ActionResult Post([FromBody] JObject record)
         {
@@ -87,23 +56,23 @@ namespace TrenDAP.Model
             return base.Patch(record);
         }
 
-        [HttpGet, Route("TestAuth/{dataSourceID:int}")]
-        public ActionResult TestAuth(int dataSourceID)
+        [HttpGet, Route("TestAuth/{eventSourceID:int}")]
+        public ActionResult TestAuth(int eventSourceID)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
                 try
                 {
-                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    SourceHelper<DataSource> helper = new SourceHelper<DataSource>(dataSource);
+                    EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", eventSourceID);
+                    SourceHelper<EventSource> helper = new SourceHelper<EventSource>(eventSource);
                     HttpResponseMessage rsp = helper.GetResponseTask($"api/TestAuth").Result;
                     switch (rsp.StatusCode)
                     {
                         default:
                         case HttpStatusCode.Unauthorized:
-                            return Ok("Failed to authorize with datasource credentials.");
+                            return Ok("Failed to authorize with eventsource credentials.");
                         case HttpStatusCode.NotFound:
-                            return Ok("Unable to find datasource.");
+                            return Ok("Unable to find eventsource.");
                         case HttpStatusCode.OK:
                             return Ok("1");
                     }
@@ -116,7 +85,7 @@ namespace TrenDAP.Model
         }
     }
 
-    public class DataSourceType
+    public class EventSourceType
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
@@ -124,8 +93,9 @@ namespace TrenDAP.Model
     }
 
 
-    public class DataSourceTypeController : ModelController<DataSourceType>
+    public class EventSourceTypeController : ModelController<EventSourceType>
     {
-        public DataSourceTypeController(IConfiguration configuration) : base(configuration) {}
+        public EventSourceTypeController(IConfiguration configuration) : base(configuration) {}
     }
+
 }

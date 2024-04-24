@@ -91,7 +91,7 @@ namespace TrenDAP.Model
             {
                 List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
                 string type = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
-                DataSourceHelper helper = new DataSourceHelper(dataSource);
+                SourceHelper<DataSource> helper = new SourceHelper<DataSource>(dataSource);
 
                 if (type == "TrenDAPDB")
                 {

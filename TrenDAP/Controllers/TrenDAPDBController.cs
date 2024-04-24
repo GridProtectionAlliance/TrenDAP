@@ -127,7 +127,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    SourceHelper<DataSource> helper = new SourceHelper<DataSource>(dataSource);
                     string type = connection.ExecuteScalar<string>("SELECT Name FROM DataSourceType WHERE ID = {0}", dataSource.DataSourceTypeID);
                     Task<string> rsp;
 
@@ -150,7 +150,7 @@ namespace TrenDAP.Controllers
         {
             try
             {
-                DataSourceHelper helper = new DataSourceHelper(dataSource);
+                SourceHelper<DataSource> helper = new SourceHelper<DataSource>(dataSource);
                 Task<string> rsp;
                 if (filter is null) rsp = helper.GetAsync($"api/{table}");
                 else rsp = helper.PostAsync($"api/{table}/SearchableList", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
@@ -166,7 +166,7 @@ namespace TrenDAP.Controllers
         {
             try
             {
-                DataSourceHelper helper = new DataSourceHelper(dataSource);
+                SourceHelper<DataSource> helper = new SourceHelper<DataSource>(dataSource);
                 Task<string> rsp = helper.GetAsync($"api/trendap/{table}");
                 return Ok(rsp.Result);
             }
@@ -185,7 +185,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    SourceHelper<DataSource> helper = new SourceHelper<DataSource>(dataSource);
                     Task<string> rsp = helper.GetAsync($"api/HIDS");
                     return Ok(rsp.Result);
                 }
@@ -244,7 +244,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    SourceHelper<DataSource> helper = new SourceHelper<DataSource>(dataSource);
                     return helper.GetAsync($"api/Setting/Category/HIDS").Result;
                 }
                 catch (Exception ex)
@@ -261,7 +261,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    SourceHelper<DataSource> helper = new SourceHelper<DataSource>(dataSource);
                     return await helper.GetAsync($"api/Setting/OpenSEE.URL").ConfigureAwait(false);
                 }
                 catch (Exception ex)
