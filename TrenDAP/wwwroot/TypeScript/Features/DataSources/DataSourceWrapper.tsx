@@ -66,13 +66,13 @@ const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IProp
     const SourceSettings = React.useMemo(() => {
         if (props.DataSource?.Settings == null)
             return dataSource?.DefaultSourceSettings ?? {};
-        return ParseSettings(props.DataSource.Settings, dataSource?.DefaultSourceSettings ?? {});
+        return TypeCorrectSettings(props.DataSource.Settings, dataSource?.DefaultSourceSettings ?? {});
     }, [dataSource, props.DataSource?.Settings]);
 
     const SetSourceSettings = React.useCallback(newSetting => {
         if (props.DataSource == null || props.ComponentType !== 'sourceConfig') return;
         const newDataSource = { ...props.DataSource };
-        newDataSource.Settings = JSON.stringify(newSetting);
+        newDataSource.Settings = newSetting;
         props.SetDataSource(newDataSource);
     }, [props.DataSource, props['SetDataSource']]);
 
@@ -80,13 +80,13 @@ const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IProp
         if (props.DataSource == null || props.ComponentType !== 'datasetConfig') return;
         if (props.DataSetConn?.Settings == null)
             return dataSource?.DefaultDataSetSettings ?? {};
-        return ParseSettings(props.DataSetConn.Settings, dataSource?.DefaultDataSetSettings ?? {});
+        return TypeCorrectSettings(props.DataSetConn.Settings, dataSource?.DefaultDataSetSettings ?? {});
     }, [dataSource, props['DataSetConn']?.Settings]);
 
     const SetDataSetSettings = React.useCallback(newSetting => {
         if (props.DataSource == null || props.ComponentType !== 'datasetConfig') return;
         const newConn = { ...props.DataSetConn };
-        newConn.Settings = JSON.stringify(newSetting);
+        newConn.Settings = newSetting;
         props.SetDataSetConn(newConn);
     }, [props['DataSetConn'], props['SetDataSetConn']]);
 
@@ -131,20 +131,11 @@ function GetReactDataSource(dataSource: DataSourceTypes.IDataSourceView, dataSou
 }
 
 // Function to parse DataSourceDataSet Settings
-function ParseSettings<T>(settingsString: string, defaultSettings: T): T {
+function TypeCorrectSettings<T>(settingsObj: any, defaultSettings: T): T {
     const s = cloneDeep(defaultSettings);
-    let custom = {};
-    if (settingsString.length > 2) {
-        try {
-            custom = JSON.parse(settingsString);
-        } catch {
-            custom = {};
-            console.warn(`Settings string was no able to be parsed.`);
-        }
-    }
     for (const [k] of Object.entries(defaultSettings)) {
-        if (custom.hasOwnProperty(k))
-            s[k] = cloneDeep(custom[k]);
+        if (settingsObj.hasOwnProperty(k))
+            s[k] = cloneDeep(settingsObj[k]);
     }
     return s;
 }
@@ -188,5 +179,5 @@ class ErrorBoundary extends React.Component<{ Name: string }, IError> {
     }
 }
 
-export { AllSources, DataSourceWrapper, GetReactDataSource, ParseSettings }
+export { AllSources, DataSourceWrapper, GetReactDataSource, TypeCorrectSettings }
 export default DataSourceWrapper;

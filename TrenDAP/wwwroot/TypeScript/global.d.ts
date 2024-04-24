@@ -97,14 +97,14 @@ export namespace DataSourceTypes {
         Expires: string | null,
         Public: boolean,
         User: string,
-        Settings: string
+        Settings: any
     }
 
     interface IDataSourceDataSet {
         ID: number,
         DataSourceID: number,
         DataSetID: number,
-        Settings: string
+        Settings: any
     }
 
     // Datasource as tsx needs them

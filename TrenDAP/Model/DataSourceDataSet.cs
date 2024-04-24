@@ -43,13 +43,32 @@ namespace TrenDAP.Model
         public int ID { get; set; }
         public int DataSourceID { get; set; }
         public int DataSetID { get; set; }
-        public string Settings { get; set; }
+        public string SettingsString { get; set; }
+        [NonRecordField]
+        public JObject Settings
+        {
+            get
+            {
+                return JObject.Parse(SettingsString);
+            }
+        }
     }
 
     public class DataSourceDataSetController : ModelController<DataSourceDataSet>
     {
         public DataSourceDataSetController(IConfiguration configuration) : base(configuration) { }
 
+        public override ActionResult Post([FromBody] JObject record)
+        {
+            record["SettingsString"] = record["Settings"].ToString();
+            return base.Post(record);
+        }
+        public override ActionResult Patch([FromBody] JObject record)
+        {
+            record["SettingsString"] = record["Settings"].ToString();
+            return base.Patch(record);
+        }
+        
         [HttpGet, Route("Query/{dataSourceDataSetID:int}")]
         public IActionResult GetData(int dataSourceDataSetID, CancellationToken cancellationToken)
         {
@@ -61,8 +80,7 @@ namespace TrenDAP.Model
                 DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSetID);
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSourceID);
                 if (dataSet is null || dataSource is null) return BadRequest("Failure loading data source or data set.");
-                JObject data = JObject.Parse(sourceSet.Settings);
-                return Query(dataSet, dataSource, data, cancellationToken);
+                return Query(dataSet, dataSource, sourceSet.Settings, cancellationToken);
             }
         }
 
