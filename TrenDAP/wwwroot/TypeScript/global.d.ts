@@ -108,7 +108,7 @@ export namespace DataSourceTypes {
     }
 
     // Datasource as tsx needs them
-    interface IDataSetProps<T, U> {
+    interface IDataSourceDataSetProps<T, U> {
         // Data Source from DB
         DataSource: IDataSourceView,
         // Data Set From DB
@@ -129,7 +129,7 @@ export namespace DataSourceTypes {
 
     // Datasource coding interface, uses props to get the datasource
     interface IDataSource<T, U> {
-        DataSetUI: React.FC<IDataSetProps<T, U>>,
+        DataSetUI: React.FC<IDataSourceDataSetProps<T, U>>,
         ConfigUI: React.FC<IConfigProps<T>>,
         LoadDataSetMeta: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => Promise<DataSetTypes.IDataSetMetaData[]>,
         LoadDataSet: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => Promise<DataSetTypes.IDataSetData[]>,

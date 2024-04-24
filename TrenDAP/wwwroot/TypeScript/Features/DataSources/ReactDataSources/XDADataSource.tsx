@@ -65,7 +65,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
 
         return <Input Record={props.Settings} Setter={props.SetSettings} Field='PQBrowserUrl' Label='PQ Browser URL' Valid={valid} />;
     },
-    DataSetUI: (props: DataSourceTypes.IDataSetProps<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet>) => {
+    DataSetUI: (props: DataSourceTypes.IDataSourceDataSetProps<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet>) => {
         const dispatch = useAppDispatch();
         const phases: OpenXDA.Types.Phase[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'Phase'));
         const phStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'Phase'));
