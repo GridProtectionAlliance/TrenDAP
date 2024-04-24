@@ -33,7 +33,8 @@ import OpenHistorianDataSource from './ReactDataSources/OpenHistorianDataSource'
 const AllSources: DataSourceTypes.IDataSource<any, any>[] = [XDADataSource, SapphireDataSource, OpenHistorianDataSource];
 
 interface IPropsCommon {
-    DataSource: DataSourceTypes.IDataSourceView
+    DataSource: DataSourceTypes.IDataSourceView,
+    SetErrors: (e: string[]) => void
 }
 
 interface IPropsDataset extends IPropsCommon {
@@ -109,7 +110,7 @@ const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IProp
                     DataSourceSettings={SourceSettings}
                     DataSetSettings={DataSetSettings}
                     SetDataSetSettings={SetDataSetSettings}
-                    SetErrors={() => { }}
+                    SetErrors={props.SetErrors}
                 /> :
                 <dataSource.ConfigUI
                     Settings={SourceSettings}

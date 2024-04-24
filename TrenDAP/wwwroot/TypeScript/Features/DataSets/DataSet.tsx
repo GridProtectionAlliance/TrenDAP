@@ -34,7 +34,8 @@ interface IProps {
     SetDataSet: (ws: TrenDAP.iDataSet) => void,
     Connections: DataSourceTypes.IDataSourceDataSet[],
     SetConnections: (arg: DataSourceTypes.IDataSourceDataSet[]) => void,
-    Tab: string
+    Tab: string,
+    SetErrors: (e: string[], connectionName: string) => void
 }
 
 const DataSet: React.FunctionComponent<IProps> = (props: IProps) => {
@@ -55,34 +56,25 @@ const DataSet: React.FunctionComponent<IProps> = (props: IProps) => {
         newConns.splice(index, 1, conn);
         props.SetConnections(newConns);
     }, [props.Connections, props.SetConnections]);
-
-    const deleteConn = React.useCallback((index: number) => {
-        const newConns = [...props.Connections];
-        if (index < 0 || index >= newConns.length) {
-            console.error(`Could not find connection ${index} in connection array.`);
-            return;
-        }
-        newConns.splice(index, 1);
-        props.SetConnections(newConns);
-    }, [props.Connections, props.SetConnections]);
    
     return (
-        <>
         <div className="tab-content" style={{height: '100%', width: '100%'}}>
                 <div className={"tab-pane container " + (props.Tab === "settings" ? 'active' : 'fade')} style={{height: '100%', width: '100%'}}>
                     <DataSetGlobalSettings DataSet={props.DataSet} SetDataSet={props.SetDataSet} Connections={props.Connections} SetConnections={props.SetConnections} />
                 </div>
                 {
-                    props.Connections.map((conn, index) => (
-                        <div className={"tab-pane container " + (dataSources.find(ds => ds.ID === conn.DataSourceID)?.Name + index.toString() === props.Tab ? 'active' : 'fade')} id={index.toString()} key={index}>
-                            <DataSourceWrapper DataSource={dataSources.find(ds => ds.ID === conn.DataSourceID)}
-                                ComponentType='datasetConfig' DataSet={props.DataSet}
-                                DataSetConn={conn} SetDataSetConn={newConn => changeConn(index, newConn)} />
-                        </div>
-                    ))
+                    props.Connections.map((conn, index) => {
+                        const src = dataSources.find(ds => ds.ID === conn.DataSourceID);
+                        return (
+                            <div className={"tab-pane container " + (src?.Name + index.toString() === props.Tab ? 'active' : 'fade')} id={index.toString()} key={index}>
+                                <DataSourceWrapper DataSource={src}
+                                    ComponentType='datasetConfig' DataSet={props.DataSet} SetErrors={(e) => props.SetErrors(e, src?.Name ?? "Unknown")}
+                                    DataSetConn={conn} SetDataSetConn={newConn => changeConn(index, newConn)} />
+                            </div>
+                        );
+                    })
                 }
             </div>
-        </>
     );
 }
 

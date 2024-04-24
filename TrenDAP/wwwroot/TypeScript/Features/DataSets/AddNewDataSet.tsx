@@ -46,6 +46,8 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
 
     const [warnings, setWarning] = React.useState<string[]>([]);
     const [errors, setErrors] = React.useState<string[]>([]);
+    const [newErrors, setNewErrors] = React.useState<number>(0);
+    const sourceErrors = React.useRef<Map<string, string[]>>(new Map<string, string[]>());
     const [hover, setHover] = React.useState<boolean>(false);
     const [dataSet, setDataSet] = React.useState<TrenDAP.iDataSet>(SelectNewDataSet());
     const [connections, setConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
@@ -64,11 +66,10 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
         if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Day' && dataSet.RelativeValue < 366)
             w.push("With the current Time Context and Week of Year Filter it is possible for the dataset to be empty at times.")
         setWarning(w);
-    }, [dataSet])
+    }, [dataSet]);
 
     React.useEffect(() => {
         const e = [];
-
         if (dataSet.Name == null || dataSet.Name.trim().length == 0)
             e.push("A Name has to be entered.")
         if (dataSet.Name != null && dataSet.Name.length > 200)
@@ -87,81 +88,89 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
             e.push("At least 1 Week has to be selected.")
         if (connections.length == 0)
             e.push("At least 1 DataSource needs to be added.");
+        [...sourceErrors.current.keys()].forEach(key => {
+            e.push(`The following errors exist for datasource ${key}:`);
+            const keyErrors = sourceErrors.current.get(key);
+            keyErrors.forEach(error => e.push(`\t${error}`));
+        });
         setErrors(e);
-    }, [dataSet, connections]);
+    }, [dataSet, connections, newErrors]);
+
+    const setSourceErrors = React.useCallback((e: string[], name: string) => {
+        setNewErrors(c => c + 1);
+        if (e.length > 0) sourceErrors.current.set(name, e);
+        else sourceErrors.current.delete(name);
+    }, []);
 
     return (
-        <>
-            <div className="row" style={{ margin: 10 }}>
-                <div className="card" style={{ width: '100%', height: window.innerHeight - 60 }}>
-                    <div className="card-header">
-                        New Data Set {dataSet.Name !== null && dataSet.Name.trim().length > 0 ? ('(' + dataSet.Name + ')') : ''}
-                    </div>
-                    <div className="card-body" style={{ overflowY: 'auto' }}>
-                        <TabSelector Tabs={[
-                            { Label: 'Settings', Id: 'settings' },
-                            ...connections.map((item, index) => ({
-                                Label: dataSources.find(ds => ds.ID === item.DataSourceID)?.Name,
-                                Id: dataSources.find(ds => ds.ID === item.DataSourceID)?.Name + index.toString(),
-                            })),
-                        ]}
-                            SetTab={(item) => setTab(item)} CurrentTab={tab} />
-                        <DataSet DataSet={dataSet} SetDataSet={setDataSet} Connections={connections} SetConnections={setConnections} Tab={tab} />
-                    </div>
-                    <div className="card-footer">
-                        <div className="row">
-                            <div className="d-flex col-6 justify-content-start">
-                                <button type="button" data-tooltip="newBtn"
-                                    className={"btn btn-success" + (errors.length > 0 ? ' disabled' : '')}
-                                    onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-                                    onClick={() => {
-                                        if (errors.length > 0)
-                                            return;
-                                        const handle = $.ajax({
-                                            type: "POST",
-                                            url: `${homePath}api/DataSet/NewWithConnections`,
-                                            contentType: "application/json; charset=utf-8",
-                                            dataType: 'json',
-                                            data: JSON.stringify({
-                                                DataSet: {
-                                                    ...dataSet, UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss')
-                                                },
-                                                Connections: connections
-                                            }),
-                                            cache: false,
-                                            async: true
-                                        }).done(() => {
-                                            dispatch(FetchDataSourceDataSets());
-                                            dispatch(FetchDataSets());
-                                        }).done(() => {
-                                            navigate(`${homePath}DataSets`);
-                                        });
-                                        return () => { if (handle != null && handle.abort != null) handle.abort(); }
-                                    }}
-                                > Save</button>
-                            </div>
-                            <ToolTip Target="newBtn" Show={hover && (warnings.length > 0 || errors.length > 0)} Position={'top'}>
-                                {warnings.map((w, i) => <p key={2 * i}>{Warning} {w} </p>)}
-                                {errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
-                            </ToolTip>
-                            {tab !== 'settings' ?
-                                <div className="d-flex col-6 justify-content-end">
-                                    <button className='btn btn-danger' onClick={() => {
-                                        let deletedConnectionIdx = connections.findIndex((con, index) => dataSources.find(ds => ds.ID === con.DataSourceID)?.Name + index.toString() === tab)
-                                        let newConnections = _.cloneDeep(connections);
-                                        newConnections.splice(deletedConnectionIdx, 1);
-                                        setConnections(newConnections);
-                                        setTab('settings');
-                                    }}
-                                    >Remove DataSource</button>
-                                </div> : null
-                            }
+        <div className="row" style={{ margin: 10 }}>
+            <div className="card" style={{ width: '100%', height: window.innerHeight - 60 }}>
+                <div className="card-header">
+                    New Data Set {dataSet.Name !== null && dataSet.Name.trim().length > 0 ? ('(' + dataSet.Name + ')') : ''}
+                </div>
+                <div className="card-body" style={{ overflowY: 'auto' }}>
+                    <TabSelector Tabs={[
+                        { Label: 'Settings', Id: 'settings' },
+                        ...connections.map((item, index) => ({
+                            Label: dataSources.find(ds => ds.ID === item.DataSourceID)?.Name,
+                            Id: dataSources.find(ds => ds.ID === item.DataSourceID)?.Name + index.toString(),
+                        })),
+                    ]}
+                        SetTab={(item) => setTab(item)} CurrentTab={tab} />
+                    <DataSet DataSet={dataSet} SetDataSet={setDataSet} Connections={connections} SetConnections={setConnections} Tab={tab} SetErrors={setSourceErrors} />
+                </div>
+                <div className="card-footer">
+                    <div className="row">
+                        <div className="d-flex col-6 justify-content-start">
+                            <button type="button" data-tooltip="newBtn"
+                                className={"btn btn-success" + (errors.length > 0 ? ' disabled' : '')}
+                                onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+                                onClick={() => {
+                                    if (errors.length > 0)
+                                        return;
+                                    const handle = $.ajax({
+                                        type: "POST",
+                                        url: `${homePath}api/DataSet/NewWithConnections`,
+                                        contentType: "application/json; charset=utf-8",
+                                        dataType: 'json',
+                                        data: JSON.stringify({
+                                            DataSet: {
+                                                ...dataSet, UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss')
+                                            },
+                                            Connections: connections
+                                        }),
+                                        cache: false,
+                                        async: true
+                                    }).done(() => {
+                                        dispatch(FetchDataSourceDataSets());
+                                        dispatch(FetchDataSets());
+                                    }).done(() => {
+                                        navigate(`${homePath}DataSets`);
+                                    });
+                                    return () => { if (handle != null && handle.abort != null) handle.abort(); }
+                                }}
+                            > Save</button>
                         </div>
+                        <ToolTip Target="newBtn" Show={hover && (warnings.length > 0 || errors.length > 0)} Position={'top'}>
+                            {warnings.map((w, i) => <p key={2 * i}>{Warning} {w} </p>)}
+                            {errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
+                        </ToolTip>
+                        {tab !== 'settings' ?
+                            <div className="d-flex col-6 justify-content-end">
+                                <button className='btn btn-danger' onClick={() => {
+                                    let deletedConnectionIdx = connections.findIndex((con, index) => dataSources.find(ds => ds.ID === con.DataSourceID)?.Name + index.toString() === tab)
+                                    let newConnections = _.cloneDeep(connections);
+                                    newConnections.splice(deletedConnectionIdx, 1);
+                                    setConnections(newConnections);
+                                    setTab('settings');
+                                }}
+                                >Remove DataSource</button>
+                            </div> : null
+                        }
                     </div>
                 </div>
             </div>
-
-        </>
+        </div>
     );
 }
 
