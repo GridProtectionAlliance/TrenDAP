@@ -77,14 +77,7 @@ namespace TrenDAP.Model
 
     public class DataSetController : ModelController<DataSet>
     {
-        #region [ Properties ]
-        private IConfiguration Configuration { get; }
-        #endregion
-
-        public DataSetController(IConfiguration configuration) : base(configuration)
-        {
-            Configuration = configuration;
-        }
+        public DataSetController(IConfiguration configuration) : base(configuration) {}
 
         public override ActionResult Post([FromBody] JObject record)
         {
