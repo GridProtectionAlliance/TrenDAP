@@ -34,6 +34,7 @@ import { useAppSelector } from './hooks';
 import { SelectWorkSpacesForUser } from './Features/WorkSpaces/WorkSpacesSlice';
 
 const DataSources = React.lazy(() => import(/* webpackChunkName: "DataSources" */ './Features/DataSources/DataSources'));
+const ByEventSources = React.lazy(() => import(/* webpackChunkName: "EventSources" */ './Features/EventSources/ByEventSources'));
 const DataSets = React.lazy(() => import(/* webpackChunkName: "DataSets" */ './Features/DataSets/DataSets'));
 const WorkSpaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/WorkSpaces/WorkSpaces'));
 const EditDataSet = React.lazy(() => import(/* webpackChunkName: "EditDataSet" */ './Features/DataSets/EditDataSet'));
@@ -62,6 +63,9 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                 OnSignOut={() => { window.location.href = `/@GSF/Web/Security/Views/Login.cshtml?logout=yes`; }}> { /*need to make sure this page exists on the backend..*/}
                 <Page Name={'DataSources'} Label={'Data Sources'} Icon={SVGIcons.DataContainer}>
                     <DataSources />
+                </Page>
+                <Page Name={'ByEventSources'} Label={'Event Sources'} Icon={SVGIcons.Alert}>
+                    <ByEventSources />
                 </Page>
                 <Page Name={'DataSets'} Label={'Data Sets'} Icon={SVGIcons.Cube}>
                     <DataSets />
