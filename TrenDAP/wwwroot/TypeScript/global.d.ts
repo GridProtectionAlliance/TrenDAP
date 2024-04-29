@@ -131,9 +131,9 @@ export namespace DataSourceTypes {
     interface IDataSource<T, U> {
         DataSetUI: React.FC<IDataSourceDataSetProps<T, U>>,
         ConfigUI: React.FC<IConfigProps<T>>,
-        LoadDataSetMeta: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => Promise<DataSetTypes.IDataSetMetaData[]>,
-        LoadDataSet: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => Promise<DataSetTypes.IDataSetData[]>,
-        QuickViewDataSet?: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => string,
+        LoadDataSetMeta: (dataSource: IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: IDataSourceDataSet) => Promise<DataSetTypes.IDataSetMetaData[]>,
+        LoadDataSet: (dataSource: IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: IDataSourceDataSet) => Promise<DataSetTypes.IDataSetData[]>,
+        QuickViewDataSet?: (dataSource: IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: IDataSourceDataSet) => string,
         TestAuth: (dataSource: IDataSourceView) => Promise<boolean>,
         DefaultSourceSettings: T,
         DefaultDataSetSettings: U,
