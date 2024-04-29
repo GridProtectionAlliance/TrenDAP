@@ -97,8 +97,9 @@ namespace TrenDAP.Model
                 JArray connections = (JArray)record.GetValue("Connections");
                 foreach (JObject conn in connections)
                 {
+                    conn["SettingsString"] = record["Settings"].ToString();
+                    conn["DataSetID"] = dataSetId;
                     DataSourceDataSet connRecord = conn.ToObject<DataSourceDataSet>();
-                    connRecord.DataSetID = dataSetId;
                     result += new TableOperations<DataSourceDataSet>(connection).AddNewRecord(connRecord);
                 }
                 return Ok(result);

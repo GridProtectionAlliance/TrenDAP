@@ -49,8 +49,9 @@ namespace TrenDAP.Model
         {
             get
             {
-                return JObject.Parse(SettingsString);
-            }
+                try { return JObject.Parse(Encoding.UTF8.GetString(SettingsBin)); }
+                catch { return JObject.Parse(Encoding.ASCII.GetString(SettingsBin)); }
+            } 
         }
     }
 
