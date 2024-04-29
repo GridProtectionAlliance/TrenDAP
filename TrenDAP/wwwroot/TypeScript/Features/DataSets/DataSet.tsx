@@ -35,13 +35,14 @@ interface IProps {
     Connections: DataSourceTypes.IDataSourceDataSet[],
     SetConnections: (arg: DataSourceTypes.IDataSourceDataSet[]) => void,
     Tab: string,
-    SetErrors: (e: string[], connectionName: string) => void
+    SetErrors: (e: string[]) => void
 }
 
 const DataSet: React.FunctionComponent<IProps> = (props: IProps) => {
     const dispatch = useAppDispatch();
     const dataSources = useAppSelector(SelectDataSources);
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
+    const wrapperErrors = React.useRef<Map<string, string[]>>(new Map<string, string[]>());
 
     React.useEffect(() => {
         if (dsStatus === 'unitiated' || dsStatus === 'changed') dispatch(FetchDataSources());
@@ -56,6 +57,19 @@ const DataSet: React.FunctionComponent<IProps> = (props: IProps) => {
         newConns.splice(index, 1, conn);
         props.SetConnections(newConns);
     }, [props.Connections, props.SetConnections]);
+
+    const setSourceErrors = React.useCallback((newErrors: string[], name: string) => {
+        if (newErrors.length > 0) wrapperErrors.current.set(name, newErrors);
+        else wrapperErrors.current.delete(name);
+
+        const allErrors: string[] = [];
+        [...wrapperErrors.current.keys()].forEach(key => {
+            allErrors.push(`The following errors exist for datasource ${key}:`);
+            const keyErrors = wrapperErrors.current.get(key);
+            keyErrors.forEach(error => allErrors.push(`\t${error}`));
+        });
+        props.SetErrors(allErrors);
+    }, [props.SetErrors]);
    
     return (
         <div className="tab-content" style={{height: '100%', width: '100%'}}>
@@ -68,7 +82,7 @@ const DataSet: React.FunctionComponent<IProps> = (props: IProps) => {
                         return (
                             <div className={"tab-pane container " + (src?.Name + index.toString() === props.Tab ? 'active' : 'fade')} id={index.toString()} key={index}>
                                 <DataSourceWrapper DataSource={src}
-                                    ComponentType='datasetConfig' DataSet={props.DataSet} SetErrors={(e) => props.SetErrors(e, src?.Name ?? "Unknown")}
+                                    ComponentType='datasetConfig' DataSet={props.DataSet} SetErrors={(e) => setSourceErrors(e, src?.Name)}
                                     DataSetConn={conn} SetDataSetConn={newConn => changeConn(index, newConn)} />
                             </div>
                         );

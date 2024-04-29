@@ -46,8 +46,7 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
 
     const [warnings, setWarning] = React.useState<string[]>([]);
     const [errors, setErrors] = React.useState<string[]>([]);
-    const [newErrors, setNewErrors] = React.useState<number>(0);
-    const sourceErrors = React.useRef<Map<string, string[]>>(new Map<string, string[]>());
+    const [sourceErrors, setSourceErrors] = React.useState<string[]>([]);
     const [hover, setHover] = React.useState<boolean>(false);
     const [dataSet, setDataSet] = React.useState<TrenDAP.iDataSet>(SelectNewDataSet());
     const [connections, setConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
@@ -88,19 +87,8 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
             e.push("At least 1 Week has to be selected.")
         if (connections.length == 0)
             e.push("At least 1 DataSource needs to be added.");
-        [...sourceErrors.current.keys()].forEach(key => {
-            e.push(`The following errors exist for datasource ${key}:`);
-            const keyErrors = sourceErrors.current.get(key);
-            keyErrors.forEach(error => e.push(`\t${error}`));
-        });
-        setErrors(e);
-    }, [dataSet, connections, newErrors]);
-
-    const setSourceErrors = React.useCallback((e: string[], name: string) => {
-        setNewErrors(c => c + 1);
-        if (e.length > 0) sourceErrors.current.set(name, e);
-        else sourceErrors.current.delete(name);
-    }, []);
+        setErrors(e.concat(sourceErrors));
+    }, [dataSet, connections, sourceErrors]);
 
     return (
         <div className="row" style={{ margin: 10 }}>

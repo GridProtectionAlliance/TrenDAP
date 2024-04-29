@@ -56,6 +56,11 @@ const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IProp
     const [dataSource, setDataSource] = React.useState<DataSourceTypes.IDataSource<any, any>>(undefined);
 
     React.useEffect(() => {
+        // Need Cleanup for errors since outside changes may effect errors
+        return () => props.SetErrors([]);
+    }, [props.DataSource.DataSourceTypeID]);
+
+    React.useEffect(() => {
         if (dstStatus === 'unitiated' || dstStatus === 'changed') dispatch(FetchDataSourceTypes());
     }, [dstStatus]);
 
