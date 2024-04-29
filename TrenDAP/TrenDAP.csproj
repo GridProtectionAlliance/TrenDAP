@@ -45,6 +45,9 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx" />
     <Content Remove="wwwroot\typescript\features\datasources\reactdatasources\OpenHistorianDataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSourceTypes\DataSourceTypesSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\EventSources\Slices\EventSourceDataSetSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\EventSources\Slices\EventSourcesSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\EventSources\Slices\EventSourceTypesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts" />
@@ -147,6 +150,15 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\typescript\features\datasources\reactdatasources\OpenHistorianDataSource.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\EventSources\Slices\EventSourceDataSetSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\EventSources\Slices\EventSourcesSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\EventSources\Slices\EventSourceTypesSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\hooks.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Constants.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\declarations.d.ts">

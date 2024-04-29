@@ -25,16 +25,20 @@ import { configureStore } from '@reduxjs/toolkit';
 import DataSourcesReducuer from '../Features/DataSources/DataSourcesSlice';
 import DataSourceDataSetReducer from '../Features/DataSources/DataSourceDataSetSlice';
 import DataSourceTypesReducer from '../Features/DataSourceTypes/DataSourceTypesSlice';
+import EventSourcesReducuer from '../Features/EventSources/Slices/EventSourcesSlice';
+import EventSourceDataSetReducer from '../Features/EventSources/Slices/EventSourceDataSetSlice';
+import EventSourceTypesReducer from '../Features/EventSources/Slices/EventSourceTypesSlice';
 import WorkSpaceReducer from '../Features/WorkSpaces/WorkSpacesSlice';
 import DataSetReducer from '../Features/DataSets/DataSetsSlice';
 import OpenXDAReducer from '../Features/OpenXDA/OpenXDASlice';
 import OpenHistorianReducer from '../Features/OpenHistorian/OpenHistorianSlice';
 import SapphireReducer from '../Features/Sapphire/SapphireSlice';
+import { EventSourceTypes } from '../global';
+import { GenericSlice } from '@gpa-gemstone/react-interactive';
 
 //Dispatch and Selector Typed
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>
-
 const reducer = {
     DataSets: DataSetReducer,
     WorkSpaces: WorkSpaceReducer,
@@ -43,7 +47,10 @@ const reducer = {
     DataSourceTypes: DataSourceTypesReducer,
     OpenXDA: OpenXDAReducer,
     OpenHistorian: OpenHistorianReducer,
-    Sapphire: SapphireReducer
+    Sapphire: SapphireReducer,
+    EventSources: EventSourcesReducuer,
+    EventSourceDataSets: EventSourceDataSetReducer,
+    EventSourceTypes: EventSourceTypesReducer
 }
 
 const store = configureStore({ reducer });
