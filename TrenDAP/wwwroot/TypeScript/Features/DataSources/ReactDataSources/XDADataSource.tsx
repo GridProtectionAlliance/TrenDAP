@@ -216,7 +216,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
                 ParentName: '',
                 Phase: '',
                 Type: '',
-                SeriesData: new Map<string, [...number[]][]>()
+                SeriesData: { Minimum: [], Maximum: [], Average: [] }
             }));
             let metaData: DataSetTypes.IDataSetMetaData[] = null;
 
@@ -242,16 +242,10 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
                         const timeStamp = moment.utc(point.Timestamp, hidsServerFormat).valueOf();
                         const dataIndex = returnData.findIndex(data => data.ID === Number("0x" + point.Tag).toString());
                         if (dataIndex !== -1) {
-                            ['Minimum', 'Maximum', 'Average'].forEach(key => {
+                            Object.keys(returnData[dataIndex].SeriesData).forEach(key => {
                                 const dataPoint = point[key];
                                 if (dataPoint == null) return;
-                                if (returnData[dataIndex].SeriesData.has(key)) {
-                                    const data = returnData[dataIndex].SeriesData.get(key);
-                                    data.push([timeStamp, dataPoint]);
-                                } else {
-                                    const data: [...number[]][] = [[timeStamp, dataPoint]];
-                                    returnData[dataIndex].SeriesData.set(key, data);
-                                }
+                                returnData[dataIndex].SeriesData[key].push([timeStamp, dataPoint]);
                             });
                         } else {
                             console.warn(`Datapoint found with unexpected channel ID ${Number("0x" + point.Tag)}`);

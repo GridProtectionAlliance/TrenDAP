@@ -155,7 +155,9 @@ export namespace DataSetTypes {
         Unit?: string
     }
     interface IDataSetData extends IDataSetMetaData {
-        SeriesData: Map<string, [...number[]][]>
+        SeriesData: {
+            [key: string]: [...number[]][]
+        }
     }
 }
 
