@@ -144,6 +144,61 @@ export namespace DataSourceTypes {
     }
 }
 
+export namespace EventSourceTypes {
+    // The following are how event sources are stored in DB
+    interface IEventSourceType { ID: number, Name: string }
+    interface IEventSourceView {
+        ID: number,
+        Name: string,
+        EventSourceTypeID: number,
+        URL: string,
+        RegistrationKey: string,
+        Expires: string | null,
+        Public: boolean,
+        User: string,
+        Settings: any
+    }
+
+    interface IEventSourceDataSet {
+        ID: number,
+        EventSourceID: number,
+        DataSetID: number,
+        Settings: any
+    }
+
+    // Eventsource as tsx needs them
+    interface IEventSourceDataSetProps<T, U> {
+        // Event Source from DB
+        EventSource: IEventSourceView,
+        // Data Set From DB
+        DataSet: TrenDAP.iDataSet,
+        // Additional Source Settings parsed form source view
+        EventSourceSettings: T,
+        // Additional DataSet Settings parsed from dataset
+        DataSetSettings: U,
+        SetDataSetSettings: (newDataSetSettings: U) => void,
+        SetErrors: (errors: string[]) => void
+    }
+
+    interface IConfigProps<T> {
+        Settings: T,
+        SetSettings: (settings: T) => void,
+        SetErrors: (errors: string[]) => void
+    }
+
+    // Eventsource coding interface, uses props to get the Eventsource
+    interface IEventSource<T, U> {
+        DataSetUI: React.FC<IEventSourceDataSetProps<T, U>>,
+        ConfigUI: React.FC<IConfigProps<T>>,
+        LoadEventSet: (eventSource: IEventSourceView, dataSet: TrenDAP.iDataSet, dataConn: IEventSourceDataSet) => Promise<DataSetTypes.IEventSetData[]>,
+        QuickViewEvents?: (eventSource: IEventSourceView, dataSet: TrenDAP.iDataSet, dataConn: IEventSourceDataSet) => string,
+        TestAuth: (eventSource: IEventSourceView) => Promise<boolean>,
+        DefaultSourceSettings: T,
+        DefaultDataSetSettings: U,
+        Name: string,
+    }
+}
+
 export namespace DataSetTypes {
     interface IDataSetMetaData {
         ID: string,
