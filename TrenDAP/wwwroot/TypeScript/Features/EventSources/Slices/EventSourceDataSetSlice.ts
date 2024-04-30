@@ -22,7 +22,8 @@
 //******************************************************************************************************
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { Redux, EventSourceTypes } from '../../../global';
+import { Redux } from '../../../global';
+import { EventSourceTypes } from '../Interface';
 import _ from 'lodash';
 import { ajax } from 'jquery';
 

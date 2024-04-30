@@ -22,10 +22,11 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { EventSourceTypes } from '../../global';
+import * as _ from 'lodash';
+import { EventSourceTypes, IEventSource } from './Interface';
 import { useAppSelector } from '../../hooks';
 import { Input, Select, CheckBox, DatePicker } from '@gpa-gemstone/react-forms';
-import { SelectEventSourceTypes, SelectEventSourceTypesStatus, FetchEventSourceTypes } from './Slices/EventSourceTypesSlice';
+import { EventDataSources } from './ByEventSources';
 import { useAppDispatch } from '../../hooks';
 
 interface IProps {
@@ -35,21 +36,27 @@ interface IProps {
 }
 
 const EventSource: React.FunctionComponent<IProps> = (props: IProps) => {
-    const dispatch = useAppDispatch();
-    const evtTypeStatus = useAppSelector(SelectEventSourceTypesStatus);
-    const eventSourceTypes = useAppSelector(SelectEventSourceTypes);
-    const [useExpiredField, setUseExpiredField] = React.useState<boolean>(props.EventSource.Expires != null);
+    const [configErrors, setConfigErrors] = React.useState<string[]>([]);
+    const implementation: IEventSource<any, any> | null = React.useMemo(() => EventDataSources.find(t => t.Name == props.EventSource.Type), [props.EventSource.Type])
 
-    React.useEffect(() => {
-        if (evtTypeStatus === 'unitiated' || evtTypeStatus === 'changed')
-            dispatch(FetchEventSourceTypes());
-    }, [evtTypeStatus]);
+    const settings = React.useMemo(() => {
+        if (implementation == null)
+            return {};
+        const s = _.cloneDeep(implementation.DefaultSourceSettings ?? {});
+        let custom = props.EventSource.Settings;
+
+        for (const [k] of Object.entries(implementation?.DefaultSourceSettings ?? {})) {
+            if (custom.hasOwnProperty(k))
+                s[k] = _.cloneDeep(custom[k]);
+        }
+        return s;
+    }, [implementation, props.EventSource.Settings]);
 
     React.useEffect(() => {
         const errors: string[] = [];
         if (!valid('Name')) errors.push("Name between 0 and 200 characters is required.");
-        props.SetErrors(errors);
-    }, [props.EventSource])
+        props.SetErrors([...errors, ...configErrors]);
+    }, [props.EventSource.Name, configErrors])
 
     function valid(field: keyof (EventSourceTypes.IEventSourceView)): boolean {
         if (field == 'Name')
@@ -60,28 +67,12 @@ const EventSource: React.FunctionComponent<IProps> = (props: IProps) => {
     return (
         <form>
             <Input<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="Name" Setter={props.SetEventSource} Valid={valid} />
-            <Select<EventSourceTypes.IEventSourceView> Record={props.EventSource} Label="EventSource Type" Field="EventSourceTypeID" Setter={item => {
-                const newRecord = { ...props.EventSource, EventSourceTypeID: Number(item.EventSourceTypeID) }
-                props.SetEventSource(newRecord);
-            }} Options={eventSourceTypes.map(x => ({ Value: x.ID.toString(), Label: x.Name }))} />
+            <Select<EventSourceTypes.IEventSourceView> Record={props.EventSource} Label="Type" Field="Type" Setter={props.SetEventSource}
+                Options={EventDataSources.map((type) => ({ Value: type.Name, Label: type.Name }))} />
             <Input<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="URL" Setter={props.SetEventSource} Valid={() => true} />
-            <Input<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="RegistrationKey" Label={'Registration Key'} Setter={props.SetEventSource} Valid={() => true} />
-            <CheckBox<{ expires: boolean }> Record={{ expires: useExpiredField }} Field="expires" Label='Expires' Setter={item => {
-                if(!item.expires)
-                    props.SetEventSource({ ...props.EventSource, Expires: null });
-                else if (props.EventSource.Expires == null)
-                    props.SetEventSource({ ...props.EventSource, Expires: new Date().toISOString() })
-                setUseExpiredField(item.expires)
-            }} />
-            {useExpiredField ? 
-                <DatePicker<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field={"Expires"} Type={'datetime-local'} Valid={() => true} Label={"Expiration Date"} Setter={props.SetEventSource} Feedback={"Date can not expire today."} />
-                : null
-            }
-            <div className="row">
-                <div className='col'>
-                    <CheckBox<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="Public" Label='Shared' Setter={props.SetEventSource} />
-                </div>
-            </div>
+            <Input<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="RegistrationKey" Label={'API Key'} Setter={props.SetEventSource} Valid={() => true} />
+            <CheckBox<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="Public" Label='Shared' Setter={props.SetEventSource} />
+            {implementation != null ? <implementation.ConfigUI SetErrors={setConfigErrors} Settings={settings} SetSettings={(s) => props.SetEventSource({ ...props.EventSource, Settings: s })} /> : <></>}
         </form>
     );
 }

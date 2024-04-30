@@ -31,8 +31,7 @@ import { CrossMark } from '@gpa-gemstone/gpa-symbols';
 
 const AddNewDataSource: React.FunctionComponent = () => {
     const dispatch = useAppDispatch();
-
-    const [dataSource, setDataSource] = React.useState<DataSourceTypes.IDataSourceView>({ ID: -1, Name: "", DataSourceTypeID: 1, URL: '', RegistrationKey: '', Expires: null, Public: false, User: '', Settings: '{}' });
+    const [dataSource, setDataSource] = React.useState<DataSourceTypes.IDataSourceView>({ ID: -1, Name: "", DataSourceTypeID: 1, URL: '', RegistrationKey: '', APIToken: '', Expires: null, Public: false, User: '', Settings: '{}' });
     const [showModal, setShowModal] = React.useState<boolean>(false);
     const [errors, setErrors] = React.useState<string[]>([]);
 

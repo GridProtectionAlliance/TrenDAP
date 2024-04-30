@@ -38,7 +38,7 @@ namespace TrenDAP.Model
 {
     public class EventSource: Source
     {
-        public int EventSourceTypeID { get; set; }
+        public string Type { get; set; }
     }
 
     public class EventSourceController: ModelController<EventSource>
@@ -84,18 +84,4 @@ namespace TrenDAP.Model
             }
         }
     }
-
-    public class EventSourceType
-    {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-        public string Name { get; set; }
-    }
-
-
-    public class EventSourceTypeController : ModelController<EventSourceType>
-    {
-        public EventSourceTypeController(IConfiguration configuration) : base(configuration) {}
-    }
-
 }

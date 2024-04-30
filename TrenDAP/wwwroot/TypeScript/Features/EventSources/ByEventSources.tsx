@@ -1,4 +1,4 @@
-﻿ //******************************************************************************************************
+﻿//******************************************************************************************************
 //  ByEventSources.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
@@ -23,36 +23,31 @@
 
 import * as React from 'react';
 import _ from 'lodash';
-import { EventSourceTypes } from '../../global';
+import { IEventSource, EventSourceTypes } from './Interface';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { ReactTable } from '@gpa-gemstone/react-table';
-import { SelectEventSourceTypes, SelectEventSourceTypesStatus, FetchEventSourceTypes } from './Slices/EventSourceTypesSlice';
 import { SelectEventSources, SelectEventSourcesStatus, FetchEventSources, RemoveEventSource } from './Slices/EventSourcesSlice';
 import { TrashCan, HeavyCheckMark, Pencil } from './../../Constants';
 import AddEditEventSource from './AddEditEventSource';
 import { Warning } from '@gpa-gemstone/react-interactive';
+import RandomEvents from './Implementations/RandomEvents';
+
+export const EventDataSources: IEventSource<any, any>[] = [RandomEvents];
 
 const ByEventSources: React.FunctionComponent = () => {
     const dispatch = useAppDispatch();
-    const evtTypes = useAppSelector(SelectEventSourceTypes);
-    const evtTypeStatus = useAppSelector(SelectEventSourceTypesStatus);
     const [editEvt, setEditEvt] = React.useState<EventSourceTypes.IEventSourceView>(undefined);
     const [showDelete, setShowDelete] = React.useState<boolean>(false);
     const [showEdit, setShowEdit] = React.useState<boolean>(false);
 
-    React.useEffect(() => {
-        if (evtTypeStatus === 'unitiated' || evtTypeStatus === 'changed')
-            dispatch(FetchEventSourceTypes());
-    }, [evtTypeStatus]);
-
     return (
-        <div className="row" style={{ margin: 10}}>
-            <div className="col-6" style={{ padding: '0 0 0 0' }}>
+        <div className="row">
+            <div className="col-6">
                 <div className="card">
                     <div className="card-header">
                         <div className="row">
                             <div className="d-flex col-6 justify-content-start">
-                                <h4>My EventSources</h4>
+                                <h4>My Event Data Sources</h4>
                             </div>
                             <div className="d-flex col-6 justify-content-end">
                                 <button className="btn btn-primary" onClick={() => {
@@ -60,33 +55,33 @@ const ByEventSources: React.FunctionComponent = () => {
                                     setEditEvt({
                                         ID: -1,
                                         Name: '',
-                                        EventSourceTypeID: evtTypes.find(type => type.Name === 'OpenXDA')?.ID ?? -1,
+                                        Type: EventDataSources[0].Name,
                                         URL: '',
                                         RegistrationKey: '',
-                                        Expires: null,
+                                        APIToken: '',
                                         Public: false,
-                                        User: '',
-                                        Settings: undefined
+                                        User: undefined,
+                                        Settings: EventDataSources[0].DefaultSourceSettings
                                     });
                                 }}>Add New</button>
                             </div>
                         </div>
                     </div>
-                    <div className="card-body">
+                    <div className="card-body" style={{ overflow: "hidden" }}>
                         <EventSourceTable OwnedByUser={true} SetEventSource={setEditEvt} SetShowEdit={setShowEdit} SetShowDelete={setShowDelete} />
                     </div>
                 </div>
             </div>
-            <div className="col-6" style={{ padding: '0 0 0 0' }}>
+            <div className="col-6">
                 <div className="card">
-                    <div className="card-header"><h4>Shared EventSources</h4></div>
-                    <div className="card-body">
+                    <div className="card-header"><h4>Shared Event Data Sources</h4></div>
+                    <div className="card-body" style={{ overflow: "hidden" }}>
                         <EventSourceTable OwnedByUser={false} SetEventSource={setEditEvt} SetShowEdit={setShowEdit} SetShowDelete={setShowDelete} />
                     </div>
                 </div>
             </div>
             <AddEditEventSource EventSource={editEvt} Show={showEdit} SetShow={setShowEdit} />
-            <Warning Title={'Delete ' + editEvt?.Name} Show={showDelete} Message={"This will remove the EventSource and can not be undone."}
+            <Warning Title={'Delete ' + editEvt?.Name} Show={showDelete} Message={"This will remove the Event Data Source and can not be undone."}
                 CallBack={(c) => {
                     if (c) dispatch(RemoveEventSource(editEvt));
                     setShowDelete(false);
@@ -108,21 +103,16 @@ const EventSourceTable = React.memo((props: ITableProps) => {
     const [eventSources, setEventSources] = React.useState<EventSourceTypes.IEventSourceView[]>([]);
 
     const dispatch = useAppDispatch();
-    const evtTypes = useAppSelector(SelectEventSourceTypes);
-    const evtTypeStatus = useAppSelector(SelectEventSourceTypesStatus);
     const allEventSources = useAppSelector(SelectEventSources);
     const evtStatus = useAppSelector(SelectEventSourcesStatus);
 
-    React.useEffect(() => {
-        if (evtTypeStatus === 'unitiated' || evtTypeStatus === 'changed')
-            dispatch(FetchEventSourceTypes);
-    }, [evtTypeStatus]);
 
     React.useEffect(() => {
         if (evtStatus === 'unitiated' || evtStatus === 'changed')
-            dispatch(FetchEventSources);
+            dispatch(FetchEventSources());
     }, [evtStatus]);
 
+    // #ToDO Clean up Slicing and sorting
     React.useEffect(() => {
         setEventSources(_.orderBy(allEventSources.filter(source => {
             if (props.OwnedByUser) return source.User === userName;
@@ -131,42 +121,46 @@ const EventSourceTable = React.memo((props: ITableProps) => {
     }, [sortField, ascending, allEventSources, props.OwnedByUser]);
 
     return (
-        <ReactTable.Table<EventSourceTypes.IEventSourceView>
-            TableClass="table table-hover"
-            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
-            TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
-            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-            // Small note: ReactTable gives the key as sort, but here we wanna use field. This is not an issue if they match.
-            SortKey={sortField}
-            OnClick={() => { }}
-            OnSort={data => {
-                if (data.colKey === sortField) setAscending(s => !s);
-                else setSortField(data.colKey);
-            }}
-            Data={eventSources}
-            KeySelector={source => source.ID}
-            Ascending={ascending}>
-            <ReactTable.Column<EventSourceTypes.IEventSourceView> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
-            <ReactTable.Column<EventSourceTypes.IEventSourceView> Key={'EventSourceTypeID'} Field={'EventSourceTypeID'}
-                Content={row => evtTypes.find(dst => row.item.EventSourceTypeID === dst.ID)?.Name}>Type</ReactTable.Column>
-            {
-                props.OwnedByUser ?
-                    <ReactTable.Column<EventSourceTypes.IEventSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}
-                        Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</ReactTable.Column>
-                    : <></>
-            }
-            {
-                props.OwnedByUser ?
-                    <ReactTable.Column<EventSourceTypes.IEventSourceView> AllowSort={false} Key={'Delete'} Field={'Public'}
-                        Content={row =>
-                            <span>
-                                <button className="btn" onClick={() => { props.SetEventSource(row.item); props.SetShowEdit(true); }}>{Pencil}</button>
-                                <button className="btn" onClick={() => { props.SetEventSource(row.item); props.SetShowDelete(true); }}>{TrashCan}</button>
-                            </span>}
-                    ><></></ReactTable.Column>
-                    : <></>
-            }
-        </ReactTable.Table>
+        <div className="container-fluid d-flex h-100 flex-column">
+            <ReactTable.Table<EventSourceTypes.IEventSourceView>
+                TableClass="table table-hover"
+                TableStyle={{
+                    padding: 0, width: 'calc(100%)', height: '100%',
+                    tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
+                }}
+                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                SortKey={sortField}
+                OnClick={() => { }}
+                OnSort={data => {
+                    if (data.colKey === sortField) setAscending(s => !s);
+                    else setSortField(data.colKey);
+                }}
+                Data={eventSources}
+                KeySelector={source => source.ID}
+                Ascending={ascending}>
+                <ReactTable.Column<EventSourceTypes.IEventSourceView> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
+                <ReactTable.Column<EventSourceTypes.IEventSourceView> Key={'Type'} Field={'Type'}>Type</ReactTable.Column>
+                {
+                    props.OwnedByUser ?
+                        <ReactTable.Column<EventSourceTypes.IEventSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}
+                            Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</ReactTable.Column>
+                        : <></>
+                }
+                {
+                    props.OwnedByUser ?
+                        <ReactTable.Column<EventSourceTypes.IEventSourceView> AllowSort={false} Key={'Delete'} Field={'Public'}
+                            Content={row =>
+                                <span>
+                                    <button className="btn" onClick={() => { props.SetEventSource(row.item); props.SetShowEdit(true); }}>{Pencil}</button>
+                                    <button className="btn" onClick={() => { props.SetEventSource(row.item); props.SetShowDelete(true); }}>{TrashCan}</button>
+                                </span>}
+                        ><></></ReactTable.Column>
+                        : <></>
+                }
+            </ReactTable.Table>
+        </div>
     );
 });
 

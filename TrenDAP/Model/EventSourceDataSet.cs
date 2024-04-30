@@ -76,7 +76,6 @@ namespace TrenDAP.Model
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
-                List<EventSourceType> eventSourceTypes = new TableOperations<EventSourceType>(connection).QueryRecords().ToList();
                 EventSourceDataSet sourceSet = new TableOperations<EventSourceDataSet>(connection).QueryRecordWhere("ID = {0}", eventSourceDataSetID);
                 if (sourceSet == null) return BadRequest($"Could not find source set relationship with ID {eventSourceDataSetID}");
                 DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSetID);
@@ -90,17 +89,15 @@ namespace TrenDAP.Model
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
-                List<EventSourceType> eventSourceTypes = new TableOperations<EventSourceType>(connection).QueryRecords().ToList();
-                string type = eventSourceTypes.Find(dst => dst.ID == eventSource.EventSourceTypeID).Name;
                 SourceHelper<EventSource> helper = new SourceHelper<EventSource>(eventSource);
 
-                if (type == "OpenXDA")
+                if (eventSource.Type == "OpenXDA")
                 {
                     // ToDo: Add implementation
-                    throw new ArgumentException($"Type of {type} not supported.");
+                    throw new ArgumentException($"Type of {eventSource.Type} not supported.");
                 }
                 else
-                    throw new ArgumentException($"Type of {type} not supported.");
+                    throw new ArgumentException($"Type of {eventSource.Type} not supported.");
             }
         }
     }

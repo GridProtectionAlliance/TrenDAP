@@ -23,10 +23,10 @@
 
 
 import * as React from 'react';
-import { EventSourceTypes } from '../../global';
 import { useAppDispatch } from '../../hooks';
 import { UpdateEventSource, AddEventSource } from './Slices/EventSourcesSlice';
 import EventSource from './EventSource';
+import { EventSourceTypes } from './Interface'
 import { Modal } from '@gpa-gemstone/react-interactive';
 import { CrossMark } from '@gpa-gemstone/gpa-symbols';
 
@@ -41,6 +41,8 @@ const AddEditEventSource: React.FunctionComponent<IProps> = (props: IProps) => {
     const [eventSource, setEventSource] = React.useState<EventSourceTypes.IEventSourceView>(props.EventSource);
     const [errors, setErrors] = React.useState<string[]>([]);
 
+    React.useEffect(() => { setEventSource(props.EventSource); }, [props.EventSource])
+
     if (eventSource == null) return <></>;
     return (
         <Modal
@@ -51,7 +53,7 @@ const AddEditEventSource: React.FunctionComponent<IProps> = (props: IProps) => {
             ConfirmText={'Save'}
             ConfirmShowToolTip={errors.length > 0}
             ConfirmToolTipContent={errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
-            Title={`${eventSource.ID > -1 ? 'Edit' : 'Add New'} Event Source`}
+            Title={`${eventSource.ID > -1 ? 'Edit' : 'Add New'} Event Data Source`}
             CallBack={conf => {
                 if (conf) {
                     if (eventSource.ID > -1) dispatch(UpdateEventSource(eventSource));

@@ -50,7 +50,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
     Name: 'TrenDAPDB',
     DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/"},
     DefaultDataSetSettings: { By: 'Meter', IDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: ''},
-    ConfigUI: (props: DataSourceTypes.IConfigProps<TrenDAP.iXDADataSource>) => {
+    ConfigUI: (props: TrenDAP.ISourceConfig<TrenDAP.iXDADataSource>) => {
         React.useEffect(() => {
             const errors: string[] = [];
             if (props.Settings.PQBrowserUrl === null || props.Settings.PQBrowserUrl.length === 0)
