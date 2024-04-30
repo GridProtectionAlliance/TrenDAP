@@ -25,14 +25,19 @@ import * as React from 'react';
 import { DataSourceTypes, TrenDAP } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { UpdateDataSet, SelectDataSetsStatus, FetchDataSets, SelectDataSets, SetRecordByID, Update } from './DataSetsSlice'
-import {  SelectDataSourceDataSets, SelectDataSourceDataSetStatus, FetchDataSourceDataSets, RemoveDataSourceDataSet, UpdateDataSourceDataSet, AddDataSourceDataSet } from '../DataSources/DataSourceDataSetSlice';
-import DataSet from './DataSet';
+import { SelectDataSourceDataSets, SelectDataSourceDataSetStatus, FetchDataSourceDataSets, RemoveDataSourceDataSet, UpdateDataSourceDataSet, AddDataSourceDataSet } from '../DataSources/DataSourceDataSetSlice';
+import { SelectEventSourceDataSets, SelectEventSourceDataSetStatus, FetchEventSourceDataSets, RemoveEventSourceDataSet, UpdateEventSourceDataSet, AddEventSourceDataSet } from '../EventSources/Slices/EventSourceDataSetSlice';
 import { useNavigate } from "react-router-dom";
 import { TabSelector, ToolTip } from '@gpa-gemstone/react-interactive';
 import * as _ from 'lodash';
 import { SelectDataSources } from '../DataSources/DataSourcesSlice'
+import { SelectEventSources } from '../EventSources/Slices/EventSourcesSlice'
 import moment from 'moment';
 import { CrossMark, Warning } from '@gpa-gemstone/gpa-symbols';
+import DataSetGlobalSettings from './Types/DataSetGlobalSettings';
+import EventDataSourceWrapper from '../EventSources/EventDataSourceWrapper';
+import { EventSourceTypes } from '../EventSources/Interface';
+import DataSourceWrapper from '../DataSources/DataSourceWrapper';
 
 const EditDataSet: React.FunctionComponent<{}> = (props) => {
     const navigate = useNavigate();
@@ -43,12 +48,27 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
     const wsStatus = useAppSelector(SelectDataSetsStatus);
     const dataSources = useAppSelector(SelectDataSources);
 
+    const eventSourceSetConnections = useAppSelector(SelectEventSourceDataSets);
+    const esdsStatus = useAppSelector(SelectEventSourceDataSetStatus);
+    const eventSources = useAppSelector(SelectEventSources);
+
     const [warnings, setWarning] = React.useState<string[]>([]);
     const [errors, setErrors] = React.useState<string[]>([]);
+
     const [sourceErrors, setSourceErrors] = React.useState<string[]>([]);
+
+    const [dataSource, setDataSource] = React.useState<DataSourceTypes.IDataSourceView>(undefined);
+    const [dataConnection, setDataConnection] = React.useState<DataSourceTypes.IDataSourceDataSet>(undefined);
+    const [deletedDataConnections, setDeletedDataConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
+
+    const [eventSource, setEventSource] = React.useState<EventSourceTypes.IEventSourceView>(undefined);
+    const [eventConnection, setEventConnection] = React.useState<EventSourceTypes.IEventSourceDataSet>(undefined);
+    const [deletedEventConnections, setDeletedEventConnections] = React.useState<EventSourceTypes.IEventSourceDataSet[]>([]);
+
     const [hover, setHover] = React.useState<boolean>(false);
-    const [connections, setConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
-    const [deletedConnections, setDeletedConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
+
+    const [dataConnections, setDataConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
+    const [eventConnections, setEventConnections] = React.useState<EventSourceTypes.IEventSourceDataSet[]>([]);
     const [dataSet, setDataSet] = React.useState<TrenDAP.iDataSet>(undefined);
     const [tab, setTab] = React.useState<string>('settings');
 
@@ -69,9 +89,18 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
 
     React.useEffect(() => {
         if (dataSet === undefined) return;
-        if (dsdsStatus === 'idle')
-            setConnections(sourceSetConnections.filter(conn => conn.DataSetID === dataSet.ID));
+        if (dsdsStatus === 'idle') setDataConnections(sourceSetConnections.filter(conn => conn.DataSetID === dataSet.ID));
     }, [dsdsStatus, dataSet?.ID]);
+
+    React.useEffect(() => {
+        if (esdsStatus === 'unitiated' || esdsStatus === 'changed')
+            dispatch(FetchEventSourceDataSets());
+    }, [esdsStatus]);
+
+    React.useEffect(() => {
+        if (dataSet === undefined) return;
+        if (dsdsStatus === 'idle') setEventConnections(eventSourceSetConnections.filter(conn => conn.DataSetID === dataSet.ID));
+    }, [esdsStatus, dataSet?.ID]);
 
     React.useEffect(() => {
         if (dataSet == null) return;
@@ -104,10 +133,10 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
             e.push("At least 1 Month has to be selected.")
         if (dataSet.Weeks == 0)
             e.push("At least 1 Week has to be selected.")
-        if (connections.length == 0)
+        if (dataConnections.length == 0)
             e.push("At least 1 DataSource needs to be added.");
         setErrors(e.concat(sourceErrors));
-    }, [dataSet, connections, sourceErrors]);
+    }, [dataSet, dataConnections, sourceErrors]);
 
     if (dataSet === undefined) return null;
     return (
@@ -118,13 +147,61 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
             <div className="card-body" style={{overflowY:'auto'}}>
                 <TabSelector Tabs={[
                     { Label: 'Settings', Id: 'settings' },
-                    ...connections.map((item, index) => ({
-                        Label: dataSources.find(ds => ds.ID === item.DataSourceID)?.Name,
-                        Id: dataSources.find(ds => ds.ID === item.DataSourceID)?.Name + index.toString(),
+                    ...dataConnections.map((item, index) => ({
+                        Label: dataSources.find(ds => ds.ID === item.DataSourceID)?.Name + ' (Trend)',
+                        Id: 'trend-' + index,
                     })),
-                ]}
-                 SetTab={(item) => setTab(item)} CurrentTab={tab} />
-                <DataSet DataSet={dataSet} SetDataSet={setDataSet} Connections={connections} SetConnections={setConnections} Tab={tab} SetErrors={setSourceErrors} />
+                    ...eventConnections.map((item, index) => ({
+                        Label: eventSources.find(es => es.ID === item.EventSourceID)?.Name + ' (Event)',
+                        Id: 'event-' + index
+                    }))
+                ]} SetTab={tab => {
+                    setTab(tab);
+                    if (tab === 'settings') return;
+                    const tabSplit = tab.split('-');
+                    const index = Number(tabSplit[1]);
+                    if (isNaN(index)) {
+                        console.error(`Could not find connection ${index} in connection array.`);
+                        return;
+                    }
+                    if (tabSplit[0] === 'trend') {
+                        const conn = dataConnections[index];
+                        setDataConnection(conn);
+                        setDataSource(dataSources.find(ds => ds.ID === conn.DataSourceID));
+                    } else {
+                        const conn = eventConnections[index];
+                        setEventConnection(conn);
+                        setEventSource(eventSources.find(es => es.ID === conn.EventSourceID));
+                    }
+                }} CurrentTab={tab} />
+                {tab.startsWith('event') ?
+                    <EventDataSourceWrapper DataSet={dataSet} Connection={eventConnection} EventDataSource={eventSource} SetErrors={() => { }}
+                        SetConnection={newConn => {
+                            const newConns = [...eventConnections];
+                            const index = Number(tab.split('-')[1]);
+                            if (isNaN(index) || index < 0 || index >= newConns.length) {
+                                console.error(`Could not find connection ${index} in connection array.`);
+                                return;
+                            }
+                            newConns.splice(index, 1, newConn);
+                            setEventConnections(newConns);
+                        }} /> : <></>}
+                {tab.startsWith('trend') ?
+                    <DataSourceWrapper DataSource={dataSource} DataSetConn={dataConnection} ComponentType='datasetConfig' DataSet={dataSet} SetErrors={() => { }}
+                        SetDataSetConn={newConn => {
+                            const newConns = [...dataConnections];
+                            const index = Number(tab.split('-')[1]);
+                            if (isNaN(index) || index < 0 || index >= newConns.length) {
+                                console.error(`Could not find connection ${index} in connection array.`);
+                                return;
+                            }
+                            newConns.splice(index, 1, newConn);
+                            setDataConnections(newConns);
+                        }} /> : <></>}
+                {tab == 'settings' ?
+                    <DataSetGlobalSettings DataSet={dataSet} SetDataSet={setDataSet}
+                        DataConnections={dataConnections} SetDataConnections={setDataConnections} EventConnections={eventConnections} SetEventConnections={setEventConnections}/> : <></>}
+
             </div>
             <div className="card-footer">
                 <div className="row">
@@ -136,11 +213,16 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
                                 if (errors.length > 0)
                                     return;
                                 dispatch(UpdateDataSet(dataSet));
-                                connections.forEach(conn => {
+                                dataConnections.forEach(conn => {
                                     if (conn.ID !== -1) dispatch(UpdateDataSourceDataSet(conn));
                                     else dispatch(AddDataSourceDataSet(conn));
                                 });
-                                deletedConnections.forEach(conn => dispatch(RemoveDataSourceDataSet(conn)));
+                                eventConnections.forEach(conn => {
+                                    if (conn.ID !== -1) dispatch(UpdateEventSourceDataSet(conn));
+                                    else dispatch(AddEventSourceDataSet(conn));
+                                });
+                                deletedDataConnections.forEach(conn => dispatch(RemoveDataSourceDataSet(conn)));
+                                deletedEventConnections.forEach(conn => dispatch(RemoveEventSourceDataSet(conn)));
                                 navigate(`${homePath}DataSets`);
                             }}
                         >Save</button>
@@ -152,18 +234,26 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
                     {tab !== 'settings' ?
                         <div className="d-flex col-6 justify-content-end">
                             <button className='btn btn-danger' onClick={() => {
-                                //Remove the connection from connections array
-                                let deletedConnection = connections.find((con, index) => dataSources.find(ds => ds.ID === con.DataSourceID)?.Name + index.toString() === tab)
-                                let deletedConnectionIdx = connections.findIndex((con, index) => dataSources.find(ds => ds.ID === con.DataSourceID)?.Name + index.toString() === tab)
-                                let newConnections = _.cloneDeep(connections);
-                                newConnections.splice(deletedConnectionIdx, 1);
-                                setConnections(newConnections)
+                                const tabSplit = tab.split('-');
+                                const index = Number(tabSplit[1]);
+                                if (isNaN(index)) {
+                                    console.error(`Could not find connection ${index} in connection array.`);
+                                    return;
+                                }
+                                if (tabSplit[0] === 'trend') {
+                                    let newConnections = _.cloneDeep(dataConnections);
+                                    const deletedConnection = newConnections.splice(index, 1);
+                                    setDataConnections(newConnections);
 
-                                //add connection to deletedConnections array to delete on Save
-                                if (deletedConnection?.ID !== -1) {
-                                    let newDeletedConnections = _.cloneDeep(deletedConnections);
-                                    newDeletedConnections.push(deletedConnection);
-                                    setDeletedConnections(newDeletedConnections)
+                                    //add connection to deletedConnections array to delete on Save
+                                    if (deletedConnection[0]?.ID !== -1) setDeletedDataConnections(deletedDataConnections.concat(deletedConnection));
+                                } else {
+                                    let newConnections = _.cloneDeep(eventConnections);
+                                    const deletedConnection = newConnections.splice(index, 1);
+                                    setEventConnections(newConnections);
+
+                                    //add connection to deletedConnections array to delete on Save
+                                    if (deletedConnection[0]?.ID !== -1) setDeletedEventConnections(deletedEventConnections.concat(deletedConnection));
                                 }
                                 setTab('settings')
                             }}

@@ -24,16 +24,12 @@
     <Content Remove="wwwroot\TypeScript\CirclePlusSVG.tsx" />
     <Content Remove="wwwroot\TypeScript\Constants.ts" />
     <Content Remove="wwwroot\TypeScript\declarations.d.ts" />
-    <Content Remove="wwwroot\TypeScript\Features\DataSets\AddNewDataSet.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\DataSets\DataSet.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\DataSetData.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\DataSets.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\DataSetsSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\EditDataSet.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\HelperFunctions.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\TrenDAPDB.ts" />
-    <Content Remove="wwwroot\TypeScript\Features\DataSets\Types\DataSetGlobalSettings.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\DataSets\Types\DataSetSapphire.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Chart.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\DataSlice.ts" />
@@ -47,7 +43,6 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSourceTypes\DataSourceTypesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\EventSources\Slices\EventSourceDataSetSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\EventSources\Slices\EventSourcesSlice.ts" />
-    <Content Remove="wwwroot\TypeScript\Features\EventSources\Slices\EventSourceTypesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts" />
@@ -156,9 +151,6 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\EventSources\Slices\EventSourcesSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\EventSources\Slices\EventSourceTypesSlice.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\hooks.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Constants.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\declarations.d.ts">
@@ -186,13 +178,7 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSourceTypes\DataSourceTypesSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\AddNewDataSet.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\EditDataSet.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\DataSet.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\DataSets.tsx">

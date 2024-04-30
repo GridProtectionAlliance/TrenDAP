@@ -74,7 +74,8 @@ const DataSet: React.FunctionComponent<IProps> = (props: IProps) => {
     return (
         <div className="tab-content" style={{height: '100%', width: '100%'}}>
                 <div className={"tab-pane container " + (props.Tab === "settings" ? 'active' : 'fade')} style={{height: '100%', width: '100%'}}>
-                    <DataSetGlobalSettings DataSet={props.DataSet} SetDataSet={props.SetDataSet} Connections={props.Connections} SetConnections={props.SetConnections} />
+                <DataSetGlobalSettings DataSet={props.DataSet} SetDataSet={props.SetDataSet} DataConnections={props.Connections} SetDataConnections={props.SetConnections}
+                    EventConnections={[]} SetEventConnections={() => { } } />
                 </div>
                 {
                     props.Connections.map((conn, index) => {

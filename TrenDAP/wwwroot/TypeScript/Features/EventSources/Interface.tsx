@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 import { TrenDAP } from '../../global'
+import RandomEvents from './Implementations/RandomEvents';
 // The intrefaces for Event Datasources
 // Interfaces = connection points to other pieces in the architecture
 
@@ -51,15 +52,14 @@ export namespace EventSourceTypes {
         EventSource: IEventSourceView,
         // Data Set From DB
         DataSet: TrenDAP.iDataSet,
-        // Additional Source Settings parsed form source view
-        EventSourceSettings: T,
-        // Additional DataSet Settings parsed from dataset
-        DataSetSettings: U,
-        SetDataSetSettings: (newDataSetSettings: U) => void,
+        // Additional DataSet Settings parsed from dataset connection
+        Settings: U,
+        SetSettings: (newDataSetSettings: U) => void,
         SetErrors: (errors: string[]) => void
     }
-
 }
+
+export const EventDataSources: IEventSource<any, any>[] = [RandomEvents];
 
 /*
  Interface that needs to be implemented by an EventSource

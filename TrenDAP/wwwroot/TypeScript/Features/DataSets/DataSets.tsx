@@ -55,8 +55,8 @@ const DataSets: React.FunctionComponent = (props: {}) => {
     }, [dispatch, dsStatus]);
 
     return (
-        <div className="row" style={{ margin: 10 }}>
-            <div className="col-8" style={{ padding: '0 0 0 0' }}>
+        <div className="row">
+            <div className="col-8">
                 <div className="card">
                     <div className="card-header">
                         <div className="row">

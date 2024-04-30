@@ -26,18 +26,22 @@ import { TrenDAP, Redux, DataSourceTypes } from '../../../global';
 import { Input, CheckBox, EnumCheckBoxes } from '@gpa-gemstone/react-forms';
 import { Plus } from '../../../Constants';
 import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from '../../DataSources/DataSourcesSlice';
+import { SelectEventSourcesStatus, SelectEventSources, FetchEventSources } from '../../EventSources/Slices/EventSourcesSlice';
 import { AddDataSourceDataSet } from '../../DataSources/DataSourceDataSetSlice';
 import { GetReactDataSource } from '../../DataSources/DataSourceWrapper';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../../DataSourceTypes/DataSourceTypesSlice';
 import { SelectDataSets } from './../DataSetsSlice';
 import { ComputeValidDays, ComputeValidWeeks } from '../HelperFunctions';
+import { EventSourceTypes } from '../../EventSources/Interface';
 
 interface IProps {
     DataSet: TrenDAP.iDataSet,
     SetDataSet: (ws: TrenDAP.iDataSet) => void,
-    Connections: DataSourceTypes.IDataSourceDataSet[],
-    SetConnections: (arg: DataSourceTypes.IDataSourceDataSet[]) => void
+    DataConnections: DataSourceTypes.IDataSourceDataSet[],
+    SetDataConnections: (arg: DataSourceTypes.IDataSourceDataSet[]) => void,
+    EventConnections: EventSourceTypes.IEventSourceDataSet[],
+    SetEventConnections: (arg: EventSourceTypes.IEventSourceDataSet[]) => void
 }
 
 const DataSetGlobalSettings: React.FunctionComponent<IProps> = (props: IProps) => {
@@ -45,6 +49,10 @@ const DataSetGlobalSettings: React.FunctionComponent<IProps> = (props: IProps) =
     const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as DataSourceTypes.IDataSourceView[];
     const publicDataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as DataSourceTypes.IDataSourceView[];
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
+    const eventSources = useAppSelector(SelectEventSources);
+    const esStatus = useAppSelector(SelectEventSourcesStatus);
+    const [eventUserSources, setEventUserSources] = React.useState<EventSourceTypes.IEventSourceView[]>([]);
+    const [eventPublicSources, setEventPublicSources] = React.useState<EventSourceTypes.IEventSourceView[]>([]);
     const dataSourceTypes = useAppSelector(SelectDataSourceTypes) as DataSourceTypes.IDataSourceType[];
     const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
     const allDataSets = useAppSelector(SelectDataSets);
@@ -52,18 +60,23 @@ const DataSetGlobalSettings: React.FunctionComponent<IProps> = (props: IProps) =
     React.useEffect(() => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
         dispatch(FetchDataSources());
+    }, [dsStatus]);
 
-        return function () {
-        }
-    }, [dispatch, dsStatus]);
+    React.useEffect(() => {
+        if (esStatus != 'unitiated' && esStatus != 'changed') return;
+        dispatch(FetchEventSources());
+    }, [esStatus]);
+
+    React.useEffect(() => {
+        if (esStatus != 'idle') return;
+        setEventUserSources(eventSources.filter(val => val.User === userName));
+        setEventPublicSources(eventSources.filter(val => val.User !== userName && val.Public));
+    }, [esStatus]);
 
     React.useEffect(() => {
         if (dstStatus != 'unitiated') return;
-
         dispatch(FetchDataSourceTypes());
-        return function () {
-        }
-    }, [dispatch, dstStatus]);
+    }, [dstStatus]);
 
 
     function valid(field: keyof (TrenDAP.iDataSet)): boolean {
@@ -75,10 +88,15 @@ const DataSetGlobalSettings: React.FunctionComponent<IProps> = (props: IProps) =
     }
 
     function AddDS(dataSource: DataSourceTypes.IDataSourceView) {
-        const dataSourceReact = GetReactDataSource(dataSource, dataSourceTypes);
-        const newConns = [...props.Connections];
-        newConns.push({ ID: -1, DataSourceID: dataSource.ID, DataSetID: props.DataSet.ID, Settings: JSON.stringify(dataSourceReact.DefaultDataSetSettings) })
-        props.SetConnections(newConns);
+        const newConns = [...props.DataConnections];
+        newConns.push({ ID: -1, DataSourceID: dataSource.ID, DataSetID: props.DataSet.ID, Settings: {} })
+        props.SetDataConnections(newConns);
+    }
+
+    function AddES(eventSource: EventSourceTypes.IEventSourceView) {
+        const newConns = [...props.EventConnections];
+        newConns.push({ ID: -1, EventSourceID: eventSource.ID, DataSetID: props.DataSet.ID, Settings: {} })
+        props.SetEventConnections(newConns);
     }
 
     function validDay(d: string) {
@@ -115,6 +133,19 @@ const DataSetGlobalSettings: React.FunctionComponent<IProps> = (props: IProps) =
                             {dataSources.map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
                             <div className="dropdown-header">Shared DataSources</div>
                             {publicDataSources.map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
+                        </div>
+                    </div>
+                </div>
+                <div className="form-group">
+                    <div className="dropup">
+                        <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {Plus} Event DataSource
+                        </button>
+                        <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <div className="dropdown-header">Your Event DataSources</div>
+                            {eventUserSources.map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddES(ds)}>{ds.Name} {ds.Type}</a>)}
+                            <div className="dropdown-header">Shared Event DataSources</div>
+                            {eventPublicSources.map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddES(ds)}>{ds.Name} {ds.Type}</a>)}
                         </div>
                     </div>
                 </div>

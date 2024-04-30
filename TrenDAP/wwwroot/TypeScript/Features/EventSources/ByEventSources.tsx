@@ -23,16 +23,13 @@
 
 import * as React from 'react';
 import _ from 'lodash';
-import { IEventSource, EventSourceTypes } from './Interface';
+import { EventSourceTypes, EventDataSources } from './Interface';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { SelectEventSources, SelectEventSourcesStatus, FetchEventSources, RemoveEventSource } from './Slices/EventSourcesSlice';
 import { TrashCan, HeavyCheckMark, Pencil } from './../../Constants';
 import AddEditEventSource from './AddEditEventSource';
 import { Warning } from '@gpa-gemstone/react-interactive';
-import RandomEvents from './Implementations/RandomEvents';
-
-export const EventDataSources: IEventSource<any, any>[] = [RandomEvents];
 
 const ByEventSources: React.FunctionComponent = () => {
     const dispatch = useAppDispatch();

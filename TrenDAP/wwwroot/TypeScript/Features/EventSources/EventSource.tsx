@@ -23,11 +23,8 @@
 
 import * as React from 'react';
 import * as _ from 'lodash';
-import { EventSourceTypes, IEventSource } from './Interface';
-import { useAppSelector } from '../../hooks';
-import { Input, Select, CheckBox, DatePicker } from '@gpa-gemstone/react-forms';
-import { EventDataSources } from './ByEventSources';
-import { useAppDispatch } from '../../hooks';
+import { EventSourceTypes, IEventSource, EventDataSources } from './Interface';
+import { Input, Select, CheckBox } from '@gpa-gemstone/react-forms';
 
 interface IProps {
     EventSource: EventSourceTypes.IEventSourceView,

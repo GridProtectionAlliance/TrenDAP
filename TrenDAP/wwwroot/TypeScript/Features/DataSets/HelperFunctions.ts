@@ -24,6 +24,8 @@
 import { TrenDAP } from "../../global";
 import moment from "moment";
 
+const DateFormat = 'YYYY-MM-DD';
+
 const ComputeValidDays = (ds: TrenDAP.iDataSet) => {
     if (ds.Context == 'Relative')
         return 127;
@@ -82,4 +84,34 @@ const ComputeValidWeeks = (ds: TrenDAP.iDataSet) => {
 
 }
 
-export { ComputeValidDays, ComputeValidWeeks }
+const ComputeTime = (ds: TrenDAP.iDataSet) => {
+    let startTime = moment.utc(ds.From, DateFormat);
+    let endTime = moment.utc(ds.To, DateFormat);
+    if (ds.Context == "Relative") {
+        endTime = moment.utc(moment().format(DateFormat), DateFormat);
+        if (ds.RelativeWindow == "Day")
+            startTime = endTime.add(-ds.RelativeValue, "day");
+        else if (ds.RelativeWindow == "Week")
+            startTime = endTime.add(-ds.RelativeValue * 7, "day");
+        else if (ds.RelativeWindow == "Month")
+            startTime = endTime.add(-ds.RelativeValue, "month");
+        else
+            startTime = endTime.add(ds.RelativeValue, "year");
+    }
+    return { Start: startTime.valueOf(), End: endTime.valueOf() };
+}
+
+const ComputeDuration = (ds: TrenDAP.iDataSet) => {
+    const result = ComputeTime(ds);
+    return result.End - result.Start;
+}
+
+const ComputeStartTime = (ds: TrenDAP.iDataSet) => {
+    return ComputeTime(ds).Start;
+}
+
+const ComputeEndTime = (ds: TrenDAP.iDataSet) => {
+    return ComputeTime(ds).End;
+}
+
+export { DateFormat, ComputeDuration, ComputeTime, ComputeStartTime, ComputeEndTime, ComputeValidDays, ComputeValidWeeks }
