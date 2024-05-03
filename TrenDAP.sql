@@ -51,35 +51,6 @@ CREATE TABLE Setting
 )
 GO
 
-CREATE TABLE DataSourceType
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL,
-)
-GO
-
-INSERT INTO DataSourceType (Name) VALUES ('TrenDAPDB')
-GO
-INSERT INTO DataSourceType (Name) VALUES ('OpenHistorian')
-GO
-INSERT INTO DataSourceType (Name) VALUES ('Sapphire')
-GO
-
-CREATE TABLE DataSource
-(
-    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
-    Name VARCHAR(200) NULL,
-    [User] VARCHAR(MAX) NOT NULL,
-    DataSourceTypeID INT NOT NULL REFERENCES DataSourceType(ID),
-    URL VARCHAR(MAX) NULL,
-    [Public] bit NULL DEFAULT 0,
-    RegistrationKey VARCHAR(50) NOT NULL UNIQUE,
-    APIToken VARCHAR(50) NOT NULL,
-    Expires DATETIME NULL,
-    SettingsString VARCHAR(MAX) NOT NULL DEFAULT '{}'
-)
-GO
-
 CREATE TABLE DataSet
 (
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
@@ -96,6 +67,21 @@ CREATE TABLE DataSet
     [User] VARCHAR(MAX) NOT NULL,
     [Public] bit NULL DEFAULT 0,
     UpdatedOn DATETIME NULL DEFAULT GETUTCDATE()
+)
+GO
+
+CREATE TABLE DataSource
+(
+    ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
+    Name VARCHAR(200) NULL,
+    [User] VARCHAR(MAX) NOT NULL,
+    Type VARCHAR(50) NOT NULL,
+    URL VARCHAR(MAX) NULL,
+    [Public] bit NULL DEFAULT 0,
+    RegistrationKey VARCHAR(50) NOT NULL UNIQUE,
+    APIToken VARCHAR(50) NOT NULL,
+    Expires DATETIME NULL,
+    SettingsString VARCHAR(MAX) NOT NULL DEFAULT '{}'
 )
 GO
 

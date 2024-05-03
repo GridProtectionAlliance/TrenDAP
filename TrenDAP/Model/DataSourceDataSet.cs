@@ -98,7 +98,6 @@ namespace TrenDAP.Model
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
-                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
                 DataSourceDataSet sourceSet = new TableOperations<DataSourceDataSet>(connection).QueryRecordWhere("ID = {0}", dataSourceDataSetID);
                 if (sourceSet == null) return BadRequest($"Could not find source set relationship with ID {dataSourceDataSetID}");
                 DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSetID);
@@ -112,11 +111,9 @@ namespace TrenDAP.Model
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
-                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
-                string type = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
 
-                if (type == "TrenDAPDB")
+                if (dataSource.Type == "TrenDAPDB")
                 {
                     HIDSPost postData = TrenDAPDBController.CreatePost(dataset, json.ToObject<XDADataSetData>());
                     JObject jObj = (JObject)JToken.FromObject(postData);

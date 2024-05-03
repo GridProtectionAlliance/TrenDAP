@@ -39,7 +39,6 @@ export namespace Redux {
     interface StoreState {
         DataSets: State<TrenDAP.iDataSet>,
         DataSources: State<DataSourceTypes.IDataSourceView>,
-        DataSourceTypes: State<DataSourceTypes.IDataSourceType>,
         EventSources: State<EventSourceTypes.IEventSourceView>,
         WorkSpaces: State<TrenDAP.iWorkSpace>,
         OpenHistorian: { ID: number, State: OpenHistorianState }[],
@@ -87,11 +86,10 @@ export namespace OpenXDAExt {
 export namespace DataSourceTypes {
     // The following are how datasources are stored in DB
     type DataSourceType = 'TrenDAPDB' | 'OpenHistorian' | 'None' | 'Sapphire';
-    interface IDataSourceType { ID: number, Name: DataSourceType }
     interface IDataSourceView {
         ID: number,
         Name: string,
-        DataSourceTypeID: number,
+        Type: string,
         URL: string,
         RegistrationKey: string,
         APIToken: string,

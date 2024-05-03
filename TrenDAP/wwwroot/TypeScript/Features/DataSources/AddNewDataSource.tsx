@@ -28,10 +28,11 @@ import { AddDataSource } from './DataSourcesSlice'
 import DataSource from './DataSource';
 import { Modal } from '@gpa-gemstone/react-interactive';
 import { CrossMark } from '@gpa-gemstone/gpa-symbols';
+import { AllSources } from './DataSourceWrapper';
 
 const AddNewDataSource: React.FunctionComponent = () => {
     const dispatch = useAppDispatch();
-    const [dataSource, setDataSource] = React.useState<DataSourceTypes.IDataSourceView>({ ID: -1, Name: "", DataSourceTypeID: 1, URL: '', RegistrationKey: '', APIToken: '', Expires: null, Public: false, User: '', Settings: '{}' });
+    const [dataSource, setDataSource] = React.useState<DataSourceTypes.IDataSourceView>({ ID: -1, Name: "", Type: AllSources[0].Name, URL: '', RegistrationKey: '', APIToken: '', Expires: null, Public: false, User: '', Settings: '{}' });
     const [showModal, setShowModal] = React.useState<boolean>(false);
     const [errors, setErrors] = React.useState<string[]>([]);
 

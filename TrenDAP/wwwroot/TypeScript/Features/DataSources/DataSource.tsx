@@ -25,8 +25,7 @@ import * as React from 'react';
 import { DataSourceTypes, Redux } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { Input, Select, CheckBox, DatePicker } from '@gpa-gemstone/react-forms';
-import { SelectDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
-import DataSourceWrapper from './DataSourceWrapper';
+import { AllSources, DataSourceWrapper } from './DataSourceWrapper';
 import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from './DataSourcesSlice';
 
 const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSourceView, SetDataSource: (ds: DataSourceTypes.IDataSourceView) => void, SetErrors: (e: string[]) => void }> = (props) => {
@@ -34,8 +33,6 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
     const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as DataSourceTypes.IDataSourceView[];
     const publicDataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as DataSourceTypes.IDataSourceView[];
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
-
-
     const dataSourceTypes: DataSourceTypes.IDataSourceType[] = useAppSelector(SelectDataSourceTypes);
     const [useExpiredField, setUseExpiredField] = React.useState<boolean>(props.DataSource.Expires != null);
     const [wrapperErrors, setWrapperErrors] = React.useState<string[]>([]);
@@ -64,10 +61,8 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
     return (
         <form>
             <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="Name" Setter={props.SetDataSource} Valid={valid} />
-            <Select<DataSourceTypes.IDataSourceView> Record={props.DataSource} Label="DataSource Type" Field="DataSourceTypeID" Setter={item => {
-                const newRecord = { ...props.DataSource, DataSourceTypeID: Number(item.DataSourceTypeID) }
-                props.SetDataSource(newRecord);
-            }} Options={dataSourceTypes.map(x => ({ Value: x.ID.toString(), Label: x.Name }))} />
+            <Select<DataSourceTypes.IDataSourceView> Record={props.DataSource} Label="Type" Field="Type" Setter={props.SetDataSource}
+                Options={AllSources.map((type) => ({ Value: type.Name, Label: type.Name }))} />
             <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="URL" Setter={props.SetDataSource} Valid={() => true} />
             <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="RegistrationKey" Label={'Registration Key'} Setter={props.SetDataSource} Valid={() => true} />
             <CheckBox<{ expires: boolean }> Record={{ expires: useExpiredField }} Field="expires" Label='Expires' Setter={item => {

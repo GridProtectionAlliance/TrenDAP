@@ -23,7 +23,6 @@
 
 import { configureStore } from '@reduxjs/toolkit';
 import DataSourcesReducuer from '../Features/DataSources/DataSourcesSlice';
-import DataSourceTypesReducer from '../Features/DataSourceTypes/DataSourceTypesSlice';
 import EventSourcesReducuer from '../Features/EventSources/Slices/EventSourcesSlice';
 import WorkSpaceReducer from '../Features/WorkSpaces/WorkSpacesSlice';
 import DataSetReducer from '../Features/DataSets/DataSetsSlice';
@@ -38,7 +37,6 @@ const reducer = {
     DataSets: DataSetReducer,
     WorkSpaces: WorkSpaceReducer,
     DataSources: DataSourcesReducuer,
-    DataSourceTypes: DataSourceTypesReducer,
     OpenXDA: OpenXDAReducer,
     OpenHistorian: OpenHistorianReducer,
     Sapphire: SapphireReducer,

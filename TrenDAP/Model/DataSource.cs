@@ -46,7 +46,7 @@ namespace TrenDAP.Model
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
-        public int DataSourceTypeID { get; set; }
+        public string Type { get; set; }
         public string Name { get; set; }
         public string URL { get; set; }
         // Todo: maybe we want to break datasource from api auth? two tables where a source is linked to an auth row?
@@ -166,18 +166,5 @@ namespace TrenDAP.Model
                 }
             }
         }
-    }
-
-    public class DataSourceType
-    {
-        [PrimaryKey(true)]
-        public int ID { get; set; }
-        public string Name { get; set; }
-    }
-
-
-    public class DataSourceTypeController : ModelController<DataSourceType>
-    {
-        public DataSourceTypeController(IConfiguration configuration) : base(configuration) {}
     }
 }

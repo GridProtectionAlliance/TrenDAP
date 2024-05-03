@@ -104,11 +104,10 @@ namespace TrenDAP.Controllers
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    string type = connection.ExecuteScalar<string>("SELECT Name FROM DataSourceType WHERE ID = {0}", dataSource.DataSourceTypeID);
 
-                    if (type == "TrenDAPDB")
+                    if (dataSource.Type == "TrenDAPDB")
                         return GetOpenXDA(dataSource, table);
-                    else if (type == "OpenHistorian")
+                    else if (dataSource.Type == "OpenHistorian")
                         return GetOpenHistorian(dataSource, table);
                     else return StatusCode(StatusCodes.Status400BadRequest, "Datasource type not supported");
                 }
@@ -128,10 +127,9 @@ namespace TrenDAP.Controllers
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    string type = connection.ExecuteScalar<string>("SELECT Name FROM DataSourceType WHERE ID = {0}", dataSource.DataSourceTypeID);
                     Task<string> rsp;
 
-                    if (type == "TrenDAPDB")
+                    if (dataSource.Type == "TrenDAPDB")
                     {
                         rsp = helper.PostAsync("api/Channel/GetTrendSearchData", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
                     }
