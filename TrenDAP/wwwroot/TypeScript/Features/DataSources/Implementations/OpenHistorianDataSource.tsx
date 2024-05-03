@@ -26,9 +26,10 @@ import { DataSourceTypes, TrenDAP, Redux, DataSetTypes } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import * as React from 'react';
 import { SelectOpenHistorian, FetchOpenHistorian } from '../../OpenHistorian/OpenHistorianSlice';
+import { IDataSource } from '../Interface';
 
 
-const OpenHistorianDataSource: DataSourceTypes.IDataSource<{}, TrenDAP.iOpenHistorianDataSet> = {
+const OpenHistorianDataSource: IDataSource<{}, TrenDAP.iOpenHistorianDataSet> = {
     Name: 'OpenHistorian',
     DefaultSourceSettings: {},
     DefaultDataSetSettings: { Devices: [], Phases: [], Types: [], Instance: "", Aggregate: '1w'},

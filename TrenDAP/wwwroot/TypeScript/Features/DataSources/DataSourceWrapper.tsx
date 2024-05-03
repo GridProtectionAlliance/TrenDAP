@@ -21,62 +21,46 @@
 //
 //******************************************************************************************************
 import * as React from 'react';
+import * as _ from 'lodash';
 import { ServerErrorIcon } from '@gpa-gemstone/react-interactive';
 import { cloneDeep } from 'lodash';
 import { DataSourceTypes, TrenDAP } from '../../global';
-import XDADataSource from './ReactDataSources/XDADataSource';
-import SapphireDataSource from './ReactDataSources/SapphireDataSource';
-import OpenHistorianDataSource from './ReactDataSources/OpenHistorianDataSource';
+import { IDataSource } from './Interface';
+import { AllSources } from './DataSources';
 
-const AllSources: DataSourceTypes.IDataSource<any, any>[] = [XDADataSource, SapphireDataSource, OpenHistorianDataSource];
-
-interface IPropsCommon {
+interface IProps {
     DataSource: DataSourceTypes.IDataSourceView,
-    SetErrors: (e: string[]) => void
-}
-
-interface IPropsDataset extends IPropsCommon {
-    ComponentType: 'datasetConfig',
+    SetErrors: (e: string[]) => void,
     DataSet: TrenDAP.iDataSet,
-    DataSetConn: DataSourceTypes.IDataSourceDataSet,
-    SetDataSetConn: (arg: DataSourceTypes.IDataSourceDataSet) => void
+    Connection: DataSourceTypes.IDataSourceDataSet,
+    SetConnection: (arg: DataSourceTypes.IDataSourceDataSet) => void
 }
 
-interface IPropsSetting extends IPropsCommon {
-    ComponentType: 'sourceConfig',
-    SetDataSource: (newSource: DataSourceTypes.IDataSourceView) => void
-}
-
-const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IPropsDataset | IPropsSetting) => {
-    const implementation: DataSourceTypes.IDataSource<any, any> | null =
+const DataSourceWrapper: React.FC<IProps> = (props: IProps) => {
+    const implementation: IDataSource<any, any> | null =
         React.useMemo(() => AllSources.find(t => t.Name == props.DataSource?.Type), [props.DataSource?.Type]);
 
-    const SourceSettings = React.useMemo(() => {
-        if (props.DataSource?.Settings == null)
-            return implementation?.DefaultSourceSettings ?? {};
-        return TypeCorrectSettings(props.DataSource.Settings, implementation?.DefaultSourceSettings ?? {});
-    }, [implementation, props.DataSource?.Settings]);
-
-    const SetSourceSettings = React.useCallback(newSetting => {
-        if (props.DataSource == null || props.ComponentType !== 'sourceConfig') return;
-        const newDataSource = { ...props.DataSource };
-        newDataSource.Settings = newSetting;
-        props.SetDataSource(newDataSource);
-    }, [props.DataSource, props['SetDataSource']]);
-
     const DataSetSettings = React.useMemo(() => {
-        if (props.DataSource == null || props.ComponentType !== 'datasetConfig') return;
-        if (props.DataSetConn?.Settings == null)
+        if (props.DataSource == null) return;
+        if (props.Connection?.Settings == null)
             return implementation?.DefaultDataSetSettings ?? {};
-        return TypeCorrectSettings(props.DataSetConn.Settings, implementation?.DefaultDataSetSettings ?? {});
-    }, [implementation, props['DataSetConn']?.Settings]);
+        return TypeCorrectSettings(props.Connection.Settings, implementation?.DefaultDataSetSettings ?? {});
+    }, [implementation, props.Connection?.Settings]);
 
-    const SetDataSetSettings = React.useCallback(newSetting => {
-        if (props.DataSource == null || props.ComponentType !== 'datasetConfig') return;
-        const newConn = { ...props.DataSetConn };
-        newConn.Settings = newSetting;
-        props.SetDataSetConn(newConn);
-    }, [props['DataSetConn'], props['SetDataSetConn']]);
+    // Ensure that source settings are valid
+    const dataSource = React.useMemo(() => {
+        if (implementation == null)
+            return props.DataSource;
+        const src = _.cloneDeep(props.DataSource);
+        const sourceSettings = _.cloneDeep(implementation.DefaultSourceSettings ?? {});
+        let custom = props.DataSource.Settings;
+        for (const [k] of Object.entries(sourceSettings)) {
+            if (custom.hasOwnProperty(k))
+                sourceSettings[k] = _.cloneDeep(custom[k]);
+        }
+        src.Settings = sourceSettings;
+        return src;
+    }, [props.DataSource]);
 
     return <>{implementation == null ? <div className="card">
         <div className="card-header">
@@ -89,21 +73,13 @@ const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IProp
         </div>
     </div>
         : <ErrorBoundary Name={props.DataSource.Name}>
-            {props.ComponentType === 'datasetConfig' ?
-                <implementation.DataSetUI
-                    DataSet={props.DataSet}
-                    DataSource={props.DataSource}
-                    DataSourceSettings={SourceSettings}
-                    DataSetSettings={DataSetSettings}
-                    SetDataSetSettings={SetDataSetSettings}
-                    SetErrors={props.SetErrors}
-                /> :
-                <implementation.ConfigUI
-                    Settings={SourceSettings}
-                    SetSettings={SetSourceSettings}
-                    SetErrors={props.SetErrors}
-                />
-            }
+            <implementation.DataSetUI
+                DataSet={props.DataSet}
+                DataSource={dataSource}
+                DataSetSettings={DataSetSettings}
+                SetDataSetSettings={(s) => props.SetConnection({ ...props.Connection, Settings: s })}
+                SetErrors={props.SetErrors}
+            />
         </ErrorBoundary>}
     </>
 }
@@ -157,5 +133,5 @@ class ErrorBoundary extends React.Component<{ Name: string }, IError> {
     }
 }
 
-export { AllSources, DataSourceWrapper, TypeCorrectSettings }
+export { DataSourceWrapper, TypeCorrectSettings }
 export default DataSourceWrapper;

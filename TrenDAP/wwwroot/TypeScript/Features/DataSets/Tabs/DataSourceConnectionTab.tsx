@@ -167,8 +167,9 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                     <div className={'row'} style={{ flex: 1, overflow: 'hidden' }}>
                         <div className={'col-12'} style={{ height: '100%', overflow: 'hidden' }}>
                             {props.DataSourceConnections[currentIndex] != null ?
-                                <DataSourceWrapper DataSource={dataSource} DataSetConn={props.DataSourceConnections[currentIndex]} ComponentType='datasetConfig' DataSet={props.DataSet} SetErrors={addWrapperErrors}
-                                    SetDataSetConn={newConn => {
+                                <DataSourceWrapper DataSource={dataSource} Connection={props.DataSourceConnections[currentIndex]}
+                                    DataSet={props.DataSet} SetErrors={addWrapperErrors}
+                                    SetConnection={newConn => {
                                         const newConns = [...props.DataSourceConnections];
                                         newConns.splice(currentIndex, 1, newConn)
                                         props.SetDataSourceConnections(newConns);

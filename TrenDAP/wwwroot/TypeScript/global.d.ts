@@ -114,25 +114,10 @@ export namespace DataSourceTypes {
         DataSource: IDataSourceView,
         // Data Set From DB
         DataSet: TrenDAP.iDataSet,
-        // Additional Source Settings parsed form source view
-        DataSourceSettings: T,
         // Additional DataSet Settings parsed from dataset
         DataSetSettings: U,
         SetDataSetSettings: (newDataSetSettings: U) => void,
         SetErrors: (errors: string[]) => void
-    }
-
-    // Datasource coding interface, uses props to get the datasource
-    interface IDataSource<T, U> {
-        DataSetUI: React.FC<IDataSourceDataSetProps<T, U>>,
-        ConfigUI: React.FC<IConfigProps<T>>,
-        LoadDataSetMeta: (dataSource: IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: IDataSourceDataSet) => Promise<DataSetTypes.IDataSetMetaData[]>,
-        LoadDataSet: (dataSource: IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: IDataSourceDataSet) => Promise<DataSetTypes.IDataSetData[]>,
-        QuickViewDataSet?: (dataSource: IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: IDataSourceDataSet) => string,
-        TestAuth: (dataSource: IDataSourceView) => Promise<boolean>,
-        DefaultSourceSettings: T,
-        DefaultDataSetSettings: U,
-        Name: string,
     }
 }
 

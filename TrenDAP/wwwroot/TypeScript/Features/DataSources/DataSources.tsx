@@ -31,7 +31,12 @@ import EditDataSource from './EditDataSource';
 import { TrashCan, HeavyCheckMark } from './../../Constants';
 import AddNewDataSource from './AddNewDataSource';
 import { Warning } from '@gpa-gemstone/react-interactive';
+import XDADataSource from './Implementations/XDADataSource';
+import SapphireDataSource from './Implementations/SapphireDataSource';
+import OpenHistorianDataSource from './Implementations/OpenHistorianDataSource';
+import { IDataSource } from './Interface';
 
+export const AllSources: IDataSource<any, any>[] = [XDADataSource, SapphireDataSource, OpenHistorianDataSource];
 
 const DataSources: React.FunctionComponent = () => {
     return (

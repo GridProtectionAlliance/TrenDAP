@@ -22,10 +22,12 @@
 //******************************************************************************************************
 
 import * as React from 'react';
+import * as _ from 'lodash';
 import { DataSourceTypes, Redux } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { Input, Select, CheckBox, DatePicker } from '@gpa-gemstone/react-forms';
-import { AllSources, DataSourceWrapper } from './DataSourceWrapper';
+import { IDataSource } from './Interface';
+import { AllSources } from './DataSources';
 import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from './DataSourcesSlice';
 
 const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSourceView, SetDataSource: (ds: DataSourceTypes.IDataSourceView) => void, SetErrors: (e: string[]) => void }> = (props) => {
@@ -35,7 +37,22 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
     const dataSourceTypes: DataSourceTypes.IDataSourceType[] = useAppSelector(SelectDataSourceTypes);
     const [useExpiredField, setUseExpiredField] = React.useState<boolean>(props.DataSource.Expires != null);
-    const [wrapperErrors, setWrapperErrors] = React.useState<string[]>([]);
+    const [configErrors, setConfigErrors] = React.useState<string[]>([]);
+    const implementation: IDataSource<any, any> | null = React.useMemo(() =>
+        AllSources.find(t => t.Name == props.DataSource.Type), [props.DataSource.Type])
+
+    const settings = React.useMemo(() => {
+        if (implementation == null)
+            return {};
+        const s = _.cloneDeep(implementation.DefaultSourceSettings ?? {});
+        let custom = props.DataSource.Settings;
+
+        for (const [k] of Object.entries(implementation?.DefaultSourceSettings ?? {})) {
+            if (custom.hasOwnProperty(k))
+                s[k] = _.cloneDeep(custom[k]);
+        }
+        return s;
+    }, [implementation, props.DataSource.Settings]);
 
     React.useEffect(() => {
         if (dsStatus === 'unitiated' || dsStatus === 'changed') dispatch(FetchDataSources());
@@ -49,8 +66,8 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
         else if (dataSources.filter(ds => ds.ID !== props.DataSource.ID).concat(publicDataSources).map(ds => ds.Name.toLowerCase()).includes(props.DataSource.Name.toLowerCase()))
             errors.push("A shared datasource with this name was already created by another user.");
 
-        props.SetErrors(wrapperErrors.concat(errors));
-    }, [props.DataSource, wrapperErrors]);
+        props.SetErrors(errors.concat(configErrors));
+    }, [props.DataSource, configErrors]);
 
     function valid(field: keyof (DataSourceTypes.IDataSourceView)): boolean {
         if (field == 'Name')
@@ -81,7 +98,10 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
                     <CheckBox<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="Public" Label='Shared' Setter={props.SetDataSource} />
                 </div>
             </div>
-            <DataSourceWrapper ComponentType='sourceConfig' DataSource={props.DataSource} SetDataSource={props.SetDataSource} SetErrors={setWrapperErrors} />
+            {implementation != null ?
+                <implementation.ConfigUI SetErrors={setConfigErrors} Settings={settings}
+                    SetSettings={(s) => props.SetDataSource({ ...props.DataSource, Settings: s })} /> : <></>
+            }
         </form>
     );
 }

@@ -38,7 +38,7 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSourcesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSourceWrapper.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx" />
-    <Content Remove="wwwroot\typescript\features\datasources\reactdatasources\OpenHistorianDataSource.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSources\Implementations\OpenHistorianDataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\EventSources\Slices\EventSourcesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts" />
@@ -99,7 +99,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <_ContentIncludedByDefault Remove="wwwroot\typescript\features\datasources\reactdatasources\OpenHistorianDataSource.tsx" />
+    <_ContentIncludedByDefault Remove="wwwroot\TypeScript\Features\DataSources\Implementations\OpenHistorianDataSource.tsx" />
   </ItemGroup>
 
   <ItemGroup>
@@ -138,7 +138,7 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\DataSourceWrapper.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\typescript\features\datasources\reactdatasources\OpenHistorianDataSource.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\Implementations\OpenHistorianDataSource.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\EventSources\Slices\EventSourcesSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>

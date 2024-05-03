@@ -28,7 +28,7 @@ import { AddDataSource } from './DataSourcesSlice'
 import DataSource from './DataSource';
 import { Modal } from '@gpa-gemstone/react-interactive';
 import { CrossMark } from '@gpa-gemstone/gpa-symbols';
-import { AllSources } from './DataSourceWrapper';
+import { AllSources } from './DataSources';
 
 const AddNewDataSource: React.FunctionComponent = () => {
     const dispatch = useAppDispatch();

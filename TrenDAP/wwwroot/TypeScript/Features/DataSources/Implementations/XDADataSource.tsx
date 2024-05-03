@@ -28,6 +28,7 @@ import { DataSourceTypes, TrenDAP, Redux, DataSetTypes } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../../OpenXDA/OpenXDASlice';
 import { TypeCorrectSettings } from '../DataSourceWrapper';
+import { IDataSource } from '../Interface';
 import $ from 'jquery';
 import queryString from 'querystring';
 import moment from 'moment';
@@ -46,7 +47,7 @@ interface XDAChannel extends OpenXDA.Types.Channel {
     Latitude: number
 }
 
-const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = {
+const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = {
     Name: 'TrenDAPDB',
     DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/"},
     DefaultDataSetSettings: { By: 'Meter', IDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: ''},
