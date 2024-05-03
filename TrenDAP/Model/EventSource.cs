@@ -42,7 +42,6 @@ namespace TrenDAP.Model
         // Todo: maybe we want to break source from api auth? two tables where a source is linked to an auth row?
         public string RegistrationKey { get; set; }
         public string APIToken { get; set; }
-        public DateTime? Expires { get; set; }
         [UseEscapedName]
         public bool Public { get; set; }
         [UseEscapedName]

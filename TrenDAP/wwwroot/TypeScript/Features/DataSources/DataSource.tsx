@@ -36,7 +36,6 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
     const publicDataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as DataSourceTypes.IDataSourceView[];
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
     const dataSourceTypes: DataSourceTypes.IDataSourceType[] = useAppSelector(SelectDataSourceTypes);
-    const [useExpiredField, setUseExpiredField] = React.useState<boolean>(props.DataSource.Expires != null);
     const [configErrors, setConfigErrors] = React.useState<string[]>([]);
     const implementation: IDataSource<any, any> | null = React.useMemo(() =>
         AllSources.find(t => t.Name == props.DataSource.Type), [props.DataSource.Type])
@@ -82,17 +81,6 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
                 Options={AllSources.map((type) => ({ Value: type.Name, Label: type.Name }))} />
             <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="URL" Setter={props.SetDataSource} Valid={() => true} />
             <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="RegistrationKey" Label={'Registration Key'} Setter={props.SetDataSource} Valid={() => true} />
-            <CheckBox<{ expires: boolean }> Record={{ expires: useExpiredField }} Field="expires" Label='Expires' Setter={item => {
-                if(!item.expires)
-                    props.SetDataSource({ ...props.DataSource, Expires: null });
-                else if (props.DataSource.Expires == null)
-                    props.SetDataSource({ ...props.DataSource, Expires: new Date().toISOString() })
-                setUseExpiredField(item.expires)
-            }} />
-            {useExpiredField ? 
-                    <DatePicker<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field={"Expires"} Type={'datetime-local'} Valid={() => true} Label={"Expiration Date"} Setter={props.SetDataSource} Feedback={"Date can not expire today."} />
-                : null
-            }
             <div className="row">
                 <div className='col'>
                     <CheckBox<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="Public" Label='Shared' Setter={props.SetDataSource} />

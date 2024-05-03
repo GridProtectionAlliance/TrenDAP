@@ -93,7 +93,6 @@ export namespace DataSourceTypes {
         URL: string,
         RegistrationKey: string,
         APIToken: string,
-        Expires: string | null,
         Public: boolean,
         User: string,
         Settings: any

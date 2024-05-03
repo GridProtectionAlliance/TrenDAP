@@ -80,7 +80,6 @@ CREATE TABLE DataSource
     [Public] bit NULL DEFAULT 0,
     RegistrationKey VARCHAR(50) NOT NULL UNIQUE,
     APIToken VARCHAR(50) NOT NULL,
-    Expires DATETIME NULL,
     SettingsString VARCHAR(MAX) NOT NULL DEFAULT '{}'
 )
 GO
@@ -104,7 +103,6 @@ CREATE TABLE EventSource
     [Public] bit NULL DEFAULT 0,
     RegistrationKey VARCHAR(50) NOT NULL,
     APIToken VARCHAR(50) NOT NULL,
-    Expires DATETIME NULL,
     SettingsString VARCHAR(MAX) NOT NULL DEFAULT '{}'
 )
 GO
