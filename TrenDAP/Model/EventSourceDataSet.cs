@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataSourceDataSet.cs - Gbtc
+//  EventSourceDataSet.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -25,16 +25,12 @@ using Gemstone.Data.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-using System.Net.Http;
 using System;
 using System.Text;
 using TrenDAP.Controllers;
-using static TrenDAP.Controllers.TrenDAPDBController;
 using System.Threading;
 using Gemstone.Data;
-using System.Linq;
-using System.Diagnostics.Tracing;
+using GSF.Data.Model;
 
 namespace TrenDAP.Model
 {
@@ -56,22 +52,29 @@ namespace TrenDAP.Model
         }
     }
 
-    public class EventSourceDataSetController : ModelController<EventSourceDataSet>
+    [CustomView(@"
+        SELECT
+            EventSourceDataSet.ID,
+            EventSourceDataSet.EventSourceID,
+            EventSourceDataSet.DataSetID,
+            EventSourceDataSet.SettingsBin,
+            EventSource.Name as EventSourceName,
+            DataSet.Name as DataSetName
+        From 
+            EventSourceDataSet LEFT JOIN
+            EventSource ON EventSourceDataSet.EventSourceID = EventSource.ID LEFT JOIN
+            DataSet ON EventSourceDataSet.DataSetID = DataSet.ID
+    ")]
+    public class EvenSourceDataSetView : EventSourceDataSet
+    {
+        public string EventSourceName { get; set; }
+        public string DataSetName { get; set; }
+    }
+    public class EventSourceDataSetController : ModelController<EvenSourceDataSetView>
     {
         public EventSourceDataSetController(IConfiguration configuration) : base(configuration) { }
 
-        public override ActionResult Post([FromBody] JObject record)
-        {
-            record["SettingsBin"] = Encoding.UTF8.GetBytes(record["Settings"].ToString());
-            return base.Post(record);
-        }
-        public override ActionResult Patch([FromBody] JObject record)
-        {
-            record["SettingsBin"] = Encoding.UTF8.GetBytes(record["Settings"].ToString());
-            return base.Patch(record);
-        }
-
-        [HttpGet, Route("Query/{dataSourceDataSetID:int}")]
+        [HttpGet, Route("Query/{eventSourceDataSetID:int}")]
         public IActionResult GetData(int eventSourceDataSetID, CancellationToken cancellationToken)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
@@ -89,7 +92,6 @@ namespace TrenDAP.Model
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
-                SourceHelper<EventSource> helper = new SourceHelper<EventSource>(eventSource);
 
                 if (eventSource.Type == "OpenXDA")
                 {

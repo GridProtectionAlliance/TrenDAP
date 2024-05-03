@@ -34,6 +34,9 @@ using static TrenDAP.Controllers.TrenDAPDBController;
 using System.Threading;
 using Gemstone.Data;
 using System.Linq;
+using TrenDAP.Attributes;
+using GSF.Data.Model;
+using System.Reflection;
 
 namespace TrenDAP.Model
 {
@@ -42,6 +45,7 @@ namespace TrenDAP.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
         public int DataSourceID { get; set; }
+        [ParentKey(typeof(DataSet))]
         public int DataSetID { get; set; }
         public string SettingsString { get; set; }
         [NonRecordField]
@@ -55,7 +59,26 @@ namespace TrenDAP.Model
         }
     }
 
-    public class DataSourceDataSetController : ModelController<DataSourceDataSet>
+    [CustomView(@"
+        SELECT
+            DataSourceDataSet.ID,
+            DataSourceDataSet.DataSourceID,
+            DataSourceDataSet.DataSetID,
+            DataSourceDataSet.SettingsBin,
+            DataSource.Name as DataSourceName,
+            DataSet.Name as DataSetName
+        From 
+            DataSourceDataSet LEFT JOIN
+            DataSource ON DataSourceDataSet.DataSourceID = DataSource.ID LEFT JOIN
+            DataSet ON DataSourceDataSet.DataSetID = DataSet.ID
+    ")]
+    public class DataSourceDataSetView : DataSourceDataSet
+    {
+        public string DataSourceName { get; set; }
+        public string DataSetName { get; set; }
+    }
+    
+    public class DataSourceDataSetController : ModelController<DataSourceDataSetView>
     {
         public DataSourceDataSetController(IConfiguration configuration) : base(configuration) { }
 
@@ -91,7 +114,7 @@ namespace TrenDAP.Model
             {
                 List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
                 string type = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
-                SourceHelper<DataSource> helper = new SourceHelper<DataSource>(dataSource);
+                DataSourceHelper helper = new DataSourceHelper(dataSource);
 
                 if (type == "TrenDAPDB")
                 {
