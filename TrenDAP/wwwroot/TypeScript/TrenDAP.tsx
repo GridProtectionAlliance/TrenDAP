@@ -38,7 +38,6 @@ const ByEventSources = React.lazy(() => import(/* webpackChunkName: "EventSource
 const DataSets = React.lazy(() => import(/* webpackChunkName: "DataSets" */ './Features/DataSets/DataSets'));
 const WorkSpaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/WorkSpaces/WorkSpaces'));
 const EditDataSet = React.lazy(() => import(/* webpackChunkName: "EditDataSet" */ './Features/DataSets/EditDataSet'));
-const AddNewDataSet = React.lazy(() => import(/* webpackChunkName: "AddNewDataSet" */ './Features/DataSets/AddNewDataSet'));
 const WorkSpaceEditor = React.lazy(() => import(/* webpackChunkName: "WorkSpaceEditor" */ './Features/WorkSpaces/WorkSpaceEditor'));
 const ViewDataSet = React.lazy(() => import(/* webpackChunkName: "ViewDataSet" */ './Features/DataSets/ViewDataSet/ViewDataSet'));
 
@@ -72,9 +71,6 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                 </Page>
                 <Page Name={'WorkSpaces'} Label={'WorkSpaces'} Icon={SVGIcons.House}>
                     <WorkSpaces />
-                </Page>
-                <Page Name={'AddNewDataSet'}>
-                    <AddNewDataSet />
                 </Page>
                 <Page Name={'EditDataSet/:id'}>
                     <EditDataSet />
