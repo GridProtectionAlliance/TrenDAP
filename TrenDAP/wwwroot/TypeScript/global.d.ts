@@ -105,7 +105,9 @@ export namespace DataSourceTypes {
 
     interface IDataSourceDataSet {
         ID: number,
+        DataSourceName: string,
         DataSourceID: number,
+        DataSetName: string,
         DataSetID: number,
         Settings: any
     }

@@ -41,7 +41,9 @@ export namespace EventSourceTypes {
 
     export interface IEventSourceDataSet {
         ID: number,
+        EventSourceName: string,
         EventSourceID: number,
+        DataSetName: string,
         DataSetID: number,
         Settings: any
     }

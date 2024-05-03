@@ -29,7 +29,7 @@ import { ajax } from 'jquery';
 
 // #region [ Consts ]
 const blankConnection: EventSourceTypes.IEventSourceDataSet = {
-    ID: -1, Settings: '{}', EventSourceID: -1, DataSetID: -1
+    ID: -1, Settings: '{}', EventSourceID: -1, DataSetID: -1, EventSourceName: '', DataSetName: ''
 }
 // #endregion
 

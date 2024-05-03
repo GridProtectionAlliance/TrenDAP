@@ -28,7 +28,7 @@ import $ from 'jquery';
 
 // #region [ Consts ]
 const blankConnection: DataSourceTypes.IDataSourceDataSet = {
-    ID: -1, Settings: '{}', DataSourceID: -1, DataSetID: -1
+    ID: -1, Settings: '{}', DataSourceID: -1, DataSetID: -1, DataSourceName: '', DataSetName: ''
 }
 // #endregion
 
