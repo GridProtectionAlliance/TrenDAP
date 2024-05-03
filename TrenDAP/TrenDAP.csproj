@@ -161,7 +161,7 @@
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\HelperFunctions.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\TrenDAPDB.ts" />
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\Types\DataSetGlobalSettings.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\Tabs\DataSetSettingsTab.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Chart.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\DataSlice.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Histogram.tsx" />

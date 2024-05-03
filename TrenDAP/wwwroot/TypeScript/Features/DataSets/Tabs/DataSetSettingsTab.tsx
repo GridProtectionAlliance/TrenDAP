@@ -22,16 +22,10 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP, Redux, DataSourceTypes } from '../../../global';
+import { TrenDAP, DataSourceTypes } from '../../../global';
 import { Input, CheckBox, EnumCheckBoxes } from '@gpa-gemstone/react-forms';
-import { Plus } from '../../../Constants';
-import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from '../../DataSources/DataSourcesSlice';
-import { SelectEventSourcesStatus, SelectEventSources, FetchEventSources } from '../../EventSources/Slices/EventSourcesSlice';
-import { AddDataSourceDataSet } from '../../DataSources/DataSourceDataSetSlice';
-import { GetReactDataSource } from '../../DataSources/DataSourceWrapper';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
-import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../../DataSourceTypes/DataSourceTypesSlice';
-import { SelectDataSets } from './../DataSetsSlice';
+import { SelectDataSets, SelectDataSetsStatus, FetchDataSets } from './../DataSetsSlice';
 import { ComputeValidDays, ComputeValidWeeks } from '../HelperFunctions';
 import { EventSourceTypes } from '../../EventSources/Interface';
 
@@ -46,43 +40,18 @@ interface IProps {
 
 const DataSetGlobalSettings: React.FunctionComponent<IProps> = (props: IProps) => {
     const dispatch = useAppDispatch();
-    const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as DataSourceTypes.IDataSourceView[];
-    const publicDataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as DataSourceTypes.IDataSourceView[];
-    const dsStatus = useAppSelector(SelectDataSourcesStatus);
-    const eventSources = useAppSelector(SelectEventSources);
-    const esStatus = useAppSelector(SelectEventSourcesStatus);
-    const [eventUserSources, setEventUserSources] = React.useState<EventSourceTypes.IEventSourceView[]>([]);
-    const [eventPublicSources, setEventPublicSources] = React.useState<EventSourceTypes.IEventSourceView[]>([]);
-    const dataSourceTypes = useAppSelector(SelectDataSourceTypes) as DataSourceTypes.IDataSourceType[];
-    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
-    const allDataSets = useAppSelector(SelectDataSets);
+    const dataSets = useAppSelector(SelectDataSets);
+    const dataSetStatus = useAppSelector(SelectDataSetsStatus);
 
     React.useEffect(() => {
-        if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
-        dispatch(FetchDataSources());
-    }, [dsStatus]);
-
-    React.useEffect(() => {
-        if (esStatus != 'unitiated' && esStatus != 'changed') return;
-        dispatch(FetchEventSources());
-    }, [esStatus]);
-
-    React.useEffect(() => {
-        if (esStatus != 'idle') return;
-        setEventUserSources(eventSources.filter(val => val.User === userName));
-        setEventPublicSources(eventSources.filter(val => val.User !== userName && val.Public));
-    }, [esStatus]);
-
-    React.useEffect(() => {
-        if (dstStatus != 'unitiated') return;
-        dispatch(FetchDataSourceTypes());
-    }, [dstStatus]);
-
+        if (dataSetStatus != 'unitiated' && dataSetStatus != 'changed') return;
+        dispatch(FetchDataSets());
+    }, [dataSetStatus]);
 
     function valid(field: keyof (TrenDAP.iDataSet)): boolean {
         if (field == 'Name')
             return props.DataSet.Name != null && props.DataSet.Name.trim().length > 0 &&
-                props.DataSet.Name.length <= 200 && allDataSets.find(ws => ws.Name.toLowerCase() == props.DataSet.Name.toLowerCase() && ws.ID != props.DataSet.ID) == null
+                props.DataSet.Name.length <= 200 && dataSets.find(ws => ws.Name.toLowerCase() == props.DataSet.Name.toLowerCase() && ws.ID != props.DataSet.ID) == null
         else
             return true;
     }
@@ -102,17 +71,15 @@ const DataSetGlobalSettings: React.FunctionComponent<IProps> = (props: IProps) =
     }
 
     return (
-        <div className="d-flex flex-column h-100">
-            <form className="d-flex flex-column h-100">
-                <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="Name" Setter={(record) => props.SetDataSet(record)} Valid={valid} Feedback={"A Unique Name has to be specified"} />
-                <RelativeDateRangePicker Record={props.DataSet} Setter={(record) => props.SetDataSet(record)} />
-                <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Hours" Label="Hour of Day" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
-                <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Days" Label="Day of Week" Setter={(record) => props.SetDataSet(record)} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} IsDisabled={validDay} />
-                <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Weeks" Label="Week of Year" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 53 }, (_, i) => i.toString())} IsDisabled={validWeek} />
-                <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Months" Label="Month of Year" Setter={(record) => props.SetDataSet(record)} Enum={['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']} />
-                <CheckBox<TrenDAP.iDataSet> Record={props.DataSet} Field="Public" Label='Shared' Setter={(record) => props.SetDataSet(record)} />
-            </form>
-        </div>
+        <>
+            <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="Name" Setter={(record) => props.SetDataSet(record)} Valid={valid} Feedback={"A Unique Name has to be specified"} />
+            <RelativeDateRangePicker Record={props.DataSet} Setter={(record) => props.SetDataSet(record)} />
+            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Hours" Label="Hour of Day" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
+            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Days" Label="Day of Week" Setter={(record) => props.SetDataSet(record)} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} IsDisabled={validDay} />
+            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Weeks" Label="Week of Year" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 53 }, (_, i) => i.toString())} IsDisabled={validWeek} />
+            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Months" Label="Month of Year" Setter={(record) => props.SetDataSet(record)} Enum={['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']} />
+            <CheckBox<TrenDAP.iDataSet> Record={props.DataSet} Field="Public" Label='Shared' Setter={(record) => props.SetDataSet(record)} />
+        </>
     );
 
 }

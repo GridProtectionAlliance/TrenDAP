@@ -22,48 +22,32 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { DataSourceTypes, TrenDAP } from '../../global';
-import { useAppDispatch, useAppSelector } from '../../hooks';
-import { UpdateDataSet, SelectDataSetsStatus, FetchDataSets, SelectDataSets, SetRecordByID, Update } from './DataSetsSlice'
-import { SelectDataSourceDataSets, SelectDataSourceDataSetStatus, FetchDataSourceDataSets, RemoveDataSourceDataSet, UpdateDataSourceDataSet, AddDataSourceDataSet } from '../DataSources/DataSourceDataSetSlice';
-import { SelectEventSourceDataSets, SelectEventSourceDataSetStatus, FetchEventSourceDataSets, RemoveEventSourceDataSet, UpdateEventSourceDataSet, AddEventSourceDataSet } from '../EventSources/Slices/EventSourceDataSetSlice';
+import * as _ from 'lodash';
+import moment from 'moment';
+import * as $ from 'jquery';
 import { useNavigate } from "react-router-dom";
 import { TabSelector, ToolTip } from '@gpa-gemstone/react-interactive';
-import * as _ from 'lodash';
-import { SelectDataSources } from '../DataSources/DataSourcesSlice'
-import { SelectEventSources } from '../EventSources/Slices/EventSourcesSlice'
-import moment from 'moment';
-import { CrossMark, Warning } from '@gpa-gemstone/gpa-symbols';
-import DataSetGlobalSettings from './Types/DataSetGlobalSettings';
-import EventDataSourceWrapper from '../EventSources/EventDataSourceWrapper';
+import { CrossMark, Plus, Warning } from '@gpa-gemstone/gpa-symbols';
+import { DataSourceTypes, TrenDAP } from '../../global';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { SelectDataSetsStatus, FetchDataSets, SelectDataSets, DataSetsHaveChanged } from './DataSetsSlice';
+import DataSetSettingsTab from './Tabs/DataSetSettingsTab';
+import DataSourceConnectionTab from './Tabs/DataSourceConnectionTab';
+import EventSourceConnectionTab from './Tabs/EventSourceConnectionTab';
 import { EventSourceTypes } from '../EventSources/Interface';
-import DataSourceWrapper from '../DataSources/DataSourceWrapper';
 
 const EditDataSet: React.FunctionComponent<{}> = (props) => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const sourceSetConnections = useAppSelector(SelectDataSourceDataSets);
-    const dsdsStatus = useAppSelector(SelectDataSourceDataSetStatus);
-    const dataSets = useAppSelector(SelectDataSets);
-    const wsStatus = useAppSelector(SelectDataSetsStatus);
-    const dataSources = useAppSelector(SelectDataSources);
 
-    const eventSourceSetConnections = useAppSelector(SelectEventSourceDataSets);
-    const esdsStatus = useAppSelector(SelectEventSourceDataSetStatus);
-    const eventSources = useAppSelector(SelectEventSources);
+    const dataSets = useAppSelector(SelectDataSets);
+    const dataSetStatus = useAppSelector(SelectDataSetsStatus);
 
     const [warnings, setWarning] = React.useState<string[]>([]);
     const [errors, setErrors] = React.useState<string[]>([]);
 
-    const [sourceErrors, setSourceErrors] = React.useState<string[]>([]);
-
-    const [dataSource, setDataSource] = React.useState<DataSourceTypes.IDataSourceView>(undefined);
-    const [dataConnection, setDataConnection] = React.useState<DataSourceTypes.IDataSourceDataSet>(undefined);
-    const [deletedDataConnections, setDeletedDataConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
-
-    const [eventSource, setEventSource] = React.useState<EventSourceTypes.IEventSourceView>(undefined);
-    const [eventConnection, setEventConnection] = React.useState<EventSourceTypes.IEventSourceDataSet>(undefined);
-    const [deletedEventConnections, setDeletedEventConnections] = React.useState<EventSourceTypes.IEventSourceDataSet[]>([]);
+    const [dataErrors, setDataErrors] = React.useState<string[]>([]);
+    const [eventErrors, setEventErrors] = React.useState<string[]>([]);
 
     const [hover, setHover] = React.useState<boolean>(false);
 
@@ -73,34 +57,43 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
     const [tab, setTab] = React.useState<string>('settings');
 
     React.useEffect(() => {
-        if (wsStatus === 'unitiated' || wsStatus === 'changed')
+        if (dataSetStatus === 'unitiated' || dataSetStatus === 'changed')
             dispatch(FetchDataSets());
-    }, [wsStatus]);
+    }, [dataSetStatus]);
 
     React.useEffect(() => {
-        if (wsStatus === 'idle')
+        if (dataSetStatus === 'idle')
             setDataSet(dataSets.find(set => set.ID == (props['useParams']?.id ?? -1)));
-    }, [wsStatus, props['useParams']?.id]);
+    }, [dataSetStatus, props['useParams']?.id]);
 
     React.useEffect(() => {
-        if (dsdsStatus === 'unitiated' || dsdsStatus === 'changed')
-            dispatch(FetchDataSourceDataSets());
-    }, [dsdsStatus]);
-
-    React.useEffect(() => {
-        if (dataSet === undefined) return;
-        if (dsdsStatus === 'idle') setDataConnections(sourceSetConnections.filter(conn => conn.DataSetID === dataSet.ID));
-    }, [dsdsStatus, dataSet?.ID]);
-
-    React.useEffect(() => {
-        if (esdsStatus === 'unitiated' || esdsStatus === 'changed')
-            dispatch(FetchEventSourceDataSets());
-    }, [esdsStatus]);
-
-    React.useEffect(() => {
-        if (dataSet === undefined) return;
-        if (dsdsStatus === 'idle') setEventConnections(eventSourceSetConnections.filter(conn => conn.DataSetID === dataSet.ID));
-    }, [esdsStatus, dataSet?.ID]);
+        const id = props['useParams']?.id ?? -1;
+        if (id === -1) return;
+        const dataConnectionHandle = $.ajax({
+            type: "GET",
+            url: `${homePath}api/DataSourceDataSet/${id}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: false,
+            async: true
+        }).done((data: DataSourceTypes.IDataSourceDataSet[]) => {
+            setDataConnections(data);
+        });
+        const eventConnectionHandle = $.ajax({
+            type: "GET",
+            url: `${homePath}api/EventSourceDataSet/${id}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: false,
+            async: true
+        }).done((data: EventSourceTypes.IEventSourceDataSet[]) => {
+            setEventConnections(data);
+        });
+        return () => {
+            if (dataConnectionHandle != null && dataConnectionHandle.abort != null) dataConnectionHandle.abort();
+            if (eventConnectionHandle != null && eventConnectionHandle.abort != null) eventConnectionHandle.abort();
+        }
+    }, [props['useParams']?.id]);
 
     React.useEffect(() => {
         if (dataSet == null) return;
@@ -134,132 +127,74 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
         if (dataSet.Weeks == 0)
             e.push("At least 1 Week has to be selected.")
         if (dataConnections.length == 0)
-            e.push("At least 1 DataSource needs to be added.");
-        setErrors(e.concat(sourceErrors));
-    }, [dataSet, dataConnections, sourceErrors]);
+            e.push("At least 1 Trend DataSource needs to be added.");
+        setErrors(e.concat(dataErrors).concat(eventErrors));
+    }, [dataSet, dataConnections, dataErrors, eventErrors]);
 
     if (dataSet === undefined) return null;
     return (
-        <div className="card" style={{ width: '100%', height: '100%' }}>
-            <div className="card-header">
-                Edit Data Set
-            </div>
-            <div className="card-body" style={{overflowY:'auto'}}>
-                <TabSelector Tabs={[
-                    { Label: 'Settings', Id: 'settings' },
-                    ...dataConnections.map((item, index) => ({
-                        Label: dataSources.find(ds => ds.ID === item.DataSourceID)?.Name + ' (Trend)',
-                        Id: 'trend-' + index,
-                    })),
-                    ...eventConnections.map((item, index) => ({
-                        Label: eventSources.find(es => es.ID === item.EventSourceID)?.Name + ' (Event)',
-                        Id: 'event-' + index
-                    }))
-                ]} SetTab={tab => {
-                    setTab(tab);
-                    if (tab === 'settings') return;
-                    const tabSplit = tab.split('-');
-                    const index = Number(tabSplit[1]);
-                    if (isNaN(index)) {
-                        console.error(`Could not find connection ${index} in connection array.`);
-                        return;
-                    }
-                    if (tabSplit[0] === 'trend') {
-                        const conn = dataConnections[index];
-                        setDataConnection(conn);
-                        setDataSource(dataSources.find(ds => ds.ID === conn.DataSourceID));
-                    } else {
-                        const conn = eventConnections[index];
-                        setEventConnection(conn);
-                        setEventSource(eventSources.find(es => es.ID === conn.EventSourceID));
-                    }
-                }} CurrentTab={tab} />
-                {tab.startsWith('event') ?
-                    <EventDataSourceWrapper DataSet={dataSet} Connection={eventConnection} EventDataSource={eventSource} SetErrors={() => { }}
-                        SetConnection={newConn => {
-                            const newConns = [...eventConnections];
-                            const index = Number(tab.split('-')[1]);
-                            if (isNaN(index) || index < 0 || index >= newConns.length) {
-                                console.error(`Could not find connection ${index} in connection array.`);
-                                return;
-                            }
-                            newConns.splice(index, 1, newConn);
-                            setEventConnections(newConns);
-                        }} /> : <></>}
-                {tab.startsWith('trend') ?
-                    <DataSourceWrapper DataSource={dataSource} DataSetConn={dataConnection} ComponentType='datasetConfig' DataSet={dataSet} SetErrors={() => { }}
-                        SetDataSetConn={newConn => {
-                            const newConns = [...dataConnections];
-                            const index = Number(tab.split('-')[1]);
-                            if (isNaN(index) || index < 0 || index >= newConns.length) {
-                                console.error(`Could not find connection ${index} in connection array.`);
-                                return;
-                            }
-                            newConns.splice(index, 1, newConn);
-                            setDataConnections(newConns);
-                        }} /> : <></>}
-                {tab == 'settings' ?
-                    <DataSetGlobalSettings DataSet={dataSet} SetDataSet={setDataSet}
-                        DataConnections={dataConnections} SetDataConnections={setDataConnections} EventConnections={eventConnections} SetEventConnections={setEventConnections}/> : <></>}
-
-            </div>
-            <div className="card-footer">
-                <div className="row">
-                    <div className="d-flex col-6 justify-content-start">
-                        <button data-tooltip="newBtn"
-                            className={"btn btn-success" + (errors.length > 0 ? ' disabled' : '')}
-                            onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-                            onClick={() => {
-                                if (errors.length > 0)
-                                    return;
-                                dispatch(UpdateDataSet(dataSet));
-                                dataConnections.forEach(conn => {
-                                    if (conn.ID !== -1) dispatch(UpdateDataSourceDataSet(conn));
-                                    else dispatch(AddDataSourceDataSet(conn));
-                                });
-                                eventConnections.forEach(conn => {
-                                    if (conn.ID !== -1) dispatch(UpdateEventSourceDataSet(conn));
-                                    else dispatch(AddEventSourceDataSet(conn));
-                                });
-                                deletedDataConnections.forEach(conn => dispatch(RemoveDataSourceDataSet(conn)));
-                                deletedEventConnections.forEach(conn => dispatch(RemoveEventSourceDataSet(conn)));
-                                navigate(`${homePath}DataSets`);
-                            }}
-                        >Save</button>
+        <div className="container-fluid d-flex h-100 flex-column">
+            <div className="row" style={{ flex: 1, overflow: 'hidden' }}>
+                <div className="card">
+                    <div className="card-header">
+                        Edit Data Set
                     </div>
-                    <ToolTip Target="newBtn" Show={hover && (warnings.length > 0 || errors.length > 0)} Position={'top'}>
-                        {warnings.map((w, i) => <p key={2 * i}>{Warning} {w} </p>)}
-                        {errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
-                    </ToolTip>
-                    {tab !== 'settings' ?
-                        <div className="d-flex col-6 justify-content-end">
-                            <button className='btn btn-danger' onClick={() => {
-                                const tabSplit = tab.split('-');
-                                const index = Number(tabSplit[1]);
-                                if (isNaN(index)) {
-                                    console.error(`Could not find connection ${index} in connection array.`);
-                                    return;
-                                }
-                                if (tabSplit[0] === 'trend') {
-                                    let newConnections = _.cloneDeep(dataConnections);
-                                    const deletedConnection = newConnections.splice(index, 1);
-                                    setDataConnections(newConnections);
-
-                                    //add connection to deletedConnections array to delete on Save
-                                    if (deletedConnection[0]?.ID !== -1) setDeletedDataConnections(deletedDataConnections.concat(deletedConnection));
-                                } else {
-                                    let newConnections = _.cloneDeep(eventConnections);
-                                    const deletedConnection = newConnections.splice(index, 1);
-                                    setEventConnections(newConnections);
-
-                                    //add connection to deletedConnections array to delete on Save
-                                    if (deletedConnection[0]?.ID !== -1) setDeletedEventConnections(deletedEventConnections.concat(deletedConnection));
-                                }
-                                setTab('settings')
-                            }}
-                            >Remove DataSource</button>
-                        </div> : null
-                    }
+                    <div className="card-body">
+                        <div className="d-flex flex-column h-100">
+                            <TabSelector Tabs={[
+                                { Label: 'Settings', Id: 'settings' },
+                                { Label: 'Trend Data Sources', Id: 'trend' },
+                                { Label: 'Event Data Sources', Id: 'event' },
+                            ]} SetTab={setTab} CurrentTab={tab} />
+                            <br />
+                            {tab === 'trend' ?
+                                <DataSourceConnectionTab DataSourceConnections={dataConnections} SetDataSourceConnections={setDataConnections}
+                                    DataSet={dataSet} SetErrors={setDataErrors} /> : <></>}
+                            {tab === 'event' ?
+                                <EventSourceConnectionTab EventSourceConnections={eventConnections} SetEventSourceConnections={setEventConnections}
+                                    DataSet={dataSet} SetErrors={setEventErrors} /> : <></>}
+                            {tab === 'settings' ?
+                                <DataSetSettingsTab DataSet={dataSet} SetDataSet={setDataSet}
+                                    DataConnections={dataConnections} SetDataConnections={setDataConnections} EventConnections={eventConnections} SetEventConnections={setEventConnections}/> : <></>}
+                        </div>
+                    </div>
+                    <div className="card-footer">
+                        <div className="row">
+                            <div className="d-flex col-6 justify-content-start">
+                                <button data-tooltip="newBtn"
+                                    className={"btn btn-success" + (errors.length > 0 ? ' disabled' : '')}
+                                    onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+                                    onClick={() => {
+                                        if (errors.length > 0)
+                                            return;
+                                        // Todo: Remove this and add a dispatch that asks to refetch slice after .done
+                                        $.ajax({
+                                            type: "POST",
+                                            url: `${homePath}api/DataSet/${dataSet.ID >= 0 ? 'UpdateWithConnections' : 'NewWithConnections'}`,
+                                            contentType: "application/json; charset=utf-8",
+                                            dataType: 'json',
+                                            data: JSON.stringify({
+                                                DataSet: {
+                                                    ...dataSet, UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss')
+                                                },
+                                                DataConnections: dataConnections,
+                                                EventConnections: eventConnections
+                                            }),
+                                            cache: false,
+                                            async: true
+                                        }).done(() => {
+                                            dispatch(DataSetsHaveChanged());
+                                            navigate(`${homePath}DataSets`);
+                                        });
+                                    }}
+                                >Save</button>
+                            </div>
+                            <ToolTip Target="newBtn" Show={hover && (warnings.length > 0 || errors.length > 0)} Position={'top'}>
+                                {warnings.map((w, i) => <p key={2 * i}>{Warning} {w} </p>)}
+                                {errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
+                            </ToolTip>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
