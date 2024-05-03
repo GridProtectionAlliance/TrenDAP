@@ -23,22 +23,47 @@
 
 using Gemstone.Data;
 using Gemstone.Data.Model;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Net;
-using System.Net.Http;
 using TrenDAP.Controllers;
 using PrimaryKeyAttribute = Gemstone.Data.Model.PrimaryKeyAttribute;
-using RouteAttribute = Microsoft.AspNetCore.Mvc.RouteAttribute;
 
 namespace TrenDAP.Model
 {
-    public class EventSource: Source
+    public class EventSource
     {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
         public string Type { get; set; }
+        public string Name { get; set; }
+        public string URL { get; set; }
+        // Todo: maybe we want to break source from api auth? two tables where a source is linked to an auth row?
+        public string RegistrationKey { get; set; }
+        public string APIToken { get; set; }
+        public DateTime? Expires { get; set; }
+        [UseEscapedName]
+        public bool Public { get; set; }
+        [UseEscapedName]
+        public string User { get; set; }
+        public string SettingsString { get; set; }
+        [NonRecordField]
+        public JObject Settings
+        {
+            get
+            {
+                try { return JObject.Parse(SettingsString); }
+                catch { return new JObject(); }
+            }
+        }
+        public static EventSource GetEventSource(IConfiguration configuration, int id)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
+            {
+                return new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", id);
+            }
+        }
     }
 
     public class EventSourceController: ModelController<EventSource>
@@ -54,34 +79,6 @@ namespace TrenDAP.Model
         {
             record["SettingsString"] = record["Settings"].ToString();
             return base.Patch(record);
-        }
-
-        [HttpGet, Route("TestAuth/{eventSourceID:int}")]
-        public ActionResult TestAuth(int eventSourceID)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
-            {
-                try
-                {
-                    EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", eventSourceID);
-                    SourceHelper<EventSource> helper = new SourceHelper<EventSource>(eventSource);
-                    HttpResponseMessage rsp = helper.GetResponseTask($"api/TestAuth").Result;
-                    switch (rsp.StatusCode)
-                    {
-                        default:
-                        case HttpStatusCode.Unauthorized:
-                            return Ok("Failed to authorize with eventsource credentials.");
-                        case HttpStatusCode.NotFound:
-                            return Ok("Unable to find eventsource.");
-                        case HttpStatusCode.OK:
-                            return Ok("1");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
-                }
-            }
         }
     }
 }

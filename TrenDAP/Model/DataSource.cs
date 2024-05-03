@@ -23,6 +23,7 @@
 
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using InfluxDB.Client.Api.Domain;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -41,9 +42,12 @@ using UseEscapedNameAttribute = Gemstone.Data.Model.UseEscapedNameAttribute;
 
 namespace TrenDAP.Model
 {
-    public class DataSource: Source
+    public class DataSource
     {
+        [PrimaryKey(true)]
+        public int ID { get; set; }
         public int DataSourceTypeID { get; set; }
+        public string Name { get; set; }
         public string URL { get; set; }
         // Todo: maybe we want to break datasource from api auth? two tables where a source is linked to an auth row?
         public string RegistrationKey { get; set; }
@@ -72,6 +76,54 @@ namespace TrenDAP.Model
         }
     }
 
+    public class DataSourceHelper : XDAAPIHelper
+    {
+        private DataSource m_dataSource;
+
+        public DataSourceHelper(IConfiguration config, int dataSourceId)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(config["SystemSettings:ConnectionString"], config["SystemSettings:DataProviderString"]))
+            {
+                m_dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceId);
+            }
+        }
+
+        public DataSourceHelper(DataSource source)
+        {
+            m_dataSource = source;
+        }
+
+        protected override string Token
+        {
+            get
+            {
+                return m_dataSource.APIToken;
+            }
+
+        }
+        protected override string Key
+        {
+            get
+            {
+                return m_dataSource.RegistrationKey;
+            }
+
+        }
+        protected override string Host
+        {
+            get
+            {
+                return m_dataSource.URL;
+            }
+        }
+
+        public IActionResult GetActionResult(string requestURI, HttpContent content = null)
+        {
+            Task<HttpResponseMessage> rsp = GetResponseTask(requestURI, content);
+            return new RspConverter(rsp);
+        }
+    }
+
     public class DataSourceController: ModelController<DataSource>
     {
         public DataSourceController(IConfiguration configuration) : base(configuration){ }
@@ -95,7 +147,7 @@ namespace TrenDAP.Model
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    SourceHelper<DataSource> helper = new SourceHelper<DataSource>(dataSource);
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
                     HttpResponseMessage rsp = helper.GetResponseTask($"api/TestAuth").Result;
                     switch (rsp.StatusCode)
                     {
