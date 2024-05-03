@@ -31,6 +31,7 @@ using TrenDAP.Controllers;
 using System.Threading;
 using Gemstone.Data;
 using GSF.Data.Model;
+using TrenDAP.Attributes;
 
 namespace TrenDAP.Model
 {
@@ -39,6 +40,7 @@ namespace TrenDAP.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
         public int EventSourceID { get; set; }
+        [ParentKey(typeof(DataSet))]
         public int DataSetID { get; set; }
         public byte[] SettingsBin { get; set; }
         [NonRecordField]

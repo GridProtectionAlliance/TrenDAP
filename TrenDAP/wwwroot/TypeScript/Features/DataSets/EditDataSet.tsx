@@ -27,10 +27,10 @@ import moment from 'moment';
 import * as $ from 'jquery';
 import { useNavigate } from "react-router-dom";
 import { TabSelector, ToolTip } from '@gpa-gemstone/react-interactive';
-import { CrossMark, Plus, Warning } from '@gpa-gemstone/gpa-symbols';
+import { CrossMark, Warning } from '@gpa-gemstone/gpa-symbols';
 import { DataSourceTypes, TrenDAP } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { SelectDataSetsStatus, FetchDataSets, SelectDataSets, DataSetsHaveChanged } from './DataSetsSlice';
+import { SelectDataSetsStatus, FetchDataSets, SelectDataSets, DataSetsHaveChanged, SelectNewDataSet } from './DataSetsSlice';
 import DataSetSettingsTab from './Tabs/DataSetSettingsTab';
 import DataSourceConnectionTab from './Tabs/DataSourceConnectionTab';
 import EventSourceConnectionTab from './Tabs/EventSourceConnectionTab';
@@ -62,8 +62,10 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
     }, [dataSetStatus]);
 
     React.useEffect(() => {
-        if (dataSetStatus === 'idle')
-            setDataSet(dataSets.find(set => set.ID == (props['useParams']?.id ?? -1)));
+        if (dataSetStatus !== 'idle') return;  //SelectNewDataSet
+        const id = (props['useParams']?.id ?? -1);
+        if (id < 0) setDataSet(SelectNewDataSet());
+        else setDataSet(dataSets.find(set => set.ID == id));
     }, [dataSetStatus, props['useParams']?.id]);
 
     React.useEffect(() => {
@@ -167,7 +169,6 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
                                     onClick={() => {
                                         if (errors.length > 0)
                                             return;
-                                        // Todo: Remove this and add a dispatch that asks to refetch slice after .done
                                         $.ajax({
                                             type: "POST",
                                             url: `${homePath}api/DataSet/${dataSet.ID >= 0 ? 'UpdateWithConnections' : 'NewWithConnections'}`,

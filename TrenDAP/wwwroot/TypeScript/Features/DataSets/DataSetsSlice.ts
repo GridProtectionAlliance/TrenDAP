@@ -70,7 +70,7 @@ export const PatchDataSetData = createAsyncThunk('DataSets/PatchDataSetData', as
 
 // #region [ Consts ]
 const newDataSet: TrenDAP.iDataSet = {
-    ID: 0,
+    ID: -1,
     Name: '',
     User: '',
     Context: 'Fixed Dates',

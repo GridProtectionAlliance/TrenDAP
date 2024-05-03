@@ -35,7 +35,7 @@ interface IProps {
 }
 
 const EventDataSourceWrapper: React.FunctionComponent<IProps> = (props: IProps) => {
-    const implementation: IEventSource<any, any> | null = React.useMemo(() => EventDataSources.find(t => t.Name == props.EventDataSource.Type), [props.EventDataSource.Type])
+    const implementation: IEventSource<any, any> | null = React.useMemo(() => EventDataSources.find(t => t.Name == props.EventDataSource?.Type), [props.EventDataSource?.Type])
     
     const settings = React.useMemo(() => {
         if (implementation == null)
