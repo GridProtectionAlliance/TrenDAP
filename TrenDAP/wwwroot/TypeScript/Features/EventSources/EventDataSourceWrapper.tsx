@@ -24,7 +24,8 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { TrenDAP } from '../../global';
-import { EventSourceTypes, IEventSource, EventDataSources } from '../EventSources/Interface';
+import { EventSourceTypes, IEventSource } from './Interface';
+import { EventDataSources } from './ByEventSources';
 
 interface IProps {
     DataSet: TrenDAP.iDataSet,
@@ -63,7 +64,6 @@ const EventDataSourceWrapper: React.FunctionComponent<IProps> = (props: IProps) 
         }
         src.Settings = sourceSettings;
         return src;
-
     }, [props.EventDataSource]);
 
     return (

@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 import { TrenDAP } from '../../global'
-import RandomEvents from './Implementations/RandomEvents';
 // The intrefaces for Event Datasources
 // Interfaces = connection points to other pieces in the architecture
 
@@ -60,8 +59,6 @@ export namespace EventSourceTypes {
         SetErrors: (errors: string[]) => void
     }
 }
-
-export const EventDataSources: IEventSource<any, any>[] = [RandomEvents];
 
 /*
  Interface that needs to be implemented by an EventSource

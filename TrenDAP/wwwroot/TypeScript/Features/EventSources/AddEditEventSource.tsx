@@ -26,7 +26,7 @@ import * as React from 'react';
 import { useAppDispatch } from '../../hooks';
 import { UpdateEventSource, AddEventSource } from './Slices/EventSourcesSlice';
 import EventSource from './EventSource';
-import { EventSourceTypes } from './Interface'
+import { EventSourceTypes } from './Interface';
 import { Modal } from '@gpa-gemstone/react-interactive';
 import { CrossMark } from '@gpa-gemstone/gpa-symbols';
 

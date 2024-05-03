@@ -23,7 +23,8 @@
 
 import * as React from 'react';
 import * as _ from 'lodash';
-import { EventSourceTypes, IEventSource, EventDataSources } from './Interface';
+import { EventSourceTypes, IEventSource } from './Interface';
+import { EventDataSources } from './ByEventSources';
 import { Input, Select, CheckBox } from '@gpa-gemstone/react-forms';
 
 interface IProps {
