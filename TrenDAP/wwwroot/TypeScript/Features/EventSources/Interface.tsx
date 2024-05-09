@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+import { cloneDeep } from 'lodash';
 import { TrenDAP } from '../../global'
 // The intrefaces for Event Datasources
 // Interfaces = connection points to other pieces in the architecture
@@ -58,6 +59,18 @@ export namespace EventSourceTypes {
         SetSettings: (newDataSetSettings: U) => void,
         SetErrors: (errors: string[]) => void
     }
+}
+
+/* Helper Function to ensure type safety on settings objects
+ {T} => Default Settings Objects, Unintiated Fields Match this Default
+*/
+export function EnsureTypeSafety<T>(settingsObj: any, defaultSettings: T): T {
+    const s = cloneDeep(defaultSettings);
+    for (const [k] of Object.entries(defaultSettings)) {
+        if (settingsObj.hasOwnProperty(k))
+            s[k] = cloneDeep(settingsObj[k]);
+    }
+    return s;
 }
 
 /*
