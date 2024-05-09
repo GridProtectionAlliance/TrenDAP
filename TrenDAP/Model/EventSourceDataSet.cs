@@ -32,6 +32,7 @@ using System.Threading;
 using Gemstone.Data;
 using GSF.Data.Model;
 using TrenDAP.Attributes;
+using System.Net.Http;
 
 namespace TrenDAP.Model
 {
@@ -94,11 +95,13 @@ namespace TrenDAP.Model
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
-
+                EventSourceHelper helper = new EventSourceHelper(eventSource);
                 if (eventSource.Type == "OpenXDA")
                 {
-                    // ToDo: Add implementation
-                    throw new ArgumentException($"Type of {eventSource.Type} not supported.");
+                    Tuple<DateTime, DateTime> timeEnds = dataset.ComputeTimeEnds();
+                    json.Add("StartTime", timeEnds.Item1);
+                    json.Add("EndTime", timeEnds.Item2);
+                    return helper.GetActionResult("api/Event/TrenDAP", new StringContent(json.ToString(), Encoding.UTF8, "application/json"));
                 }
                 else
                     throw new ArgumentException($"Type of {eventSource.Type} not supported.");
