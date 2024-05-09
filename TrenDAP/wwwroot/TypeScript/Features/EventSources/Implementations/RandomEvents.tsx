@@ -26,7 +26,7 @@ import _ from 'lodash';
 import { EventSourceTypes, IEventSource } from '../Interface';
 import { TrenDAP } from '../../../global';
 import { Input } from '@gpa-gemstone/react-forms';
-import { ComputeDuration, ComputeStartTime } from '../../DataSets/HelperFunctions'
+import { ComputeTimeEnds } from '../../DataSets/HelperFunctions'
 
 interface ISetting { Title: string }
 interface IDatasetSetting { Number: number }
@@ -35,12 +35,14 @@ const RandomEvents: IEventSource<ISetting, IDatasetSetting> = {
     DataSetUI: (props) => <Input<IDatasetSetting> Record={props.Settings} Field="Number" Setter={props.SetSettings} Valid={() => true} />,
     ConfigUI: (props) => <Input<ISetting> Record={props.Settings} Field="Title" Setter={props.SetSettings} Valid={() => true} />,
     Load: (eventSource: EventSourceTypes.IEventSourceView, dataSet: TrenDAP.iDataSet, dataConn: EventSourceTypes.IEventSourceDataSet) => {
-        const t = ComputeDuration(dataSet) / dataConn.Settings.Number;
+        const time = ComputeTimeEnds(dataSet);
+        const startTimeValue = time.Start.valueOf();
         const result: TrenDAP.IEvent[] = [];
         let n = 0;
+        const t = (time.End.valueOf() - startTimeValue) / dataConn.Settings.Number;
         while (n < dataConn.Settings.Number) {
             result.push( {
-                Time: n*t + ComputeStartTime(dataSet),
+                Time: n * t + startTimeValue,
                 Description: 'Test',
                 Title: eventSource.Settings.Title,
                 Duration: 0.5*t

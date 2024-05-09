@@ -84,7 +84,7 @@ const ComputeValidWeeks = (ds: TrenDAP.iDataSet) => {
 
 }
 
-const ComputeTime = (ds: TrenDAP.iDataSet) => {
+const ComputeTimeEnds = (ds: TrenDAP.iDataSet) => {
     let startTime = moment.utc(ds.From, DateFormat);
     let endTime = moment.utc(ds.To, DateFormat);
     if (ds.Context == "Relative") {
@@ -96,22 +96,17 @@ const ComputeTime = (ds: TrenDAP.iDataSet) => {
         else if (ds.RelativeWindow == "Month")
             startTime = endTime.add(-ds.RelativeValue, "month");
         else
-            startTime = endTime.add(ds.RelativeValue, "year");
+            startTime = endTime.add(-ds.RelativeValue, "year");
     }
-    return { Start: startTime.valueOf(), End: endTime.valueOf() };
+    return { Start: startTime, End: endTime };
 }
 
-const ComputeDuration = (ds: TrenDAP.iDataSet) => {
-    const result = ComputeTime(ds);
-    return result.End - result.Start;
+// Computes center of window and size of window in hours
+const ComputeTimeCenterAndSize = (ds: TrenDAP.iDataSet, granularity: moment.unitOfTime.Diff = 'hours') => {
+    const timeEnds = ComputeTimeEnds(ds);
+    const windowSize = timeEnds.End.diff(timeEnds.Start, granularity, true) / 2;
+    const center = timeEnds.Start.add(windowSize, granularity);
+    return { Center: center, Size: windowSize, Unit: granularity }
 }
 
-const ComputeStartTime = (ds: TrenDAP.iDataSet) => {
-    return ComputeTime(ds).Start;
-}
-
-const ComputeEndTime = (ds: TrenDAP.iDataSet) => {
-    return ComputeTime(ds).End;
-}
-
-export { DateFormat, ComputeDuration, ComputeTime, ComputeStartTime, ComputeEndTime, ComputeValidDays, ComputeValidWeeks }
+export { DateFormat, ComputeTimeEnds, ComputeTimeCenterAndSize, ComputeValidDays, ComputeValidWeeks }
