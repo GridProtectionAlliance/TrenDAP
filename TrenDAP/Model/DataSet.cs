@@ -46,6 +46,7 @@ namespace TrenDAP.Model
 
     public class DataSet
     {
+        #region [ Fields ]
         [PrimaryKey(true)]
         public int ID { get; set; }
         [UseEscapedName]
@@ -73,6 +74,28 @@ namespace TrenDAP.Model
         [UseEscapedName]
         public bool Public { get; set; }
         public DateTime UpdatedOn { get; set; }
+        #endregion
+
+        #region [ Methods ]
+        public Tuple<DateTime, DateTime> ComputeTimeEnds()
+        {
+            DateTime startTime = From;
+            DateTime endTime = To;
+            if (Context == "Relative")
+            {
+                endTime = DateTime.Now;
+                if (RelativeWindow == "Day")
+                    startTime = endTime.AddDays(-RelativeValue);
+                else if (RelativeWindow == "Week")
+                    startTime = endTime.AddDays(-RelativeValue * 7);
+                else if (RelativeWindow == "Month")
+                    startTime = endTime.AddMonths(-int.Parse(RelativeValue.ToString()));
+                else
+                    startTime = endTime.AddYears(-int.Parse(RelativeValue.ToString()));
+            }
+            return new Tuple<DateTime, DateTime>(startTime, endTime);
+        }
+        #endregion
     }
 
     public class DataSetController : ModelController<DataSet>
