@@ -43,7 +43,7 @@ export namespace Redux {
         WorkSpaces: State<TrenDAP.iWorkSpace>,
         OpenHistorian: { ID: number, State: OpenHistorianState }[],
         Sapphire: { [instance: number]: { [table: string]: Redux.SapphireTableSlice } },
-        OpenXDA: { [instance: number]: { [table: string]: Redux.OpenXDATableSlice } },
+        OpenXDA: { [instance: string]: { [table: string]: Redux.OpenXDATableSlice } },
     }
     interface State<T> {
         Status: TrenDAP.Status,
@@ -63,8 +63,9 @@ export namespace Redux {
 
     interface OpenXDATableSlice {
         Status: TrenDAP.Status,
-        Error: string,
-        Data: any[]
+        Data: any[],
+        SearchStatus: TrenDAP.Status,
+        SearchData: any[]
     }
 
     interface SapphireTableSlice {

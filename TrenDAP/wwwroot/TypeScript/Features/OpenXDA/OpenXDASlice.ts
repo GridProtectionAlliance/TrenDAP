@@ -27,12 +27,19 @@ import { Redux, TrenDAP } from '../../global';
 import $ from 'jquery';
 import { Search } from '@gpa-gemstone/react-interactive';
 
-export const FetchOpenXDA = createAsyncThunk<string | object, { dataSourceID: number, table: string }, {}>('OpenXDA/FetchOpenXDA', async (ds ,{ dispatch }) => {
-    return await GetOpenXDA(ds.dataSourceID, ds.table)
+export const FetchOpenXDA = createAsyncThunk<string | object, { dataSourceID: number, table: string, sourceType?: 'event' | 'data' }, {}>('OpenXDA/FetchOpenXDA', async (ds ,{ dispatch }) => {
+    return await GetOpenXDA(ds.dataSourceID, ds.sourceType ?? 'data', ds.table)
 });
 
-export const SearchOpenXDA = createAsyncThunk<string | object, { dataSourceID: number, table: string, filter: Search.IFilter<any>[] }, {}>('OpenXDA/SearchOpenXDA', async (ds, { dispatch }) => {
-    return await PostOpenXDA(ds.dataSourceID, ds.table, ds.filter)
+export const SearchOpenXDA = createAsyncThunk<string | object, { dataSourceID: number, table: string, filter: Search.IFilter<any>[], sourceType?: 'event' | 'data' }, {}>('OpenXDA/SearchOpenXDA', async (ds, { dispatch }) => {
+    return await PostOpenXDA(ds.dataSourceID, ds.sourceType ?? 'data', ds.table, ds.filter)
+});
+
+const getNewTable = () => ({
+    Status: 'unitiated' as TrenDAP.Status,
+    Data: [] as any,
+    SearchStatus: 'unitiated' as TrenDAP.Status,
+    SearchData: [] as any
 });
 
 export const OpenXDASlice = createSlice({
@@ -45,109 +52,87 @@ export const OpenXDASlice = createSlice({
     extraReducers: (builder) => {
 
         builder.addCase(FetchOpenXDA.fulfilled, (state, action) => {
-            if (state[action.meta.arg.dataSourceID] === undefined) {
-                state[action.meta.arg.dataSourceID] = {};
+            const key = action.meta.arg.dataSourceID + (action.meta.arg.sourceType ?? 'data');
+
+            if (state[key] === undefined) {
+                state[key] = {};
             }
 
-            if (state[action.meta.arg.dataSourceID][action.meta.arg.table] === undefined) {
-                state[action.meta.arg.dataSourceID][action.meta.arg.table] = {
-                    Status: 'unitiated' as TrenDAP.Status,
-                    Data: [] as any,
-                    Error: null
-                };
-            }
+            if (state[key][action.meta.arg.table] === undefined)
+                state[key][action.meta.arg.table] = getNewTable();
 
-            state[action.meta.arg.dataSourceID][action.meta.arg.table].Status = 'idle';
-            state[action.meta.arg.dataSourceID][action.meta.arg.table].Error = null;
+            state[key][action.meta.arg.table].Status = 'idle';
             if (typeof (action.payload) === "string")
-                state[action.meta.arg.dataSourceID][action.meta.arg.table].Data.push(...JSON.parse(action.payload));
+                state[key][action.meta.arg.table].Data.push(...JSON.parse(action.payload));
             else if (typeof (action.payload) === "object")
-                state[action.meta.arg.dataSourceID][action.meta.arg.table].Data = action.payload as any[];
+                state[key][action.meta.arg.table].Data = action.payload as any[];
         });
         builder.addCase(FetchOpenXDA.pending, (state, action) => {
-            if (state[action.meta.arg.dataSourceID] === undefined) {
-                state[action.meta.arg.dataSourceID] = {};
+            const key = action.meta.arg.dataSourceID + (action.meta.arg.sourceType ?? 'data');
+
+            if (state[key] === undefined) {
+                state[key] = {};
             }
 
-            if (state[action.meta.arg.dataSourceID][action.meta.arg.table] === undefined) {
-                state[action.meta.arg.dataSourceID][action.meta.arg.table] = {
-                    Status: 'unitiated' as TrenDAP.Status,
-                    Data: [] as any,
-                    Error: null
-                };
-            }
+            if (state[key][action.meta.arg.table] === undefined)
+                state[key][action.meta.arg.table] = getNewTable();
 
-
-            state[action.meta.arg.dataSourceID][action.meta.arg.table].Status = 'loading';
+            state[key][action.meta.arg.table].Status = 'loading';
         });
         builder.addCase(FetchOpenXDA.rejected, (state, action) => {
-            if (state[action.meta.arg.dataSourceID] === undefined) {
-                state[action.meta.arg.dataSourceID] = {};
+            const key = action.meta.arg.dataSourceID + (action.meta.arg.sourceType ?? 'data');
+
+            if (state[key] === undefined) {
+                state[key] = {};
             }
 
-            if (state[action.meta.arg.dataSourceID][action.meta.arg.table] === undefined) {
-                state[action.meta.arg.dataSourceID][action.meta.arg.table] = {
-                    Status: 'unitiated' as TrenDAP.Status,
-                    Data: [] as any,
-                    Error: null
-                };
-            }
+            if (state[key][action.meta.arg.table] === undefined)
+                state[key][action.meta.arg.table] = getNewTable();
 
-            state[action.meta.arg.dataSourceID][action.meta.arg.table].Status = 'error';
-            state[action.meta.arg.dataSourceID][action.meta.arg.table].Error = action.error.message;
+            state[key][action.meta.arg.table].Status = 'error';
+            console.error(action.error.message);
         });
 
         builder.addCase(SearchOpenXDA.fulfilled, (state, action) => {
-            if (state[action.meta.arg.dataSourceID] === undefined) {
-                state[action.meta.arg.dataSourceID] = {};
+            const key = action.meta.arg.dataSourceID + (action.meta.arg.sourceType ?? 'data');
+
+            if (state[key] === undefined) {
+                state[key] = {};
             }
 
-            if (state[action.meta.arg.dataSourceID][action.meta.arg.table] === undefined) {
-                state[action.meta.arg.dataSourceID][action.meta.arg.table] = {
-                    Status: 'unitiated' as TrenDAP.Status,
-                    Data: [] as any,
-                    Error: null
-                };
-            }
+            if (state[key][action.meta.arg.table] === undefined)
+                state[key][action.meta.arg.table] = getNewTable();
 
-            state[action.meta.arg.dataSourceID][action.meta.arg.table].Status = 'idle';
-            state[action.meta.arg.dataSourceID][action.meta.arg.table].Error = null;
+            state[key][action.meta.arg.table].SearchStatus = 'idle';
             if (typeof (action.payload) === "string")
-                state[action.meta.arg.dataSourceID][action.meta.arg.table].Data.push(...JSON.parse(action.payload));
+                state[key][action.meta.arg.table].SearchData.push(...JSON.parse(action.payload));
             else if (typeof (action.payload) === "object")
-                state[action.meta.arg.dataSourceID][action.meta.arg.table].Data = action.payload as any[];
+                state[key][action.meta.arg.table].SearchData = action.payload as any[];
         });
         builder.addCase(SearchOpenXDA.pending, (state, action) => {
-            if (state[action.meta.arg.dataSourceID] === undefined) {
-                state[action.meta.arg.dataSourceID] = {};
+            const key = action.meta.arg.dataSourceID + (action.meta.arg.sourceType ?? 'data');
+
+            if (state[key] === undefined) {
+                state[key] = {};
             }
 
-            if (state[action.meta.arg.dataSourceID][action.meta.arg.table] === undefined) {
-                state[action.meta.arg.dataSourceID][action.meta.arg.table] = {
-                    Status: 'unitiated' as TrenDAP.Status,
-                    Data: [] as any,
-                    Error: null
-                };
-            }
+            if (state[key][action.meta.arg.table] === undefined)
+                state[key][action.meta.arg.table] = getNewTable();
 
-
-            state[action.meta.arg.dataSourceID][action.meta.arg.table].Status = 'loading';
+            state[key][action.meta.arg.table].SearchStatus = 'loading';
         });
         builder.addCase(SearchOpenXDA.rejected, (state, action) => {
-            if (state[action.meta.arg.dataSourceID] === undefined) {
-                state[action.meta.arg.dataSourceID] = {};
+            const key = action.meta.arg.dataSourceID + (action.meta.arg.sourceType ?? 'data');
+
+            if (state[key] === undefined) {
+                state[key] = {};
             }
 
-            if (state[action.meta.arg.dataSourceID][action.meta.arg.table] === undefined) {
-                state[action.meta.arg.dataSourceID][action.meta.arg.table] = {
-                    Status: 'unitiated' as TrenDAP.Status,
-                    Data: [] as any,
-                    Error: null
-                };
-            }
+            if (state[key][action.meta.arg.table] === undefined)
+                state[key][action.meta.arg.table] = getNewTable();
 
-            state[action.meta.arg.dataSourceID][action.meta.arg.table].Status = 'error';
-            state[action.meta.arg.dataSourceID][action.meta.arg.table].Error = action.error.message;
+            state[key][action.meta.arg.table].SearchStatus = 'error';
+            console.error(action.error.message);
         });
 
     }
@@ -156,23 +141,25 @@ export const OpenXDASlice = createSlice({
 
 export const { } = OpenXDASlice.actions;
 export default OpenXDASlice.reducer;
-export const SelectOpenXDA = (state: Redux.StoreState, dsid: number, table: string) => (state.OpenXDA[dsid] ? state.OpenXDA[dsid][table].Data : [] ) ;
-export const SelectOpenXDAStatus = (state: Redux.StoreState, dsid: number, table: string) => (state.OpenXDA[dsid] ? state.OpenXDA[dsid][table]?.Status ?? 'unitiated' : 'unitiated') as TrenDAP.Status
+export const SelectOpenXDA = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table].Data : [] ) ;
+export const SelectOpenXDAStatus = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table]?.Status ?? 'unitiated' : 'unitiated') as TrenDAP.Status
+export const SelectSearchOpenXDA = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table].SearchData : []);
+export const SelectSearchOpenXDAStatus = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table]?.SearchStatus ?? 'unitiated' : 'unitiated') as TrenDAP.Status
 
-function GetOpenXDA(dataSourceID: number, table: string): JQuery.jqXHR<string> {
+function GetOpenXDA(sourceID: number, type: 'event' | 'data',  table: string): JQuery.jqXHR<string> {
     return $.ajax({
         type: "GET",
-        url: `${homePath}api/TrenDAPDB/${dataSourceID}/${table}`,
+        url: `${homePath}api/TrenDAPDB/${sourceID}/${table}/${type}`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
         cache: true,
         async: true
     });
 }
-function PostOpenXDA(dataSourceID: number, table: string, filters: Search.IFilter<any>[]): JQuery.jqXHR<string> {
+function PostOpenXDA(sourceID: number, type: 'event' | 'data', table: string, filters: Search.IFilter<any>[]): JQuery.jqXHR<string> {
     return $.ajax({
         type: "Post",
-        url: `${homePath}api/TrenDAPDB/${dataSourceID}/${table}`,
+        url: `${homePath}api/TrenDAPDB/${sourceID}/${table}/${type}`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
         // Todo: If there is no ID col, this won't work. Every single one does, but this should still be more resilient
