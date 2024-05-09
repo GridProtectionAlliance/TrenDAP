@@ -23,12 +23,17 @@
 
 using Gemstone.Data;
 using Gemstone.Data.Model;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Net.Http;
+using System.Net;
 using TrenDAP.Controllers;
 using PrimaryKeyAttribute = Gemstone.Data.Model.PrimaryKeyAttribute;
+using openXDA.APIAuthentication;
+using System.Threading.Tasks;
 
 namespace TrenDAP.Model
 {
@@ -65,6 +70,54 @@ namespace TrenDAP.Model
         }
     }
 
+    public class EventSourceHelper : XDAAPIHelper
+    {
+        private EventSource m_eventSource;
+
+        public EventSourceHelper(IConfiguration config, int dataSourceId)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(config["SystemSettings:ConnectionString"], config["SystemSettings:DataProviderString"]))
+            {
+                m_eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", dataSourceId);
+            }
+        }
+
+        public EventSourceHelper(EventSource source)
+        {
+            m_eventSource = source;
+        }
+
+        protected override string Token
+        {
+            get
+            {
+                return m_eventSource.APIToken;
+            }
+
+        }
+        protected override string Key
+        {
+            get
+            {
+                return m_eventSource.RegistrationKey;
+            }
+
+        }
+        protected override string Host
+        {
+            get
+            {
+                return m_eventSource.URL;
+            }
+        }
+
+        public IActionResult GetActionResult(string requestURI, HttpContent content = null)
+        {
+            Task<HttpResponseMessage> rsp = GetResponseTask(requestURI, content);
+            return new RspConverter(rsp);
+        }
+    }
+
     public class EventSourceController: ModelController<EventSource>
     {
         public EventSourceController(IConfiguration configuration) : base(configuration){ }
@@ -78,6 +131,34 @@ namespace TrenDAP.Model
         {
             record["SettingsString"] = record["Settings"].ToString();
             return base.Patch(record);
+        }
+
+        [HttpGet, Route("TestAuth/{eventSourceID:int}")]
+        public ActionResult TestAuth(int eventSourceID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                try
+                {
+                    EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", eventSourceID);
+                    EventSourceHelper helper = new EventSourceHelper(eventSource);
+                    HttpResponseMessage rsp = helper.GetResponseTask($"api/TestAuth").Result;
+                    switch (rsp.StatusCode)
+                    {
+                        default:
+                        case HttpStatusCode.Unauthorized:
+                            return Ok("Failed to authorize with datasource credentials.");
+                        case HttpStatusCode.NotFound:
+                            return Ok("Unable to find datasource.");
+                        case HttpStatusCode.OK:
+                            return Ok("1");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
+                }
+            }
         }
     }
 }
