@@ -65,7 +65,6 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
         const newConns = [...props.EventSourceConnections];
         newConns.push({ ID: -1, EventSourceID: src.ID, EventSourceName: src.Name, DataSetID: props.DataSet.ID, DataSetName: props.DataSet.Name, Settings: {} });
         setCurrentIndex(newConns.length - 1);
-        console.log(newConns);
         props.SetEventSourceConnections(newConns);
     }, [props.EventSourceConnections, props.SetEventSourceConnections, props.DataSet, currentIndex, eventSourceStatus]);
 
@@ -168,20 +167,20 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
             </div>
             <div className="col-8" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
                 <div className="container-fluid d-flex h-100 flex-column" style={{ padding: 0 }}>
-                    <div className={'row'} style={{ flex: 1, overflow: 'hidden' }}>
+                <div className={'row'} style={{ flex: 1, overflow: 'hidden' }}>
                         <div className={'col-12'} style={{ height: '100%', overflow: 'hidden' }}>
-                            {props.EventSourceConnections[currentIndex] != null ?
-                                <EventDataSourceWrapper EventDataSource={eventSource} Connection={props.EventSourceConnections[currentIndex]}
-                                    DataSet={props.DataSet} SetErrors={addWrapperErrors}
-                                    SetConnection={newConn => {
-                                        const newConns = [...props.EventSourceConnections];
-                                        newConns.splice(currentIndex, 1, newConn)
-                                        props.SetEventSourceConnections(newConns);
-                                    }} /> : <></>}
-                        </div>
+                        {props.EventSourceConnections[currentIndex] != null ?
+                            <EventDataSourceWrapper EventDataSource={eventSource} Connection={props.EventSourceConnections[currentIndex]}
+                                DataSet={props.DataSet} SetErrors={addWrapperErrors}
+                                SetConnection={newConn => {
+                                    const newConns = [...props.EventSourceConnections];
+                                    newConns.splice(currentIndex, 1, newConn)
+                                    props.SetEventSourceConnections(newConns);
+                                }} /> : <></>}
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     );
 
