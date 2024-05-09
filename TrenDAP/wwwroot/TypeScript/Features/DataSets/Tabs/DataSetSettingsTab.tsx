@@ -38,7 +38,7 @@ interface IProps {
     SetEventConnections: (arg: EventSourceTypes.IEventSourceDataSet[]) => void
 }
 
-const DataSetGlobalSettings: React.FunctionComponent<IProps> = (props: IProps) => {
+const DataSetSettingsTab: React.FunctionComponent<IProps> = (props: IProps) => {
     const dispatch = useAppDispatch();
     const dataSets = useAppSelector(SelectDataSets);
     const dataSetStatus = useAppSelector(SelectDataSetsStatus);
@@ -84,7 +84,7 @@ const DataSetGlobalSettings: React.FunctionComponent<IProps> = (props: IProps) =
 
 }
 
-export default DataSetGlobalSettings;
+export default DataSetSettingsTab;
 
 const RelativeDateRangePicker = (props: { Record: TrenDAP.iDataSet, Setter: (record: TrenDAP.iDataSet) => void }) => {
     const [context, setContext] = React.useState<'Relative' | 'Fixed Dates'>(props.Record.Context);
