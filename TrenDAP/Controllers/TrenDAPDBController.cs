@@ -61,7 +61,6 @@ namespace TrenDAP.Controllers
             public string OrderBy { get; set; }
             public bool Ascending { get; set; }
         }
-
         public class XDADataSetData
         {
             public string By { get; set; }
@@ -95,21 +94,32 @@ namespace TrenDAP.Controllers
         #endregion
 
         #region [ Http Methods ]
-        [HttpGet, Route("{dataSourceID:int}/{table?}")]
-        public virtual ActionResult GetTable(int dataSourceID, string table = "")
+        [HttpGet, Route("{sourceID:int}/{table?}/{type?}")]
+        public virtual ActionResult GetTable(int sourceID, string table = "", string type = "data")
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
 
                 try
                 {
-                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
+                    if (type == "data")
+                    {
+                        DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
+                        if (dataSource.Type == "TrenDAPDB")
+                            return GetOpenXDA(dataSource, table);
+                        else if (dataSource.Type == "OpenHistorian")
+                            return GetOpenHistorian(dataSource, table);
+                        else return StatusCode(StatusCodes.Status400BadRequest, "Datasource type not supported");
+                    }
+                    else if (type == "event")
+                    {
+                        EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
+                        if (eventSource.Type == "OpenXDA")
+                            return GetOpenXDA(eventSource, table);
+                        else return StatusCode(StatusCodes.Status400BadRequest, "Eventsource type not supported");
 
-                    if (dataSource.Type == "TrenDAPDB")
-                        return GetOpenXDA(dataSource, table);
-                    else if (dataSource.Type == "OpenHistorian")
-                        return GetOpenHistorian(dataSource, table);
-                    else return StatusCode(StatusCodes.Status400BadRequest, "Datasource type not supported");
+                    }
+                    return StatusCode(StatusCodes.Status400BadRequest, "Source type not supported");
                 }
                 catch (Exception ex)
                 {
@@ -131,7 +141,7 @@ namespace TrenDAP.Controllers
 
                     if (dataSource.Type == "TrenDAPDB")
                     {
-                        rsp = helper.PostAsync("api/Channel/GetTrendSearchData", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
+                        rsp = helper.PostAsync("api/Channel/TrenDAP", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
                     }
                     else return StatusCode(StatusCodes.Status500InternalServerError, "Only TrenDAPDB datasources supported by this endpoint.");
 
@@ -143,12 +153,28 @@ namespace TrenDAP.Controllers
                 }
             }
         }
-        
+
         private ActionResult GetOpenXDA(DataSource dataSource, string table, JObject filter = null)
         {
             try
             {
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
+                Task<string> rsp;
+                if (filter is null) rsp = helper.GetAsync($"api/{table}");
+                else rsp = helper.PostAsync($"api/{table}/SearchableList", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
+                return Ok(rsp.Result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex);
+            }
+        }
+
+        private ActionResult GetOpenXDA(EventSource eventSource, string table, JObject filter = null)
+        {
+            try
+            {
+                EventSourceHelper helper = new EventSourceHelper(eventSource);
                 Task<string> rsp;
                 if (filter is null) rsp = helper.GetAsync($"api/{table}");
                 else rsp = helper.PostAsync($"api/{table}/SearchableList", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
