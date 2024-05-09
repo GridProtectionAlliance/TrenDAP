@@ -23,9 +23,8 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { ServerErrorIcon } from '@gpa-gemstone/react-interactive';
-import { cloneDeep } from 'lodash';
 import { DataSourceTypes, TrenDAP } from '../../global';
-import { IDataSource } from './Interface';
+import { IDataSource, EnsureTypeSafety } from './Interface';
 import { AllSources } from './DataSources';
 
 interface IProps {
@@ -44,7 +43,7 @@ const DataSourceWrapper: React.FC<IProps> = (props: IProps) => {
         if (props.DataSource == null) return;
         if (props.Connection?.Settings == null)
             return implementation?.DefaultDataSetSettings ?? {};
-        return TypeCorrectSettings(props.Connection.Settings, implementation?.DefaultDataSetSettings ?? {});
+        return EnsureTypeSafety(props.Connection.Settings, implementation?.DefaultDataSetSettings ?? {});
     }, [implementation, props.Connection?.Settings]);
 
     // Ensure that source settings are valid
@@ -84,16 +83,6 @@ const DataSourceWrapper: React.FC<IProps> = (props: IProps) => {
     </>
 }
 
-// Function to parse DataSourceDataSet Settings
-function TypeCorrectSettings<T>(settingsObj: any, defaultSettings: T): T {
-    const s = cloneDeep(defaultSettings);
-    for (const [k] of Object.entries(defaultSettings)) {
-        if (settingsObj.hasOwnProperty(k))
-            s[k] = cloneDeep(settingsObj[k]);
-    }
-    return s;
-}
-
 interface IError {
     name: string,
     message: string
@@ -110,7 +99,7 @@ class ErrorBoundary extends React.Component<{ Name: string }, IError> {
             name: error.name,
             message: error.message
         });
-        console.log(error);
+        console.error(error);
     }
 
     render() {
@@ -133,5 +122,4 @@ class ErrorBoundary extends React.Component<{ Name: string }, IError> {
     }
 }
 
-export { DataSourceWrapper, TypeCorrectSettings }
 export default DataSourceWrapper;

@@ -20,10 +20,23 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+import { cloneDeep } from 'lodash';
 import { TrenDAP, DataSourceTypes, DataSetTypes } from '../../global'
 
 // The intrefaces for Trend Datasources
 // Interfaces = connection points to other pieces in the architecture
+
+/* Helper Function to ensure type safety on settings objects
+ {T} => Default Settings Objects, Unintiated Fields Match this Default
+*/
+export function EnsureTypeSafety<T>(settingsObj: any, defaultSettings: T): T {
+    const s = cloneDeep(defaultSettings);
+    for (const [k] of Object.entries(defaultSettings)) {
+        if (settingsObj.hasOwnProperty(k))
+            s[k] = cloneDeep(settingsObj[k]);
+    }
+    return s;
+}
 
 /*
  Interface that needs to be implemented by an DataSource
