@@ -183,9 +183,9 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     channel.Key = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) }
 
                     //This is for the specific case of XvsY where we need to update the targetKey with the correct parent...
-                    //There probably is a better way todo this..
+                    //Not sure of a better way to do this unless we start updating the maps in the channelselection
 
-                    if (channel.ChannelSettings?.TargetKey === null) return
+                    if (channel?.ChannelSettings?.TargetKey == null) return
                     channel.ChannelSettings.TargetKey = { ...channel.ChannelSettings.TargetKey, Parent: props.ParentMap.current.get(channel.ChannelSettings.TargetParentID) }
                 }
             })
@@ -203,9 +203,6 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             props.RemoveWidget();
         setShowSettingsModal(false)
     }
-
-    { /*fix error boundary width and height after implementing percents for widget width.. needs to b ea number or a string..*/ }
-
 
     return <>
         {Implementation == null ? <div className="card">
@@ -256,7 +253,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     Size="xlg"
                 >
                     <div className="row">
-                        <div className="col-6">
+                        <div className="col-4">
                             <div className="row">
                                 <div className="col-12">
                                     <Input<ICommonSettings> Field='Label' Record={localCommonSettings} Type='text' Setter={(r) => setCommonLocalSettings(r)} Valid={(field) => true} />
@@ -275,7 +272,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-6 d-flex flex-column h-100" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
+                        <div className="col-8 d-flex flex-column h-100" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
                             {Implementation?.ChannelSelectionUI !== undefined ?
                                 <Implementation.ChannelSelectionUI
                                     AddChannel={(channelID, defaultSetting, isAdded) => handleAddChannel(channelID, defaultSetting, isAdded)}
