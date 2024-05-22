@@ -36,9 +36,9 @@ import { SelectWorkSpacesForUser } from './Features/WorkSpaces/WorkSpacesSlice';
 const DataSources = React.lazy(() => import(/* webpackChunkName: "DataSources" */ './Features/DataSources/DataSources'));
 const ByEventSources = React.lazy(() => import(/* webpackChunkName: "EventSources" */ './Features/EventSources/ByEventSources'));
 const DataSets = React.lazy(() => import(/* webpackChunkName: "DataSets" */ './Features/DataSets/DataSets'));
-const WorkSpaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/WorkSpaces/WorkSpaces'));
+const Workspaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/WorkSpaces/Workspaces'));
 const EditDataSet = React.lazy(() => import(/* webpackChunkName: "EditDataSet" */ './Features/DataSets/EditDataSet'));
-const WorkSpaceEditor = React.lazy(() => import(/* webpackChunkName: "WorkSpaceEditor" */ './Features/WorkSpaces/WorkSpaceEditor'));
+const WorkSpaceEditor = React.lazy(() => import(/* webpackChunkName: "WorkSpaceEditor" */ './Features/WorkSpaces/Workspace'));
 const ViewDataSet = React.lazy(() => import(/* webpackChunkName: "ViewDataSet" */ './Features/DataSets/ViewDataSet/ViewDataSet'));
 
 const TrenDAP: React.FunctionComponent = (props: {}) => {
@@ -47,10 +47,10 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
     const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
 
     React.useEffect(() => {
-        window.addEventListener('resize', (evt) => forceUpdate());
+        window.addEventListener('resize', () => forceUpdate());
 
         return () => {
-            window.removeEventListener('resize', (evt) => { });
+            window.removeEventListener('resize', () => { });
         }
     }, []);
 
@@ -69,8 +69,8 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                 <Page Name={'DataSets'} Label={'Data Sets'} Icon={SVGIcons.Cube}>
                     <DataSets />
                 </Page>
-                <Page Name={'WorkSpaces'} Label={'WorkSpaces'} Icon={SVGIcons.House}>
-                    <WorkSpaces />
+                <Page Name={'WorkSpaces'} Label={'Workspaces'} Icon={SVGIcons.House}>
+                    <Workspaces />
                 </Page>
                 <Page Name={'EditDataSet/:id'}>
                     <EditDataSet />
