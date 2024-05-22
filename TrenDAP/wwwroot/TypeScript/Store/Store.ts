@@ -29,6 +29,7 @@ import DataSetReducer from '../Features/DataSets/DataSetsSlice';
 import OpenXDAReducer from '../Features/OpenXDA/OpenXDASlice';
 import OpenHistorianReducer from '../Features/OpenHistorian/OpenHistorianSlice';
 import SapphireReducer from '../Features/Sapphire/SapphireSlice';
+import GeneralSettingsReducer from './GeneralSettingsSlice';
 
 //Dispatch and Selector Typed
 export type AppDispatch = typeof store.dispatch;
@@ -40,7 +41,8 @@ const reducer = {
     OpenXDA: OpenXDAReducer,
     OpenHistorian: OpenHistorianReducer,
     Sapphire: SapphireReducer,
-    EventSources: EventSourcesReducuer
+    EventSources: EventSourcesReducuer,
+    GeneralSettings: GeneralSettingsReducer
 }
 
 const store = configureStore({ reducer });
