@@ -223,7 +223,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 Show={props.IsModalOpen}
                 ShowX={true}
                 ConfirmText={'Apply'}
-                Title={'Select A Data Set'}
+                Title={'Select a Data Set'}
                 CallBack={conf => {
                     if (conf) 
                         props.GenerateMapping(channelMatches.map(match => [match.Key, match.ChannelID]), parentMatches.map((match, index) => [match.ParentID, index]), allChannels, selectedDataSet, loadData());
