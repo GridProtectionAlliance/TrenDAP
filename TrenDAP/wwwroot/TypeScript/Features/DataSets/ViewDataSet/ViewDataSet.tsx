@@ -24,7 +24,7 @@
 import * as React from 'react';
 import { TrenDAP } from '../../../global';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
-import { UpdateDataSetData, SelectDataSetsStatus, FetchDataSets, SelectRecord, SetRecordByID, GetDataSetDataFromIDB, UpdateDataSetDataFlag } from '../DataSetsSlice'
+import { /*UpdateDataSetData,*/ SelectDataSetsStatus, FetchDataSets, SelectRecord, SetRecordByID,/* GetDataSetDataFromIDB*/ } from '../DataSetsSlice'
 import PagedTable from './PagedTable';
 import Chart from './Chart';
 import Histogram from './Histogram';
@@ -71,9 +71,12 @@ export default function ViewDataSet(props) {
 
 
     React.useEffect(() => {
+        //This needs to be switched out for the loaddatasetdata function gabriel made
+        /*
         GetDataSetDataFromIDB(props['useParams']?.id ?? -1).then(d => {
-            setData(d);
-        });
+            //setData(d);
+        });*/
+
     }, [flag]);
 
     React.useEffect(() => {
@@ -117,7 +120,7 @@ export default function ViewDataSet(props) {
     }, [dataSourceID]);
 
     function FlagData(record: TrenDAP.iXDATrendDataPoint | TrenDAP.iXDATrendDataPoint[]) {
-        UpdateDataSetData(dataSet, dataSourceID, channelID, record).then(() => setFlag(1));
+        //UpdateDataSetData(dataSet, dataSourceID, channelID, record).then(() => setFlag(1));
     }
 
     return (
