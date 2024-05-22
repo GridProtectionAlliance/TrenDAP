@@ -70,12 +70,6 @@ export const WorkSpacesSlice = createSlice({
             const sorted = _.orderBy(state.Data, [state.SortField], [state.Ascending ? "asc" : "desc"])
             state.Data = sorted;
         },
-        OpenWorkSpace: (state, action) => {
-            state.Data.find(ws => ws.ID == action.payload).Open = true;
-        },
-        CloseWorkSpace: (state, action) => {
-            state.Data.find(ws => ws.ID == action.payload).Open = false;
-        }
     },
     extraReducers: (builder) => {
 
@@ -150,11 +144,11 @@ export const WorkSpacesSlice = createSlice({
 // #endregion
 
 // #region [ Selectors ]
-export const { Sort, OpenWorkSpace, CloseWorkSpace } = WorkSpacesSlice.actions;
+export const { Sort } = WorkSpacesSlice.actions;
 export default WorkSpacesSlice.reducer; 
 export const SelectWorkSpaces = (state: Redux.StoreState) => state.WorkSpaces.Data;
 export const SelectWorkSpaceByID = createSelector((state: Redux.StoreState) => state.WorkSpaces.Data, (_,id: number) => id, (ws, id) => ws.find(ds => ds.ID === id));
-export const SelectNewWorkSpace = () => ({ ID: 0, Name: '', DataSetID: 0,  User: '', JSON: '' });
+export const SelectNewWorkSpace = (): TrenDAP.iWorkSpace => ({ ID: 0, Name: '',  User: '', JSON: '', JSONString: '', Public: false, UpdatedOn: '' });
 export const SelectWorkSpacesStatus = (state: Redux.StoreState) => state.WorkSpaces.Status;
 export const SelectWorkSpacesForUser = createSelector((state: Redux.StoreState) => state.WorkSpaces.Data, (_, user: string) => user, (ws, user) => ws.filter(w => w.User === user));
 export const SelectWorkSpacesAllPublicNotUser = createSelector((state: Redux.StoreState) => state.WorkSpaces.Data, (_, user: string) => user, (workspaces, user) => workspaces.filter(ws => ws.Public && ws.User !== user));
