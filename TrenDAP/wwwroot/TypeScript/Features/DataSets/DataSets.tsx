@@ -138,6 +138,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                     </span>
                                 }
                             >
+                                {'\u200B'}
                             </ReactTable.Column>
                         </ReactTable.Table>
                     </div>
