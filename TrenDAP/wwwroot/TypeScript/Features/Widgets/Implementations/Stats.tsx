@@ -27,16 +27,21 @@ import stats from 'stats-lite';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import _ from 'lodash';
 import { WidgetTypes } from '../Interfaces'
+import { TrenDAP } from '../../../global';
+
 
 interface IStatData {
     Category: string,
     Statistic: string | number
 }
 
-interface IProps { SeriesField: ('Average' | 'Minimum' | 'Maximum'), Precision: number }
+interface IProps {
+    Field: TrenDAP.SeriesField,
+    Precision: number
+}
 
 export const StatsWidget: WidgetTypes.IWidget<IProps, any> = {
-    DefaultSettings: { SeriesField: 'Average', Precision: 3 },
+    DefaultSettings: { Field: 'Average', Precision: 3 },
     DefaultChannelSettings: null,
     Name: "Stats",
     WidgetUI: (props) => {
@@ -54,7 +59,7 @@ export const StatsWidget: WidgetTypes.IWidget<IProps, any> = {
             newStats.Data.forEach(data => {
                 let seriesData = data.SeriesData;
                 if (seriesData != null && Object.keys(seriesData).length !== 0) {
-                    let filteredData = seriesData[props.Settings.SeriesField]?.map(min => min[1])
+                    let filteredData = seriesData[props.Settings.Field]?.map(min => min[1])
 
                     if (filteredData != null)
                         statData.push(...filteredData);
@@ -112,7 +117,7 @@ export const StatsWidget: WidgetTypes.IWidget<IProps, any> = {
     SettingsUI: (props) => {
         return <>
             <Select<IProps> Label={'Series Data Field'} Record={props.Settings} Setter={(item) => props.SetSettings(item)}
-                Options={[{ Label: 'Average', Value: 'Average' }, { Label: 'Minimum', Value: 'Minimum' }, { Label: 'Maximum', Value: 'Maximum' }]} Field={'SeriesField'} />
+                Options={[{ Label: 'Average', Value: 'Average' }, { Label: 'Minimum', Value: 'Minimum' }, { Label: 'Maximum', Value: 'Maximum' }]} Field={'Field'} />
             <Input<IProps> Record={props.Settings} Field={'Precision'} Setter={(item) => props.SetSettings(item)} Valid={() => true} AllowNull={true} />
         </>
     },

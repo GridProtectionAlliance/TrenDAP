@@ -48,7 +48,7 @@ interface IChannelSettings {
     TargetParentID: string //Used to correctly generate targetkey
     Color: string,
     RegressionLine: boolean,
-    Field: ('Average' | 'Minimum' | 'Maximum'),
+    Field: TrenDAP.SeriesField,
     Axis: ('X' | 'Y'),
 }
 
@@ -58,7 +58,7 @@ interface IAxisSelection extends IChannelSettings {
 }
 
 interface SelectValue {
-    Field: ('Average' | 'Minimum' | 'Maximum'),
+    Field: TrenDAP.SeriesField,
     Axis: ('X' | 'Y'),
     Key: TrenDAP.IChannelKey
 }
@@ -197,7 +197,6 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         const [localSelectedPair, setLocalSelectedPair] = React.useState<DataSetTypes.IDataSetMetaData[]>([]); // this needs to be a tuple
         const [pairs, setPairs] = React.useState<[ISelectedChannels, ISelectedChannels][]>([]);
 
-        const [isEditPair, setIsEditPair] = React.useState<boolean>(false);
         const [editedPair, setEdittedPair] = React.useState<[ISelectedChannels, ISelectedChannels]>(null);
 
         React.useEffect(() => {
@@ -242,10 +241,11 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     }, props.SelectedChannels[0].Key.Parent);
                 }
 
-                if (isEditPair) {
+                if (editedPair != null) {
                     let sameChan1 = localSelectedPair.find(p => _.isEqual(p, editedPair[0].MetaData))
                     let sameChan2 = localSelectedPair.find(p => _.isEqual(p, editedPair[1].MetaData))
                     if (sameChan1 !== null && sameChan2 != null) {
+                        setEdittedPair(null)
                         setShowPairSelection(false);
                         return;
                     }
@@ -258,7 +258,8 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     let chan2Index = selectedChannels.findIndex(c => _.isEqual(c, editedPair[1]))
                     props.SetSelectedChannels(selectedChannels.splice(chan2Index, 1))
                     //we can use the same settings here as we override the non shared ones below
-                    chanDefaultSettings = { ...editedPair[0].ChannelSettings}
+                    chanDefaultSettings = { ...editedPair[0].ChannelSettings }
+                    setEdittedPair(null)
                 }
 
                 let chan1TargetKey = { Phase: localSelectedPair[1].Phase, Type: localSelectedPair[1].Type, Harmonic: localSelectedPair[1].Harmonic, Parent: maxParentValue + 2 }
@@ -361,8 +362,14 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                             <ColorPicker<IChannelSettings> Record={item[0]?.ChannelSettings} Label="Color" Field="Color" Style={{ backgroundColor: item[0]?.ChannelSettings?.Color, borderColor: item[0]?.ChannelSettings?.Color }}
                                 Setter={(record) => {
                                     item.forEach(i => {
-                                        //rewrite settings
-                                        props.SetChannelSettings(i.Key, { ...i.ChannelSettings, Color: record.Color })
+                                        props.SetChannelSettings(i.Key, {
+                                            TargetKey: i.ChannelSettings.TargetKey,
+                                            TargetParentID: i.ChannelSettings.TargetParentID,
+                                            RegressionLine: i.ChannelSettings.RegressionLine,
+                                            Field: i.ChannelSettings.Field,
+                                            Axis: i.ChannelSettings.Axis,
+                                            Color: record.Color,
+                                        })
                                     })
                                 }}
                             />
@@ -374,16 +381,24 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         Key={'XAxis'}
                         AllowSort={true}
                         Field={'0'}
-                        Content={({ item }) => {
+                        Content={({ item, style }) => {
+                            console.log('style from x axis', style)
                             let xChannel = item.find(item => item?.ChannelSettings?.Axis === 'X') ?? item[0]
                             return (
-                                <StylableSelect<IAxisSelection> Record={xChannel?.ChannelSettings} Field="LabelValue" Options={getAxisOptions(item, 'X')} Label="" Setter={axis => {
+                                <StylableSelect<IAxisSelection> Style={{ position: undefined }} Record={xChannel?.ChannelSettings} Field="LabelValue" Options={getAxisOptions(item, 'X')} Label="" Setter={axis => {
                                     let record: SelectValue = axis.LabelValue
                                     const newXAxis = item.find(c => _.isEqual(record.Key, c.Key))
                                     //rewrite settings
 
                                     if (newXAxis.ChannelSettings.Axis !== record.Axis || newXAxis.ChannelSettings.Field !== record.Field)
-                                        props.SetChannelSettings(newXAxis.Key, { ...newXAxis.ChannelSettings, Axis: record.Axis, Field: record.Field })
+                                        props.SetChannelSettings(newXAxis.Key, {
+                                            TargetKey: newXAxis.ChannelSettings.TargetKey,
+                                            TargetParentID: newXAxis.ChannelSettings.TargetParentID,
+                                            RegressionLine: newXAxis.ChannelSettings.RegressionLine,
+                                            Color: newXAxis.ChannelSettings.Color,
+                                            Axis: record.Axis,
+                                            Field: record.Field
+                                        })
                                 }} />
                             )
                         }}
@@ -420,20 +435,20 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         AllowSort={true}
                         Field={'0'}
                         Content={({ item }) => <>
-                            <button className="btn" onClick={() => setShowPairSelection(true)}> <ReactIcons.Copy Size={15} /></button>
-                            <button className="btn" onClick={() => { props.SetSelectedChannels(props.SelectedChannels.filter(chan => !item.map(i => i.Key).includes(chan.Key))) }}>
-                                <ReactIcons.TrashCan Color="Red" Size={15} />
-                            </button>
-                            <button className="btn" onClick={() => {
-                                setShowPairSelection(true);
-                                //this is only going to truly work once we add a UID to the channel keys
-                                let chan1 = props.SelectedChannels.find(c => _.isEqual(c.Key, item[0].Key))
-                                let chan2 = props.SelectedChannels.find(c => _.isEqual(c.Key, item[1].Key))
+                            <div className="btn-group">
+                                <button className="btn" onClick={() => {
+                                    setShowPairSelection(true);
+                                    let chan1 = props.SelectedChannels.find(c => _.isEqual(c, item[0]))
+                                    let chan2 = props.SelectedChannels.find(c => _.isEqual(c, item[1]))
 
-                                setEdittedPair([chan1, chan2]);
-                                setLocalSelectedPair([chan1.MetaData, chan2.MetaData])
-                                setIsEditPair(true);
-                            }}><ReactIcons.Pencil Size={15} /></button> { /*move this back after styling*/}
+                                    setEdittedPair([chan1, chan2]);
+                                    setLocalSelectedPair([chan1.MetaData, chan2.MetaData])
+                                }}><ReactIcons.Pencil Size={15} /></button>
+                                <button className="btn" onClick={() => setShowPairSelection(true)}> <ReactIcons.Copy Size={15} /></button>
+                                <button className="btn" onClick={() => { props.SetSelectedChannels(props.SelectedChannels.filter(chan => !item.map(i => i.Key).includes(chan.Key))) }}>
+                                    <ReactIcons.TrashCan Color="Red" Size={15} />
+                                </button>
+                            </div>
                         </>}
                     >
                         {'\u200B'}
@@ -560,25 +575,26 @@ function matchDataByTime(seriesData1: ISeriesData[], seriesData2: ISeriesData[])
 
 
 const getAxisOptions = (chans, axis) => {
+    //not sure if using a 0.7 rem font size is the best approach here but more logic would be required to dynamically fit the text..
     return React.useMemo(() => {
         const axisOptions = (chans, axis) => {
             if (axis === 'X') {
                 return [
-                    { Element: <p>{chans[0]?.MetaData?.Name} Average</p>, Value: { Field: 'Average', Axis: 'X', Key: chans[0]?.Key } as SelectValue },
-                    { Element: <p>{chans[0]?.MetaData?.Name} Maximum</p>, Value: { Field: 'Maximum', Axis: 'X', Key: chans[0]?.Key } as SelectValue },
-                    { Element: <p>{chans[0]?.MetaData?.Name} Minimum</p>, Value: { Field: 'Minimum', Axis: 'X', Key: chans[0]?.Key } as SelectValue },
-                    { Element: <p>{chans[1]?.MetaData?.Name} Average</p>, Value: { Field: 'Average', Axis: 'X', Key: chans[1]?.Key } as SelectValue },
-                    { Element: <p>{chans[1]?.MetaData?.Name} Maximum</p>, Value: { Field: 'Maximum', Axis: 'X', Key: chans[1]?.Key } as SelectValue },
-                    { Element: <p>{chans[1]?.MetaData?.Name} Minimum</p>, Value: { Field: 'Minimum', Axis: 'X', Key: chans[1]?.Key } as SelectValue },
+                    { Element: <span style={{ fontSize: '0.7rem' }}>{chans[0]?.MetaData?.Name + ` Average`}</span>, Value: { Field: 'Average', Axis: 'X', Key: chans[0]?.Key } as SelectValue },
+                    { Element: <span style={{ fontSize: '0.7rem' }}>{chans[0]?.MetaData?.Name + ` Maximum`}</span>, Value: { Field: 'Maximum', Axis: 'X', Key: chans[0]?.Key } as SelectValue },
+                    { Element: <span style={{ fontSize: '0.7rem' }}>{chans[0]?.MetaData?.Name + ` Minimum`}</span>, Value: { Field: 'Minimum', Axis: 'X', Key: chans[0]?.Key } as SelectValue },
+                    { Element: <span style={{ fontSize: '0.7rem' }}>{chans[1]?.MetaData?.Name + ` Average`}</span>, Value: { Field: 'Average', Axis: 'X', Key: chans[1]?.Key } as SelectValue },
+                    { Element: <span style={{ fontSize: '0.7rem' }}>{chans[1]?.MetaData?.Name + ` Maximum`}</span>, Value: { Field: 'Maximum', Axis: 'X', Key: chans[1]?.Key } as SelectValue },
+                    { Element: <span style={{ fontSize: '0.7rem' }}>{chans[1]?.MetaData?.Name + ` Minimum`}</span>, Value: { Field: 'Minimum', Axis: 'X', Key: chans[1]?.Key } as SelectValue },
                 ];
             } else {
                 return [
-                    { Element: <p>{chans[0]?.MetaData?.Name} Average</p>, Value: { Field: 'Average', Axis: 'Y', Key: chans[0]?.Key } as SelectValue },
-                    { Element: <p>{chans[0]?.MetaData?.Name} Maximum</p>, Value: { Field: 'Maximum', Axis: 'Y', Key: chans[0]?.Key } as SelectValue },
-                    { Element: <p>{chans[0]?.MetaData?.Name} Minimum</p>, Value: { Field: 'Minimum', Axis: 'Y', Key: chans[0]?.Key } as SelectValue },
-                    { Element: <p>{chans[1]?.MetaData?.Name} Average</p>, Value: { Field: 'Average', Axis: 'Y', Key: chans[1]?.Key } as SelectValue },
-                    { Element: <p>{chans[1]?.MetaData?.Name} Maximum</p>, Value: { Field: 'Maximum', Axis: 'Y', Key: chans[1]?.Key } as SelectValue },
-                    { Element: <p>{chans[1]?.MetaData?.Name} Minimum</p>, Value: { Field: 'Minimum', Axis: 'Y', Key: chans[1]?.Key } as SelectValue },
+                    { Element: <span style={{ fontSize: '0.7rem' }}>{chans[0]?.MetaData?.Name + ` Average`}</span>, Value: { Field: 'Average', Axis: 'Y', Key: chans[0]?.Key } as SelectValue },
+                    { Element: <span style={{ fontSize: '0.7rem' }}>{chans[0]?.MetaData?.Name + ` Maximum`}</span>, Value: { Field: 'Maximum', Axis: 'Y', Key: chans[0]?.Key } as SelectValue },
+                    { Element: <span style={{ fontSize: '0.7rem' }}>{chans[0]?.MetaData?.Name + ` Minimum`}</span>, Value: { Field: 'Minimum', Axis: 'Y', Key: chans[0]?.Key } as SelectValue },
+                    { Element: <span style={{ fontSize: '0.7rem' }}>{chans[1]?.MetaData?.Name + ` Average`}</span>, Value: { Field: 'Average', Axis: 'Y', Key: chans[1]?.Key } as SelectValue },
+                    { Element: <span style={{ fontSize: '0.7rem' }}>{chans[1]?.MetaData?.Name + ` Maximum`}</span>, Value: { Field: 'Maximum', Axis: 'Y', Key: chans[1]?.Key } as SelectValue },
+                    { Element: <span style={{ fontSize: '0.7rem' }}>{chans[1]?.MetaData?.Name + ` Minimum`}</span>, Value: { Field: 'Minimum', Axis: 'Y', Key: chans[1]?.Key } as SelectValue },
                 ];
             }
         };

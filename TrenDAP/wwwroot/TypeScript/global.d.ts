@@ -178,7 +178,7 @@ export namespace TrenDAP {
     interface iXDAReturnWithDataSource extends iXDAReturnData { DataSourceID: number, DataSource: string }
     interface iXDAReturnData extends iXDAReturn { Data: iXDATrendDataPoint[], Events: { ID: number, ChannelID: number, StartTime: string }[] }
     interface iXDATrendDataPoint { Tag: string, Minimum: number, Maximum: number, Average: number, Timestamp: string, QualityFlags: number }
-    type iXDATrendDataPointField = 'Minimum' | 'Maximum' | 'Average';
+    type SeriesField = 'Minimum' | 'Maximum' | 'Average';
 
     // openHistorian
     interface iOpenHistorianDataSet { Devices: string[], Phases: string[], Types: string[], Instance: string, Aggregate: '1s' | '1m' | '1h' | '1d' | '1w' }
@@ -191,7 +191,7 @@ export namespace TrenDAP {
     interface iSapphireReturnWithDataSource extends iSapphireReturnData { DataSourceID: number, DataSource: string }
     interface iSapphireReturnData extends iSapphireReturn { Data: iSapphireTrendDataPoint[], Events: { ID: number, ChannelID: number, StartTime: string }[] }
     interface iSapphireTrendDataPoint extends iXDATrendDataPoint { }
-    type iSapphireTrendDataPointField = iXDATrendDataPointField;
+    type iSapphireTrendDataPointField = SeriesField;
 
     // Widget JSON interfaces
     interface WorkSpaceJSON { Rows: IRow[] }
@@ -212,8 +212,8 @@ export namespace TrenDAP {
         AddChannelToMap: (channelKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData) => void
     }
 
-    interface iSeries { DataSourceID: number, ID: string, Field: iXDATrendDataPointField }
-    interface iTemplateSeries { DataSourceID: number, Field: iXDATrendDataPointField }
+    interface iSeries { DataSourceID: number, ID: string, Field: SeriesField }
+    interface iTemplateSeries { DataSourceID: number, Field: SeriesField }
     interface iTemplateSeriesXDA extends iTemplateSeries { Phase: OpenXDA.Types.PhaseName, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Type: OpenXDA.Types.MeasurementTypeName }
     interface iTemplateSeriesSapphire extends iTemplateSeries { Phase: string, Measurement: string, Harmonic: number }
 

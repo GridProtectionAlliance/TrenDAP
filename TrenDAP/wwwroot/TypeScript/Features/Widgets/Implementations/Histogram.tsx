@@ -42,7 +42,7 @@ interface IProps {
 
 interface IChannelSettings {
     Color: string,
-    Field: ('Average' | 'Minimum' | 'Maximum'),
+    Field: TrenDAP.SeriesField,
     Profile: boolean,
 }
 
