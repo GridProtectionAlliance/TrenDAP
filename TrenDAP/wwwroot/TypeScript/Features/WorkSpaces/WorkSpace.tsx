@@ -79,7 +79,7 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
 
     React.useEffect(() => {
         if (workSpace === undefined) return;
-        let json = JSON.parse(workSpace.JSONString, reviver) as TrenDAP.WorkSpaceJSON;
+        let json = JSON.parse(workSpace.JSONString) as TrenDAP.WorkSpaceJSON;
         setWorkSpaceJSON(json);
     }, [workSpace]);
 
@@ -89,7 +89,6 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
 
     }, [dispatch, workspaceStatus]);
 
-    //udpate to handle parentMapping as well
     function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], allChannels: DataSetTypes.IDataSetMetaData[], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
         setLoading(true);
         loadHandle.then(() => setLoading(false));
@@ -104,7 +103,7 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
 
     function HandleAddObject(type: string | 'Row') {
         if (type === 'Row')
-            dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify({ ...workSpaceJSON, Rows: [...workSpaceJSON.Rows, { Height: 500, Widgets: [], Label: "", ShowHeader: true }] }, replacer) }))
+            dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify({ ...workSpaceJSON, Rows: [...workSpaceJSON.Rows, { Height: 500, Widgets: [], Label: "", ShowHeader: true }] }) }))
         else {
             dispatch(UpdateWorkSpace({
                 ...workSpace, JSONString: JSON.stringify({
@@ -112,7 +111,7 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
                         Height: 500,
                         Widgets: [CreateWidget(type, 100)]
                     }]
-                }, replacer)
+                })
             }))
         }
     }
@@ -173,7 +172,7 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
 
                         <button className="btn" onMouseEnter={() => setHover('Save')} onMouseLeave={() => setHover('None')} data-tooltip="save-btn" onClick={(e) => {
                             e.preventDefault();
-                            dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(workSpaceJSON, replacer) }));
+                            dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(workSpaceJSON) }));
                         }}><ReactIcons.FloppyDisk Color="white" /></button>
                         <ToolTip Show={hover === "Save"} Position="left" Target="save-btn">Save Current Workspace</ToolTip>
 
@@ -199,37 +198,37 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
                                 ShowHeader={row.ShowHeader}
                                 AddChannelToMap={AddChannelToMap}
                                 UpdateRow={(record) => {
-                                    let json: TrenDAP.WorkSpaceJSON = JSON.parse(workSpace.JSONString, reviver);
+                                    let json: TrenDAP.WorkSpaceJSON = JSON.parse(workSpace.JSONString);
                                     json.Rows[index].Height = record.Height;
                                     json.Rows[index].Label = record.Label;
                                     json.Rows[index].ShowHeader = record.ShowHeader;
                                     json.Rows[index].Widgets = record.Widgets;
-                                    dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json, replacer) }));
+                                    dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json) }));
                                 }}
                                 RemoveRow={() => {
-                                    let json = JSON.parse(workSpace.JSONString, reviver);
+                                    let json = JSON.parse(workSpace.JSONString);
                                     json.Rows.splice(index, 1);
-                                    dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json, replacer) }));
+                                    dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json) }));
                                 }}
                                 MoveRowUp={() => {
                                     if (index <= 0) return;
                                     const newIndex = index - 1
-                                    let json = JSON.parse(workSpace.JSONString, reviver);
+                                    let json = JSON.parse(workSpace.JSONString);
                                     const a = json.Rows[newIndex];
                                     const b = json.Rows[index];
                                     json.Rows[newIndex] = b;
                                     json.Rows[index] = a;
-                                    dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json, replacer) }));
+                                    dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json) }));
                                 }}
                                 MoveRowDown={() => {
-                                    let json = JSON.parse(workSpace.JSONString, reviver);
+                                    let json = JSON.parse(workSpace.JSONString);
                                     if (index >= json.Rows.length) return;
                                     const newIndex = index + 1
                                     const a = json.Rows[newIndex];
                                     const b = json.Rows[index];
                                     json.Rows[newIndex] = b;
                                     json.Rows[index] = a;
-                                    dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json, replacer) }));
+                                    dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(json) }));
                                 }}
                             />)}
                         </div>
@@ -242,31 +241,3 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
 }
 
 export default WorkSpace;
-
-
-export const replacer = (key, value) => {
-    if (value instanceof Map) {
-        return {
-            dataType: 'Map',
-            value: Array.from(value.entries()),
-        };
-    } else if (value instanceof HashTable) {
-        return {
-            dataType: 'HashTable',
-            value: Array.from(value.entries()), 
-        };
-    } else {
-        return value;
-    }
-}
-
-export const reviver = (key, value) => {
-    if (typeof value === 'object' && value !== null) {
-        if (value.dataType === 'Map') {
-            return new Map(value.value);
-        } else if (value.dataType === 'HashTable') {
-             return new HashTable<TrenDAP.IChannelKey, any>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, value.value); 
-        }
-    }
-    return value;
-}
