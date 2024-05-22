@@ -613,7 +613,6 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         const [ascending, setAscending] = React.useState<boolean>(false);
         const [sortField, setSortField] = React.useState<keyof DataSetTypes.IDataSetMetaData>('Phase');
 
-
         const sort = (field: keyof DataSetTypes.IDataSetMetaData, ascend: boolean) => {
             setSortField(field);
             setAscending(ascend);
@@ -621,7 +620,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         }
 
         return <>
-            <div className="row h-50">
+            <div className="container-fluid d-flex h-50 flex-column">
                 <ReactTable.Table<DataSetTypes.IDataSetMetaData>
                     TableClass="table table-hover"
                     TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
@@ -673,7 +672,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     </ReactTable.Column>
                 </ReactTable.Table>
             </div>
-            <div className="row h-50">
+            <div className="container-fluid d-flex h-50 flex-column">
                 <ReactTable.Table<ISelectedChannels>
                     TableClass="table table-hover"
                     TableStyle={{ maxHeight: 'calc((-230px + 100vh) / 2)', width: '100%', overflow: 'hidden' }}
