@@ -43,10 +43,6 @@
     <Content Remove="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Histogram.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Profile.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Widgets\Implementations\Trend\Axis.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Widgets\Implementations\Trend\SeriesPicker.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Widgets\Implementations\Trend\TemplatePicker.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Widgets\Implementations\Trend\Trend.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Trend.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\XvsY.tsx" />
@@ -55,7 +51,6 @@
     <Content Remove="wwwroot\TypeScript\Features\Workspaces\WorkSpaces.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Workspaces\WorkSpaceSettings" />
     <Content Remove="wwwroot\TypeScript\Features\Workspaces\WorkSpacesSlice.ts" />
-    <Content Remove="wwwroot\TypeScript\Forms\MultiCheckBoxSelect.tsx" />
     <Content Remove="wwwroot\TypeScript\global.d.ts" />
     <Content Remove="wwwroot\TypeScript\hooks.ts" />
     <Content Remove="wwwroot\TypeScript\Implementations.ts" />
@@ -146,16 +141,7 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Implementations\Trend\Axis.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Implementations\Trend\SeriesPicker.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Implementations\Trend\TemplatePicker.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Implementations\Trend\Trend.tsx">
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Implementations\Trend.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Workspaces\Row.tsx">
@@ -170,7 +156,6 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Workspaces\WorkspacesSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Forms\MultiCheckBoxSelect.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\LoadingSpinner.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Store\Store.ts">
       <SubType>Code</SubType>
