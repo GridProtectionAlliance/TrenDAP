@@ -44,11 +44,7 @@ namespace TrenDAP.Model
         public string Name { get; set; }
         [UseEscapedName]
         public string User { get; set; }
-        public byte[] JSON { get; set; }
-        public int DataSetID { get; set; }
-        [UseEscapedName]
-        public string Type { get; set; }
-
+        public byte[] JSON { get; set; } //this should be named settings as JSON really isnt descriptive at all..
         [NonRecordField]
         public string JSONString
         {
@@ -63,8 +59,6 @@ namespace TrenDAP.Model
         [UseEscapedName]
         public bool Public { get; set; }
         public DateTime UpdatedOn { get; set; }
-        [UseEscapedName]
-        public bool Open { get; set; }
     }
 
 
