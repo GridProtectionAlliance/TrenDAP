@@ -21,21 +21,23 @@
 //
 //******************************************************************************************************
 
-import { TrenDAP } from "../../global";
+import { TrenDAP, DataSetTypes } from "../../global";
 import moment from "moment";
 
-export interface DataSetTableRow {
-    ID: number,
+export interface ChannelTableRow {
+    ID: string,
     Created: string,
-    Data: (TrenDAP.iDataSetReturn)[]
+    Data: DataSetTypes.IDataSetData
 }
-const TimeFormat = 'MM/DD/YYYY HH:mm';
+
+const TimeFormat = 'MM/DD/YYYY HH:mm:ss';
+//To DO Add Documentation on what each function does...
 export default class TrenDAPDB {
 
     private OpenDB() {
 
         return new Promise<IDBDatabase>((resolve, reject) => {
-            let req = indexedDB.open('TrenDAP', 1);
+            let req = indexedDB.open('TrenDAP', 2);
 
             req.onupgradeneeded = this.AddTables;
 
@@ -56,20 +58,19 @@ export default class TrenDAPDB {
 
     private AddTables(evt: any) {
         let upgradeDB = evt.target.result as IDBDatabase;
-        if (!upgradeDB.objectStoreNames.contains('DataSet')) {
-            let ds = upgradeDB.createObjectStore('DataSet', { keyPath: 'ID', autoIncrement: false });
+        if (!upgradeDB.objectStoreNames.contains('Channel')) {
+            let ds = upgradeDB.createObjectStore('Channel', { keyPath: 'ID', autoIncrement: false });
             ds.createIndex("ID", "ID", { unique: true });
         }
 
     }
 
-    public Read(table: string, id: number) {
-        return new Promise<(DataSetTableRow)>(async (resolve, reject) => {
-
+    public Read(key: string) {
+        return new Promise<(ChannelTableRow)>(async (resolve, reject) => {
             let db = await this.OpenDB();
-            let tx = db.transaction(table, 'readonly');
-            let store = tx.objectStore(table);
-            let result = store.get(id);
+            let tx = db.transaction('Channel', 'readonly');
+            let store = tx.objectStore('Channel');
+            let result = store.get(key);
 
             result.onsuccess = (evt: any) => {
                 resolve(evt.target.result);
@@ -84,12 +85,49 @@ export default class TrenDAPDB {
         });
     }
 
-    public ReadAll(table: string) {
-        return new Promise<(DataSetTableRow)[]>(async (resolve, reject) => {
+    public ReadMany(keys: string[]) {
+        return new Promise<(ChannelTableRow[])>(async (resolve, reject) => {
+            if (keys == null || keys.length === 0) {
+                resolve([]);
+                return;
+            }
 
             let db = await this.OpenDB();
-            let tx = db.transaction(table, 'readonly');
-            let store = tx.objectStore(table);
+            let tx = db.transaction('Channel', 'readonly');
+            let store = tx.objectStore('Channel');
+            let results = [];
+
+            keys.forEach(key => {
+                if (key == null)
+                    return
+                let request = store.get(key);
+                request.onsuccess = (evt: any) => {
+                    results.push(evt.target.result);  
+                };
+                request.onerror = (evt: any) => {
+                    reject(evt.target.error);  
+                };
+            });
+
+            tx.oncomplete = () => {
+                db.close();
+                resolve(results);  
+            };
+
+            tx.onerror = (evt: any) => {
+                reject(evt.target.error); 
+            };
+        });
+    }
+
+
+
+    public ReadAll() {
+        return new Promise<(ChannelTableRow)[]>(async (resolve, reject) => {
+
+            let db = await this.OpenDB();
+            let tx = db.transaction('Channel', 'readonly');
+            let store = tx.objectStore('Channel');
             let result = store.getAll();
 
             result.onsuccess = (evt: any) => {
@@ -103,15 +141,13 @@ export default class TrenDAPDB {
         });
     }
 
-    public Add(table: string, id: number, name: string, record: any) {
+    public Add(record: ChannelTableRow) {
         return new Promise(async (resolve, reject) => {
-
-
             let db = await this.OpenDB();
 
-            let tx = db.transaction(table, 'readwrite');
-            let store = tx.objectStore(table);
-            let result = store.put({ ID: id, Created: moment().format(TimeFormat), Name: name, Data: record });
+            let tx = db.transaction('Channel', 'readwrite');
+            let store = tx.objectStore('Channel');
+            let result = store.put({ ID: record.ID, Created: moment().format(TimeFormat), Data: record });
 
             result.onsuccess = (evt: any) => {
                 resolve(evt.target.result);
@@ -125,16 +161,14 @@ export default class TrenDAPDB {
         })
     }
 
-    public AddMultiple(table: string, id: number, name: string, record: any[]) {
+    public AddMultiple(record: DataSetTypes.IDataSetData[]) {
         return new Promise(async (resolve, reject) => {
-
-
             let db = await this.OpenDB();
 
-            let tx = db.transaction(table, 'readwrite');
-            let store = tx.objectStore(table);
+            let tx = db.transaction('Channel', 'readwrite');
+            let store = tx.objectStore('Channel');
             Promise.all(record.map(r => new Promise((res, rej) => {
-                let result = store.put({ ID: id, Created: moment().format(TimeFormat), Name: name, Data: record });
+                let result = store.put({ ID: r.ID, Created: moment().format(TimeFormat), Data: r });
 
                 result.onsuccess = (evt: any) => {
                     res(evt.target.result);
@@ -150,13 +184,13 @@ export default class TrenDAPDB {
     }
 
 
-    public Delete(table: string, id: number) {
+    public Delete(id: number) {
         return new Promise(async (resolve, reject) => {
 
         let db = await this.OpenDB();
 
-        let tx = db.transaction(table, 'readwrite');
-        let store = tx.objectStore(table);
+        let tx = db.transaction('Channel', 'readwrite');
+        let store = tx.objectStore('Channel');
         let result = store.delete(id);
         result.onsuccess = (evt: any) => {
             resolve(evt.target.result);
