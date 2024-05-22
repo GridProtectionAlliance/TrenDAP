@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { ServerErrorIcon, Modal, ToolTip } from '@gpa-gemstone/react-interactive';
+import { ServerErrorIcon, Modal, ToolTip, Warning } from '@gpa-gemstone/react-interactive';
 import { RandomColor, CreateGuid } from '@gpa-gemstone/helper-functions';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ErrorBoundary } from '@gpa-gemstone/common-pages';
@@ -37,7 +37,7 @@ import { StatsWidget } from './Implementations/Stats';
 import { HistogramWidget } from './Implementations/Histogram';
 import { XvsYWidget } from './Implementations/XvsY';
 import { ProfileWidget } from './Implementations/Profile';
-import { TrendWidget } from './Implementations/Trend/Trend';
+import { TrendWidget } from './Implementations/Trend';
 import { SelectEditMode } from '../../Store/GeneralSettingsSlice';
 
 import TrenDAPDB from '../DataSets/TrenDAPDB';
@@ -84,6 +84,8 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     const [localChannels, setLocalChannels] = React.useState<ISelectedChannels[]>([]);
     const [localSetting, setLocalSetting] = React.useState<any | null>(null);
     const [localCommonSettings, setCommonLocalSettings] = React.useState<ICommonSettings>({ Width: props.Widget.Width, Label: props.Widget.Label, ShowHeader: props.Widget.ShowHeader });
+
+    const [showWarning, setShowWarning] = React.useState<boolean>(false);
 
     const Settings: any = React.useMemo(() => {
         if (props.Widget.Settings == null)
@@ -198,10 +200,12 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                 ShowHeader: localCommonSettings.ShowHeader,
                 Channels: updatedChannels
             })
+            setShowSettingsModal(false)
         }
         else if (!confBtn && deleteBtn)
-            props.RemoveWidget();
-        setShowSettingsModal(false)
+            setShowWarning(true);
+        else if (!confBtn && !deleteBtn)
+            setShowSettingsModal(false);
     }
 
     return <>
@@ -253,7 +257,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     Size="xlg"
                 >
                     <div className="row">
-                        <div className="col-4">
+                        <div className="col-4" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
                             <div className="row">
                                 <div className="col-12">
                                     <Input<ICommonSettings> Field='Label' Record={localCommonSettings} Type='text' Setter={(r) => setCommonLocalSettings(r)} Valid={(field) => true} />
@@ -272,12 +276,11 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-8 d-flex flex-column h-100" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
+                        <div className="col-8" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
                             {Implementation?.ChannelSelectionUI !== undefined ?
                                 <Implementation.ChannelSelectionUI
                                     AddChannel={(channelID, defaultSetting, isAdded) => handleAddChannel(channelID, defaultSetting, isAdded)}
                                     SetChannelSettings={(channelKey, settings) => {
-                                        //temporary for Select component since we have to use it differently than intended
                                         setLocalChannels(prevChannels => {
                                             let updatedChans = prevChannels.map(chan =>
                                                 _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
@@ -312,6 +315,13 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                         </div>
                     </div>
                 </Modal>
+                <Warning Title="Delete Widget" Show={showWarning} Message={"Are you sure you want to delete this widget?"} CallBack={(confirmed) => {
+                    if (confirmed) {
+                        props.RemoveWidget();
+                        setShowSettingsModal(false);
+                    }
+                    setShowWarning(false);
+                }} />
             </ErrorBoundary>}
     </>
 }

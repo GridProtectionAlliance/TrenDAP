@@ -24,7 +24,7 @@
 import * as React from 'react';
 import { TrenDAP } from './../../global';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
-import { ToolTip, Modal } from '@gpa-gemstone/react-interactive';
+import { ToolTip, Modal, Warning } from '@gpa-gemstone/react-interactive';
 import { CreateWidget } from '../Widgets/WidgetWrapper';
 import WidgetWrapper from '../Widgets/WidgetWrapper';
 import { Input, CheckBox, InputWithButton } from '@gpa-gemstone/react-forms';
@@ -57,8 +57,13 @@ export default function Row(props: TrenDAP.IRow) {
     const [rowHeaderHover, setRowHeaderHover] = React.useState<boolean>(false);
     const [headerOpacity, setHeaderOpacity] = React.useState<number>(1);
     const [containerWidth, setContainerWidth] = React.useState<number>(0);
+    const [showWarning, setShowWarning] = React.useState<boolean>(false);
 
     const editMode = useAppSelector(SelectEditMode);
+
+    React.useEffect(() => {
+        setSettings({ Height: props.Height, Label: props.Label, ShowHeader: props.ShowHeader, Widgets: props.Widgets })
+    },[showModal])
 
     React.useLayoutEffect(() => {
         if (containerRef.current != null) {
@@ -120,11 +125,11 @@ export default function Row(props: TrenDAP.IRow) {
         <>
             <div className="card" style={{ height: props.Height }} ref={containerRef}>
                 {props.ShowHeader || editMode ?
-                    <div className="card-header" style={{ opacity: headerOpacity }} onMouseEnter={() => setRowHeaderHover(true)} onMouseLeave={() => setRowHeaderHover(false)}>
+                    <div className="card-header" style={{ opacity: headerOpacity, zIndex: 9985}} onMouseEnter={() => setRowHeaderHover(true)} onMouseLeave={() => setRowHeaderHover(false)}>
                         <div className="row">
                             <div className="d-flex col-6 justify-content-start align-items-center" >{props.Label}</div>
                             <div className="d-flex col-6 justify-content-end align-items-center">
-                                <div style={{ visibility: rowHeaderHover && editMode ? 'visible' : 'hidden', zIndex: 9999 }}>
+                                <div style={{ visibility: rowHeaderHover && editMode ? 'visible' : 'hidden'}}>
                                     <div className="btn-group">
                                         <BtnDropdown Disabled={props.Widgets.length >= 15} Label={AllWidgets[0].Name} Options={AllWidgets.map(widget => ({ Label: widget.Name, Callback: () => HandleAddObject(widget.Name), Disabled: props.Widgets.length >= 15 }))}
                                             Callback={() => HandleAddObject(AllWidgets[0].Name)} ShowToolTip={true} TooltipContent={<p>Add Widget</p>} />
@@ -175,11 +180,15 @@ export default function Row(props: TrenDAP.IRow) {
                 ConfirmText='Save'
                 Title={`Row Settings`}
                 CallBack={(conf, deleteBtn, tertiary) => {
-                    if (conf)
+                    if (settings.Widgets.length < props.Widgets.length) {
+                        setShowWarning(true);
+                        return
+                    }
+                    else if (conf)
                         props.UpdateRow({ ...props, ...settings });
-                    if (deleteBtn && !conf && !tertiary) //we need to see if we want these changes to happen immediately or onSave(row up and row down)
+                    else if (deleteBtn && !conf && !tertiary)
                         props.MoveRowDown()
-                    if (tertiary)
+                    else if (tertiary)
                         props.MoveRowUp()
                     setShowModal(false);
                 }}
@@ -197,7 +206,7 @@ export default function Row(props: TrenDAP.IRow) {
 
                 <label>Widget Width</label>
                 <ul className='list-group'>
-                    {props.Widgets.map((widget, i) =>
+                    {settings.Widgets.map((widget, i) =>
                         <li className='list-group-item' key={i}>
                             <div className="row">
                                 <div className='col-4 d-flex align-items-center'>
@@ -205,7 +214,7 @@ export default function Row(props: TrenDAP.IRow) {
                                 </div>
                                 <div className='col-4 d-flex align-items-center justify-content-center'>
                                     <Input<TrenDAP.IWidgetModel> Record={widget} Label="Width (%)" Field="Width" Type="integer" Valid={(field) => isPercent(widget[field])} Setter={(item) => {
-                                        let row = _.cloneDeep(props);
+                                        let row = _.cloneDeep(settings);
                                         row.Widgets[i].Width = item.Width;
                                         setSettings({ ...settings, Widgets: row.Widgets })
                                     }} />
@@ -213,7 +222,7 @@ export default function Row(props: TrenDAP.IRow) {
                                 <div className='col-4 d-flex align-items-center justify-content-center'>
                                     <button className='btn btn-link' disabled={i <= 0} onClick={() => {
                                         //for arrow up and down I will need to think about how to visually show them moving but not make the changes they save..
-                                        let row = { ...props };
+                                        let row = _.cloneDeep(settings);
                                         if (i <= 0) return;
                                         const newIndex = i - 1;
                                         const a = row.Widgets[newIndex];
@@ -223,7 +232,7 @@ export default function Row(props: TrenDAP.IRow) {
                                         setSettings({ ...settings, Widgets: row.Widgets })
                                     }}><ReactIcons.ArrowDropUp /></button>
                                     <button className='btn btn-link' disabled={i >= props.Widgets.length - 1} onClick={() => {
-                                        let row = { ...props };
+                                        let row = _.cloneDeep(settings);
                                         if (i >= row.Widgets.length - 1) return;
                                         const newIndex = i + 1;
                                         const a = row.Widgets[newIndex];
@@ -233,19 +242,23 @@ export default function Row(props: TrenDAP.IRow) {
                                         setSettings({ ...settings, Widgets: row.Widgets })
                                     }}><ReactIcons.ArrowDropDown /></button>
                                     <button className='btn btn-link' onClick={() => {
-                                        //this doesnt make too much sense the way I am odnig this 
-                                        //revisit this after done w Histogram
-                                        let row = _.cloneDeep(props);
+                                        let row = _.cloneDeep(settings);
                                         row.Widgets.splice(i, 1);
                                         setSettings({ ...settings, Widgets: row.Widgets })
-                                        props.UpdateRow(row);
-                                    }}><ReactIcons.CrossMark Color='red' /></button>
+                                    }}><ReactIcons.TrashCan Color='red' /></button>
                                 </div>
                             </div>
                         </li>
                     )}
                 </ul>
             </Modal>
+            <Warning Show={showWarning} Title={"Delete Widget"} Message={"You deleted a widget are you sure you want to proceed?"} CallBack={(confirmed) => {
+                if (confirmed) {
+                    props.UpdateRow({ ...props, ...settings });
+                    setShowModal(false);
+                }
+                setShowWarning(false);
+            }} />
         </>
     );
 }
