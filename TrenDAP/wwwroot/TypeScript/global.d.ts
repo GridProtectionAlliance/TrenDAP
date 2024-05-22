@@ -145,16 +145,13 @@ export namespace DataSetTypes {
 export namespace TrenDAP {
     type Status = 'loading' | 'idle' | 'error' | 'changed' | 'unitiated';
     type WidgetType = 'Histogram' | 'Profile' | 'Stats' | 'Table' | 'Text' | 'Trend' | 'XvsY';
-    type WidgetClass = iHistogram | iTrend | iProfile | iStats | iTable | iText | iXvsY;
-    type TemplatableWidgetClass = iTemplatableHistogram | iTemplatableTrend | iTemplatableProfile | iTemplatableStats | iTemplatableTable | iTemplatableText | iTemplatableXvsY;
     type TemplateSeries = iTemplateSeriesXDA | iTemplateSeriesOpenHistorian;
     type iDataSetReturnType = iXDAReturnData | iOpenHistorianReturn | iSapphireReturnData;
     type ChartAction = 'Click' | 'Pan' | 'ZoomX' | 'ZoomY' | 'ZoomXY';
-    type WorkSpaceType = 'Regular' | 'Templatable';
     type TemplateBy = 'Meter' | 'Asset' | 'Device';
     type iTrendDataPoint = iXDATrendDataPoint | iOpenHistorianAggregationPoint | iSapphireTrendDataPoint;
     // TrenDAP     
-    interface iWorkSpace { ID: number, Type: WorkSpaceType, Name: string, User: string, DataSetID: number, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Open: boolean }
+    interface iWorkSpace { ID: number, Name: string, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string }
     interface iDataSet { ID: number, Name: string, Context: 'Relative' | 'Fixed Dates', RelativeValue: number, RelativeWindow: 'Day' | 'Week' | 'Month' | 'Year', From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, Public: boolean, UpdatedOn: string, Data?: { Status: Status, Error?: string } }
     interface iDataSetSource { ID: number, Name: string, DataSourceTypeID: number, JSON: object }
     interface iDataSetReturn<T extends iDataSetReturnType = iDataSetReturnType> { Data: T[], DataSource: { ID: number, Name: string, Type: DataSourceType, OpenSEE?: string }, From: string, To: string }
@@ -197,17 +194,23 @@ export namespace TrenDAP {
     type iSapphireTrendDataPointField = iXDATrendDataPointField;
 
     // Widget JSON interfaces
-    interface WorkSpaceJSON { Rows: iRow[] | iTemplatableRow[], By?: TemplateBy, Type?: DataSourceType }
-    interface WorkSpaceJSONTrenDAPDB extends WorkSpaceJSON { By: 'Meter' | 'Asset', Type: 'TrenDAPDB' }
-    interface WorkSpaceJSONOpenHistorian extends WorkSpaceJSON { By: 'Device', Type: 'OpenHistorian' }
+    interface WorkSpaceJSON { Rows: IRow[] }
 
     // Workspace
-    interface iRow { WorkSpace?: iWorkSpace, Height: number, Data?: iDataSetReturn[], Widgets: iWidget[], Update?: (row: iRow) => void, RemoveRow?: () => void, MoveUp?: () => void, MoveDown?: () => void }
-    interface iTemplatableRow extends iRow { By: TrenDAP.TemplateBy, Device: string, Widgets: iTemplatableWidget[] }
-
-    // Generic Widget
-    interface iWidget<T extends WidgetClass = any, U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> { WorkSpace?: iWorkSpace, Data?: iDataSetReturn<U>[], Height: number, Width: number, Type: WidgetType, Label: string, JSON: T, Update?: (widget: iWidget) => void, Remove?: () => void, AddSeries?: (id: number, dataSourceID: number, label?: string) => void }
-    interface iTemplatableWidget<T extends TemplatableWidgetClass = any, U extends TrenDAP.iDataSetReturnType = TrenDAP.iDataSetReturnType> { WorkSpace?: iWorkSpace, By: TemplateBy, Device: string, Data?: iDataSetReturn<U>[], Height: number, Width: number, Type: WidgetType, Label: string, JSON: T, Update?: (widget: iTemplatableWidget) => void, Remove?: () => void }
+    interface IRow {
+        AllChannels: DataSetTypes.IDataSetMetaData[],
+        ChannelMap: IChannelMap,
+        ParentMap: React.MutableRefObject<Map<string, number>>,
+        Label: string,
+        Height: number,
+        Widgets: IWidgetModel[],
+        ShowHeader: boolean,
+        UpdateRow?: (row: iRow) => void,
+        RemoveRow?: () => void,
+        MoveRowUp?: () => void,
+        MoveRowDown?: () => void,
+        AddChannelToMap: (channelKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData) => void
+    }
 
     interface iSeries { DataSourceID: number, ID: string, Field: iXDATrendDataPointField }
     interface iTemplateSeries { DataSourceID: number, Field: iXDATrendDataPointField }
@@ -219,48 +222,49 @@ export namespace TrenDAP {
     interface iYAxis extends iAxis { Position: 'left' | 'right' }
 
     // Histogram Specific
-    interface iHistogram { Min: number, Max: number, Units: string, BinCount: number, Series: iHistogramSeries[] }
     interface iHistogramSeries extends iSeries { Color: string, Profile: boolean, ProfileColor: string }
-    interface iTemplatableHistogram { Min: number, Max: number, Units: string, BinCount: number, Series: iTemplatableHistogramSeriesXDA[] | iTemplatableHistogramSeriesOpenHistorian[] | iTemplatableHistogramSeriesSapphire[] }
     interface iTemplatableHistogramSeries extends iTemplateSeries { Color: string, Profile: boolean, ProfileColor: string }
     interface iTemplatableHistogramSeriesSapphire extends iTemplatableHistogramSeries { Phase: string, Measurement: string, Harmonic: number }
     interface iTemplatableHistogramSeriesXDA extends iTemplatableHistogramSeries { Phase: OpenXDA.Types.PhaseName, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Type: OpenXDA.Types.MeasurementTypeName }
     interface iTemplatableHistogramSeriesOpenHistorian extends iTemplatableHistogramSeries { Phase: OpenHistorian.Types.Phase, Type: OpenHistorian.Types.SignalType }
 
-    // Profile
-    interface iProfile { }
-    interface iTemplatableProfile { }
 
-    // Stats
-    interface iStats { Series: iSeries, Precision: number }
-    interface iTemplatableStats { Series: iTemplateSeriesXDA | iTemplateSeriesOpenHistorian | iTemplateSeriesSapphire, Precision: number }
-
-    // Table
-    interface iTable { Series: iSeries, Precision: number }
-    interface iTemplatableTable { Series: iTemplateSeriesXDA | iTemplateSeriesOpenHistorian | iTemplateSeriesSapphire, Precision: number }
-
-    // Text
-    interface iText { Text: string }
-    interface iTemplatableText { Text: string }
 
     // Trend
-    interface iTrend {
-        Min: number, Max: number, YAxis: iYAxis[], Legend: boolean, Split: boolean, SplitType: 'Axis' | 'Series', Series: iTrendSeries[]
-    }
-
-    interface iTemplatableTrend {
-        Min: number, Max: number, YAxis: iYAxis[], Legend: boolean, Split: boolean, SplitType: 'Axis' | 'Series', Series: iTrendTemplateSeries[]
-    }
-
     interface iTrendSeries extends iSeries { Color: string, Axis: number, Label: string, ShowEvents: boolean }
     interface iTrendTemplateSeries extends iTemplateSeries { Color: string, Axis: number, Label: string }
     interface iTrendTemplateSeriesXDA extends iTrendTemplateSeries { Phase: OpenXDA.Types.PhaseName, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Type: OpenXDA.Types.MeasurementTypeName, ShowEvents: boolean }
     interface iTrendTemplateSeriesSapphire extends iTrendTemplateSeries { Phase: string, Measurement: string, ShowEvents: boolean, Harmonic: number }
-
     interface iTrendTemplateSeriesOpenHistorian extends iTrendTemplateSeries { Phase: OpenHistorian.Types.Phase, Type: OpenHistorian.Types.SignalType }
 
-    // XvsY
-    interface iXvsY { Y: { Series: iSeries, Min: number, Max: number, Units: string }, X: { Series: iSeries, Min: number, Max: number, Units: string }, TimeMin: number, TimeMax: number, RegressionLine: boolean }
-    interface iTemplatableXvsY { Y: { Series: iTemplateSeriesXDA | iTemplateSeriesOpenHistorian | iTemplateSeriesSapphire, Min: number, Max: number, Units: string }, X: { Series: iTemplateSeriesXDA | iTemplateSeriesOpenHistorian | iTemplateSeriesSapphire, Min: number, Max: number, Units: string }, TimeMin: number, TimeMax: number, RegressionLine: boolean }
+    interface GeneralSettings { EditMode: boolean }
+
+    //Model for Workspace logic
+    interface IWidgetModel {
+        Width: number, //percentage 
+        Label: string,
+        Type: string,
+        ShowHeader: boolean,
+        Settings: any,
+        Channels: IWidgetChannels<any>[]
+    }
+
+    //might be better in widgettypes namespace..
+    interface IWidgetChannels<T> {
+        Key: TrenDAP.IChannelKey,
+        ChannelSettings: any
+    }
+
+    interface IChannelKey {
+        Parent: number,
+        Phase: string,
+        Type: string,
+        Harmonic?: number,
+    }
+
+    interface IChannelMap {
+        Map: React.MutableRefObject<HashTable<TrenDAP.IChannelKey, string>>,
+        Version: number
+    }
 
 }
