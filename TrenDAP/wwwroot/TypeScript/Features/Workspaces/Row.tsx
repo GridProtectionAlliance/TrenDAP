@@ -124,17 +124,17 @@ export default function Row(props: TrenDAP.IRow) {
                         <div className="row">
                             <div className="d-flex col-6 justify-content-start align-items-center" >{props.Label}</div>
                             <div className="d-flex col-6 justify-content-end align-items-center">
-                                <div style={{ visibility: rowHeaderHover && editMode ? 'visible' : 'hidden' }}>
+                                <div style={{ visibility: rowHeaderHover && editMode ? 'visible' : 'hidden', zIndex: 9999 }}>
                                     <div className="btn-group">
                                         <BtnDropdown Disabled={props.Widgets.length >= 15} Label={AllWidgets[0].Name} Options={AllWidgets.map(widget => ({ Label: widget.Name, Callback: () => HandleAddObject(widget.Name), Disabled: props.Widgets.length >= 15 }))}
                                             Callback={() => HandleAddObject(AllWidgets[0].Name)} ShowToolTip={true} TooltipContent={<p>Add Widget</p>} />
+                                        <button className="btn" data-tooltip={"rm-row-btn" + guid.current} onMouseEnter={() => setHover('Remove')} onMouseLeave={() => setHover('None')} onClick={() => props.RemoveRow()}>
+                                            <ReactIcons.Minus />
+                                        </button>
+                                        <button className="btn" data-tooltip={"row-settings-btn" + guid.current} onMouseEnter={() => setHover('Settings')} onMouseLeave={() => setHover('None')} onClick={() => setShowModal(true)}>
+                                            <ReactIcons.Settings />
+                                        </button>
                                     </div>
-                                    <button className="btn" data-tooltip={"rm-row-btn" + guid.current} onMouseEnter={() => setHover('Remove')} onMouseLeave={() => setHover('None')} onClick={() => props.RemoveRow()}>
-                                        <ReactIcons.Minus />
-                                    </button>
-                                    <button className="btn" data-tooltip={"row-settings-btn" + guid.current} onMouseEnter={() => setHover('Settings')} onMouseLeave={() => setHover('None')} onClick={() => setShowModal(true)}>
-                                        <ReactIcons.Settings />
-                                    </button>
                                     <ToolTip Show={hover === 'Remove'} Position="left" Target={"rm-row-btn" + guid.current}>Remove Row</ToolTip>
                                     <ToolTip Show={hover === 'Settings'} Position="left" Target={"row-settings-btn" + guid.current}>Row Settings</ToolTip>
                                 </div>
