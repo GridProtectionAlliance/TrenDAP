@@ -23,8 +23,6 @@
 
 using Gemstone.Data;
 using Gemstone.Data.Model;
-using Gemstone.Reflection.MemberInfoExtensions;
-using GSF;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -34,20 +32,9 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Net.Security;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -343,7 +330,7 @@ namespace TrenDAP.Controllers.Sapphire
                 {
                     DataSource dataSource = GetDataSource(dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    Task<string> rsp = helper.Get("api/Meter/Sapphire");
+                    Task<string> rsp = helper.GetAsync("api/Meter/Sapphire");
                     return Ok(rsp.Result);
                 }
                 catch (Exception ex)
@@ -361,7 +348,7 @@ namespace TrenDAP.Controllers.Sapphire
                 {
                     DataSource dataSource = GetDataSource(dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    Task<string> rsp = helper.Get($"api/Meter/One/{meterID}");
+                    Task<string> rsp = helper.GetAsync($"api/Meter/One/{meterID}");
                     return JObject.Parse(rsp.Result);
                 }
                 catch (Exception ex)
@@ -379,7 +366,7 @@ namespace TrenDAP.Controllers.Sapphire
                 {
                     DataSource dataSource = GetDataSource(dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    Task<string> rsp = helper.Get($"api/Meter/Sapphire/Asset/{meterID}");
+                    Task<string> rsp = helper.GetAsync($"api/Meter/Sapphire/Asset/{meterID}");
                     return JObject.Parse(rsp.Result);
                 }
                 catch (Exception ex)
@@ -397,7 +384,7 @@ namespace TrenDAP.Controllers.Sapphire
                 {
                     DataSource dataSource = GetDataSource(dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    Task<string> rsp = helper.Get($"api/Meter/Sapphire/Station/{meterID}");
+                    Task<string> rsp = helper.GetAsync($"api/Meter/Sapphire/Station/{meterID}");
                     return JObject.Parse(rsp.Result);
                 }
                 catch (Exception ex)
@@ -415,7 +402,7 @@ namespace TrenDAP.Controllers.Sapphire
                 {
                     DataSource dataSource = GetDataSource(dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    Task<List<Event>> rsp = helper.GetAll<Event>($"api/Meter/Sapphire/Events/{meterID}/{startTime.ToString("MM-dd-yyyy HH:mm:ss")}/{endTime.ToString("MM-dd-yyyy HH:mm:ss")}");
+                    Task<List<Event>> rsp = helper.GetAllAsync<Event>($"api/Meter/Sapphire/Events/{meterID}/{startTime.ToString("MM-dd-yyyy HH:mm:ss")}/{endTime.ToString("MM-dd-yyyy HH:mm:ss")}");
                     return rsp.Result;
                 }
                 catch (Exception ex)
@@ -431,7 +418,7 @@ namespace TrenDAP.Controllers.Sapphire
             {
                 DataSource dataSource = GetDataSource(dataSourceID);
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
-                Task<string> rsp = helper.Get($"api/Meter/Sapphire/{meterID}");
+                Task<string> rsp = helper.GetAsync($"api/Meter/Sapphire/{meterID}");
                 return rsp.Result.Replace("\"", "");
             }
         }
@@ -443,7 +430,7 @@ namespace TrenDAP.Controllers.Sapphire
                 {
                     DataSource dataSource = GetDataSource(dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    Task<string> rsp = helper.Get($"api/{table}");
+                    Task<string> rsp = helper.GetAsync($"api/{table}");
                     return Ok(rsp.Result);
                 }
                 catch (Exception ex)
@@ -798,7 +785,7 @@ namespace TrenDAP.Controllers.Sapphire
             {
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
-                return helper.Get($"api/Event/TrenDAP");
+                return helper.GetAsync($"api/Event/TrenDAP");
             }
         }
 
@@ -845,7 +832,7 @@ namespace TrenDAP.Controllers.Sapphire
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    return helper.Get($"api/Setting/Category/Sapphire").Result;
+                    return helper.GetAsync($"api/Setting/Category/Sapphire").Result;
                 }
                 catch (Exception ex)
                 {
@@ -862,7 +849,7 @@ namespace TrenDAP.Controllers.Sapphire
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    return await helper.Get($"api/Setting/OpenSEE.URL").ConfigureAwait(false);
+                    return await helper.GetAsync($"api/Setting/OpenSEE.URL").ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {

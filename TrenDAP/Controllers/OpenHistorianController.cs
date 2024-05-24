@@ -181,7 +181,7 @@ namespace TrenDAP.Controllers
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    Task<string> rsp = helper.Get($"api/trendap/{table}");
+                    Task<string> rsp = helper.GetAsync($"api/trendap/{table}");
                     return Ok(rsp.Result);
                 }
                 catch (Exception ex)
@@ -239,7 +239,7 @@ namespace TrenDAP.Controllers
             {
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
-                Task<Stream> rsp = helper.GetStream($"api/trendap/querymetadata");
+                Task<Stream> rsp = helper.GetStreamAsync($"api/trendap/querymetadata");
                 BinaryFormatter formatter = new BinaryFormatter();
                 DataTable table = (DataTable)formatter.Deserialize(rsp.Result);
                 return table;

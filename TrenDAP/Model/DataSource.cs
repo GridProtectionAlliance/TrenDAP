@@ -22,38 +22,20 @@
 //******************************************************************************************************
 
 using Gemstone.Data;
-using Gemstone.Data.Model;
-using GSF.Data.Model;
-using GSF.Security.Model;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
 using openXDA.APIAuthentication;
 using System;
-using System.Security;
 using TrenDAP.Controllers;
 using PrimaryKeyAttribute = Gemstone.Data.Model.PrimaryKeyAttribute;
 using UseEscapedNameAttribute = Gemstone.Data.Model.UseEscapedNameAttribute;
 
 namespace TrenDAP.Model
 {
-    // Todo: ParentKey & Custom view not respected by custom model controller implementation
-    [CustomView(@"
-        SELECT
-            ID,
-            Name,
-            DataSourceTypeID,
-            URL,
-            RegistrationKey,
-            Expires
-        FROM
-	        DataSource
-    ")]
     public class DataSource
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
         public string Name { get; set; }
-        [ParentKey(typeof(DataSourceType))]
         public int DataSourceTypeID { get; set; }
         public string URL { get; set; }
         // Todo: maybe we want to break datasource from api auth? two tables where a source is linked to an auth row?

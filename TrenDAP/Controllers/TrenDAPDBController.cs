@@ -21,35 +21,17 @@
 //
 //******************************************************************************************************
 
-using Gemstone.Data;
 using Gemstone.Data.Model;
-using Gemstone.Reflection.MemberInfoExtensions;
-using GSF.Data;
-using GSF.Net.Snmp.Messaging;
-using HIDS;
-using InfluxDB.Client.Api.Domain;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Net.Security;
-using System.Reflection;
-using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -158,7 +140,7 @@ namespace TrenDAP.Controllers
             try
             {
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
-                Task<string> rsp = helper.Get($"api/{table}");
+                Task<string> rsp = helper.GetAsync($"api/{table}");
                 return Ok(rsp.Result);
             }
             catch (Exception ex)
@@ -172,7 +154,7 @@ namespace TrenDAP.Controllers
             try
             {
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
-                Task<string> rsp = helper.Get($"api/trendap/{table}");
+                Task<string> rsp = helper.GetAsync($"api/trendap/{table}");
                 return Ok(rsp.Result);
             }
             catch (Exception ex)
@@ -191,7 +173,7 @@ namespace TrenDAP.Controllers
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    Task<string> rsp = helper.Get($"api/HIDS");
+                    Task<string> rsp = helper.GetAsync($"api/HIDS");
                     return Ok(rsp.Result);
                 }
                 catch (Exception ex)
@@ -232,7 +214,7 @@ namespace TrenDAP.Controllers
             {
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
-                Task<Stream> rsp = helper.GetStream($"api/HIDS/Table");
+                Task<Stream> rsp = helper.GetStreamAsync($"api/HIDS/Table");
                 BinaryFormatter formatter = new BinaryFormatter();
                 DataTable table = (DataTable)formatter.Deserialize(rsp.Result);
                 return table;
@@ -245,7 +227,7 @@ namespace TrenDAP.Controllers
             {
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
-                return helper.Get($"api/Event/TrenDAP");
+                return helper.GetAsync($"api/Event/TrenDAP");
             }
         }
 
@@ -255,7 +237,7 @@ namespace TrenDAP.Controllers
             {
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
-                return await helper.Get($"api/AlarmLimits").ConfigureAwait(false);
+                return await helper.GetAsync($"api/AlarmLimits").ConfigureAwait(false);
             }
         }
 
@@ -305,7 +287,7 @@ namespace TrenDAP.Controllers
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    return helper.Get($"api/Setting/Category/HIDS").Result;
+                    return helper.GetAsync($"api/Setting/Category/HIDS").Result;
                 }
                 catch (Exception ex)
                 {
@@ -322,7 +304,7 @@ namespace TrenDAP.Controllers
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                     DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    return await helper.Get($"api/Setting/OpenSEE.URL").ConfigureAwait(false);
+                    return await helper.GetAsync($"api/Setting/OpenSEE.URL").ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
