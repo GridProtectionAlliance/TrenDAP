@@ -43,6 +43,8 @@ using TrenDAP.Controllers;
 using HIDSPoint = HIDS.Point;
 using TrenDAP.Controllers.Sapphire;
 using SapphirePoint = TrenDAP.Controllers.Sapphire.Point;
+using System.IO;
+using System.Net.Http;
 
 namespace TrenDAP.Model
 {
@@ -166,10 +168,11 @@ namespace TrenDAP.Model
 
                     if (table.Rows.Count > 0)
                     {
-                        IAsyncEnumerable<HIDSPoint> points = TrenDAPDBController.QueryHIDSDirectly(table, dataSourceID, post, Configuration, cancellationToken);
+                        Task<HttpResponseMessage> rsp = TrenDAPDBController.QueryHids(dataSourceID, post, Configuration, cancellationToken);
+                        IEnumerable<HIDSPoint> points = ParsePoints(rsp, cancellationToken);
                         IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
 
-                        var groupjoin = tableJson.GroupJoin(points.ToArrayAsync().Result, row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) =>
+                        var groupjoin = tableJson.GroupJoin(points.ToArray(), row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) =>
                         {
                             row["Data"] = JArray.FromObject(resultcollection);
                             return row;
@@ -239,13 +242,14 @@ namespace TrenDAP.Model
                     Task<string> eventsTask = TrenDAPDBController.GetEvents(json.DataSource.ID, post, Configuration, cancellationToken);
                     Task<string> alarmsTask = TrenDAPDBController.GetAlarms(json.DataSource.ID, post, Configuration, cancellationToken);
 
-                    IAsyncEnumerable<HIDSPoint> points = TrenDAPDBController.QueryHIDSDirectly(table, json.DataSource.ID, post, Configuration, cancellationToken);
+                    Task<HttpResponseMessage> rsp = TrenDAPDBController.QueryHids(json.DataSource.ID, post, Configuration, cancellationToken);
+                    IEnumerable<HIDSPoint> points = ParsePoints(rsp, cancellationToken);
                     IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
 
                     string eventsString = await eventsTask;
                     JArray events = JArray.Parse(eventsString);
                     string alarmsString = await alarmsTask;
-                    var groupjoin = tableJson.GroupJoin(points.ToArrayAsync().Result, row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) =>
+                    var groupjoin = tableJson.GroupJoin(points.ToArray(), row => int.Parse(row["ID"].ToString()), result => int.Parse(result.Tag, System.Globalization.NumberStyles.HexNumber), (row, resultcollection) =>
                     {
                         row["Events"] = JArray.FromObject(events.Where(token => int.Parse(token["ChannelID"].ToString()) == int.Parse(row["ID"].ToString())));
                         row["Data"] = JArray.FromObject(resultcollection);
@@ -281,7 +285,9 @@ namespace TrenDAP.Model
 
                 if (table.Rows.Count > 0)
                 {
-                    IEnumerable<OpenHistorianController.HistorianAggregatePoint> points = OpenHistorianController.Query(json.DataSource.ID, post, Configuration, cancellationToken);
+
+                    Task<HttpResponseMessage> rsp = OpenHistorianController.Query(json.DataSource.ID, post, Configuration, cancellationToken);
+                    IEnumerable<HIDSPoint> points = ParsePoints(rsp, cancellationToken);
                     IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
 
                     var groupjoin = tableJson.GroupJoin(points, row => row["ID"].ToString(), result => result.Tag, (row, resultcollection) =>
@@ -323,7 +329,30 @@ namespace TrenDAP.Model
             }, cancellationToken);
 
         }
+        public static IEnumerable<HIDSPoint> ParsePoints(Task<HttpResponseMessage> hidsTask, CancellationToken cancellationToken)
+        {
+            HttpResponseMessage responseMessage = hidsTask.Result;
+            List<HIDSPoint> points = new List<HIDSPoint>();
+            using (Stream stream = responseMessage.Content.ReadAsStreamAsync().Result)
+            using (TextReader reader = new StreamReader(stream))
+            {
+                while (true)
+                {
+                    string line = reader.ReadLine();
 
+                    if (line == null)
+                        break;
+
+                    if (line == string.Empty)
+                        continue;
+
+                    JObject jPoint = JObject.Parse(line);
+                    HIDSPoint point = jPoint.ToObject<HIDSPoint>();
+                    points.Add(point);
+                }
+            }
+            return points;
+        }
     }
 
 }

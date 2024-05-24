@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>openXDA.APIAuthentication</name>
+    </assembly>
+    <members>
+        <member name="T:openXDA.APIAuthentication.APIQueryException">
+            <summary>
+            Exceptions thrown during an API query.
+            </summary>
+        </member>
+        <member name="M:openXDA.APIAuthentication.APIQueryException.#ctor(System.String,System.String,System.Exception)">
+            <summary>
+            Creates a new instance of the <see cref="T:openXDA.APIAuthentication.APIQueryException"/> class.
+            </summary>
+            <param name="hostURL">The URL of the host that issued the failure.</param>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="innerException">The exception that is the cause of the current exception.</param>
+        </member>
+        <member name="P:openXDA.APIAuthentication.APIQueryException.HostURL">
+            <summary>
+            The URL of the host that issued the failure.
+            </summary>
+        </member>
+        <member name="T:openXDA.APIAuthentication.APIQuery">
+            <summary>
+            Issues requests to the API using API authentication.
+            This class handles the GSF token and authentication
+            </summary>
+        </member>
+        <member name="M:openXDA.APIAuthentication.APIQuery.#ctor(System.String,System.String,System.String)">
+            <summary>
+            Creates a new instance of the <see cref="T:openXDA.APIAuthentication.APIQuery"/> class.
+            </summary>
+            <param name="apiKey">The API key used to identify the user of the API.</param>
+            <param name="apiToken">The token used to authenticate the user of the API.</param>
+            <param name="hostURL">URL that locates the host providing access to the API.</param>
+        </member>
+        <member name="M:openXDA.APIAuthentication.APIQuery.#ctor(System.String,System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Creates a new instance of the <see cref="T:openXDA.APIAuthentication.APIQuery"/> class.
+            </summary>
+            <param name="apiKey">The API key used to identify the user of the API.</param>
+            <param name="apiToken">The token used to authenticate the user of the API.</param>
+            <param name="hostURLs">List of URLs that locate the hosts providing access to the API.</param>
+        </member>
+        <member name="P:openXDA.APIAuthentication.APIQuery.APIKey">
+            <summary>
+            The API key identifying the user of the API.
+            </summary>
+        </member>
+        <member name="P:openXDA.APIAuthentication.APIQuery.APIToken">
+            <summary>
+            The API token used to authenticate the user.
+            </summary>
+        </member>
+        <member name="P:openXDA.APIAuthentication.APIQuery.HostsURLs">
+            <summary>
+            The list of URLs that locate the hosts providing access to the API.
+            </summary>
+        </member>
+        <member name="M:openXDA.APIAuthentication.APIQuery.SendWebRequestAsync(System.Action{System.Net.Http.HttpRequestMessage},System.String,System.Security.Principal.IPrincipal,System.Threading.CancellationToken)">
+            <summary>
+            Sends a web request to the host using the credentials for API authentication.
+            </summary>
+            <param name="configure">Action that configures the HTTP request.</param>
+            <param name="path">Path to the API endpoint locating the resource to be requested.</param>
+            <param name="user"><see cref="T:System.Security.Principal.IPrincipal"/> being impersonated if the APIToken supports impersonation. set to NULL for using APIAuthentication only</param>
+            <param name="cancellationToken">Token used to cancel the request before it has completed.</param>
+            <returns>The HTTP response returned by the host that handled the request.</returns>
+        </member>
+        <member name="M:openXDA.APIAuthentication.APIQuery.SendWebRequestAsync(System.Action{System.Net.Http.HttpRequestMessage},System.String,System.Net.Http.HttpCompletionOption,System.Security.Principal.IPrincipal,System.Threading.CancellationToken)">
+            <summary>
+            Sends a web request to the host using the credentials for API authentication.
+            </summary>
+            <param name="configure">Action that configures the HTTP request.</param>
+            <param name="path">Path to the API endpoint locating the resource to be requested.</param>
+            <param name="httpCompletionOption">When the operation should complete (as soon as a response is available or after reading the whole response content).</param>
+            <param name="user"><see cref="T:System.Security.Principal.IPrincipal"/> being impersonated if the APIToken supports impersonation. set to NULL for using APIAuthentication only</param>
+            <param name="cancellationToken">Token used to cancel the request before it has completed.</param>
+            <returns>The HTTP response returned by the host that handled the request.</returns>
+        </member>
+        <member name="T:openXDA.APIAuthentication.XDAAPIHelper">
+            <summary>
+            Helper class that provides openXDA API Calls
+            </summary>
+        </member>
+        <member name="P:openXDA.APIAuthentication.XDAAPIHelper.Token">
+            <summary>
+            API Token used to access OpenXDA
+            </summary>
+        </member>
+        <member name="P:openXDA.APIAuthentication.XDAAPIHelper.Key">
+            <summary>
+            API Key used to access OpenXDA
+            </summary>
+        </member>
+        <member name="P:openXDA.APIAuthentication.XDAAPIHelper.Host">
+            <summary>
+            API Key used to access OpenXDA
+            </summary>
+        </member>
+        <member name="M:openXDA.APIAuthentication.XDAAPIHelper.GetResponseTask(System.String,System.Net.Http.HttpContent)">
+            <summary>
+            Gets Response Task from XDA 
+            </summary>
+            <param name="requestURI">Path to specific API request</param>
+            <param name="content"> The <see cref="T:System.Net.Http.HttpContent"/> of the request </param>
+            <returns> response as a <see cref="T:System.IO.Stream"/></returns>
+        </member>
+        <member name="M:openXDA.APIAuthentication.XDAAPIHelper.GetAsync(System.String)">
+            <summary>
+            Makes a Get Request to OpenXDA to obtain a string
+            </summary>
+            <param name="requestURI">Path to specific API request</param>
+            <returns>string</returns>
+        </member>
+        <member name="M:openXDA.APIAuthentication.XDAAPIHelper.GetStreamAsync(System.String)">
+            <summary>
+            Makes a Get Request to OpenXDA to obtain a stream
+            </summary>
+            <param name="requestURI">Path to specific API request</param>
+            <returns>stream</returns>
+        </member>
+        <member name="M:openXDA.APIAuthentication.XDAAPIHelper.GetAsync``1(System.String)">
+            <summary>
+            Makes a Get Request to OpenXDA to obtain an object
+            </summary>
+            <param name="requestURI">Path to specific API request</param>
+            <returns> a <see cref="T:System.Threading.Tasks.Task`1"/> object</returns>
+        </member>
+        <member name="M:openXDA.APIAuthentication.XDAAPIHelper.PostAsync(System.String,System.Net.Http.HttpContent)">
+            <summary>
+            Makes Post request on OpenXDA
+            </summary>
+            <param name="requestURI">Path to specific API request</param>
+            <param name="content"> The <see cref="T:System.Net.Http.HttpContent"/> of the request </param>
+            <returns> response as a <see cref="T:System.String"/></returns>
+        </member>
+        <member name="M:openXDA.APIAuthentication.XDAAPIHelper.PostAllAsync``1(System.String,System.Net.Http.HttpContent)">
+            <summary>
+            Makes Post request on OpenXDA
+            </summary>
+            <param name="endpoint">Path to specific API request</param>
+            <param name="content"> The <see cref="T:System.Net.Http.HttpContent"/> of the request </param>
+            <returns> response as a <see cref="T:System.String"/></returns>
+        </member>
+        <member name="M:openXDA.APIAuthentication.XDAAPIHelper.GetAllAsync``1(System.String)">
+            <summary>
+            Makes a Get Request to OpenXDA to obtain a <see cref="T:System.Collections.Generic.List`1"/> objects
+            </summary>
+            <param name="requestURI">Path to specific API request</param>
+            <returns> a <see cref="T:System.Collections.Generic.List`1"/> object</returns>
+        </member>
+    </members>
+</doc>

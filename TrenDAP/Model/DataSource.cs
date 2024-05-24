@@ -22,15 +22,15 @@
 //******************************************************************************************************
 
 using Gemstone.Data;
-using Gemstone.Data.Model;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
-using System.Security;
+using openXDA.APIAuthentication;
+using System;
 using TrenDAP.Controllers;
+using PrimaryKeyAttribute = Gemstone.Data.Model.PrimaryKeyAttribute;
+using UseEscapedNameAttribute = Gemstone.Data.Model.UseEscapedNameAttribute;
 
 namespace TrenDAP.Model
 {
-
     public class DataSource
     {
         [PrimaryKey(true)]
@@ -38,8 +38,10 @@ namespace TrenDAP.Model
         public string Name { get; set; }
         public int DataSourceTypeID { get; set; }
         public string URL { get; set; }
-        public string Credential { get; set; }
-        public string Password { get; set; }
+        // Todo: maybe we want to break datasource from api auth? two tables where a source is linked to an auth row?
+        public string RegistrationKey { get; set; }
+        public string APIToken { get; set; }
+        public DateTime Expires { get; set; }
         [UseEscapedName]
         public bool Public { get; set; }
         [UseEscapedName]
@@ -50,12 +52,11 @@ namespace TrenDAP.Model
         {
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
-                return new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", id);
+                return new Gemstone.Data.Model.TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", id);
             }
         }
 
     }
-
 
     public class DataSourceController: ModelController<DataSource>
     {
@@ -75,4 +76,45 @@ namespace TrenDAP.Model
         public DataSourceTypeController(IConfiguration configuration) : base(configuration) {} 
     }
 
+    public class DataSourceHelper : XDAAPIHelper
+    {
+        private DataSource m_dataSource;
+
+        public DataSourceHelper(IConfiguration config, int dataSourceId)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(config["SystemSettings:ConnectionString"], config["SystemSettings:DataProviderString"]))
+            {
+                m_dataSource = new Gemstone.Data.Model.TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceId);
+            }
+        }
+
+        public DataSourceHelper(DataSource dataSource)
+        {
+            m_dataSource = dataSource;
+        }
+
+        protected override string Token
+        {
+            get
+            {
+                return m_dataSource.APIToken;
+            }
+
+        }
+        protected override string Key
+        {
+            get
+            {
+                return m_dataSource.RegistrationKey;
+            }
+
+        }
+        protected override string Host
+        {
+            get
+            {
+                return m_dataSource.URL;
+            }
+        }
+    }
 }

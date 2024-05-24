@@ -51,6 +51,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TrenDAP.Model;
+using AdoDataConnection = Gemstone.Data.AdoDataConnection;
 using DataSet = TrenDAP.Model.DataSet;
 
 namespace TrenDAP.Controllers
@@ -176,68 +177,32 @@ namespace TrenDAP.Controllers
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
-
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-
-                    using (HttpClient client = new HttpClient())
-                    {
-
-                        try
-                        {
-                            client.BaseAddress = new Uri(dataSource.URL);
-                            client.DefaultRequestHeaders.Accept.Clear();
-                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-                            HttpResponseMessage response = client.GetAsync($"api/trendap/{table}").Result;
-
-                            if (!response.IsSuccessStatusCode)
-                                return StatusCode((int)response.StatusCode, response.ReasonPhrase);
-
-                            string rsp = response.Content.ReadAsStringAsync().Result;
-                            return Ok(rsp);
-                        }
-                        catch (InvalidOperationException ex)
-                        {
-                            return StatusCode(StatusCodes.Status500InternalServerError, ex);
-
-                        }
-                        catch (Exception ex)
-                        {
-                            return StatusCode(StatusCodes.Status500InternalServerError, ex);
-                        }
-                    }
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    Task<string> rsp = helper.GetAsync($"api/trendap/{table}");
+                    return Ok(rsp.Result);
                 }
                 catch (Exception ex)
                 {
                     return StatusCode(StatusCodes.Status500InternalServerError, ex);
                 }
             }
-
         }
 
 
         [HttpGet, Route("Data/{dataSourceID:int}/{dataSetID:int}")]
-        public IEnumerable<HistorianAggregatePoint> Query(int dataSourceID, Post post, CancellationToken cancellationToken)
+        public Task<HttpResponseMessage> Query(int dataSourceID, Post post, CancellationToken cancellationToken)
         {
-            string token = ControllerHelpers.GenerateAntiForgeryToken(dataSourceID, Configuration);
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
-            using (HttpClientHandler handler = new HttpClientHandler() { UseCookies = true })
-            using (HttpClient client = new HttpClient(handler))
             {
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    client.BaseAddress = new Uri(dataSource.URL);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-                    HttpResponseMessage response = client.PostAsync($"api/HIDS", JsonContent.Create(post), cancellationToken).Result;
-
-                    Task<string> rsp = response.Content.ReadAsStringAsync();
-                    return JsonConvert.DeserializeObject<IEnumerable<HistorianAggregatePoint>>(rsp.Result);
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    JObject jObj = (JObject)JToken.FromObject(post);
+                    return helper.GetResponseTask("api/HIDS", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
                 }
                 catch (Exception ex)
                 {
@@ -250,32 +215,16 @@ namespace TrenDAP.Controllers
 
         #region [ Static ]
 
-        public static IEnumerable<HistorianAggregatePoint> Query(int dataSourceID, Post post, IConfiguration configuration, CancellationToken cancellationToken)
+        public static Task<HttpResponseMessage> Query(int dataSourceID, Post post, IConfiguration configuration, CancellationToken cancellationToken)
         {
-            string token = ControllerHelpers.GenerateAntiForgeryToken(dataSourceID, configuration);
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
-            using (HttpClientHandler handler = new HttpClientHandler() { UseCookies = true })
-            using (HttpClient client = new HttpClient(handler) { Timeout = TimeSpan.FromMinutes(10)})
             {
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    client.BaseAddress = new Uri(dataSource.URL);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-                    HttpResponseMessage response = client.PostAsync($"api/trendap/query", JsonContent.Create(post), cancellationToken).Result;
-
-
-                    if (!response.IsSuccessStatusCode)
-                        throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                    //var stream = response.Content.ReadAsStreamAsync().Result;
-                    //BinaryFormatter formatter = new BinaryFormatter();
-                    //IEnumerable<HistorianAggregatePoint> result = (IEnumerable<HistorianAggregatePoint>)formatter.Deserialize(stream);
-                    var json = response.Content.ReadAsStringAsync().Result;
-                    IEnumerable<HistorianAggregatePoint> result = JsonConvert.DeserializeObject<IEnumerable<HistorianAggregatePoint>>(json);
-                    return result;
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    JObject jObj = (JObject)JToken.FromObject(post);
+                    return helper.GetResponseTask("api/HIDS", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
                 }
                 catch (Exception ex)
                 {
@@ -286,45 +235,15 @@ namespace TrenDAP.Controllers
 
 
         public static DataTable GetDataTable(int dataSourceID, Post post, IConfiguration configuration, CancellationToken cancellationToken) {
-            string token = ControllerHelpers.GenerateAntiForgeryToken(dataSourceID, configuration);
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
-                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-
-                using (HttpClient client = new HttpClient()
-                {
-                    Timeout = TimeSpan.FromMinutes(10)
-                })
-                {
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
-                    client.DefaultRequestHeaders.Add("X-GSF-Verify", token);
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{dataSource.Credential}:{dataSource.Password}")));
-
-
-                    var response = client.PostAsync(dataSource.URL + "/api/trendap/querymetadata", JsonContent.Create(post), cancellationToken).Result;
-                   
-
-                    try
-                    {
-
-                        if (!response.IsSuccessStatusCode)
-                            throw new Exception($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                        var stream = response.Content.ReadAsStreamAsync().Result;
-                        BinaryFormatter formatter = new BinaryFormatter();
-                        DataTable table =  (DataTable)formatter.Deserialize(stream);
-                        return table;
-                    }
-                    catch (Exception ex)
-                    {
-                        throw ex;
-                    }
-
-                }
-
+                DataSourceHelper helper = new DataSourceHelper(dataSource);
+                Task<Stream> rsp = helper.GetStreamAsync($"api/trendap/querymetadata");
+                BinaryFormatter formatter = new BinaryFormatter();
+                DataTable table = (DataTable)formatter.Deserialize(rsp.Result);
+                return table;
             }
-
         }
 
         public static Post CreatePost(DataSet dataSet, OpenHistorianDataSet data)

@@ -133,7 +133,6 @@ export const SelectDataSourceByID = (state: Redux.StoreState, id) => state.DataS
 export const SelectDataSourcesForUser = (state: Redux.StoreState, user) => state.DataSources.Data.filter(ds => ds.User === user);
 export const SelectDataSourcesAllPublicNotUser = (state: Redux.StoreState, user) => state.DataSources.Data.filter(ds => ds.Public && ds.User !== user);
 
-export const SelectNewDataSource = (state: Redux.StoreState) => ({ ID: 0, Name: '', DataSourceTypeID: 1, URL: '', Credential: '', Password: '' });
 export const SelectDataSourcesStatus = (state: Redux.StoreState) => state.DataSources.Status;
 export const SelectDataSourcesSortField = (state: Redux.StoreState) => state.DataSources.SortField;
 export const SelectDataSourcesAscending = (state: Redux.StoreState) => state.DataSources.Ascending;

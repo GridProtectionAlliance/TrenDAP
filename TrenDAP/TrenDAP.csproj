@@ -39,8 +39,6 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\DataSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Histogram.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\Types\DataSetOpenXDA.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\DataSources\AddNewDataSource.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSources.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSourcesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx" />
@@ -159,12 +157,6 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\ViewDataSet.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\Types\DataSetOpenXDA.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\AddNewDataSource.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\DataSource.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\DataSources.tsx">
@@ -392,6 +384,12 @@
     <Content Update="wwwroot\js\WorkSpaces.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+	  <Reference Include="openXDA.APIAuthentication">
+		  <HintPath>..\Dependencies\openXDA\openXDA.APIAuthentication.dll</HintPath>
+	  </Reference>
   </ItemGroup>
 
 </Project>
