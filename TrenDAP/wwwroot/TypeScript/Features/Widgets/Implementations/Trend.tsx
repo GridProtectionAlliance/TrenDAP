@@ -68,32 +68,39 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
     Name: "Trend",
     WidgetUI: (props) => {
         const plotRef = React.useRef<HTMLDivElement>(null);
-        const hover = React.useRef<number>(-10);
         const svgs = React.useRef<d3.Selection<SVGSVGElement, unknown, null, undefined>[]>([]);
         const margin = React.useRef<{ bottom: number, left: number, top: number, right: number }>({ bottom: 50, left: 60, top: 40, right: 60 });
         const chartActionRef = React.useRef<TrenDAP.ChartAction>('Pan');
         const xScaleRef = React.useRef<d3.ScaleTime<number, number, never>>(null);
         const yScalesRef = React.useRef<IYScale[]>(null);
 
+        const [svgCount, setSvgCount] = React.useState<number>(0);
         const [chartAction, setChartAction] = React.useState<TrenDAP.ChartAction>('Pan');
-
-        const setHover = React.useCallback((value) => {
-            HandleHoverUpdate(value);
-        }, []);
 
         React.useEffect(() => {
             chartActionRef.current = chartAction;
         }, [chartAction]);
 
         React.useEffect(() => {
-            if (plotRef.current != null)
-                Initialize(true)
+            Initialize()
+        }, [svgCount])
+
+        React.useEffect(() => {
+            if (plotRef.current != null && props.Data.length !== 0) {
+                if (props.Settings.Split) {
+                    if (props.Settings.Split && props.Settings.SplitType === 'Axis')
+                        setSvgCount(props.Settings.YAxis.length);
+                    else if (props.Settings.SplitType === 'Series')
+                        setSvgCount(props.Data.length);
+                }
+                else
+                    setSvgCount(1);
+            }
         }, [props.Data, props.Settings])
 
         React.useEffect(() => {
             return () => { select(plotRef.current).selectAll('svg').remove(); }
         }, []);
-
 
         function GetChannelData(channel: WidgetTypes.IWidgetData<IChannelSettings>) {
             return props.Data.find(data => data.ID === channel.ID).SeriesData[channel.ChannelSettings.Field]
@@ -103,9 +110,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             return (GetChannelData(series)).map(data => [data[0], data[1]]);
         }
 
-        function Initialize(updateScales: boolean) {
+        function Initialize() {
             if (props.Data.length === 0) return;
-            let svgCount = 1;
             margin.current = {
                 bottom: 50,
                 left: (props.Settings.YAxis.filter(axis => axis.Position === 'left').length == 0 ? 60 : props.Settings.YAxis.filter(axis => axis.Position === 'left').length * 75),
@@ -117,21 +123,15 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             const svgHeight = plotRef.current.offsetHeight / svgCount;
             const svgWidth = plotRef.current.offsetWidth - margin.current.left - margin.current.right - legendWidth;
 
-            if (updateScales) {
-                yScalesRef.current = props.Settings.YAxis.map(axis => GetYScale(axis, svgCount));
-                xScaleRef.current = GetXScale();
+            if (props.Settings.Split) {
+                if (props.Settings.Split && props.Settings.SplitType === 'Axis')
+                    margin.current = { bottom: 50, left: 60, top: 40, right: 60 };
+                else if (props.Settings.SplitType === 'Series')
+                    margin.current = { bottom: 50, left: 60, top: 40, right: 60 }
             }
 
-            if (props.Settings.Split) {
-                if (props.Settings.Split && props.Settings.SplitType === 'Axis') {
-                    margin.current = { bottom: 50, left: 60, top: 40, right: 60 };
-                    svgCount = props.Settings.YAxis.length;
-                }
-                else if (props.Settings.SplitType === 'Series') {
-                    margin.current = { bottom: 50, left: 60, top: 40, right: 60 }
-                    svgCount = props.Data.length;
-                }
-            }
+            yScalesRef.current = props.Settings.YAxis.map(axis => GetYScale(axis, svgCount));
+            xScaleRef.current = GetXScale();
 
             if (props.Settings.Legend)
                 margin.current.right = margin.current.right + 200;
@@ -159,6 +159,10 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 }
             }
 
+            updateLines()
+        }
+
+        function updateLines() {
             svgs.current.forEach((svg, i) => {
                 if (props.Settings.Split && props.Settings.SplitType === 'Axis')
                     InitializeSplitOnAxis(svg, i, svgCount);
@@ -207,7 +211,6 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 AddLegend(svg, [series]);
             }
 
-            svg.on('mousemove', (d: MouseEvent) => setHover(d.offsetX));
             svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg));
 
         }
@@ -256,7 +259,6 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             }
 
 
-            svg.on('mousemove', (d: MouseEvent) => setHover(d.offsetX));
             svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg));
         }
 
@@ -299,9 +301,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     return lineFunc(data);
                 })
 
-            svg.on('mousemove', (d: MouseEvent) => setHover(d.offsetX))
             svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg))
-
 
             //props.Data.filter(channel => channel.ChannelSettings.ShowEvents).forEach(series => AddEventLine(channel, svg, x));
 
@@ -445,28 +445,9 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
         }
 
-        function HandleHoverUpdate(hover: number) {
-            if (chartActionRef.current !== 'Click') return;
-            svgs.current.forEach((svg, index) => {
-                const height = parseInt(svg.attr('height')) - margin.current.top - margin.current.bottom;
-
-                if (hover >= margin.current.left && hover <= (props.Width - margin.current.right)) {
-                    svg.selectAll('g.mouse-over').remove()
-                    svg.append('g')
-                        .classed('mouse-over', true)
-                        .append('path')
-                        .attr("d", d => `M 0 0 V ${height}`)
-                        .attr("transform", `translate(${hover},${margin.current.top})`)
-                        .attr('stroke', 'gray')
-
-                }
-
-            });
-        }
-
         function HandleReset() {
             xScaleRef.current = GetXScale()
-            Initialize(false)
+            updateLines()
         }
 
         function HandleChartAction(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>) {
@@ -527,8 +508,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 const clickedDate = xScaleRef.current.invert(evt.offsetX);
 
                 // Find the closest data point
-                const bisectDate = bisector(d => moment(d[0], 'YYYY-MM-DDTHH:mm:ss.fffZ').toDate()).left;
-                const index = bisectDate(ds, clickedDate);
+                const bisectDate = bisector(d => new Date(d[0]));
+                const index = bisectDate.left(ds, clickedDate);
                 const closestData = ds[Math.min(index, ds.length - 1)];
 
                 const closestValue = closestData != null ? closestData[1] : null;
@@ -556,7 +537,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             svg.on('mousemove.pan', (e: MouseEvent) => {
                 xScaleRef.current.domain([xScaleRef.current.invert(xScaleRef.current.range()[0] + start - e.clientX).getTime(), xScaleRef.current.invert(xScaleRef.current.range()[1] + start - e.clientX).getTime()])
                 //need to break initialize up into more functions because we dont need to do some of that logic again..
-                Initialize(false)
+                updateLines()
             });
             svg.on('mouseup.pan', () => svg.on('mousemove.pan', null));
         }
@@ -574,7 +555,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 const min = Math.min(start, e.offsetX);
                 const max = Math.max(start, e.offsetX);
                 xScaleRef.current.domain([xScaleRef.current.invert(min).getTime(), xScaleRef.current.invert(max).getTime()])
-                Initialize(false)
+                updateLines()
                 br.remove();
                 svg.on('mousemove.brush', null);
                 svg.on('mouseup.brush', null);
