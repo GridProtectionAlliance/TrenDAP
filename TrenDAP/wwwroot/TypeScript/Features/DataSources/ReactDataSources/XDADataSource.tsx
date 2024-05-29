@@ -49,7 +49,7 @@ interface XDAChannel extends OpenXDA.Types.Channel {
 const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = {
     Name: 'TrenDAPDB',
     DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/"},
-    DefaultDataSetSettings: { By: 'Meter', IDs: [], Phases: [], Groups: [], Chans: [], Aggregate: ''},
+    DefaultDataSetSettings: { By: 'Meter', IDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: ''},
     ConfigUI: (props: DataSourceTypes.IConfigProps<TrenDAP.iXDADataSource>) => {
         React.useEffect(() => {
             const errors: string[] = [];
@@ -81,7 +81,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
                 errors.push(`Phases must be selected to filter for channels.`);
             if (props.DataSetSettings.Groups === null || props.DataSetSettings.Groups.length === 0)
                 errors.push(`Channel groups must be selected to filter for channels.`);
-            if (props.DataSetSettings.Chans === null || props.DataSetSettings.Chans.length === 0)
+            if (props.DataSetSettings.ChannelIDs === null || props.DataSetSettings.ChannelIDs.length === 0)
                 errors.push(`Channels must be selected to retrieve data.`);
         }, [props.DataSetSettings]);
 
@@ -147,7 +147,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
                         <ArrayCheckBoxes<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Label="Channel Groups" Checkboxes={channelGroups?.map(m => ({ ID: m.ID.toString(), Label: m.Name })) ?? []} Field="Groups" Setter={props.SetDataSetSettings} />
                         <ArrayMultiSelect<TrenDAP.iXDADataSet> Style={{ height: window.innerHeight - 520 }} Record={props.DataSetSettings}
                             Options={channels?.map(m => ({ Value: m.ID.toString(), Label: `${props.DataSetSettings.By === 'Meter' ? m.Meter : m.Asset} - ${m.Name}` })) ?? []}
-                            Field="Chans" Setter={props.SetDataSetSettings} />
+                            Field="ChannelIDs" Setter={props.SetDataSetSettings} />
                     </div>
                 </div>
             </form>
@@ -157,7 +157,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
     LoadDataSetMeta: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetData[]> {
         return new Promise<DataSetTypes.IDataSetData[]>((resolve, reject) => {
             const dataSetSettings = ParseSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
-            const returnData: DataSetTypes.IDataSetData[] = dataSetSettings.Chans.map(id => ({
+            const returnData: DataSetTypes.IDataSetData[] = dataSetSettings.ChannelIDs.map(id => ({
                 ID: id.toString(),
                 Name: '',
                 ParentID: '',
@@ -202,7 +202,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
     LoadDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetData[]> {
         return new Promise<DataSetTypes.IDataSetData[]>((resolve, reject) => {
             const dataSetSettings = ParseSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
-            const returnData: DataSetTypes.IDataSetData[] = dataSetSettings.Chans.map(id => ({
+            const returnData: DataSetTypes.IDataSetData[] = dataSetSettings.ChannelIDs.map(id => ({
                 ID: id.toString(),
                 Name: '',
                 ParentID: '',

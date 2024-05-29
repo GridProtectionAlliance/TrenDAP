@@ -175,7 +175,7 @@ export namespace TrenDAP{
     interface iDataSetReturn<T extends iDataSetReturnType = iDataSetReturnType> { Data: T[], DataSource: { ID: number, Name: string, Type: DataSourceType, OpenSEE?: string}, From: string, To: string }
 
     // XDA
-    interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], Chans: number[], Aggregate: '' | '1h' | '1d' | '1w' }
+    interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], ChannelIDs: number[], Aggregate: '' | '1h' | '1d' | '1w' }
     interface iXDADataSource { PQBrowserUrl: string }
     interface iXDAReturn { ID: number, Meter: string, Name: string, Station: string, Phase: OpenXDA.Types.PhaseName, Type: OpenXDA.Types.MeasurementTypeName, Harmonic: number, Latitude: number, Longitude: number, Asset: string, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Unit: string }
     interface iXDAReturnWithDataSource extends iXDAReturnData { DataSourceID: number, DataSource: string }

@@ -240,7 +240,7 @@ export const SelectDataSetData = async (state: Redux.StoreState, id: number) => 
 };
 export const SelectRecord = (state: Redux.StoreState) => state.DataSets.Record;
 export const SelectNewDataSet = () => newDataSet;
-export const SelectNewXDADataSet = () => ({ By: 'Meter', IDs: [], Phases: [], Groups: [], Chans: [], Aggregate: '' }) as TrenDAP.iXDADataSet;
+export const SelectNewXDADataSet = () => ({ By: 'Meter', IDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: '' }) as TrenDAP.iXDADataSet;
 export const SelectDataSetsStatus = (state: Redux.StoreState)  => state.DataSets.Status;
 export const SelectDataSetsForUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.User === user);
 export const SelectDataSetsAllPublicNotUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.Public && ws.User !== user);

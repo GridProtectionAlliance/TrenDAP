@@ -68,7 +68,7 @@ namespace TrenDAP.Controllers
             public List<int> IDs { get; set; }
             public List<int> Phases { get; set; }
             public List<int> Groups { get; set; }
-            public List<int> Chans { get; set; }
+            public List<int> ChannelIDs { get; set; }
             public string Aggregate { get; set; }
         }
 
@@ -231,7 +231,7 @@ namespace TrenDAP.Controllers
             {
                 StartTime = startTime,
                 StopTime = endTime,
-                Channels = data.Chans,
+                Channels = data.ChannelIDs,
                 AggregateDuration = data.Aggregate,
                 TimeFilters = timeFilters
             };
