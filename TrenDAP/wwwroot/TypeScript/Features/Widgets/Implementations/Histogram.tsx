@@ -207,14 +207,13 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             setAllChannels((c) => _.orderBy(c, field, [ascend ? "asc" : "desc"]))
         }
 
-        { /*Having trouble getting tables to take up 50% evenly here.. just gonna revisit later..*/ }
         return <>
-            <div className="row h-50">
+            <div className="container-fluid d-flex h-50 flex-column p-0">
                 <ReactTable.Table<DataSetTypes.IDataSetMetaData>
                     TableClass="table table-hover"
-                    TableStyle={{ height: '100%', width: '100%' }}
+                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                     TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'scroll' }}
+                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                     SortKey={sortField}
                     OnClick={(item) => {
@@ -261,12 +260,12 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     </ReactTable.Column>
                 </ReactTable.Table>
             </div>
-            <div className="row h-50">
+            <div className="container-fluid d-flex h-50 flex-column p-0">
                 <ReactTable.Table<ISelectedChannels>
                     TableClass="table table-hover"
-                    TableStyle={{ maxHeight: 'calc((-230px + 100vh) / 2)', width: '100%', overflow: 'hidden' }}
+                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                     TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'scroll' }}
+                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                     SortKey={"ChannelKey"}
                     OnSort={() => { }}
