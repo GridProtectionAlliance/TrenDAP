@@ -96,7 +96,7 @@ namespace TrenDAP.Controllers
 
         #region [ Http Methods ]
         [HttpGet, Route("{dataSourceID:int}/{table?}")]
-        public virtual ActionResult Get(int dataSourceID, string table = "")
+        public virtual ActionResult GetTable(int dataSourceID, string table = "")
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
@@ -120,7 +120,7 @@ namespace TrenDAP.Controllers
         }
 
         [HttpPost, Route("Channel/GetTrendChannels/{dataSourceID:int}")]
-        public virtual ActionResult Post(int dataSourceID, [FromBody] JObject filter)
+        public virtual ActionResult GetChannels(int dataSourceID, [FromBody] JObject filter)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
@@ -135,7 +135,7 @@ namespace TrenDAP.Controllers
                     {
                         rsp = helper.PostAsync("api/Channel/GetTrendSearchData", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
                     }
-                    else return StatusCode(StatusCodes.Status400BadRequest, "Datasource type not supported");
+                    else return StatusCode(StatusCodes.Status500InternalServerError, "Only TrenDAPDB datasources supported by this endpoint.");
 
                     return Ok(rsp.Result);
                 }

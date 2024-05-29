@@ -110,7 +110,7 @@ namespace TrenDAP.Model
                     return QuerySapphire(jObject, dataset, dataSource, json, cancellationToken);
                 } */
                 else
-                    throw new ArgumentException($"Type of {type} not supported.");
+                    throw new ArgumentException("Only datasources type of TrenDAPDB supported by this method.");
             }
         }
     }
