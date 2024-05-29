@@ -109,7 +109,8 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
                 ...workSpace, JSONString: JSON.stringify({
                     ...workSpaceJSON, Rows: [...workSpaceJSON.Rows, {
                         Height: 500,
-                        Widgets: [CreateWidget(type, 100)]
+                        Widgets: [CreateWidget(type, 100)],
+                        ShowHeader: true
                     }]
                 })
             }))
