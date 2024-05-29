@@ -261,7 +261,6 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                             <div className="col-4 d-flex flex-column" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
                                 <div className="container-fluid d-flex flex-column p-0 flex-shrink-0">
                                     <Input<ICommonSettings> Field='Label' Record={localCommonSettings} Type='text' Setter={(r) => setCommonLocalSettings(r)} Valid={(field) => true} />
-                                    {/*make with button full width*/ }
                                     <Input<ICommonSettings> Label="Width (%)" Field='Width' Record={localCommonSettings} Type='integer' Setter={(r) => setCommonLocalSettings(r)}
                                         Valid={(item) => isPercent(localCommonSettings[item] as number)} Feedback='Width must be a valid percent and greater than 5' />
                                     <CheckBox<ICommonSettings> Field='ShowHeader' Record={localCommonSettings} Setter={r => setCommonLocalSettings(r)} Label="Show Widget Header" />
@@ -274,21 +273,17 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                     />}
                                 </div>
                             </div>
-                        </div>
                         <div className="col-8" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
                             {Implementation?.ChannelSelectionUI !== undefined ?
                                 <Implementation.ChannelSelectionUI
                                     AddChannel={(channelID, defaultSetting, isAdded) => handleAddChannel(channelID, defaultSetting, isAdded)}
                                     SetChannelSettings={(channelKey, settings) => {
                                         setLocalChannels(prevChannels => {
-                                            let updatedChans = prevChannels.map(chan =>
+                                                const updatedChans = prevChannels.map(chan =>
                                                 _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
                                             );
 
-                                            if (!_.isEqual(updatedChans, prevChannels)) 
-                                                return updatedChans;
-                                            
-                                            return prevChannels;
+                                                return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
                                         });
                                     }}
                                         RemoveChannel={channel => setLocalChannels(channels => {
@@ -304,9 +299,13 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                 /> : <ChannelSelector
                                     AddChannel={(channelID, defaultSetting, isAdded) => handleAddChannel(channelID, defaultSetting, isAdded)}
                                     SetChannelSettings={(channelKey, settings) => {
+                                            setLocalChannels(prevChannels => {
+                                                const updatedChans = prevChannels.map(chan =>
+                                                    _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
+                                                );
 
-                                        setLocalChannels(prev => prev.map(chan => _.isEqual(chan.Key, channelKey) ? { ...chan, Settings: settings } : chan))
-
+                                                return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
+                                            });
                                     }}
                                         RemoveChannel={channel => setLocalChannels(channels => {
                                             const updatedChannels = [...channels];
