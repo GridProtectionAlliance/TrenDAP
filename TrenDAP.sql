@@ -104,7 +104,7 @@ CREATE TABLE DataSourceDataSet
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     DataSourceID INT NOT NULL REFERENCES DataSource(ID),
     DataSetID INT NOT NULL REFERENCES DataSet(ID),
-    SettingsBin varbinary(max) NOT NULL DEFAULT '0x7B7D'
+    Settings VARCHAR(MAX) NOT NULL DEFAULT '{}'
 )
 GO
 

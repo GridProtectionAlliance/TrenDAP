@@ -106,7 +106,6 @@ namespace TrenDAP.Model
                 {
                     DataSourceDataSet connRecord = conn.ToObject<DataSourceDataSet>();
                     connRecord.DataSetID = dataSetId;
-                    connRecord.SettingsBin = Encoding.UTF8.GetBytes(conn["Settings"].ToString());
                     result += new TableOperations<DataSourceDataSet>(connection).AddNewRecord(connRecord);
                 }
                 return Ok(result);

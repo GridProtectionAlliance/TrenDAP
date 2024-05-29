@@ -43,33 +43,12 @@ namespace TrenDAP.Model
         public int ID { get; set; }
         public int DataSourceID { get; set; }
         public int DataSetID { get; set; }
-        public byte[] SettingsBin { get; set; }
-        [NonRecordField]
-        public string Settings
-        {
-            get
-            {
-                try { return Encoding.UTF8.GetString(SettingsBin); }
-                catch { return Encoding.ASCII.GetString(SettingsBin); }
-            } 
-            
-        }
+        public string Settings { get; set; }
     }
 
     public class DataSourceDataSetController : ModelController<DataSourceDataSet>
     {
         public DataSourceDataSetController(IConfiguration configuration) : base(configuration) { }
-
-        public override ActionResult Post([FromBody] JObject record)
-        {
-            record["SettingsBin"] = Encoding.UTF8.GetBytes(record["Settings"].ToString());
-            return base.Post(record);
-        }
-        public override ActionResult Patch([FromBody] JObject record)
-        {
-            record["SettingsBin"] = Encoding.UTF8.GetBytes(record["Settings"].ToString());
-            return base.Patch(record);
-        }
 
         [HttpGet, Route("Query/{dataSourceDataSetID:int}")]
         public IActionResult GetData(int dataSourceDataSetID, CancellationToken cancellationToken)
