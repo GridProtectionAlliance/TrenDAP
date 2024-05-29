@@ -24,7 +24,7 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { Redux, TrenDAP } from '../../global';
-import {ajax } from 'jquery';
+import $ from 'jquery';
 import { Search } from '@gpa-gemstone/react-interactive';
 
 export const FetchOpenXDA = createAsyncThunk<string | object, { dataSourceID: number, table: string }, {}>('OpenXDA/FetchOpenXDA', async (ds ,{ dispatch }) => {
@@ -160,7 +160,7 @@ export const SelectOpenXDA = (state: Redux.StoreState, dsid: number, table: stri
 export const SelectOpenXDAStatus = (state: Redux.StoreState, dsid: number, table: string) => (state.OpenXDA[dsid] ? state.OpenXDA[dsid][table]?.Status ?? 'unitiated' : 'unitiated') as TrenDAP.Status
 
 function GetOpenXDA(dataSourceID: number, table: string): JQuery.jqXHR<string> {
-    return ajax({
+    return $.ajax({
         type: "GET",
         url: `${homePath}api/TrenDAPDB/${dataSourceID}/${table}`,
         contentType: "application/json; charset=utf-8",
@@ -170,7 +170,7 @@ function GetOpenXDA(dataSourceID: number, table: string): JQuery.jqXHR<string> {
     });
 }
 function PostOpenXDA(dataSourceID: number, table: string, filters: Search.IFilter<any>[]): JQuery.jqXHR<string> {
-    return ajax({
+    return $.ajax({
         type: "Post",
         url: `${homePath}api/TrenDAPDB/${dataSourceID}/${table}`,
         contentType: "application/json; charset=utf-8",

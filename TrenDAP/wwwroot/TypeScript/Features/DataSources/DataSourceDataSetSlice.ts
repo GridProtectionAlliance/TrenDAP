@@ -24,7 +24,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { Redux, DataSourceTypes } from '../../global';
 import _ from 'lodash';
-import { ajax } from 'jquery';
+import $ from 'jquery';
 
 // #region [ Consts ]
 const blankConnection: DataSourceTypes.IDataSourceDataSet = {
@@ -154,7 +154,7 @@ export const SelectDataSourceDataSetAscending = (state: Redux.StoreState)  => st
 
 // #region [ Async Functions ]
 function GetDataSourceDataSets(): JQuery.jqXHR<DataSourceTypes.IDataSourceDataSet[]> {
-    return ajax({
+    return $.ajax({
         type: "GET",
         url: `${homePath}api/DataSourceDataSet`,
         contentType: "application/json; charset=utf-8",
@@ -165,7 +165,7 @@ function GetDataSourceDataSets(): JQuery.jqXHR<DataSourceTypes.IDataSourceDataSe
 }
 
 function PostDataSourceDataSet(dataSourceDataSet: DataSourceTypes.IDataSourceDataSet): JQuery.jqXHR<DataSourceTypes.IDataSourceDataSet> {
-    return ajax({
+    return $.ajax({
         type: "POST",
         url: `${homePath}api/DataSourceDataSet`,
         contentType: "application/json; charset=utf-8",
@@ -177,7 +177,7 @@ function PostDataSourceDataSet(dataSourceDataSet: DataSourceTypes.IDataSourceDat
 }
 
 function DeleteDataSourceDataSet(dataSourceDataSet: DataSourceTypes.IDataSourceDataSet){
-    return ajax({
+    return $.ajax({
         type: "DELETE",
         url: `${homePath}api/DataSourceDataSet`,
         contentType: "application/json; charset=utf-8",
@@ -189,7 +189,7 @@ function DeleteDataSourceDataSet(dataSourceDataSet: DataSourceTypes.IDataSourceD
 }
 
 function PatchDataSourceDataSet(dataSourceDataSet: DataSourceTypes.IDataSourceDataSet): JQuery.jqXHR<DataSourceTypes.IDataSourceDataSet> {
-    return ajax({
+    return $.ajax({
         type: "PATCH",
         url: `${homePath}api/DataSourceDataSet`,
         contentType: "application/json; charset=utf-8",

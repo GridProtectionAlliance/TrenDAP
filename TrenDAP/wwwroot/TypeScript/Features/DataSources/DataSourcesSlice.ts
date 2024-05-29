@@ -23,7 +23,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { DataSourceTypes, Redux } from '../../global';
 import _ from 'lodash';
-import { ajax } from 'jquery';
+import $ from 'jquery';
 
 // #region [ Thunks ]
 export const FetchDataSources = createAsyncThunk('DataSources/FetchDataSources', async (_, { dispatch }) => {
@@ -142,7 +142,7 @@ export const SelectDataSourcesAscending = (state: Redux.StoreState) => state.Dat
 // #region [ Async Functions ]
 
 function GetDataSources(): JQuery.jqXHR<DataSourceTypes.IDataSourceView[]> {
-    return ajax({
+    return $.ajax({
         type: "GET",
         url: `${homePath}api/DataSource`,
         contentType: "application/json; charset=utf-8",
@@ -153,7 +153,7 @@ function GetDataSources(): JQuery.jqXHR<DataSourceTypes.IDataSourceView[]> {
 }
 
 function PostDataSource(dataSource: DataSourceTypes.IDataSourceView): JQuery.jqXHR<DataSourceTypes.IDataSourceView> {
-    return ajax({
+    return $.ajax({
         type: "POST",
         url: `${homePath}api/DataSource`,
         contentType: "application/json; charset=utf-8",
@@ -165,7 +165,7 @@ function PostDataSource(dataSource: DataSourceTypes.IDataSourceView): JQuery.jqX
 }
 
 function DeleteDataSource(dataSource: DataSourceTypes.IDataSourceView): JQuery.jqXHR<DataSourceTypes.IDataSourceView> {
-    return ajax({
+    return $.ajax({
         type: "DELETE",
         url: `${homePath}api/DataSource`,
         contentType: "application/json; charset=utf-8",
@@ -177,7 +177,7 @@ function DeleteDataSource(dataSource: DataSourceTypes.IDataSourceView): JQuery.j
 }
 
 function PatchDataSource(dataSource: DataSourceTypes.IDataSourceView): JQuery.jqXHR<DataSourceTypes.IDataSourceView> {
-    return ajax({
+    return $.ajax({
         type: "PATCH",
         url: `${homePath}api/DataSource`,
         contentType: "application/json; charset=utf-8",

@@ -28,7 +28,7 @@ import { DataSourceTypes, TrenDAP, Redux, DataSetTypes } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../../OpenXDA/OpenXDASlice';
 import { ParseSettings } from '../DataSourceWrapper';
-import { ajax } from 'jquery';
+import $ from 'jquery';
 import queryString from 'querystring';
 import moment from 'moment';
 
@@ -113,7 +113,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
                 AssetList: props.DataSetSettings.By === 'Asset' ? props.DataSetSettings.IDs : []
             };
 
-            const handle = ajax({
+            const handle = $.ajax({
                 type: "POST",
                 url: `${homePath}api/TrenDAPDB/Channel/GetTrendChannels/${props.DataSource.ID}`,
                 contentType: "application/json; charset=utf-8",
@@ -165,7 +165,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
                 Phase: '',
                 Type: ''
             }));
-            ajax({
+            $.ajax({
                 type: "POST",
                 url: `${homePath}api/TrenDAPDB/Channel/GetTrendChannels/${setConn.DataSourceID}`,
                 contentType: "application/json; charset=utf-8",
@@ -214,7 +214,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
             let metaData: DataSetTypes.IDataSetData[] = null;
 
             // Handle to query HIDS information (through XDA)
-            const dataHandle = ajax({
+            const dataHandle = $.ajax({
                 type: "Get",
                 url: `${homePath}api/DataSourceDataSet/Query/${setConn.ID}`,
                 contentType: "application/json; charset=utf-8",
@@ -322,7 +322,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
     },
     TestAuth: function (dataSource: DataSourceTypes.IDataSourceView): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
-            ajax({
+            $.ajax({
                 type: "GET",
                 url: `${homePath}api/DataSource/TestAuth/${dataSource.ID}`,
                 contentType: "application/json; charset=utf-8",

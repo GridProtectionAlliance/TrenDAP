@@ -24,7 +24,7 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { DataSourceTypes, Redux } from '../../global';
-import { ajax } from 'jquery';
+import $ from 'jquery';
 
 export const FetchDataSourceTypes = createAsyncThunk('DataSources/FetchDataSourceTypes', async (_,{ dispatch }) => {
     return await GetDataSourceTypes()
@@ -78,7 +78,7 @@ export const SelectDataSourceTypes = (state: Redux.StoreState) => state.DataSour
 export const SelectDataSourceTypesStatus = (state: Redux.StoreState) => state.DataSourceTypes.Status;
 
 function GetDataSourceTypes(): JQuery.jqXHR<DataSourceTypes.IDataSourceType[]> {
-    return ajax({
+    return $.ajax({
         type: "GET",
         url: `${homePath}api/DataSourceType`,
         contentType: "application/json; charset=utf-8",

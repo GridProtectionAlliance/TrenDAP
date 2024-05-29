@@ -27,7 +27,7 @@ import { TrenDAP, Redux } from '../../../global';
 import _, { result } from 'lodash';
 import moment from 'moment';
 import TrenDAPDB, { DataSetTableRow } from './../TrenDAPDB';
-import { ajax } from 'jquery';
+import $ from 'jquery';
 
 // #region [ Thunks ]
 
@@ -122,7 +122,7 @@ export async function GetDataSetDataFromIDB(id: number) {
 
 function GetDataSetData(dataSet: TrenDAP.iDataSet) {
     return new Promise((resolve, reject) => {
-        ajax({
+        $.ajax({
             type: "GET",
             url: `${homePath}api/DataSet/Query/${dataSet.ID}`,
             contentType: "application/json; charset=utf-8",

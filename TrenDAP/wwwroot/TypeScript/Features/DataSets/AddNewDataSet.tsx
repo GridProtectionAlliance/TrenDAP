@@ -31,7 +31,7 @@ import { ToolTip } from '@gpa-gemstone/react-interactive';
 import { Warning } from '@gpa-gemstone/gpa-symbols';
 import moment from 'moment';
 import { CrossMark } from '../../Constants';
-import { ajax } from 'jquery';
+import $ from 'jquery';
 
 const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
     const dispatch = useAppDispatch();
@@ -102,7 +102,7 @@ const AddNewDataSet: React.FunctionComponent<{}> = (props) => {
                                 onClick={() => {
                                     if (errors.length > 0)
                                         return;
-                                    const handle = ajax({
+                                    const handle = $.ajax({
                                         type: "POST",
                                         url: `${homePath}api/DataSet/NewWithConnections`,
                                         contentType: "application/json; charset=utf-8",

@@ -26,7 +26,7 @@ import { TrenDAP, Redux } from '../../global';
 import _, { result } from 'lodash';
 import moment from 'moment';
 import TrenDAPDB, { DataSetTableRow } from './TrenDAPDB';
-import { ajax } from 'jquery';
+import $ from 'jquery';
 
 // #region [ Thunks ]
 export const FetchDataSets = createAsyncThunk('DataSets/FetchDataSets', async (_, { dispatch }) => {
@@ -256,7 +256,7 @@ export async function GetDataSetDataFromIDB(id: number) {
 }
 
 function GetDataSets(): JQuery.jqXHR<TrenDAP.iDataSet[]> {
-    return ajax({
+    return $.ajax({
         type: "GET",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",
@@ -268,7 +268,7 @@ function GetDataSets(): JQuery.jqXHR<TrenDAP.iDataSet[]> {
 
 function GetDataSetData(dataSet: TrenDAP.iDataSet) {
     return new Promise((resolve, reject) => {
-        ajax({
+        $.ajax({
             type: "GET",
             url: `${homePath}api/DataSet/Query/${dataSet.ID}`,
             contentType: "application/json; charset=utf-8",
@@ -325,7 +325,7 @@ export async function UpdateDataSetData(dataSet: TrenDAP.iDataSet, dataSourceID:
 
 
 function PostDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> {
-    return ajax({
+    return $.ajax({
         type: "POST",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",
@@ -337,7 +337,7 @@ function PostDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> 
 }
 
 function DeleteDataSet(dataSet: TrenDAP.iDataSet){
-    return ajax({
+    return $.ajax({
         type: "DELETE",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",
@@ -353,7 +353,7 @@ function DeleteDataSet(dataSet: TrenDAP.iDataSet){
 }
 
 function PatchDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> {
-    return ajax({
+    return $.ajax({
         type: "PATCH",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",
