@@ -46,11 +46,6 @@
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Trend.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Widget.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\XvsY.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Workspaces\AddNewWorkSpace.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Workspaces\Row.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Workspaces\WorkSpaces.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\Workspaces\WorkSpaceSettings" />
-    <Content Remove="wwwroot\TypeScript\Features\Workspaces\WorkSpacesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\global.d.ts" />
     <Content Remove="wwwroot\TypeScript\hooks.ts" />
     <Content Remove="wwwroot\TypeScript\Implementations.ts" />
@@ -142,18 +137,6 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Implementations\Trend.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Workspaces\Row.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Workspaces\Workspace.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Workspaces\Workspaces.tsx">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\Workspaces\WorkspacesSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\LoadingSpinner.tsx" />
