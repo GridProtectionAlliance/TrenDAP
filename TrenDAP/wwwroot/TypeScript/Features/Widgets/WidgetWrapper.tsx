@@ -132,12 +132,12 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
         const promises = channels.map(chan =>
             db.Read(chan.ID).then(data => ({ ...data.Data, ChannelSettings: chan.ChannelSettings, ChannelKey: chan.ChannelKey }))
         );
-        
+
         Promise.all(promises).then(allData => {
             setData(allData);
         });
         /**********/
-        //Once i get all the channel specific settings out of the way lets rework ReadMany so that it accepts our map and gives us back a key with the data..
+        //Once i get all the channel specific settings out of the way, rework ReadMany so it works as well.
 
     }, [props.Widget.Channels, props.ChannelMap.Version]);
 
@@ -158,9 +158,9 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
         let key = updatedKey ?? { Phase: channel.Phase, Type: channel.Type, Harmonic: channel.Harmonic, Parent: maxParent }
         let newChannel = {
             MetaData: channel,
-                    ChannelSettings: defaultSetting,
+            ChannelSettings: defaultSetting,
             Key: key,
-                    IsNew: true
+            IsNew: true
         };
 
         setLocalChannels(prevLocalChannels => {
@@ -257,7 +257,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     Size="xlg"
                 >
                     <div className="container-fluid h-100 d-flex flex-column p-0">
-                    <div className="row">
+                        <div className="row">
                             <div className="col-4 d-flex flex-column" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
                                 <div className="container-fluid d-flex flex-column p-0 flex-shrink-0">
                                     <Input<ICommonSettings> Field='Label' Record={localCommonSettings} Type='text' Setter={(r) => setCommonLocalSettings(r)} Valid={(field) => true} />
@@ -273,32 +273,11 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                     />}
                                 </div>
                             </div>
-                        <div className="col-8" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
-                            {Implementation?.ChannelSelectionUI !== undefined ?
-                                <Implementation.ChannelSelectionUI
-                                    AddChannel={(channelID, defaultSetting, isAdded) => handleAddChannel(channelID, defaultSetting, isAdded)}
-                                    SetChannelSettings={(channelKey, settings) => {
-                                        setLocalChannels(prevChannels => {
-                                                const updatedChans = prevChannels.map(chan =>
-                                                _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
-                                            );
-
-                                                return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
-                                        });
-                                    }}
-                                        RemoveChannel={channel => setLocalChannels(channels => {
-                                            const updatedChannels = [...channels];
-                                            const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
-                                            index !== -1 ? updatedChannels.splice(index, 1) : null;
-                                            return updatedChannels;
-                                        })}
-                                    AllChannels={props.AllChannels}
-                                    SelectedChannels={localChannels}
-                                    SetSettings={setLocalSetting}
-                                    Settings={localSetting}
-                                /> : <ChannelSelector
-                                    AddChannel={(channelID, defaultSetting, isAdded) => handleAddChannel(channelID, defaultSetting, isAdded)}
-                                    SetChannelSettings={(channelKey, settings) => {
+                            <div className="col-8" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
+                                {Implementation?.ChannelSelectionUI !== undefined ?
+                                    <Implementation.ChannelSelectionUI
+                                        AddChannel={(channelID, defaultSetting, updatedKey) => handleAddChannel(channelID, defaultSetting, updatedKey)}
+                                        SetChannelSettings={(channelKey, settings) => {
                                             setLocalChannels(prevChannels => {
                                                 const updatedChans = prevChannels.map(chan =>
                                                     _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
@@ -306,20 +285,41 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
 
                                                 return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
                                             });
-                                    }}
+                                        }}
                                         RemoveChannel={channel => setLocalChannels(channels => {
                                             const updatedChannels = [...channels];
                                             const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
                                             index !== -1 ? updatedChannels.splice(index, 1) : null;
                                             return updatedChannels;
                                         })}
-                                    AllChannels={props.AllChannels}
-                                    SelectedChannels={localChannels}
-                                    SetSettings={setLocalSetting}
-                                    Settings={localSetting}
-                                />}
+                                        AllChannels={props.AllChannels}
+                                        SelectedChannels={localChannels}
+                                        SetSettings={setLocalSetting}
+                                        Settings={localSetting}
+                                    /> : <ChannelSelector
+                                        AddChannel={(channelID, defaultSetting, channelIDs) => handleAddChannel(channelID, defaultSetting, channelIDs)}
+                                        SetChannelSettings={(channelKey, settings) => {
+                                            setLocalChannels(prevChannels => {
+                                                const updatedChans = prevChannels.map(chan =>
+                                                    _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
+                                                );
+
+                                                return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
+                                            });
+                                        }}
+                                        RemoveChannel={channel => setLocalChannels(channels => {
+                                            const updatedChannels = [...channels];
+                                            const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
+                                            index !== -1 ? updatedChannels.splice(index, 1) : null;
+                                            return updatedChannels;
+                                        })}
+                                        AllChannels={props.AllChannels}
+                                        SelectedChannels={localChannels}
+                                        SetSettings={setLocalSetting}
+                                        Settings={localSetting}
+                                    />}
+                            </div>
                         </div>
-                    </div>
                     </div>
                 </Modal>
                 <Warning Title="Delete Widget" Show={showWarning} Message={"Are you sure you want to delete this widget?"} CallBack={(confirmed) => {
