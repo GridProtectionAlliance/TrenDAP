@@ -21,13 +21,15 @@
 //
 //******************************************************************************************************
 import { DataSetTypes, TrenDAP } from '../../global';
+import { ISelectedChannels } from './WidgetWrapper';
 export { };
 declare module '*.scss';
 
 export namespace WidgetTypes {
-    interface ISettingsProps<T> {
+    interface ISettingsProps<T, U> {
         SetSettings: (settings: T) => void,
         Settings: T,
+        ChannelSettings: U[]
     }
 
     interface IWidgetProps<T, U> {
@@ -51,10 +53,9 @@ export namespace WidgetTypes {
         Settings: S,
         SetSettings: (settings: S) => void,
         AllChannels: DataSetTypes.IDataSetMetaData[],
-        AddChannel: (channelID: string, channelSettings: U, isAdded?: boolean) => void,
+        AddChannel: (channelID: string, channelSettings: U, updatedKey?: TrenDAP.IChannelKey) => void, 
         RemoveChannel: (channelID: string) => void,
         SelectedChannels: ISelectedChannels[],
-        SetSelectedChannels: (channels: ISelectedChannels[]) => void,
         SetChannelSettings: (channelKey: TrenDAP.IChannelKey, settings: U ) => void,
     }
 
@@ -63,7 +64,7 @@ export namespace WidgetTypes {
     */
     interface IWidget<S, U> {
         WidgetUI: React.FC<IWidgetProps<S, U>>,
-        SettingsUI?: React.FC<ISettingsProps<S>>,
+        SettingsUI?: React.FC<ISettingsProps<S ,U>>,
         ChannelSelectionUI?: React.FC<IChannelSelectionProps<S, U>>,
         DefaultSettings: S,
         DefaultChannelSettings: U,
