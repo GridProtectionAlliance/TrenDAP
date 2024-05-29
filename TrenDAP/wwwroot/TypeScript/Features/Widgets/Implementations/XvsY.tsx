@@ -28,8 +28,6 @@ import { Input, CheckBox, ColorPicker, StylableSelect } from '@gpa-gemstone/reac
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols'
 import { Modal } from '@gpa-gemstone/react-interactive';
-import { ISelectedChannels } from '../WidgetWrapper';
-
 import { WidgetTypes } from '../Interfaces';
 import { linearRegression, linearRegressionLine, rSquared } from 'simple-statistics';
 import moment from 'moment';
@@ -41,20 +39,27 @@ import { DataSetTypes } from '../../../global';
 interface IProps {
     XAxisLabel: string,
     YAxisLabel: string,
+    Pairs: {
+        Keys: [TrenDAP.IChannelKey, TrenDAP.IChannelKey],
+        Index: number
+    }[]
 }
 
 interface IChannelSettings {
-    TargetKey: TrenDAP.IChannelKey,
-    TargetParentID: string //Used to correctly generate targetkey
     Color: string,
     RegressionLine: boolean,
     Field: TrenDAP.SeriesField,
     Axis: ('X' | 'Y'),
+    PairIndex: number
 }
 
 interface IAxisSelection extends IChannelSettings {
     LabelValue: SelectValue,
-    Key: TrenDAP.IChannelKey
+}
+
+
+interface IPairChannel extends TrenDAP.IWidgetChannels<IAxisSelection> {
+    MetaData: DataSetTypes.IDataSetMetaData, IsNew: boolean, PairIndex: number
 }
 
 interface SelectValue {
@@ -63,10 +68,9 @@ interface SelectValue {
     Key: TrenDAP.IChannelKey
 }
 
-
 export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
-    DefaultSettings: { XAxisLabel: "X Axis", YAxisLabel: 'Y Axis' },
-    DefaultChannelSettings: { Field: 'Average', Color: 'red', TargetKey: null, TargetParentID: null, Axis: 'Y', RegressionLine: false, },
+    DefaultSettings: { XAxisLabel: "X Axis", YAxisLabel: 'Y Axis', Pairs: [] },
+    DefaultChannelSettings: { Field: 'Average', Color: 'red', Axis: 'Y', RegressionLine: false, PairIndex: -1 },
     Name: "XvsY",
     WidgetUI: (props) => {
         const ref = React.useRef<HTMLDivElement>(null);
@@ -80,8 +84,8 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             if (props.Data == null || props?.Data.length == 0) return;
             let xMax = 100, xMin = 0, yMax = 100, yMin = 0;
 
-            const xSeries = props.Data.filter(d => d.ChannelSettings.Axis === 'X').map(d => ({ Color: d.ChannelSettings.Color, Data: d.SeriesData[d.ChannelSettings.Field], SourceKey: d.ChannelKey, TargetKey: d.ChannelSettings.TargetKey, Regression: d.ChannelSettings.RegressionLine }));
-            const ySeries = props.Data.filter(d => d.ChannelSettings.Axis === 'Y').map(d => ({ Color: d.ChannelSettings.Color, Data: d.SeriesData[d.ChannelSettings.Field], SourceKey: d.ChannelKey, TargetKey: d.ChannelSettings.TargetKey, Regression: d.ChannelSettings.RegressionLine }));
+            const xSeries = props.Data.filter(d => d.ChannelSettings.Axis === 'X').map(d => ({ Color: d.ChannelSettings.Color, Data: d.SeriesData[d.ChannelSettings.Field], Regression: d.ChannelSettings.RegressionLine, PairIndex: d.ChannelSettings.PairIndex }));
+            const ySeries = props.Data.filter(d => d.ChannelSettings.Axis === 'Y').map(d => ({ Color: d.ChannelSettings.Color, Data: d.SeriesData[d.ChannelSettings.Field], Regression: d.ChannelSettings.RegressionLine, PairIndex: d.ChannelSettings.PairIndex }));
 
             const combinedData = matchDataByTime(xSeries, ySeries);
 
@@ -95,7 +99,7 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 yMin = Math.min(...ySeries.map(d => d.Data.map(d => d[1])).flat());
             }
 
-            const margin = { bottom: 50, left: 50, top: 40, right: 50 };
+            const margin = { bottom: 50, left: 60, top: 40, right: 100 };
             const svgHeight = ref.current.offsetHeight;
 
             d3.select(ref.current).selectAll('svg').remove()
@@ -143,34 +147,43 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .style("fill", d => d.Color)
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            let groupedData = _.groupBy(combinedData.filter(d => d.Regression), 'UniqKey');
+            // Group data by PairIndex
+            let groupedData = Object.values(_.groupBy(combinedData.filter(d => d.Regression), 'PairIndex'));
 
-            // Theres got to be a better way to do do this than iterating over groupedData..
-            if (groupedData)
-                Object.keys(groupedData).forEach((key, index) => {
-                    let group = groupedData[key];
-                    const linearRegModel = linearRegression(group.map(d => d.Values));
-                    const linearRegline = linearRegressionLine(linearRegModel);
-                    const r2 = rSquared(group.map(d => d.Values), linearRegline);
-                    const lineFunc = d3.line<number[]>().x(d => xScale(d[0])).y(d => yScale(linearRegline(d[0])));
+            if (groupedData != null && groupedData.length !== 0) {
+                let lines = svg.selectAll(".line")
+                    .data(groupedData)
+                    .enter()
+                    .append("path")
+                    .attr("class", "line")
+                    .attr("fill", "none")
+                    .attr("stroke-width", 1.5)
+                    .attr("stroke", d => d[0].Color)
+                    .attr("transform", `translate(${margin.left},${margin.top})`)
+                    .attr("d", d => {
+                        const linearRegModel = linearRegression(d.map(dd => dd.Values));
+                        const linearRegline = linearRegressionLine(linearRegModel);
+                        const lineFunc = d3.line<number[]>()
+                            .x(dd => xScale(dd[0]))
+                            .y(dd => yScale(linearRegline(dd[0])));
+                        return lineFunc(d.map(dd => dd.Values));
+                    });
 
-                    // Create regression line
-                    svg.append("path")
-                        .datum(group)
-                        .attr("class", "line")
-                        .attr("fill", "none")
-                        .attr("stroke-width", 1.5)
-                        .attr("stroke", d => d[0].Color)
-                        .attr("transform", `translate(${margin.left},${margin.top})`)
-                        .attr("d", lineFunc(group.map(g => g.Values)));
-
-                    svg.append('text')
-                        .datum(group)
-                        .attr('stroke', d => d[0].Color)
-                        .attr("transform", `translate(${ref.current.offsetWidth - margin.left - margin.right},${margin.top + (index * 15)})`)
-                        .text(`R2 - ${r2.toFixed(3)}`);
-                });
-
+                // Create text elements for each group of data
+                let texts = svg.selectAll(".r2-text")
+                    .data(groupedData)
+                    .enter()
+                    .append("text")
+                    .attr("class", "r2-text")
+                    .attr('stroke', d => d[0].Color)
+                    .attr("transform", (d, i) => `translate(${ref.current.offsetWidth - margin.left - margin.right + 50},${margin.top + (i * 15)})`)
+                    .text(d => {
+                        const linearRegModel = linearRegression(d.map(dd => dd.Values));
+                        const linearRegline = linearRegressionLine(linearRegModel);
+                        const r2 = rSquared(d.map(dd => dd.Values), linearRegline);
+                        return `R2 - ${r2.toFixed(3)}`;
+                    });
+            }
         }
 
         return (
@@ -179,13 +192,8 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
     },
     SettingsUI: (props) => {
         return <>
-
-            <div className="row">
-                <div className="col-12">
-                    <Input<IProps> Record={props.Settings} Field='XAxisLabel' Label="X Axis Label" Valid={() => true} Setter={item => props.SetSettings(item)} />
-                    <Input<IProps> Record={props.Settings} Field='YAxisLabel' Label="Y Axis Label" Valid={() => true} Setter={item => props.SetSettings(item)} />
-                </div>
-            </div>
+            <Input<IProps> Record={props.Settings} Field='XAxisLabel' Label="X Axis Label" Valid={() => true} Setter={item => props.SetSettings(item)} />
+            <Input<IProps> Record={props.Settings} Field='YAxisLabel' Label="Y Axis Label" Valid={() => true} Setter={item => props.SetSettings(item)} />
         </>
     },
     ChannelSelectionUI: (props) => {
@@ -193,35 +201,30 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         const [ascending, setAscending] = React.useState<boolean>(false);
         const [sortField, setSortField] = React.useState<keyof DataSetTypes.IDataSetMetaData>('Phase');
         const [showPairSelection, setShowPairSelection] = React.useState<boolean>(false);
-        //change name of thsi to just selectedPair
-        const [localSelectedPair, setLocalSelectedPair] = React.useState<DataSetTypes.IDataSetMetaData[]>([]); // this needs to be a tuple
-        const [pairs, setPairs] = React.useState<[ISelectedChannels, ISelectedChannels][]>([]);
 
-        const [editedPair, setEdittedPair] = React.useState<[ISelectedChannels, ISelectedChannels]>(null);
+        const [selectedPair, setSelectedPair] = React.useState<DataSetTypes.IDataSetMetaData[]>([]); // this needs to be a tuple
+        const [pairs, setPairs] = React.useState<[IPairChannel, IPairChannel][]>([]);
+
+        const [edittedPair, setEdittedPair] = React.useState<[IPairChannel, IPairChannel]>(null);
 
         React.useEffect(() => {
             if (props.SelectedChannels == null || props.SelectedChannels?.length === 0) {
                 setPairs([])
                 return
             }
+            let newPairs: [IPairChannel, IPairChannel][] = []
 
-            let targetIndex = -1;
-            let channelPairs: [ISelectedChannels, ISelectedChannels][] = []
-            props.SelectedChannels.forEach((chan, index) => {
-                if (index === targetIndex) return;
-                let sourceChan = { ...chan }
-                let targetChan = props.SelectedChannels.find(target => _.isEqual(chan.ChannelSettings?.TargetKey, target.Key))
-                targetIndex = props.SelectedChannels.findIndex(target => _.isEqual(chan.ChannelSettings?.TargetKey, target.Key))
-                if (targetChan != null) {
-                    //confirm this making it in db aren't making its way into the db..
-                    sourceChan.ChannelSettings = { ...sourceChan.ChannelSettings, LabelValue: { Field: sourceChan.ChannelSettings.Field, Axis: sourceChan.ChannelSettings.Axis, Key: sourceChan.Key } }
-                    targetChan.ChannelSettings = { ...targetChan.ChannelSettings, LabelValue: { Field: targetChan.ChannelSettings.Field, Axis: targetChan.ChannelSettings.Axis, Key: targetChan.Key } }
+            props.Settings.Pairs.forEach(pair => {
+                let chan1 = props.SelectedChannels.find(chan => _.isEqual(chan.Key, pair.Keys[0]))
+                let chan2 = props.SelectedChannels.find(chan => _.isEqual(chan.Key, pair.Keys[1]))
+                if (chan1 != null && chan2 != null) {
+                    chan1.ChannelSettings = { ...chan1.ChannelSettings, LabelValue: { Field: chan1.ChannelSettings.Field, Axis: chan1.ChannelSettings.Axis, Key: chan1.Key } }
+                    chan2.ChannelSettings = { ...chan2.ChannelSettings, LabelValue: { Field: chan2.ChannelSettings.Field, Axis: chan2.ChannelSettings.Axis, Key: chan2.Key } }
+                    newPairs.push([{ ...chan1, PairIndex: pair.Index }, { ...chan2, PairIndex: pair.Index }])
                 }
-                channelPairs.push([sourceChan, targetChan])
             })
-            setPairs(channelPairs)
-
-        }, [props.SelectedChannels, props.Settings])
+            setPairs(newPairs)
+        }, [props.SelectedChannels, props.Settings, showPairSelection])
 
         const sort = (field: keyof DataSetTypes.IDataSetMetaData, ascend: boolean) => {
             setSortField(field);
@@ -231,78 +234,58 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
         const handleChannelPairSelection = (conf: boolean) => {
             if (conf) {
-                let selectedChannels = [...props.SelectedChannels]
-                let chanDefaultSettings = { ...XvsYWidget.DefaultChannelSettings }
+                let maxParent = props.SelectedChannels.reduce((max, current) => {
+                    return current.Key.Parent > max ? current.Key.Parent : max;
+                }, 0);
+                maxParent = props.SelectedChannels.length === 0 ? 0 : maxParent + 1
+                let maxPairID = props.Settings.Pairs.reduce((max, current) => {
+                    return current.Index > max ? current.Index : max
+                }, 0)
+                maxPairID = props.Settings.Pairs.length === 0 ? 0 : maxPairID + 1
+                let chanDefaultSettings: IChannelSettings = { ...XvsYWidget.DefaultChannelSettings, PairIndex: maxPairID }
 
-                let maxParentValue = 0
-                if (props.SelectedChannels.length !== 0) {
-                    maxParentValue = props.SelectedChannels.reduce((max, channel) => {
-                        return channel.Key.Parent > max ? channel.Key.Parent : max;
-                    }, props.SelectedChannels[0].Key.Parent);
-                }
+                let chan1Key: TrenDAP.IChannelKey = { Type: selectedPair[0].Type, Phase: selectedPair[0].Phase, Harmonic: selectedPair[0].Harmonic, Parent: maxParent }
+                let chan2Key: TrenDAP.IChannelKey = { Type: selectedPair[1].Type, Phase: selectedPair[1].Phase, Harmonic: selectedPair[1].Harmonic, Parent: maxParent + 1 }
 
-                if (editedPair != null) {
-                    let sameChan1 = localSelectedPair.find(p => _.isEqual(p, editedPair[0].MetaData))
-                    let sameChan2 = localSelectedPair.find(p => _.isEqual(p, editedPair[1].MetaData))
-                    if (sameChan1 !== null && sameChan2 != null) {
+                if (edittedPair != null) {
+                    let sameChan1 = selectedPair.find(p => _.isEqual(p, edittedPair[0].MetaData))
+                    let sameChan2 = selectedPair.find(p => _.isEqual(p, edittedPair[1].MetaData))
+                    if (sameChan1 !== null && sameChan2 != null)
                         setEdittedPair(null)
-                        setShowPairSelection(false);
-                        return;
+
+                    else {
+                        let pairs = [...props.Settings.Pairs]
+
+                        //Remove editted pair
+                        let pairIndex = pairs.findIndex(pair => _.isEqual(pair, [edittedPair[0].Key, edittedPair[1].Key]))
+                        props.RemoveChannel(edittedPair[0].MetaData.ID)
+                        props.RemoveChannel(edittedPair[1].MetaData.ID)
+                        props.SetSettings({ ...props.Settings, Pairs: pairs.splice(pairIndex, 1) })
+
+                        //Update replaced pair's settings
+                        chanDefaultSettings = edittedPair[0].ChannelSettings
+                        setEdittedPair(null)
                     }
-
-                    //Since we do a deep equality check of whole object this should cover the case of
-                    //the same channel with a different targets..
-                    let chan1Index = selectedChannels.findIndex(c => _.isEqual(c, editedPair[0]))
-                    props.SetSelectedChannels(selectedChannels.splice(chan1Index, 1))
-
-                    let chan2Index = selectedChannels.findIndex(c => _.isEqual(c, editedPair[1]))
-                    props.SetSelectedChannels(selectedChannels.splice(chan2Index, 1))
-                    //we can use the same settings here as we override the non shared ones below
-                    chanDefaultSettings = { ...editedPair[0].ChannelSettings }
-                    setEdittedPair(null)
                 }
 
-                let chan1TargetKey = { Phase: localSelectedPair[1].Phase, Type: localSelectedPair[1].Type, Harmonic: localSelectedPair[1].Harmonic, Parent: maxParentValue + 2 }
-                let chan2TargetKey = { Phase: localSelectedPair[0].Phase, Type: localSelectedPair[0].Type, Harmonic: localSelectedPair[0].Harmonic, Parent: maxParentValue + 1 }
-                let chan1Settings = { ...chanDefaultSettings, TargetKey: chan1TargetKey, TargetParentID: localSelectedPair[1].ParentID }
-                let chan2Settings = { ...chanDefaultSettings, TargetKey: chan2TargetKey, TargetParentID: localSelectedPair[0].ParentID }
-                let chan1MetaData = { ...localSelectedPair[0] }
-                let chan2MetaData = { ...localSelectedPair[1] }
-
-                let chan1 = {
-                    MetaData: chan1MetaData,
-                    ChannelSettings: chan1Settings,
-                    Key: chan2TargetKey,
-                    IsNew: true
-                }
-
-                let chan2 = {
-                    MetaData: chan2MetaData,
-                    ChannelSettings: chan2Settings,
-                    Key: chan1TargetKey,
-                    IsNew: true
-                }
-
-                if (selectedChannels.length === 0)
-                    props.SetSelectedChannels([chan1, chan2])
-                else
-                    props.SetSelectedChannels([...selectedChannels, chan1, chan2])
+                props.AddChannel(selectedPair[0].ID, chanDefaultSettings, chan1Key)
+                props.AddChannel(selectedPair[1].ID, chanDefaultSettings, chan2Key)
+                props.SetSettings({ ...props.Settings, Pairs: [...props.Settings.Pairs, { Keys: [chan1Key, chan2Key], Index: maxPairID }] })
 
             }
-            setLocalSelectedPair([]);
-            setShowPairSelection(false)
-        }
-
-        { /*In pairs table we dont need to be sending of the LabelValue and Key to be saved to database */ }
+            setSelectedPair([]);
+            setShowPairSelection(false);
+        };
 
         return <>
-            <div className="row">
-                <div className="col-6 d-flex justify-content-start">
-                    <button className="btn btn-primary" onClick={() => setShowPairSelection(true)}>Add New Pair</button>
+            <div className="container-fluid d-flex h-100 flex-column p-0">
+                <div className="row">
+                    <div className="col-12">
+                        <button className="btn btn-primary" onClick={() => setShowPairSelection(true)}>Add New Pair</button>
+                    </div>
                 </div>
-            </div>
-            <div className="col-12 d-flex h-100 d-flex-column">
-                <ReactTable.Table<[ISelectedChannels, ISelectedChannels]>
+
+                <ReactTable.Table<[IPairChannel, IPairChannel]>
                     TableClass="table table-hover"
                     TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                     TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
@@ -315,7 +298,7 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     Ascending={ascending}
                     KeySelector={(row, idx) => idx}
                 >
-                    <ReactTable.Column<[ISelectedChannels, ISelectedChannels]>
+                    <ReactTable.Column<[IPairChannel, IPairChannel]>
                         Key={'PairNames'}
                         AllowSort={true}
                         Field={'0'}
@@ -328,7 +311,7 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     >
                         Names
                     </ReactTable.Column>
-                    <ReactTable.Column<[ISelectedChannels, ISelectedChannels]>
+                    <ReactTable.Column<[IPairChannel, IPairChannel]>
                         Key={'PairPhases'}
                         AllowSort={true}
                         Field={'0'}
@@ -341,7 +324,7 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     >
                         Phases
                     </ReactTable.Column>
-                    <ReactTable.Column<[ISelectedChannels, ISelectedChannels]>
+                    <ReactTable.Column<[IPairChannel, IPairChannel]>
                         Key={'PairTypes'}
                         AllowSort={true}
                         Field={'0'}
@@ -354,7 +337,7 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     >
                         Types
                     </ReactTable.Column>
-                    <ReactTable.Column<[ISelectedChannels, ISelectedChannels]>
+                    <ReactTable.Column<[IPairChannel, IPairChannel]>
                         Key={'Color'}
                         AllowSort={true}
                         Field={'1'}
@@ -363,11 +346,10 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                                 Setter={(record) => {
                                     item.forEach(i => {
                                         props.SetChannelSettings(i.Key, {
-                                            TargetKey: i.ChannelSettings.TargetKey,
-                                            TargetParentID: i.ChannelSettings.TargetParentID,
                                             RegressionLine: i.ChannelSettings.RegressionLine,
                                             Field: i.ChannelSettings.Field,
                                             Axis: i.ChannelSettings.Axis,
+                                            PairIndex: i.PairIndex,
                                             Color: record.Color,
                                         })
                                     })
@@ -377,26 +359,22 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     >
                         Color
                     </ReactTable.Column>
-                    <ReactTable.Column<[ISelectedChannels, ISelectedChannels]>
+                    <ReactTable.Column<[IPairChannel, IPairChannel]>
                         Key={'XAxis'}
                         AllowSort={true}
                         Field={'0'}
                         Content={({ item, style }) => {
-                            console.log('style from x axis', style)
                             let xChannel = item.find(item => item?.ChannelSettings?.Axis === 'X') ?? item[0]
                             return (
-                                <StylableSelect<IAxisSelection> Style={{ position: undefined }} Record={xChannel?.ChannelSettings} Field="LabelValue" Options={getAxisOptions(item, 'X')} Label="" Setter={axis => {
+                                <StylableSelect<IAxisSelection> Record={xChannel?.ChannelSettings} Field="LabelValue" Options={getAxisOptions(item, 'X')} Label="" Setter={axis => {
                                     let record: SelectValue = axis.LabelValue
                                     const newXAxis = item.find(c => _.isEqual(record.Key, c.Key))
-                                    //rewrite settings
-
                                     if (newXAxis.ChannelSettings.Axis !== record.Axis || newXAxis.ChannelSettings.Field !== record.Field)
                                         props.SetChannelSettings(newXAxis.Key, {
-                                            TargetKey: newXAxis.ChannelSettings.TargetKey,
-                                            TargetParentID: newXAxis.ChannelSettings.TargetParentID,
                                             RegressionLine: newXAxis.ChannelSettings.RegressionLine,
                                             Color: newXAxis.ChannelSettings.Color,
                                             Axis: record.Axis,
+                                            PairIndex: newXAxis.PairIndex,
                                             Field: record.Field
                                         })
                                 }} />
@@ -405,7 +383,7 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     >
                         X Axis
                     </ReactTable.Column>
-                    <ReactTable.Column<[ISelectedChannels, ISelectedChannels]>
+                    <ReactTable.Column<[IPairChannel, IPairChannel]>
                         Key={'YAxis'}
                         AllowSort={true}
                         Field={'0'}
@@ -419,10 +397,9 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                                         props.SetChannelSettings(newYAxis.Key, {
                                             RegressionLine: newYAxis.ChannelSettings.RegressionLine,
                                             Color: newYAxis.ChannelSettings.Color,
-                                            TargetParentID: newYAxis.ChannelSettings.TargetParentID,
-                                            TargetKey: newYAxis.ChannelSettings.TargetKey,
                                             Axis: record.Axis,
-                                            Field: record.Field
+                                            Field: record.Field,
+                                            PairIndex: newYAxis.PairIndex
                                         })
                                 }} />
                             )
@@ -430,7 +407,7 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     >
                         Y Axis
                     </ReactTable.Column>
-                    <ReactTable.Column<[ISelectedChannels, ISelectedChannels]>
+                    <ReactTable.Column<[IPairChannel, IPairChannel]>
                         Key={'EditClone'}
                         AllowSort={true}
                         Field={'0'}
@@ -441,11 +418,16 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                                     let chan1 = props.SelectedChannels.find(c => _.isEqual(c, item[0]))
                                     let chan2 = props.SelectedChannels.find(c => _.isEqual(c, item[1]))
 
-                                    setEdittedPair([chan1, chan2]);
-                                    setLocalSelectedPair([chan1.MetaData, chan2.MetaData])
+                                    setEdittedPair([{ ...chan1, PairIndex: -1 }, { ...chan2, PairIndex: -1 }]);
+                                    setSelectedPair([chan1.MetaData, chan2.MetaData])
                                 }}><ReactIcons.Pencil Size={15} /></button>
                                 <button className="btn" onClick={() => setShowPairSelection(true)}> <ReactIcons.Copy Size={15} /></button>
-                                <button className="btn" onClick={() => { props.SetSelectedChannels(props.SelectedChannels.filter(chan => !item.map(i => i.Key).includes(chan.Key))) }}>
+                                <button className="btn" onClick={() => {
+                                    props.RemoveChannel(item[0].MetaData.ID);
+                                    props.RemoveChannel(item[1].MetaData.ID);
+                                    let updatedSettings = { ...props.Settings, Pairs: [...props.Settings.Pairs].filter(pair => pair.Index !== item[0].PairIndex) }
+                                    props.SetSettings(updatedSettings)
+                                }}>
                                     <ReactIcons.TrashCan Color="Red" Size={15} />
                                 </button>
                             </div>
@@ -453,17 +435,20 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     >
                         {'\u200B'}
                     </ReactTable.Column>
-                    <ReactTable.Column<[ISelectedChannels, ISelectedChannels]>
+                    <ReactTable.Column<[IPairChannel, IPairChannel]>
                         Key={'EditClone'}
                         AllowSort={true}
                         Field={'0'}
                         Content={({ item }) => <>
                             <CheckBox<IChannelSettings> Record={item[0]?.ChannelSettings} Field="RegressionLine" Label="" Setter={(record) => {
                                 item.forEach(i => {
-                                    //rewrite settings
-
-                                    props.SetChannelSettings(i.Key,
-                                        { ...i.ChannelSettings, RegressionLine: record.RegressionLine })
+                                    props.SetChannelSettings(i.Key, {
+                                        Color: i.ChannelSettings.Color,
+                                        Axis: i.ChannelSettings.Axis,
+                                        Field: i.ChannelSettings.Field,
+                                        RegressionLine: record.RegressionLine,
+                                        PairIndex: i.ChannelSettings.PairIndex
+                                    })
                                 })
                             }} />
                         </>}
@@ -471,7 +456,6 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         Regression Line
                     </ReactTable.Column>
                 </ReactTable.Table>
-
             </div>
             <Modal
                 Show={showPairSelection}
@@ -481,8 +465,8 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 Title='Pair Selection'
                 CallBack={(conf) => handleChannelPairSelection(conf)}
                 Size="lg"
-                DisableConfirm={showPairSelection && localSelectedPair.length !== 2}
-                ConfirmShowToolTip={showPairSelection && localSelectedPair.length !== 2}
+                DisableConfirm={showPairSelection && selectedPair.length !== 2}
+                ConfirmShowToolTip={showPairSelection && selectedPair.length !== 2}
                 ConfirmToolTipContent={<><p>Please select at least two channels</p></>}
                 ShowCancel={false}
             >
@@ -494,17 +478,17 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                     SortKey={sortField}
                     OnClick={({ row }) => {
-                        const isChannelSelected = localSelectedPair?.find(chan => chan.ID === row.ID);
-                        if (localSelectedPair.length < 2)
-                            setLocalSelectedPair(prev => [...prev, row]);
+                        const isChannelSelected = selectedPair?.find(chan => chan.ID === row.ID);
+                        if (selectedPair.length < 2)
+                            setSelectedPair(prev => [...prev, row]);
                         else if (isChannelSelected ?? false)
-                            setLocalSelectedPair(prev => prev.filter(pair => pair.ID !== row.ID))
+                            setSelectedPair(prev => prev.filter(pair => pair.ID !== row.ID))
                     }}
                     OnSort={data => sort(data.colField, data.ascending)}
                     Data={allChannels}
                     Ascending={ascending}
                     KeySelector={(row) => row.ID}
-                    Selected={(row) => localSelectedPair.find(chan => chan.ID === row.ID) != null ? true : null}
+                    Selected={(row) => selectedPair.find(chan => chan.ID === row.ID) != null ? true : null}
                 >
                     <ReactTable.Column<DataSetTypes.IDataSetMetaData>
                         Key={'ParentName'}
@@ -544,27 +528,26 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 interface ISeriesData {
     Color: string,
     Data: [...number[]][],
-    TargetKey: TrenDAP.IChannelKey,
-    SourceKey: TrenDAP.IChannelKey,
-    Regression: boolean
+    Regression: boolean,
+    PairIndex: number
 }
 
 function matchDataByTime(seriesData1: ISeriesData[], seriesData2: ISeriesData[]) {
-    let returnArray: { Timestamp: number, Values: [number, number], Color: string, UniqKey: string, Regression: boolean }[] = [];
+    let returnArray: { Timestamp: number, Values: [number, number], Color: string, Regression: boolean, PairIndex: number }[] = [];
 
     seriesData1.forEach((series1, index) => {
         const series2 = seriesData2[index];
         if (series1.Data.length > series2.Data.length) {
             series1.Data.forEach(point1 => {
-                const point2 = series2.Data.find(data2 => data2[0] === point1[0] && _.isEqual(series1.SourceKey, series2.TargetKey));
+                const point2 = series2.Data.find(data2 => data2[0] === point1[0] && series1.PairIndex === series2.PairIndex);
                 if (point2 === undefined) return;
-                returnArray.push({ Timestamp: point1[0], Values: [point1[1], point2[1]], Color: series2.Color, UniqKey: JSON.stringify({ ...series1.SourceKey, ...series2.TargetKey }), Regression: series2.Regression });
+                returnArray.push({ Timestamp: point1[0], Values: [point1[1], point2[1]], Color: series2.Color, Regression: series2.Regression, PairIndex: series1.PairIndex });
             });
         } else {
             series2.Data.forEach(point2 => {
-                const point1 = series1.Data.find(data1 => data1[0] === point2[0] && _.isEqual(series1.SourceKey, series2.TargetKey));
+                const point1 = series1.Data.find(data1 => data1[0] === point2[0] && series1.PairIndex === series2.PairIndex);
                 if (point1 === undefined) return;
-                returnArray.push({ Timestamp: point2[0], Values: [point1[1], point2[1]], Color: series2.Color, UniqKey: JSON.stringify({ ...series1.SourceKey, ...series2.TargetKey }), Regression: series2.Regression });
+                returnArray.push({ Timestamp: point2[0], Values: [point1[1], point2[1]], Color: series2.Color, Regression: series2.Regression, PairIndex: series1.PairIndex });
             });
         }
     });
