@@ -225,7 +225,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                 <div className="d-flex col-6 justify-content-start">
                                     <span>{props.Widget.Label}</span>
                                 </div>
-                                <div className="d-flex col-6 justify-content-end">
+                                <div className="d-flex col-6 justify-content-end mt-auto">
                                     <>
                                         <button className={"btn"} data-tooltip={'widget-setting-btn' + guid.current} style={{ padding: 0, visibility: editMode && headerHover ? 'visible' : 'hidden' }}
                                             onClick={() => setShowSettingsModal(true)}
@@ -256,22 +256,21 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     CancelText={"Delete Widget"}
                     Size="xlg"
                 >
+                    <div className="container-fluid h-100 d-flex flex-column p-0">
                     <div className="row">
-                        <div className="col-4" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
-                            <div className="row">
-                                <div className="col-12">
+                            <div className="col-4 d-flex flex-column" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
+                                <div className="container-fluid d-flex flex-column p-0 flex-shrink-0">
                                     <Input<ICommonSettings> Field='Label' Record={localCommonSettings} Type='text' Setter={(r) => setCommonLocalSettings(r)} Valid={(field) => true} />
                                     {/*make with button full width*/ }
                                     <Input<ICommonSettings> Label="Width (%)" Field='Width' Record={localCommonSettings} Type='integer' Setter={(r) => setCommonLocalSettings(r)}
                                         Valid={(item) => isPercent(localCommonSettings[item] as number)} Feedback='Width must be a valid percent and greater than 5' />
                                     <CheckBox<ICommonSettings> Field='ShowHeader' Record={localCommonSettings} Setter={r => setCommonLocalSettings(r)} Label="Show Widget Header" />
                                 </div>
-                            </div>
-                            <div className="row">
-                                <div className="col-12">
+                                <div className="container-fluid d-flex flex-column p-0 flex-grow-1">
                                     {Implementation?.SettingsUI === undefined ? <></> : <Implementation.SettingsUI
                                         Settings={localSetting ?? Settings}
                                         SetSettings={setLocalSetting}
+                                        ChannelSettings={localChannels.map(chan => chan.ChannelSettings)}
                                     />}
                                 </div>
                             </div>
@@ -313,6 +312,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                     Settings={localSetting}
                                 />}
                         </div>
+                    </div>
                     </div>
                 </Modal>
                 <Warning Title="Delete Widget" Show={showWarning} Message={"Are you sure you want to delete this widget?"} CallBack={(confirmed) => {
