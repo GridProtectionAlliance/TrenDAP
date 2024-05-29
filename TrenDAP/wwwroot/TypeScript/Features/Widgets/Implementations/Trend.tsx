@@ -24,18 +24,20 @@
 import { axisBottom, axisLeft, axisRight, brushX, format, line, scaleLinear, scaleUtc, select } from 'd3';
 import * as React from 'react';
 import { DataSetTypes, TrenDAP } from '../../../global';
-import { Input, Select, CheckBox, ToggleSwitch, DatePicker, ColorPicker } from '@gpa-gemstone/react-forms';
 import { WidgetTypes } from '../Interfaces';
+import { Input, Select, CheckBox, ToggleSwitch, DatePicker, ColorPicker } from '@gpa-gemstone/react-forms';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ReactTable } from '@gpa-gemstone/react-table';
+import { ToolTip } from '@gpa-gemstone/react-interactive';
 import moment from 'moment';
 import _ from 'lodash';
 import { ISelectedChannels } from '../WidgetWrapper'
 
 export interface IProps {
-    Min: number,
-    Max: number,
-    YAxis: TrenDAP.iYAxis[],
+    AutoXScale: boolean
+    Min: string,
+    Max: string,
+    YAxis: TrenDAP.IYAxis[],
     Legend: boolean,
     Split: boolean,
     SplitType: 'Axis' | 'Series',
@@ -44,29 +46,37 @@ export interface IProps {
 interface IChannelSettings {
     Field: TrenDAP.SeriesField,
     Color: string,
-    ShowEvents: boolean,
-    Axis: number //not sure yet what this is.. i think this was how he was tying axises to yAxises but we need to use channelKeys here..
+    YAxisID: number,
+}
+
+interface IYScale {
+    ID: number,
+    Scale: d3.ScaleLinear<number, number, never>
 }
 
 export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
     DefaultSettings: {
-        Min: 0,
-        Max: 100,
+        Min: new Date().toISOString(),
+        Max: new Date().toISOString(),
         YAxis: [],
         Legend: true,
         Split: false,
         SplitType: 'Axis',
+        AutoXScale: true
     },
-    DefaultChannelSettings: { Field: 'Average', Color: 'Red', ShowEvents: false, Axis: 0 },
+    DefaultChannelSettings: { Field: 'Average', Color: 'Red', YAxisID: -1 },
     Name: "Trend",
     WidgetUI: (props) => {
-        const ref = React.useRef<HTMLDivElement>(null);
-        const [toggle, setToggle] = React.useState<boolean>(false);
+        const plotRef = React.useRef<HTMLDivElement>(null);
         const hover = React.useRef<number>(-10);
         const svgs = React.useRef<d3.Selection<SVGSVGElement, unknown, null, undefined>[]>([]);
-        const margin = React.useRef<{ bottom: number, left: number, top: number, right: number }>({ bottom: 50, left: 50, top: 40, right: 50 });
-        const [chartAction, setChartAction] = React.useState<TrenDAP.ChartAction>('Pan');
+        const margin = React.useRef<{ bottom: number, left: number, top: number, right: number }>({ bottom: 50, left: 60, top: 40, right: 60 });
         const chartActionRef = React.useRef<TrenDAP.ChartAction>('Pan');
+        const xScaleRef = React.useRef<d3.ScaleTime<number, number, never>>(null);
+        const yScalesRef = React.useRef<IYScale[]>(null);
+
+        const [chartAction, setChartAction] = React.useState<TrenDAP.ChartAction>('Pan');
+
         const setHover = React.useCallback((value) => {
             HandleHoverUpdate(value);
         }, []);
@@ -76,11 +86,12 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         }, [chartAction]);
 
         React.useEffect(() => {
-            Initialize()
+            if (plotRef.current != null)
+                Initialize(true)
         }, [props.Data, props.Settings])
 
         React.useEffect(() => {
-            return () => { select(ref.current).selectAll('svg').remove(); }
+            return () => { select(plotRef.current).selectAll('svg').remove(); }
         }, []);
 
 
@@ -92,66 +103,82 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             return (GetChannelData(series)).map(data => [data[0], data[1]]);
         }
 
-        function Initialize() {
-            //d3.select(ref.current).selectAll('svg').remove()
+        function Initialize(updateScales: boolean) {
             if (props.Data.length === 0) return;
             let svgCount = 1;
-            if (props.Settings.Split && props.Settings.SplitType === 'Axis') {
-                margin.current = { bottom: 50, left: 50, top: 40, right: 50 };
-                svgCount = props.Settings.YAxis.length;
+            margin.current = {
+                bottom: 50,
+                left: (props.Settings.YAxis.filter(axis => axis.Position === 'left').length == 0 ? 60 : props.Settings.YAxis.filter(axis => axis.Position === 'left').length * 75),
+                top: 40,
+                right: (props.Settings.YAxis.filter(axis => axis.Position === 'right').length == 0 ? 60 : props.Settings.YAxis.filter(axis => axis.Position === 'right').length * 75)
             }
-            else if (props.Settings.Split && props.Settings.SplitType === 'Series') {
-                margin.current = { bottom: 50, left: 50, top: 40, right: 50 }
-                svgCount = props.Data.length;
+
+            let legendWidth = props.Settings.Legend ? 200 : 0;
+            const svgHeight = plotRef.current.offsetHeight / svgCount;
+            const svgWidth = plotRef.current.offsetWidth - margin.current.left - margin.current.right - legendWidth;
+
+            if (updateScales) {
+                yScalesRef.current = props.Settings.YAxis.map(axis => GetYScale(axis, svgCount));
+                xScaleRef.current = GetXScale();
             }
-            else
-                margin.current = {
-                    bottom: 50,
-                    left: (props.Settings.YAxis.filter(axis => axis.Position === 'left').length == 0 ? 50 : props.Settings.YAxis.filter(axis => axis.Position === 'left').length * 50),
-                    top: 40,
-                    right: (props.Settings.YAxis.filter(axis => axis.Position === 'right').length == 0 ? 50 : props.Settings.YAxis.filter(axis => axis.Position === 'right').length * 50)
-                };
 
-            if (props.Settings.Legend) margin.current.right = margin.current.right + 200;
+            if (props.Settings.Split) {
+                if (props.Settings.Split && props.Settings.SplitType === 'Axis') {
+                    margin.current = { bottom: 50, left: 60, top: 40, right: 60 };
+                    svgCount = props.Settings.YAxis.length;
+                }
+                else if (props.Settings.SplitType === 'Series') {
+                    margin.current = { bottom: 50, left: 60, top: 40, right: 60 }
+                    svgCount = props.Data.length;
+                }
+            }
 
-            const svgHeight = ref.current.offsetHeight / svgCount;
+            if (props.Settings.Legend)
+                margin.current.right = margin.current.right + 200;
 
-            if (svgs.current.length !== svgCount) {
+            let currentSvgSize = select(plotRef.current).node().getBoundingClientRect()
+
+            if (svgs.current.length !== svgCount || currentSvgSize.width !== plotRef.current.offsetWidth || currentSvgSize.height !== plotRef.current.offsetHeight) {
                 svgs.current = [];
-                select(ref.current).selectAll('svg').remove()
+                select(plotRef.current).selectAll('svg').remove()
                 for (let i = 0; i < svgCount; i++) {
-                    const svg = select(ref.current).append('svg')
-                    svg.attr('width', ref.current.offsetWidth).attr('height', svgHeight)
+                    const svg = select(plotRef.current).append('svg')
+                        .attr('width', plotRef.current.offsetWidth)
+                        .attr('height', svgHeight);
+
+                    // Define clip path
+                    svg.append('defs').append('clipPath')
+                        .attr('id', `clip-${i}`)
+                        .append('rect')
+                        .attr('x', margin.current.left)
+                        .attr('y', margin.current.top)
+                        .attr('width', svgWidth)
+                        .attr('height', svgHeight - margin.current.top - margin.current.bottom);
 
                     svgs.current.push(svg);
-
                 }
-
-
             }
-
-            const x = GetXScale();
 
             svgs.current.forEach((svg, i) => {
                 if (props.Settings.Split && props.Settings.SplitType === 'Axis')
-                    return InitializeSplitOnAxis(svg, x, i);
-                if (props.Settings.Split && props.Settings.SplitType === 'Series')
-                    return InitializeSplitOnSeries(svg, x, i);
+                    InitializeSplitOnAxis(svg, i, svgCount);
+                else if (props.Settings.Split && props.Settings.SplitType === 'Series')
+                    InitializeSplitOnChannel(svg, xScaleRef.current, i);
                 else
-                    return InitializeNotSplit(svg, x);
+                    InitializeNotSplit(svg, i);
             });
         }
 
-        function InitializeSplitOnSeries(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, x: d3.ScaleTime<number, number>, i: number) {
-            const series = props.Data[i];
-            const axis = props.Settings.YAxis[series.ChannelSettings.Axis];
-            AddXAxis(svg, x);
+        function InitializeSplitOnChannel(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, xScale: d3.ScaleTime<number, number>, dataIndex: number) {
+            const series = props.Data[dataIndex];
+            const axis = props.Settings.YAxis.find(axis => axis.ID === series.ChannelSettings.YAxisID);
+            const yScale = yScalesRef.current.find(scale => scale.ID === axis.ID)
+            AddXAxis(svg);
 
-            const y = GetYScale(series.ChannelSettings.Axis);
             svg.selectAll('g.yaxis').remove();
-            AddYAxisLeft(axis, svg, y);
+            AddYAxisLeft(axis, svg);
 
-            let lineFunc = line<number[]>().x(dd => x(dd[0])).y(dd => y(dd[1]));
+            let lineFunc = line<number[]>().x(dd => xScale(dd[0])).y(dd => yScale.Scale(dd[1]));
             let data = GetDataSeriesForD3(series);
 
             svg.selectAll("g.line").remove();
@@ -161,6 +188,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .append('g')
                 .classed('line', true)
                 .append("path")
+                .attr('clip-path', `url(#clip-${dataIndex})`)
                 .attr("fill", "none")
                 .attr("stroke-width", 1.5)
                 .attr("stroke", series.ChannelSettings.Color)
@@ -169,37 +197,38 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
                 })
 
-            if (series.ChannelSettings.ShowEvents) {
+            /*
+            if (series.ChannelSettings.YAxis.ShowEvents) {
                 //AddEventLine(series, svg, x);
-            }
+            }*/
 
             svg.selectAll("g.legend").remove();
             if (props.Settings.Legend) {
-                AddLegend(svg);
+                AddLegend(svg, [series]);
             }
 
             svg.on('mousemove', (d: MouseEvent) => setHover(d.offsetX));
-            svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg, x));
+            svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg));
 
         }
 
-        function InitializeSplitOnAxis(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, x: d3.ScaleTime<number, number>, i: number) {
-            const svgHeight = parseInt(svg.attr('height'));
-            const axis = props.Settings.YAxis[i];
-            const series = props.Data.filter(s => s.ChannelSettings.Axis === i).map(s => {
+
+        function InitializeSplitOnAxis(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, axisIndex: number, svgCount) {
+            const axis = props.Settings.YAxis[axisIndex];
+            const series = props.Data.filter(s => s.ChannelSettings.YAxisID === axis.ID).map(s => {
                 let datum = GetChannelData(s);
 
                 return {
-                    ...s,
-                    Data: datum.filter(data => data[0] >= props.Settings.Min && data[0] <= props.Settings.Max && data[s.ChannelSettings.Field] >= axis.Min && data[s.ChannelSettings.Field] <= axis.Max)
+                    ...s, Data: datum
+                    //Data: datum.filter(data => data[0] >= props.Settings.Min && data[0] <= props.Settings.Max && data[s.ChannelSettings.Field] >= axis.Min && data[s.ChannelSettings.Field] <= axis.Max)
                 }
             });
 
-            AddXAxis(svg, x);
+            AddXAxis(svg);
 
-            const y = GetYScale(i);
+            const yScale = GetYScale(axis, svgCount).Scale;
             svg.selectAll('g.yaxis').remove();
-            AddYAxisLeft(axis, svg, y);
+            AddYAxisLeft(axis, svg);
 
             svg.selectAll("g.line").remove();
             svg.selectAll("g.line")
@@ -208,11 +237,12 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .append('g')
                 .classed('line', true)
                 .append("path")
+                .attr('clip-path', `url(#clip-${axisIndex})`)
                 .attr("fill", "none")
                 .attr("stroke-width", 1.5)
                 .attr("stroke", (s) => s.ChannelSettings.Color)
                 .attr("d", (s) => {
-                    let lineFunc = line<number[]>().x(dd => x(dd[0])).y(dd => y(dd[1]));
+                    let lineFunc = line<number[]>().x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
                     let data = GetDataSeriesForD3(s);
                     return lineFunc(data);
 
@@ -222,37 +252,34 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
             svg.selectAll("g.legend").remove();
             if (props.Settings.Legend) {
-                AddLegend(svg);
+                AddLegend(svg, props.Data.filter(s => s.ChannelSettings.YAxisID === axis.ID));
             }
 
 
             svg.on('mousemove', (d: MouseEvent) => setHover(d.offsetX));
-            svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg, x));
+            svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg));
         }
 
-        function InitializeNotSplit(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, x: d3.ScaleTime<number, number>) {
-            AddXAxis(svg, x);
-            const y = props.Settings.YAxis.map((axis, index) => GetYScale(index));
+
+        function InitializeNotSplit(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, clipIndex: number) {
+            AddXAxis(svg);
             svg.selectAll('g.yaxis').remove();
-            const yAxis = props.Settings.YAxis.map((axis, index) => {
-                let a;
-                if (axis.Position === 'left') {
-                    let ind = props.Settings.YAxis.filter(axis => axis.Position === 'left').findIndex(axis => axis === props.Settings.YAxis[index]);
-                    AddYAxisLeft(axis, svg, y[index], false, ind);
+
+            //Create yAxis
+            props.Settings.YAxis.forEach(yAxis => {
+                if (yAxis.Position === 'left') {
+                    let ind = props.Settings.YAxis.filter(axis => axis.Position === 'left').findIndex(axis => axis.ID === yAxis.ID);
+                    AddYAxisLeft(yAxis, svg, ind);
                 }
                 else {
-                    let ind = props.Settings.YAxis.filter(axis => axis.Position === 'right').findIndex(axis => axis === props.Settings.YAxis[index]);
-                    AddYAxisRight(axis, svg, y[index], ind);
+                    let ind = props.Settings.YAxis.filter(axis => axis.Position === 'right').findIndex(axis => axis.ID === yAxis.ID);
+                    AddYAxisRight(yAxis, svg, ind);
                 }
-
-                return a;
-
             });
 
             svg.selectAll("g.legend").remove();
-            if (props.Settings.Legend) {
-                AddLegend(svg);
-            }
+            if (props.Settings.Legend)
+                AddLegend(svg, props.Data);
 
             svg.selectAll("g.line").remove();
             svg.selectAll("g.line")
@@ -261,30 +288,29 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .append("g")
                 .classed("line", true)
                 .append("path")
+                .attr('clip-path', `url(#clip-${clipIndex})`)
                 .attr("fill", "none")
                 .attr("stroke-width", 1.5)
                 .attr("stroke", d => d.ChannelSettings.Color)
                 .attr("d", d => {
-                    let yScale = y[d.ChannelSettings.Axis];
-                    let lineFunc = line<number[]>().x(dd => x(dd[0])).y(dd => yScale(dd[1]));
+                    let yScale = yScalesRef.current.find(scale => d.ChannelSettings.YAxisID === scale.ID)?.Scale;
+                    let lineFunc = line<number[]>().x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
                     let data = GetDataSeriesForD3(d);
                     return lineFunc(data);
                 })
 
             svg.on('mousemove', (d: MouseEvent) => setHover(d.offsetX))
-            svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg, x))
+            svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg))
 
 
             //props.Data.filter(channel => channel.ChannelSettings.ShowEvents).forEach(series => AddEventLine(channel, svg, x));
 
         }
 
-        function AddLegend(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>) {
-            const svgHeight = parseInt(svg.attr('height'));
+        function AddLegend(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, data: WidgetTypes.IWidgetData<IChannelSettings>[]) {
             const svgWidth = parseInt(svg.attr('width'));
-
             const legend = svg.selectAll('g.legend')
-                .data([props.Data])
+                .data([data])
                 .enter()
                 .append('g')
                 .attr('class', 'legend')
@@ -334,14 +360,14 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 })
         }*/
 
-        function AddXAxis(svg, x) {
+        function AddXAxis(svg) {
             const svgWidth = parseInt(svg.attr('width'));
             const svgHeight = parseInt(svg.attr('height'));
 
             svg.selectAll('g.xaxis').remove();
             const xAxis = svg.append("g").classed('xaxis', true)
                 .attr("transform", "translate(0," + (svgHeight - margin.current.bottom) + ")")
-                .call(axisBottom(x))
+                .call(axisBottom(xScaleRef.current))
 
             svg.append("g").classed('xaxis', true).append("text")
                 .style("text-anchor", "middle")
@@ -350,59 +376,73 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
         }
 
-        function AddYAxisLeft(axis: TrenDAP.iYAxis, svg, y, rotate: boolean = true, index: number = 0) {
+        function AddYAxisLeft(axis: TrenDAP.IYAxis, svg, index: number = 0) {
             const svgWidth = parseInt(svg.attr('width'));
             const svgHeight = parseInt(svg.attr('height'));
+            const yScale = yScalesRef.current.find(a => a.ID === axis.ID).Scale
 
             const yAxis = svg.append("g").classed('yaxis', true)
-                .attr("transform", "translate(" + (margin.current.left - index * 50) + ",0)")
-                .call(axisLeft(y).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => format("~s")(value)));
+                .attr("transform", "translate(" + (margin.current.left - index * 60) + ",0)")
+                .call(axisLeft(yScale).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => format("~s")(value)));
 
             const text = svg.append("g")
                 .classed('yaxis', true)
                 .append("text")
-                .text(axis.Units);
-            if (rotate)
-                text.attr("transform", "rotate(-90) translate(-" + svgHeight / 2 + "," + ((margin.current.left - index * 50) / 3) + ")").style("text-anchor", "middle");
-            else
-                text.attr("transform", "translate(" + (margin.current.left - index * 50) + "," + (svgHeight - margin.current.bottom / 2) + ")").style("text-anchor", "end");
+                .text(axis.Label)
+                .attr("transform", `rotate(-90) translate(${-svgHeight / 2}, ${margin.current.left - index * 60 - 40})`)
+                .style("text-anchor", "middle");
         }
 
-        function AddYAxisRight(axis: TrenDAP.iYAxis, svg, y, index: number = 0) {
+        function AddYAxisRight(axis: TrenDAP.IYAxis, svg, index: number = 0) {
             const svgWidth = parseInt(svg.attr('width'));
             const svgHeight = parseInt(svg.attr('height'));
+            const yScale = yScalesRef.current.find(a => a.ID === axis.ID).Scale
 
             const yAxis = svg.append("g").classed('yaxis', true)
-                .attr("transform", "translate(" + (svgWidth - margin.current.right + index * 50) + ",0)")
-                .call(axisRight(y).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => format("~s")(value)));
+                .attr('transform', `translate(${svgWidth - margin.current.right + index * 60}, 0)`)
+                .call(axisRight(yScale).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => format("~s")(value)));
 
             const text = svg.append("g")
                 .classed('yaxis', true)
                 .append("text")
-                .text(axis.Units);
-            text.attr("transform", "translate(" + (svgWidth - margin.current.right + index * 50) + "," + (svgHeight - margin.current.bottom / 2) + ")").style("text-anchor", "start");
+                .text(axis.Label)
+                .style("text-anchor", "middle")
+                .attr('transform', `rotate(90) translate(${svgHeight / 2}, ${-svgWidth + margin.current.right - index * 60 - 40})`);
         }
 
         function GetXScale() {
             let d = props.Data.map(channel => GetDataSeriesForD3(channel))
             let dd = [].concat(...d)
-            let ddx = dd.map(dp => new Date(dp.Timestamp).getTime());
             let xMax = Math.max(...dd.map(dp => dp[0]));
             let xMin = Math.min(...dd.map(dp => dp[0]));
+            if (!props.Settings.AutoXScale) {
+                xMin = new Date(props.Settings.Min).getTime()
+                xMax = new Date(props.Settings.Max).getTime()
+            }
+
             return scaleUtc()
-                .domain([xMin, xMax])     // can use this instead of 1000 to have the max of data: d3.max(data, function(d) { return +d.price })
-                .range([margin.current.left, ref.current.offsetWidth - margin.current.right]);
+                .domain([xMin, xMax])
+                .range([margin.current.left, plotRef.current.offsetWidth - margin.current.right - (props.Settings.Legend ? 200 : 0)]);
         }
 
-        function GetYScale(axis: number) {
-            let d = props.Data.filter(s => s.ChannelSettings.Axis === axis).map(s => GetDataSeriesForD3(s))
+        function GetYScale(axis: TrenDAP.IYAxis, svgCount) {
+            const svgHeight = plotRef.current.offsetHeight / svgCount;
+
+            let d = props.Data.filter(s => s.ChannelSettings.YAxisID === axis.ID).map(s => GetDataSeriesForD3(s))
             let dd = [].concat(...d)
             let yMax = Math.max(...dd.map(dp => dp[1]));
             let yMin = Math.min(...dd.map(dp => dp[1]));
+            if (!axis.AutoMinScale)
+                yMin = axis.Min
+            if (!axis.AutoMaxScale)
+                yMax = axis.Max
 
-            return scaleLinear()
-                .range([ref.current.offsetHeight - margin.current.bottom, margin.current.top])
-                .domain([yMin, yMax])
+            return {
+                ID: axis.ID, Scale: scaleLinear()
+                    .range([svgHeight - margin.current.bottom, margin.current.top])
+                    .domain([yMin, yMax])
+            }
+
         }
 
         function HandleHoverUpdate(hover: number) {
@@ -425,27 +465,26 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         }
 
         function HandleReset() {
-            //this will need to be redone
-            //CalculateAxisRange('x');
+            xScaleRef.current = GetXScale()
+            Initialize(false)
         }
 
-        function HandleChartAction(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, scale: d3.ScaleTime<number, number>) {
+        function HandleChartAction(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>) {
             const height = parseInt(svg.attr('height'));
             const width = parseInt(svg.attr('width'));
             evt.preventDefault();
             if (evt.offsetX < margin.current.left || evt.offsetX > width - margin.current.right) return;
             else if (evt.offsetY < margin.current.top || evt.offsetY > height - margin.current.bottom) return;
             else if (chartActionRef.current == 'Click')
-                OnClick(evt, svg, scale);
+                OnClick(evt, svg);
             else if (chartActionRef.current == 'Pan')
-                OnPan(evt, svg, scale)
+                OnPan(evt, svg)
             else if (chartActionRef.current == 'ZoomX')
-                OnXZoom(evt, svg, scale)
-
+                OnXZoom(evt, svg)
 
         }
 
-        function OnClick(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, scale: d3.ScaleTime<number, number>) {
+        function OnClick(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>) {
             const height = parseInt(svg.attr('height'));
             const tooltipHeight = props.Data.length * 15;
             if (evt.offsetX < margin.current.left && evt.offsetX > (props.Width - margin.current.right)) return;
@@ -481,7 +520,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 const floor = Math.floor(datum.length * evt.offsetX / props.Width * .95);
                 const ceil = Math.ceil(datum.length * evt.offsetX / props.Width * 1.05);
                 const shortenedData = datum.slice(floor, ceil);
-                const dist = shortenedData.map(d => ({ Value: d[1], Distance: Math.abs(evt.offsetX - scale(d[0])) }));
+                const dist = shortenedData.map(d => ({ Value: d[1], Distance: Math.abs(evt.offsetX - xScaleRef.current(d[0])) }));
                 dist.sort((a, b) => {
                     if (a.Distance > b.Distance) return 1;
                     else if (a.Distance == b.Distance) return 0;
@@ -497,16 +536,17 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 tooltip.attr("transform", `translate(${evt.offsetX - 15 - width},${evt.offsetY - tooltipHeight / 2})`);
         }
 
-        function OnPan(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, scale: d3.ScaleTime<number, number>) {
+        function OnPan(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>) {
             const start = evt.clientX;
             svg.on('mousemove.pan', (e: MouseEvent) => {
-                props.SetSettings({ ...props.Settings, Min: scale.invert(scale.range()[0] + start - e.clientX).getTime() })
-                props.SetSettings({ ...props.Settings, Max: scale.invert(scale.range()[1] + start - e.clientX).getTime() })
+                xScaleRef.current.domain([xScaleRef.current.invert(xScaleRef.current.range()[0] + start - e.clientX).getTime(), xScaleRef.current.invert(xScaleRef.current.range()[1] + start - e.clientX).getTime()])
+                //need to break initialize up into more functions because we dont need to do some of that logic again..
+                Initialize(false)
             });
             svg.on('mouseup.pan', () => svg.on('mousemove.pan', null));
         }
 
-        function OnXZoom(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, scale: d3.ScaleTime<number, number>) {
+        function OnXZoom(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>) {
             const start = evt.offsetX;
             const brush = brushX()
                 .extent([[margin.current.left, margin.current.top + 0.5], [props.Width - margin.current.right, parseInt(svg.attr('height')) - margin.current.bottom + 0.5]])
@@ -518,18 +558,20 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             svg.on('mouseup.brush', (e: MouseEvent) => {
                 const min = Math.min(start, e.offsetX);
                 const max = Math.max(start, e.offsetX);
-                props.SetSettings({ ...props.Settings, Min: scale.invert(min).getTime() })
-                props.SetSettings({ ...props.Settings, Max: scale.invert(max).getTime() })
-
+                xScaleRef.current.domain([xScaleRef.current.invert(min).getTime(), xScaleRef.current.invert(max).getTime()])
+                Initialize(false)
                 br.remove();
                 svg.on('mousemove.brush', null);
                 svg.on('mouseup.brush', null);
             });
         }
+
         return (
-            <div className="d-flex h-100 flex-column" ref={ref} style={{ userSelect: 'none' }}>
+            <div className="d-flex h-100 flex-column" ref={plotRef} style={{ userSelect: 'none' }}>
                 <div style={{ position: 'absolute', left: 10, zIndex: 1010 }}>
-                    <button className='btn btn-light' onClick={HandleReset}>Reset</button>
+                    <button className='btn btn-light' onClick={HandleReset}>
+                        Reset Limits
+                    </button>
                     <div className="form-check-inline">
                         <label className="form-check-label">
                             <input type="radio" className="form-check-input" checked={chartAction == 'Pan'} onChange={(evt) => setChartAction('Pan')} />Pan
@@ -537,7 +579,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     </div>
                     <div className="form-check-inline">
                         <label className="form-check-label">
-                            <input type="radio" className="form-check-input" checked={chartAction == 'ZoomX'} onChange={(evt) => setChartAction('ZoomX')} />Zoom
+                            <input type="radio" className="form-check-input" checked={chartAction == 'ZoomX'} onChange={(evt) => setChartAction('ZoomX')} />Zoom X
                         </label>
                     </div>
                     <div className="form-check-inline">
@@ -545,67 +587,152 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                             <input type="radio" className="form-check-input" checked={chartAction == 'Click'} onChange={(evt) => setChartAction('Click')} />Click
                         </label>
                     </div>
-
-                    <div className="form-check-inline">
-                        <label className="form-check-label">
-                            <input type="radio" className="form-check-input" checked={chartAction == 'ZoomY'} onChange={(evt) => setChartAction('ZoomY')} />Zoom Y
-                        </label>
-                    </div>
-                    <div className="form-check-inline">
-                        <label className="form-check-label">
-                            <input type="radio" className="form-check-input" checked={chartAction == 'ZoomXY'} onChange={(evt) => setChartAction('ZoomXY')} />Zoom X & Y
-                        </label>
-                    </div>
-
                 </div>
             </div>
         );
     },
     SettingsUI: (props) => {
+        const [deleteHover, setDeleteHover] = React.useState<{ ID: number, Hover: boolean }>({ ID: -1, Hover: false });
+
         return <>
-            <ToggleSwitch<IProps> Record={props.Settings} Field="Legend" Setter={record => props.SetSettings(record)} />
-            <ToggleSwitch<IProps> Record={props.Settings} Field="Split" Setter={record => props.SetSettings(record)} />
-            <Select<IProps> Label='Split On' Field='SplitType' Record={props?.Settings} Setter={(r) => props.SetSettings(r)} Options={[{ Value: 'Axis', Label: 'Axis' }, { Value: 'Series', Label: 'Series' }]} />
-            <h6>X Axis</h6>
-            <hr />
             <div className="row">
-                <div className="col-5">
-                    <DatePicker<IProps> Record={props.Settings} Field="Min" Valid={() => true /*make sure its in dataset range*/}
-                        Setter={record => props.SetSettings(record)} Type="datetime-local" />
+                <div className="col-6">
+                    <Select<IProps> Label='Split On' Field='SplitType' Record={props?.Settings} Setter={(r) => props.SetSettings(r)} Options={[{ Value: 'Axis', Label: 'Axis' }, { Value: 'Series', Label: 'Series' }]}
+                        Disabled={!props.Settings.Split} />
                 </div>
-                <div className="col-5">
-                    <DatePicker<IProps> Record={props.Settings} Field="Max" Valid={() => true /*make sure its in dataset range*/}
-                        Setter={record => props.SetSettings(record)} Type="datetime-local" />
-                </div>
-                <div className="col-2">
-                    <button className="btn btn-outline-secondary" style={{ position: 'absolute', bottom: 16 }} type="button" onClick={() => {
-                        //CalculateAxisRange('x', 0);
-                    }}>Use Data</button>
+                <div className="col-6">
+                    <label style={{ display: 'block' }}>&nbsp;</label>
+                    <ToggleSwitch<IProps> Record={props.Settings} Field="Split" Setter={record => props.SetSettings(record)} />
                 </div>
             </div>
-            <h6>Y Axis</h6>
-            <button style={{ position: 'relative', float: 'right', top: -30 }} className='btn btn-primary' onClick={() => {
-                props.SetSettings({ ...props.Settings, YAxis: [...props.Settings.YAxis, { Max: 10, Min: 0, Position: 'left', Units: '' }] });
-            }}>Add New</button>
-            <hr />
-            <ul className="list-group list-group-flush" style={{ maxHeight: window.innerHeight - 625, overflowY: 'auto', overflowX: 'hidden', width: '100%' }}>
-                {props.Settings.YAxis.map((axis, index) => (
-                    <li key={index} className='list-group-item'>
-                        <AxisSettings Axis={axis}
-                            SetAxis={axis => {
-                                let axises = [...props.Settings.YAxis]
-                                axises[index] = axis
-                                props.SetSettings({ ...props.Settings, YAxis: axises })
-                            }}
-                            RemoveAxis={() => {
-                                let axises = [...props.Settings.YAxis]
-                                axises.splice(index, 1)
-                                props.SetSettings({ ...props.Settings, YAxis: axises })
-                            }}
-                            key={index}
-                        /></li>
-                ))}
-            </ul>
+            <ToggleSwitch<IProps> Record={props.Settings} Field="Legend" Setter={record => props.SetSettings(record)} />
+            <br />
+            <h6>X Axis</h6>
+            <div className="row">
+                <div className="col-5">
+                    <DatePicker<IProps> Record={props.Settings} Field="Min" Valid={() => true} Setter={record => props.SetSettings(record)} Type="datetime-local"
+                        Disabled={props.Settings.AutoXScale} AllowEmpty={true} />
+                </div>
+                <div className="col-5">
+                    <DatePicker<IProps> Record={props.Settings} Field="Max" Valid={() => true} Setter={record => props.SetSettings(record)} Type="datetime-local"
+                        Disabled={props.Settings.AutoXScale} AllowEmpty={true} />
+                </div>
+                <div className="col-2">
+                    <label style={{ display: 'block' }}>&nbsp;</label>
+                    <ToggleSwitch<IProps> Record={props.Settings} Field="AutoXScale" Label="Use Data" Setter={record => props.SetSettings(record)} />
+                </div>
+            </div>
+            <div className="row">
+                <div className="col-6 d-flex align-items-center justify-content-start">
+                    <h6>Y Axises</h6>
+                </div>
+                <div className="col-6 d-flex align-items-center justify-content-end">
+                    <button className='btn btn-primary' onClick={() => {
+                        let maxID = props.Settings.YAxis.reduce((max, current) => {
+                            return current.ID > max ? current.ID : max
+                        }, 0)
+                        props.SetSettings({
+                            ...props.Settings, YAxis: [...props.Settings.YAxis, {
+                                Max: 10, Min: 0, Position: 'left', Type: `None`, AutoMaxScale: true, AutoMinScale: true, Label: '',
+                                ShowEvents: false,
+                                ID: props.Settings.YAxis.length !== 0 ? maxID + 1 : 0
+                            }]
+                        });
+                    }}>Add New</button>
+                </div>
+            </div>
+            <ReactTable.Table<TrenDAP.IYAxis>
+                TableClass="table table-hover"
+                TableStyle={{ width: 'calc(100%)', height: '50%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                SortKey={"Label"}
+                OnClick={() => { }}
+                OnSort={() => { }}
+                Data={props.Settings.YAxis}
+                Ascending={true}
+                KeySelector={(row) => row.ID}
+            >
+                <ReactTable.Column<TrenDAP.IYAxis>
+                    Key={'ID'}
+                    AllowSort={true}
+                    Field={'ID'}
+                >
+                    ID
+                </ReactTable.Column>
+                <ReactTable.Column<TrenDAP.IYAxis>
+                    Key={'Label'}
+                    AllowSort={true}
+                    Field={'Label'}
+                    Content={({ item }) =>
+                        <Input<TrenDAP.IYAxis> Label="" Field='Label' Record={item} Type='text' Valid={(field) => true}
+                            Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
+                    }
+                >
+                    Label
+                </ReactTable.Column>
+                <ReactTable.Column<TrenDAP.IYAxis>
+                    Key={'Position'}
+                    AllowSort={true}
+                    Field={'Position'}
+                    Content={({ item }) =>
+                        <Select<TrenDAP.IYAxis> Label="" Record={item} Field="Position" Options={[{ Label: 'Left', Value: 'left' }, { Label: 'Right', Value: 'right' }]}
+                            Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
+                    }
+                >
+                    Position
+                </ReactTable.Column>
+                <ReactTable.Column<TrenDAP.IYAxis>
+                    Key={'Min'}
+                    AllowSort={true}
+                    Field={'Min'}
+                    Content={({ item }) =>
+                        <>
+                            <Input<TrenDAP.IYAxis> Label="" Field='Min' Record={item} Type='number' Disabled={item.AutoMinScale} Valid={(field) => true}
+                                Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
+                            <ToggleSwitch<TrenDAP.IYAxis> Field="AutoMinScale" Label="Use Data" Record={item}
+                                Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
+                        </>
+                    }
+                >
+                    Min
+                </ReactTable.Column>
+                <ReactTable.Column<TrenDAP.IYAxis>
+                    Key={'Max'}
+                    AllowSort={true}
+                    Field={'Max'}
+                    Content={({ item }) =>
+                        <>
+                            <Input<TrenDAP.IYAxis> Label="" Field='Max' Record={item} Type='number' Disabled={item.AutoMaxScale} Valid={(field) => true}
+                                Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
+                            <ToggleSwitch<TrenDAP.IYAxis> Field="AutoMaxScale" Label="Use Data" Record={item}
+                                Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
+                        </>
+                    }
+                >
+                    Max
+                </ReactTable.Column>
+                <ReactTable.Column<TrenDAP.IYAxis>
+                    Key="Delete"
+                    AllowSort={false}
+                    Field="AutoMaxScale"
+                    Content={({ item }) =>
+                        <>
+                            <div onMouseEnter={() => setDeleteHover({ ID: item.ID, Hover: true })} onMouseLeave={() => setDeleteHover({ ID: item.ID, Hover: false })}>
+                                <button className="btn btn-link" data-tooltip={`deletebtn-${item.ID}`} disabled={props.ChannelSettings.find(c => c.YAxisID === item.ID) != null ? true : false}
+                                    onClick={() => props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.filter(axis => axis.ID !== item.ID) })}>
+                                    <ReactIcons.TrashCan Color={'Red'} />
+                                </button>
+                            </div>
+                            <ToolTip Target={`deletebtn-${item.ID}`} Zindex={9999} Show={(deleteHover.Hover && deleteHover.ID === item.ID) && props.ChannelSettings.find(c => c.YAxisID === item.ID) != null ? true : false}>
+                                <span>Unable to delete axis that's in use by a channel.</span>
+                            </ToolTip>
+                        </>
+                    }
+                >
+                </ReactTable.Column>
+            </ReactTable.Table>
         </>
     },
     ChannelSelectionUI: (props) => {
@@ -620,7 +747,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         }
 
         return <>
-            <div className="container-fluid d-flex h-50 flex-column">
+            <div className="container-fluid d-flex h-50 flex-column p-0">
                 <ReactTable.Table<DataSetTypes.IDataSetMetaData>
                     TableClass="table table-hover"
                     TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
@@ -632,8 +759,24 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID);
                         if (isSelected ?? false)
                             props.RemoveChannel(item.row.ID);
-                        else
-                            props.AddChannel(item.row.ID, TrendWidget.DefaultChannelSettings);
+                        else {
+                            const exisitingAxis = props.Settings.YAxis.find(axis => axis.Type === item.row.Type)
+                            let yAxisID = exisitingAxis != null ? exisitingAxis.ID : 0
+                            if (exisitingAxis == null) {
+                                if (props.Settings.YAxis.length !== 0)
+                                    yAxisID = props.Settings.YAxis.reduce((max, current) => {
+                                        return current.ID > max ? current.ID : max
+                                    }, 0) + 1
+                                const newAxis: TrenDAP.IYAxis = { ID: yAxisID, Min: 0, Max: 10, AutoMaxScale: true, AutoMinScale: true, Label: '', Type: item.row.Type, Position: 'left', ShowEvents: false }
+
+                                props.SetSettings({
+                                    ...props.Settings,
+                                    YAxis: [...props.Settings.YAxis, newAxis]
+                                });
+                            }
+
+                            props.AddChannel(item.row.ID, { ...TrendWidget.DefaultChannelSettings, YAxisID: yAxisID });
+                        }
                     }}
                     OnSort={data => sort(data.colField, data.ascending)}
                     Data={allChannels}
@@ -672,12 +815,12 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     </ReactTable.Column>
                 </ReactTable.Table>
             </div>
-            <div className="container-fluid d-flex h-50 flex-column">
+            <div className="container-fluid d-flex h-50 flex-column p-0">
                 <ReactTable.Table<ISelectedChannels>
                     TableClass="table table-hover"
-                    TableStyle={{ maxHeight: 'calc((-230px + 100vh) / 2)', width: '100%', overflow: 'hidden' }}
+                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                     TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'scroll' }}
+                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                     SortKey={"ChannelKey"}
                     OnSort={() => { }}
@@ -689,7 +832,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         Key={'Name'}
                         AllowSort={true}
                         Field={'MetaData'}
-                        Content={(row) => <p>{row.item.MetaData.Name}</p>}
+                        Content={({ item }) => <p>{item?.MetaData?.Name}</p>}
                     >
                         Channel
                     </ReactTable.Column>
@@ -697,31 +840,35 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         Key={'Color'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
-                        Content={(row) =>
-                            <ColorPicker<IChannelSettings> Record={row.item?.ChannelSettings} Label="Color" Field="Color" Setter={(item) => props.SetChannelSettings(row.item.Key, item)}
-                                Style={{ backgroundColor: row.item.ChannelSettings.Color, borderColor: row.item.ChannelSettings.Color }} />
+                        Content={({ item }) =>
+                            <ColorPicker<IChannelSettings> Record={item?.ChannelSettings} Label="Color" Field="Color" Setter={(record) => props.SetChannelSettings(item.Key, record)}
+                                Style={{ backgroundColor: item.ChannelSettings.Color, borderColor: item.ChannelSettings.Color }} />
                         }
                     >
                         Color
                     </ReactTable.Column>
-                    <ReactTable.Column<TrenDAP.IWidgetChannels<IChannelSettings>>
+                    <ReactTable.Column<ISelectedChannels>
                         Key={'SeriesField'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
-                        Content={(row) =>
-                            <Select<IChannelSettings> Record={row.item?.ChannelSettings} Label="" Field="Field" Setter={(item) => props.SetChannelSettings(row.item.Key, item)}
+                        Content={({ item }) =>
+                            <Select<IChannelSettings> Record={item?.ChannelSettings} Label="" Field="Field" Setter={(record) => props.SetChannelSettings(item.Key, record)}
                                 Options={[{ Label: 'Average', Value: 'Average' }, { Label: 'Minimum', Value: 'Minimum' }, { Label: 'Maximum', Value: 'Maximum' }]} />
                         }
                     >
                         Field
                     </ReactTable.Column>
-                    <ReactTable.Column<TrenDAP.IWidgetChannels<IChannelSettings>>
-                        Key={'SeriesField'}
+                    <ReactTable.Column<ISelectedChannels>
+                        Key={'YAxis'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
-                        Content={(row) => <CheckBox<IChannelSettings> Record={row.item?.ChannelSettings} Field="ShowEvents" Setter={(item) => props.SetChannelSettings(row.item.Key, item)} />}
+                        Content={({ item }) =>
+                            <>
+                                <Select<IChannelSettings> Label="" Record={item.ChannelSettings} Field="YAxisID" Setter={(record) => props.SetChannelSettings(item.Key, { ...item.ChannelSettings, YAxisID: parseInt(record.YAxisID as any) })} Options={props.Settings.YAxis.map(axis => { return { Label: `${axis.ID}`, Value: `${axis.ID}` } })} />
+                            </>
+                        }
                     >
-                        Show Events
+                        Y Axis ID
                     </ReactTable.Column>
                 </ReactTable.Table>
             </div>
@@ -729,139 +876,3 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
     }
 }
 
-function AxisSettings(props: { Axis: TrenDAP.iYAxis, SetAxis: (axis: TrenDAP.iYAxis) => void, RemoveAxis: () => void }) {
-    return (
-        <div className='row'>
-            <div className="col-2">
-                <Select<TrenDAP.iYAxis> Record={props.Axis} Field="Position" Setter={record => props.SetAxis(record)}
-                    Options={[{ Label: 'Left', Value: 'left' }, { Label: 'Right', Value: 'right' }]} />
-            </div>
-            <div className="col-2">
-                { /*This needs to be a select of units for the Axis Type..*/}
-                <Input<TrenDAP.iYAxis> Field='Units' Record={props.Axis} Type='text' Setter={(r) => props.SetAxis(r)} Valid={(field) => true} />
-            </div>
-            <div className="col-2">
-                <Input<TrenDAP.iYAxis> Field='Min' Label='Min' Record={props.Axis} Type='number' Setter={(r) => props.SetAxis(r)} Valid={(field) => true} />
-            </div>
-            <div className="col-2">
-                <Input<TrenDAP.iYAxis> Field='Max' Record={props.Axis} Type='number' Setter={(r) => props.SetAxis(r)} Valid={(field) => true} />
-            </div>
-            <div className="col-2" style={{ position: 'relative' }}>
-                <button className="btn btn-outline-secondary" style={{ position: 'absolute', bottom: 16 }} type="button" onClick={() => {
-                    //let newWidget = CalculateAxisRange(props.Widget, 'y', props.Index)
-                    //props.Callback(newWidget);
-                }}>Use Data</button>
-            </div>
-
-            <div className="col-2">
-                <button className="btn btn-link" style={{ position: 'relative' }} onClick={() => { props.RemoveAxis() }}>
-                    <ReactIcons.TrashCan Color={'Red'} />
-                </button>
-            </div>
-
-        </div>
-    );
-}
-
-//Helper Functions
-/*
-export const CalculateAxisRange = (trend: TrenDAP.IWidgetProps<TrenDAP.ITrend>, type: 'x' | 'y', index?: number) => {
-    let newTrend = { ...trend }
-    if (newTrend.Settings.Series.length == 0) return;
-
-    let ds = newTrend.Data.find(ds => ds.DataSource.ID === newTrend.Settings.Series[0].DataSourceID)
-    let dd: TrenDAP.iDataSetReturnType[] = [].concat(...newTrend.Data.map(d => d.Data));
-    if (type === 'x')
-        newTrend = CalculateXAxis(newTrend, ds, dd);
-    else {
-        if (index == undefined) {
-            for (let index = 0; index < newTrend.Settings.YAxis.length; index++) {
-                newTrend = CalculateYAxis(newTrend, ds, dd, index);
-            }
-        }
-        else
-            newTrend = CalculateYAxis(newTrend, ds, dd, index);
-    }
-
-    return newTrend;
-};*/
-
-/*
-const CalculateXAxis = (trend: WidgetTypes.IWidgetProps<TrenDAP.ITrend>, ds: TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>, dd: TrenDAP.iDataSetReturnType[]) => {
-    let newTrend = { ...trend }
-
-    let ss;
-    if (ds.DataSource.Type === 'TrenDAPDB') {
-        let phases = newTrend.Settings.Series.map((s: TrenDAP.iTrendTemplateSeriesXDA) => s.Phase)
-        let types = newTrend.Settings.Series.map((s: TrenDAP.iTrendTemplateSeriesXDA) => s.Type)
-        let characteristics = newTrend.Settings.Series.map((s: TrenDAP.iTrendTemplateSeriesXDA) => s.Characteristic)
-        let series = dd.find((d) => d[newTrend.By] === newTrend.Device && phases.indexOf((d as TrenDAP.iXDAReturnData).Phase) >= 0 && characteristics.indexOf((d as TrenDAP.iXDAReturnData).Characteristic) >= 0 && types.indexOf((d as TrenDAP.iXDAReturnData).Type) >= 0);
-
-        ss = (series?.Data ?? []).map(d => new Date(d.Timestamp).getTime());
-    }
-    else if (ds.DataSource.Type === 'OpenHistorian') {
-        let phases = newTrend.Settings.Series.map((s: TrenDAP.iTrendTemplateSeriesOpenHistorian) => s.Phase)
-        let types = newTrend.Settings.Series.map((s: TrenDAP.iTrendTemplateSeriesOpenHistorian) => s.Type)
-        let series = dd.find((d) => d[newTrend.By] === newTrend.Device && phases.indexOf((d as TrenDAP.iOpenHistorianReturn).Phase) >= 0 && types.indexOf((d as TrenDAP.iOpenHistorianReturn).SignalType) >= 0);
-
-        ss = (series?.Data ?? []).map(d => new Date(d.Timestamp).getTime());
-    }
-    else if (ds.DataSource.Type === 'Sapphire') {
-        let phases = newTrend.Settings.Series.map((s: TrenDAP.iTrendTemplateSeriesSapphire) => s.Phase)
-        let types = newTrend.Settings.Series.map((s: TrenDAP.iTrendTemplateSeriesSapphire) => s.Measurement)
-        let harmonics = newTrend.Settings.Series.map((s: TrenDAP.iTrendTemplateSeriesSapphire) => s.Harmonic);
-        let series = dd.find((d) => d[newTrend.By] === newTrend.Device && phases.indexOf((d as TrenDAP.iSapphireReturnData).Phase) >= 0 && types.indexOf((d as TrenDAP.iSapphireReturnData).Characteristic) >= 0 && harmonics.indexOf((d as TrenDAP.iSapphireReturnData).Harmonic) >= 0);
-
-        ss = (series?.Data ?? []).map(d => new Date(d.Timestamp).getTime());
-    }
-    else
-        ss = [];
-
-
-    let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
-    newTrend.Settings.Max = Math.max(...[].concat(...mm));
-    newTrend.Settings.Min = Math.min(...[].concat(...mm));
-    return newTrend;
-}
-*/
-/*
-export const CalculateYAxis = (trend: WidgetTypes.IWidgetProps<TrenDAP.ITrend>, ds: TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>, dd: TrenDAP.iDataSetReturnType[], index: number) => {
-    let newTrend = { ...trend }
-
-    let axes = newTrend.Settings.Series.filter(series => series.Axis === index);
-
-    let ss = axes.map(a => {
-        if (ds.DataSource.Type === 'TrenDAPDB') {
-            const axis = a as TrenDAP.iTrendTemplateSeriesXDA;
-            const series = dd.find((d) => d[newTrend.By] === newTrend.Device && axis.Phase === (d as TrenDAP.iXDAReturnData).Phase && axis.Characteristic === (d as TrenDAP.iXDAReturnData).Characteristic && axis.Type === (d as TrenDAP.iXDAReturnData).Type);
-            return (series?.Data ?? []).map(d => d[axis.Field]);
-        }
-        else if (ds.DataSource.Type === 'OpenHistorian') {
-            const axis = a as TrenDAP.iTrendTemplateSeriesOpenHistorian;
-            const series = dd.find((d) => d[newTrend.By] === newTrend.Device && axis.Phase === (d as TrenDAP.iOpenHistorianReturn).Phase && axis.Type === (d as TrenDAP.iOpenHistorianReturn).SignalType);
-            return (series?.Data ?? []).map(d => d[axis.Field]);
-        }
-        else if (ds.DataSource.Type === 'Sapphire') {
-            const axis = a as TrenDAP.iTrendTemplateSeriesSapphire;
-            const series = dd.find((d) => d[newTrend.By] === newTrend.Device && axis.Phase === (d as TrenDAP.iSapphireReturnData).Phase && axis.Measurement === (d as TrenDAP.iSapphireReturnData).Characteristic && (d as TrenDAP.iSapphireReturnData).Harmonic === axis.Harmonic);
-            return (series?.Data ?? []).map(d => d[axis.Field]);
-        }
-        else
-            ss = [];
-
-    });
-    let mm = ss.map(s => [Math.min(...s), Math.max(...s)]);
-    newTrend.Settings.Max = Math.max(...[].concat(...mm));
-    newTrend.Settings.Min = Math.min(...[].concat(...mm));
-    return newTrend;
-}
-
-
-
-
-export const Pan = (trend: TrenDAP.IWidgetProps<TrenDAP.ITrend>, value: number) => {
-    let newTrend = { ...trend }
-    newTrend.Settings.Max = newTrend.Settings.Max + value;
-    newTrend.Settings.Min = newTrend.Settings.Min + value;
-    return newTrend;
-};*/
