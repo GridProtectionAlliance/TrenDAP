@@ -148,30 +148,24 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
         else setHeaderOpacity(1)
     }, [props.Widget.ShowHeader, editMode])
 
+    function handleAddChannel(channelID: string, defaultSetting: any, updatedKey?: TrenDAP.IChannelKey) {
+        let channel = props.AllChannels.find(channel => channel.ID === channelID);
+        let maxParent = localChannels.reduce((max, chan) => {
+            return chan.Key.Parent > max ? chan.Key.Parent : max;
+        }, 0);
 
-    function handleAddChannel(channelID: string, defaultSetting: any, isAdded: boolean) {
-        if(isAdded ?? false) return
-        let newChannel = props.AllChannels.find(channel => channel.ID === channelID)
-
-        setLocalChannels(prev => {
-            if (prev == null || prev.length === 0) {
-                return [{
-                    MetaData: newChannel,
+        maxParent = localChannels.length === 0 ? 0 : maxParent + 1;
+        let key = updatedKey ?? { Phase: channel.Phase, Type: channel.Type, Harmonic: channel.Harmonic, Parent: maxParent }
+        let newChannel = {
+            MetaData: channel,
                     ChannelSettings: defaultSetting,
-                    Key: { Phase: newChannel.Phase, Type: newChannel.Type, Harmonic: newChannel.Harmonic, Parent: 0 },
+            Key: key,
                     IsNew: true
-                }];
-            }
+        };
 
-            const lastParentValue = prev[prev.length - 1].Key.Parent;
-            return [...prev, {
-                MetaData: newChannel,
-                ChannelSettings: defaultSetting,
-                Key: { Phase: newChannel.Phase, Type: newChannel.Type, Harmonic: newChannel.Harmonic, Parent: lastParentValue + 1 },
-                IsNew: true
-            }];
+        setLocalChannels(prevLocalChannels => {
+            return [...prevLocalChannels, newChannel];
         });
-
     }
 
     const handleUpdateWidget = (confBtn: boolean, deleteBtn: boolean) => {
@@ -182,13 +176,19 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             updatedChannels.forEach(channel => {
                 if (channel.IsNew) {
                     props.AddChannelToMap(channel.Key, channel.MetaData)
-                    channel.Key = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) }
+                    const updatedKey = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) }
+                    //This should probably be done in XvsY but not sure of a 'better' way to do this. Without returning {oldKey, newKey} from this func and passing it into the widgets 
+                    if (localSetting?.Pairs != null) {
+                        let pairs = [...localSetting.Pairs] as { Keys: [TrenDAP.IChannelKey, TrenDAP.IChannelKey], Index: number}[]
+                        pairs.forEach((pair, pairIndex) => {
+                            let chanIndex = pair.Keys.findIndex(p => _.isEqual(p, channel.Key))
+                            if (chanIndex !== -1)
+                                pairs[pairIndex].Keys[chanIndex] = updatedKey
+                        })
+                        setLocalSetting({ ...localSetting, Pairs: pairs })
+                    }
 
-                    //This is for the specific case of XvsY where we need to update the targetKey with the correct parent...
-                    //Not sure of a better way to do this unless we start updating the maps in the channelselection
-
-                    if (channel?.ChannelSettings?.TargetKey == null) return
-                    channel.ChannelSettings.TargetKey = { ...channel.ChannelSettings.TargetKey, Parent: props.ParentMap.current.get(channel.ChannelSettings.TargetParentID) }
+                    channel.Key = updatedKey
                 }
             })
 
