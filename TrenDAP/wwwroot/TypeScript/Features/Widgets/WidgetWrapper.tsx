@@ -100,7 +100,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                 s[k] = _.cloneDeep(custom[k]);
         }
         return s;
-    }, [Implementation, props.Widget.Settings]);
+    }, [Implementation, props.Widget.Settings, showSettingsModal]);
 
     React.useEffect(() => {
         if (props.Widget.Channels.length === 0 || props.Widget.Channels == null) {
@@ -114,11 +114,11 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
 
     React.useEffect(() => {
         setCommonLocalSettings({ Width: props.Widget.Width, Label: props.Widget.Label, ShowHeader: props.Widget.ShowHeader })
-    }, [props.Widget.Width, props.Widget.Label, props.Widget.ShowHeader])
+    }, [props.Widget.Width, props.Widget.Label, props.Widget.ShowHeader, showSettingsModal])
 
     React.useEffect(() => {
         setLocalSetting(Settings)
-    }, [Settings])
+    }, [Settings, showSettingsModal])
 
     React.useEffect(() => {
         if (props.Widget.Channels.length === 0 || props.Widget.Channels == null) {
