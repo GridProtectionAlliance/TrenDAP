@@ -21,17 +21,17 @@
 //
 //******************************************************************************************************
 
-import { axisBottom, axisLeft, axisRight, brushX, format, line, scaleLinear, scaleUtc, select } from 'd3';
+import { axisBottom, axisLeft, axisRight, brushX, format, line, scaleLinear, scaleUtc, select, bisector, bisect } from 'd3';
 import * as React from 'react';
 import { DataSetTypes, TrenDAP } from '../../../global';
 import { WidgetTypes } from '../Interfaces';
-import { Input, Select, CheckBox, ToggleSwitch, DatePicker, ColorPicker } from '@gpa-gemstone/react-forms';
+import { Input, Select, ToggleSwitch, DatePicker, ColorPicker } from '@gpa-gemstone/react-forms';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { ToolTip } from '@gpa-gemstone/react-interactive';
-import moment from 'moment';
-import _ from 'lodash';
 import { ISelectedChannels } from '../WidgetWrapper'
+import _ from 'lodash';
+import moment from 'moment';
 
 export interface IProps {
     AutoXScale: boolean
@@ -512,28 +512,43 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .attr('x', 0)
                 .attr('y', 0)
 
-            let width = 200
+            let width = 200;
+            props.Data.forEach((series, seriesIndex) => {
+                tooltip.append('rect')
+                    .attr('x', 5)
+                    .attr('y', `${seriesIndex}em`)
+                    .attr('height', '1em')
+                    .attr('width', '1em')
+                    .attr('fill', series.ChannelSettings.Color);
 
-            props.Data.forEach((series, index) => {
-                tooltip.append('rect').attr('x', 5).attr('y', `${index}em`).attr('height', '1em').attr('width', '1em').attr('fill', series.ChannelSettings.Color);
-                let datum = GetChannelData(series);
-                const floor = Math.floor(datum.length * evt.offsetX / props.Width * .95);
-                const ceil = Math.ceil(datum.length * evt.offsetX / props.Width * 1.05);
-                const shortenedData = datum.slice(floor, ceil);
-                const dist = shortenedData.map(d => ({ Value: d[1], Distance: Math.abs(evt.offsetX - xScaleRef.current(d[0])) }));
-                dist.sort((a, b) => {
-                    if (a.Distance > b.Distance) return 1;
-                    else if (a.Distance == b.Distance) return 0;
-                    else return -1;
-                })
+                let ds = GetChannelData(series);
 
-                const formated = format('.2f')(dist[0].Value);
-                text.append('tspan').text(series.Name + ' - ' + formated).attr('x', '1.5em').attr('y', `${index + 1}em`);
-                width = text.node().getBBox().width + 25 > width ? text.node().getBBox().width + 25 : width;
+                // Get the corresponding date for the clicked position
+                const clickedDate = xScaleRef.current.invert(evt.offsetX);
+
+                // Find the closest data point
+                const bisectDate = bisector(d => moment(d[0], 'YYYY-MM-DDTHH:mm:ss.fffZ').toDate()).left;
+                const index = bisectDate(ds, clickedDate);
+                const closestData = ds[Math.min(index, ds.length - 1)];
+
+                const closestValue = closestData != null ? closestData[1] : null;
+
+                if (closestValue !== null) {
+                    const formatted = format('.2f')(closestValue);
+                    text.append('tspan')
+                        .text(`${series.Name} - ${formatted}`)
+                        .attr('x', '1.5em')
+                        .attr('y', `${seriesIndex + 1}em`);
+
+                    width = Math.max(width, text.node().getBBox().width + 25);
+                }
             });
+
             rect.attr('width', width);
-            if (width > props.Width - margin.current.right - evt.offsetX)
+            if (width > props.Width - margin.current.right - evt.offsetX) {
                 tooltip.attr("transform", `translate(${evt.offsetX - 15 - width},${evt.offsetY - tooltipHeight / 2})`);
+            }
+
         }
 
         function OnPan(evt: MouseEvent, svg: d3.Selection<SVGSVGElement, unknown, null, undefined>) {
