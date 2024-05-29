@@ -140,8 +140,8 @@ export default function Row(props: TrenDAP.IRow) {
                                             <ReactIcons.Settings />
                                         </button>
                                     </div>
-                                    <ToolTip Show={hover === 'Remove'} Position="left" Target={"rm-row-btn" + guid.current}>Remove Row</ToolTip>
-                                    <ToolTip Show={hover === 'Settings'} Position="left" Target={"row-settings-btn" + guid.current}>Row Settings</ToolTip>
+                                    <ToolTip Show={hover === 'Remove'} Position="left" Target={"rm-row-btn" + guid.current} Zindex={9986}>Remove Row</ToolTip>
+                                    <ToolTip Show={hover === 'Settings'} Position="left" Target={"row-settings-btn" + guid.current} Zindex={9986}>Row Settings</ToolTip>
                                 </div>
                             </div>
                         </div>
