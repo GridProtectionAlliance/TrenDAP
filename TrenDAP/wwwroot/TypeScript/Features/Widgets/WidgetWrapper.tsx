@@ -291,9 +291,13 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                             return prevChannels;
                                         });
                                     }}
-                                    RemoveChannel={channel => setLocalChannels(channels => channels.filter(chan => chan.MetaData.ID !== channel))}
+                                        RemoveChannel={channel => setLocalChannels(channels => {
+                                            const updatedChannels = [...channels];
+                                            const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
+                                            index !== -1 ? updatedChannels.splice(index, 1) : null;
+                                            return updatedChannels;
+                                        })}
                                     AllChannels={props.AllChannels}
-                                    SetSelectedChannels={setLocalChannels}
                                     SelectedChannels={localChannels}
                                     SetSettings={setLocalSetting}
                                     Settings={localSetting}
@@ -304,10 +308,14 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                         setLocalChannels(prev => prev.map(chan => _.isEqual(chan.Key, channelKey) ? { ...chan, Settings: settings } : chan))
 
                                     }}
-                                    RemoveChannel={channel => setLocalChannels(channels => channels.filter(chan => chan.MetaData.ID !== channel))}
+                                        RemoveChannel={channel => setLocalChannels(channels => {
+                                            const updatedChannels = [...channels];
+                                            const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
+                                            index !== -1 ? updatedChannels.splice(index, 1) : null;
+                                            return updatedChannels;
+                                        })}
                                     AllChannels={props.AllChannels}
                                     SelectedChannels={localChannels}
-                                    SetSelectedChannels={setLocalChannels}
                                     SetSettings={setLocalSetting}
                                     Settings={localSetting}
                                 />}
