@@ -145,12 +145,11 @@ export namespace DataSetTypes {
 export namespace TrenDAP {
     type Status = 'loading' | 'idle' | 'error' | 'changed' | 'unitiated';
     type WidgetType = 'Histogram' | 'Profile' | 'Stats' | 'Table' | 'Text' | 'Trend' | 'XvsY';
-    type TemplateSeries = iTemplateSeriesXDA | iTemplateSeriesOpenHistorian;
     type iDataSetReturnType = iXDAReturnData | iOpenHistorianReturn | iSapphireReturnData;
     type ChartAction = 'Click' | 'Pan' | 'ZoomX' | 'ZoomY' | 'ZoomXY';
-    type TemplateBy = 'Meter' | 'Asset' | 'Device';
     type iTrendDataPoint = iXDATrendDataPoint | iOpenHistorianAggregationPoint | iSapphireTrendDataPoint;
-    // TrenDAP     
+
+    // TrenDAP
     interface iWorkSpace { ID: number, Name: string, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string }
     interface iDataSet { ID: number, Name: string, Context: 'Relative' | 'Fixed Dates', RelativeValue: number, RelativeWindow: 'Day' | 'Week' | 'Month' | 'Year', From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, Public: boolean, UpdatedOn: string, Data?: { Status: Status, Error?: string } }
     interface iDataSetSource { ID: number, Name: string, DataSourceTypeID: number, JSON: object }
@@ -194,7 +193,21 @@ export namespace TrenDAP {
     type iSapphireTrendDataPointField = SeriesField;
 
     // Widget JSON interfaces
-    interface WorkSpaceJSON { Rows: IRow[] }
+    interface WorkSpaceJSON {
+        Rows: IRow[]
+    }
+
+    interface IYAxis {
+        ID: number,
+        Min: number,
+        Max: number,
+        Type: string,
+        Label: string,
+        Position: 'left' | 'right',
+        ShowEvents: boolean,
+        AutoMinScale: boolean,
+        AutoMaxScale: boolean
+    }
 
     // Workspace
     interface IRow {
@@ -212,32 +225,9 @@ export namespace TrenDAP {
         AddChannelToMap: (channelKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData) => void
     }
 
-    interface iSeries { DataSourceID: number, ID: string, Field: SeriesField }
-    interface iTemplateSeries { DataSourceID: number, Field: SeriesField }
-    interface iTemplateSeriesXDA extends iTemplateSeries { Phase: OpenXDA.Types.PhaseName, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Type: OpenXDA.Types.MeasurementTypeName }
-    interface iTemplateSeriesSapphire extends iTemplateSeries { Phase: string, Measurement: string, Harmonic: number }
-
-    interface iTemplateSeriesOpenHistorian extends iTemplateSeries { Phase: OpenHistorian.Types.Phase, Type: OpenHistorian.Types.SignalType }
-    interface iAxis { Min: number, Max: number, Units: string }
-    interface iYAxis extends iAxis { Position: 'left' | 'right' }
-
-    // Histogram Specific
-    interface iHistogramSeries extends iSeries { Color: string, Profile: boolean, ProfileColor: string }
-    interface iTemplatableHistogramSeries extends iTemplateSeries { Color: string, Profile: boolean, ProfileColor: string }
-    interface iTemplatableHistogramSeriesSapphire extends iTemplatableHistogramSeries { Phase: string, Measurement: string, Harmonic: number }
-    interface iTemplatableHistogramSeriesXDA extends iTemplatableHistogramSeries { Phase: OpenXDA.Types.PhaseName, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Type: OpenXDA.Types.MeasurementTypeName }
-    interface iTemplatableHistogramSeriesOpenHistorian extends iTemplatableHistogramSeries { Phase: OpenHistorian.Types.Phase, Type: OpenHistorian.Types.SignalType }
-
-
-
-    // Trend
-    interface iTrendSeries extends iSeries { Color: string, Axis: number, Label: string, ShowEvents: boolean }
-    interface iTrendTemplateSeries extends iTemplateSeries { Color: string, Axis: number, Label: string }
-    interface iTrendTemplateSeriesXDA extends iTrendTemplateSeries { Phase: OpenXDA.Types.PhaseName, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Type: OpenXDA.Types.MeasurementTypeName, ShowEvents: boolean }
-    interface iTrendTemplateSeriesSapphire extends iTrendTemplateSeries { Phase: string, Measurement: string, ShowEvents: boolean, Harmonic: number }
-    interface iTrendTemplateSeriesOpenHistorian extends iTrendTemplateSeries { Phase: OpenHistorian.Types.Phase, Type: OpenHistorian.Types.SignalType }
-
-    interface GeneralSettings { EditMode: boolean }
+    interface GeneralSettings {
+        EditMode: boolean
+    }
 
     //Model for Workspace logic
     interface IWidgetModel {
@@ -252,7 +242,7 @@ export namespace TrenDAP {
     //might be better in widgettypes namespace..
     interface IWidgetChannels<T> {
         Key: TrenDAP.IChannelKey,
-        ChannelSettings: any
+        ChannelSettings: T
     }
 
     interface IChannelKey {
