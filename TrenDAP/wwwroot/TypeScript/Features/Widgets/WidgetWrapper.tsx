@@ -58,16 +58,6 @@ interface IProps {
     AddChannelToMap: (channelKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData) => void
 }
 
-interface ICommonSettings {
-    Width: number, //percentage
-    Label: string,
-    ShowHeader: boolean
-}
-
-export interface ISelectedChannels extends TrenDAP.IWidgetChannels<any> {
-    MetaData: DataSetTypes.IDataSetMetaData, IsNew: boolean
-}
-
 const WidgetWrapper: React.FC<IProps> = (props) => {
     const Implementation: WidgetTypes.IWidget<any, any> | null = React.useMemo(() => AllWidgets.find(item => item.Name === props.Widget.Type), [props.Widget.Type]);
     const guid = React.useRef<string>(CreateGuid());
@@ -81,9 +71,9 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
 
     const [data, setData] = React.useState<WidgetTypes.IWidgetData<any>[]>([]);
 
-    const [localChannels, setLocalChannels] = React.useState<ISelectedChannels[]>([]);
+    const [localChannels, setLocalChannels] = React.useState<WidgetTypes.ISelectedChannels<any>[]>([]);
     const [localSetting, setLocalSetting] = React.useState<any | null>(null);
-    const [localCommonSettings, setCommonLocalSettings] = React.useState<ICommonSettings>({ Width: props.Widget.Width, Label: props.Widget.Label, ShowHeader: props.Widget.ShowHeader });
+    const [localCommonSettings, setCommonLocalSettings] = React.useState<WidgetTypes.ICommonSettings>({ Width: props.Widget.Width, Label: props.Widget.Label, ShowHeader: props.Widget.ShowHeader });
 
     const [showWarning, setShowWarning] = React.useState<boolean>(false);
 
@@ -137,7 +127,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             setData(allData);
         });
         /**********/
-        //Once i get all the channel specific settings out of the way, rework ReadMany so it works as well.
+        //Once i get all the channel specific settings out of the way, rework ReadMany so we dont have to map over Read
 
     }, [props.Widget.Channels, props.ChannelMap.Version]);
 
@@ -150,12 +140,12 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
 
     function handleAddChannel(channelID: string, defaultSetting: any, updatedKey?: TrenDAP.IChannelKey) {
         let channel = props.AllChannels.find(channel => channel.ID === channelID);
-        let maxParent = localChannels.reduce((max, chan) => {
+        let uniqParent = localChannels.reduce((max, chan) => {
             return chan.Key.Parent > max ? chan.Key.Parent : max;
         }, 0);
 
-        maxParent = localChannels.length === 0 ? 0 : maxParent + 1;
-        let key = updatedKey ?? { Phase: channel.Phase, Type: channel.Type, Harmonic: channel.Harmonic, Parent: maxParent }
+        uniqParent = localChannels.length === 0 ? 0 : uniqParent + 1;
+        let key = updatedKey ?? { Phase: channel.Phase, Type: channel.Type, Harmonic: channel.Harmonic, Parent: uniqParent }
         let newChannel = {
             MetaData: channel,
             ChannelSettings: defaultSetting,
@@ -177,9 +167,9 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                 if (channel.IsNew) {
                     props.AddChannelToMap(channel.Key, channel.MetaData)
                     const updatedKey = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) }
-                    //This should probably be done in XvsY but not sure of a 'better' way to do this. Without returning {oldKey, newKey} from this func and passing it into the widgets 
+                    //Remove this and just use ID to match pairs and handle the case where we only have one ID for a pair..
                     if (localSetting?.Pairs != null) {
-                        let pairs = [...localSetting.Pairs] as { Keys: [TrenDAP.IChannelKey, TrenDAP.IChannelKey], Index: number}[]
+                        let pairs = [...localSetting.Pairs] as { Keys: [TrenDAP.IChannelKey, TrenDAP.IChannelKey], Index: number }[]
                         pairs.forEach((pair, pairIndex) => {
                             let chanIndex = pair.Keys.findIndex(p => _.isEqual(p, channel.Key))
                             if (chanIndex !== -1)
@@ -187,7 +177,6 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                         })
                         setLocalSetting({ ...localSetting, Pairs: pairs })
                     }
-
                     channel.Key = updatedKey
                 }
             })
@@ -241,7 +230,6 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                         <Implementation.WidgetUI
                             Data={data}
                             Width={props.Widget.Width}
-                            SetSettings={(s) => props.UpdateWidget({ ...props.Widget, Settings: s })}
                             Settings={props.Widget.Settings}
                         />
                     </div>
@@ -256,24 +244,33 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     CancelText={"Delete Widget"}
                     Size="xlg"
                 >
-                    <div className="container-fluid h-100 d-flex flex-column p-0">
-                        <div className="row">
-                            <div className="col-4 d-flex flex-column" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
-                                <div className="container-fluid d-flex flex-column p-0 flex-shrink-0">
-                                    <Input<ICommonSettings> Field='Label' Record={localCommonSettings} Type='text' Setter={(r) => setCommonLocalSettings(r)} Valid={(field) => true} />
-                                    <Input<ICommonSettings> Label="Width (%)" Field='Width' Record={localCommonSettings} Type='integer' Setter={(r) => setCommonLocalSettings(r)}
-                                        Valid={(item) => isPercent(localCommonSettings[item] as number)} Feedback='Width must be a valid percent and greater than 5' />
-                                    <CheckBox<ICommonSettings> Field='ShowHeader' Record={localCommonSettings} Setter={r => setCommonLocalSettings(r)} Label="Show Widget Header" />
+                    <div className="container-fluid d-flex flex-column p-0" style={{ height: '80vh' }}>
+                        <div className="row h-100">
+                            <div className="col-4 d-flex flex-column h-100">
+                                <div className="row">
+                                    <div className="col-12">
+                                        <Input<WidgetTypes.ICommonSettings> Field='Label' Record={localCommonSettings} Type='text' Setter={(r) => setCommonLocalSettings(r)} Valid={(field) => true} />
+                                    </div>
                                 </div>
-                                <div className="container-fluid d-flex flex-column p-0 flex-grow-1">
-                                    {Implementation?.SettingsUI === undefined ? <></> : <Implementation.SettingsUI
-                                        Settings={localSetting ?? Settings}
-                                        SetSettings={setLocalSetting}
-                                        ChannelSettings={localChannels.map(chan => chan.ChannelSettings)}
-                                    />}
+                                <div className="row">
+                                    <div className="col-12">
+                                        <Input<WidgetTypes.ICommonSettings> Label="Width (%)" Field='Width' Record={localCommonSettings} Type='integer' Setter={(r) => setCommonLocalSettings(r)}
+                                            Valid={(item) => isPercent(localCommonSettings[item] as number)} Feedback='Width must be a valid percent and greater than 5' />
+                                    </div>
                                 </div>
+                                <div className="row">
+                                    <div className="col-12">
+                                        <CheckBox<WidgetTypes.ICommonSettings> Field='ShowHeader' Record={localCommonSettings} Setter={r => setCommonLocalSettings(r)} Label="Show Widget Header" />
+                                    </div>
+                                </div>
+
+                                {Implementation?.SettingsUI === undefined ? <></> : <Implementation.SettingsUI
+                                    Settings={localSetting ?? Settings}
+                                    SetSettings={setLocalSetting}
+                                    ChannelSettings={localChannels.map(chan => chan.ChannelSettings)}
+                                />}
                             </div>
-                            <div className="col-8" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
+                            <div className="col-8 h-100">
                                 {Implementation?.ChannelSelectionUI !== undefined ?
                                     <Implementation.ChannelSelectionUI
                                         AddChannel={(channelID, defaultSetting, updatedKey) => handleAddChannel(channelID, defaultSetting, updatedKey)}
@@ -329,7 +326,8 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     }
                     setShowWarning(false);
                 }} />
-            </ErrorBoundary>}
+            </ErrorBoundary>
+        }
     </>
 }
 
