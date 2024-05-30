@@ -80,10 +80,17 @@ namespace TrenDAP.Controllers
             public List<TimeFilter> TimeFilters { get; set; }
         }
 
-        #endregion
+        public class HIDSPostTimeSpans
+        {
+            public IEnumerable<DateTime[]> TimeSpans { get; set; }
+            public string AggregateDuration { get; set; }
+            public IEnumerable<int> Channels { get; set; }
+        }
 
-        #region [ Constructor ]
-        public TrenDAPDBController(IConfiguration configuration)
+    #endregion
+
+    #region [ Constructor ]
+    public TrenDAPDBController(IConfiguration configuration)
         {
             Configuration = configuration;
         }
@@ -212,6 +219,40 @@ namespace TrenDAP.Controllers
                 Channels = data.ChannelIDs,
                 AggregateDuration = data.Aggregate,
                 TimeFilters = timeFilters
+            };
+        }
+        public static HIDSPostTimeSpans CreatePostTimeSpans(DataSet dataSet, XDADataSetData data, List<Event> events)
+        {
+            double addition;
+
+            switch (dataSet.EventWindowUnit.ToLower())
+            {
+                case "week":
+                    addition = dataSet.EventWindowSize * 168;
+                    break;
+                case "day":
+                    addition = dataSet.EventWindowSize * 24;
+                    break;
+                case "hour":
+                    addition = dataSet.EventWindowSize;
+                    break;
+                default:
+                    throw new ArgumentException("Event window units for timespan must be one of the following: hour, day, week");
+            }
+
+            IEnumerable<DateTime[]> spans = events
+                .Select(evt =>
+                {
+                    DateTime evtStartTime = DateTime.UnixEpoch.AddMilliseconds(evt.Time);
+                    return new DateTime[] { evtStartTime.AddHours(-addition), evtStartTime.AddMilliseconds(evt.Duration).AddHours(addition) };
+                });
+
+
+            return new HIDSPostTimeSpans
+            {
+                TimeSpans = spans,
+                Channels = data.ChannelIDs,
+                AggregateDuration = data.Aggregate
             };
         }
 

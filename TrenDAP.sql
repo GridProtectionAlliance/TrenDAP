@@ -66,6 +66,8 @@ CREATE TABLE DataSet
     [Name] VARCHAR(200) NOT NULL,
     [User] VARCHAR(MAX) NOT NULL,
     [Public] bit NULL DEFAULT 0,
+    EventWindowSize FLOAT DEFAULT NULL,
+    EventWindowUnit VARCHAR(5) NOT NULL DEFAULT 'Hour',
     UpdatedOn DATETIME NULL DEFAULT GETUTCDATE()
 )
 GO
