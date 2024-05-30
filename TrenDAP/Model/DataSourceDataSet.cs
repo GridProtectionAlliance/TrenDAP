@@ -85,6 +85,7 @@ namespace TrenDAP.Model
         [HttpGet, Route("Query/{dataSourceDataSetID:int}")]
         public IActionResult GetData(int dataSourceDataSetID, CancellationToken cancellationToken)
         {
+            if (!string.IsNullOrEmpty(GetRoles) && !User.IsInRole(GetRoles)) return Unauthorized();
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
                 DataSourceDataSet sourceSet = new TableOperations<DataSourceDataSet>(connection).QueryRecordWhere("ID = {0}", dataSourceDataSetID);
@@ -99,6 +100,7 @@ namespace TrenDAP.Model
         [HttpPost, Route("Query/ByEvents/{dataSourceDataSetID:int}")]
         public IActionResult GetDataByEvents(int dataSourceDataSetID, [FromBody] JArray events, CancellationToken cancellationToken)
         {
+            if (!string.IsNullOrEmpty(PostRoles) && !User.IsInRole(PostRoles)) return Unauthorized();
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
                 DataSourceDataSet sourceSet = new TableOperations<DataSourceDataSet>(connection).QueryRecordWhere("ID = {0}", dataSourceDataSetID);
