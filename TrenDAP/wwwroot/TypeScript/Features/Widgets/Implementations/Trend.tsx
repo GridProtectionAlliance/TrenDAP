@@ -407,7 +407,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .append("text")
                 .text(axis.Label)
                 .style("text-anchor", "middle")
-                .attr('transform', `rotate(90) translate(${svgHeight / 2}, ${-svgWidth + margin.current.right - index * 60 - 40})`);
+                .attr('transform', `rotate(90) translate(${svgHeight / 2}, ${-svgWidth + margin.current.right - index * 60 - 45})`);
         }
 
         function GetXScale() {
@@ -645,100 +645,94 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     }}>Add New</button>
                 </div>
             </div>
-
-            <div className="row h-100" style={{overflow: 'hidden'}}>
-                <ReactTable.Table<TrenDAP.IYAxis>
-                    TableClass="table table-hover"
-                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                    SortKey={"Label"}
-                    OnClick={() => { }}
-                    OnSort={() => { }}
-                    Data={props.Settings.YAxis}
-                    Ascending={true}
-                    KeySelector={(row) => row.ID}
-                >
-                    <ReactTable.Column<TrenDAP.IYAxis>
-                        Key={'ID'}
-                        AllowSort={true}
-                        Field={'ID'}
+            <div className="row h-100" style={{ overflow: 'hidden' }}>
+                <div className="col-12 h-100">
+                    <ReactTable.Table<TrenDAP.IYAxis>
+                        TableClass="table table-hover"
+                        TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                        TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                        TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                        RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                        SortKey={"Label"}
+                        OnClick={() => { }}
+                        OnSort={() => { }}
+                        Data={props.Settings.YAxis}
+                        Ascending={true}
+                        KeySelector={(row) => row.ID}
                     >
-                        ID
-                    </ReactTable.Column>
-                    <ReactTable.Column<TrenDAP.IYAxis>
-                        Key={'Label'}
-                        AllowSort={true}
-                        Field={'Label'}
-                        Content={({ item }) =>
-                            <Input<TrenDAP.IYAxis> Label="" Field='Label' Record={item} Type='text' Valid={(field) => true}
-                                Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
-                        }
-                    >
-                        Label
-                    </ReactTable.Column>
-                    <ReactTable.Column<TrenDAP.IYAxis>
-                        Key={'Position'}
-                        AllowSort={true}
-                        Field={'Position'}
-                        Content={({ item }) =>
-                            <Select<TrenDAP.IYAxis> Label="" Record={item} Field="Position" Options={[{ Label: 'Left', Value: 'left' }, { Label: 'Right', Value: 'right' }]}
-                                Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
-                        }
-                    >
-                        Position
-                    </ReactTable.Column>
-                    <ReactTable.Column<TrenDAP.IYAxis>
-                        Key={'Min'}
-                        AllowSort={true}
-                        Field={'Min'}
-                        Content={({ item }) =>
-                            <>
-                                <Input<TrenDAP.IYAxis> Label="" Field='Min' Record={item} Type='number' Disabled={item.AutoMinScale} Valid={(field) => true}
+                        <ReactTable.Column<TrenDAP.IYAxis>
+                            Key={'Label'}
+                            AllowSort={true}
+                            Field={'Label'}
+                            Content={({ item }) =>
+                                <Input<TrenDAP.IYAxis> Label="" Field='Label' Record={item} Type='text' Valid={(field) => true}
                                     Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
-                                <ToggleSwitch<TrenDAP.IYAxis> Field="AutoMinScale" Label="Use Data" Record={item}
+                            }
+                        >
+                            Label
+                        </ReactTable.Column>
+                        <ReactTable.Column<TrenDAP.IYAxis>
+                            Key={'Position'}
+                            AllowSort={true}
+                            Field={'Position'}
+                            Content={({ item }) =>
+                                <Select<TrenDAP.IYAxis> Label="" Record={item} Field="Position" Options={[{ Label: 'Left', Value: 'left' }, { Label: 'Right', Value: 'right' }]}
                                     Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
-                            </>
-                        }
-                    >
-                        Min
-                    </ReactTable.Column>
-                    <ReactTable.Column<TrenDAP.IYAxis>
-                        Key={'Max'}
-                        AllowSort={true}
-                        Field={'Max'}
-                        Content={({ item }) =>
-                            <>
-                                <Input<TrenDAP.IYAxis> Label="" Field='Max' Record={item} Type='number' Disabled={item.AutoMaxScale} Valid={(field) => true}
-                                    Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
-                                <ToggleSwitch<TrenDAP.IYAxis> Field="AutoMaxScale" Label="Use Data" Record={item}
-                                    Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
-                            </>
-                        }
-                    >
-                        Max
-                    </ReactTable.Column>
-                    <ReactTable.Column<TrenDAP.IYAxis>
-                        Key="Delete"
-                        AllowSort={false}
-                        Field="AutoMaxScale"
-                        Content={({ item }) =>
-                            <>
-                                <div onMouseEnter={() => setDeleteHover({ ID: item.ID, Hover: true })} onMouseLeave={() => setDeleteHover({ ID: item.ID, Hover: false })}>
-                                    <button className="btn btn-link" data-tooltip={`deletebtn-${item.ID}`} disabled={props.ChannelSettings.find(c => c.YAxisID === item.ID) != null ? true : false}
-                                        onClick={() => props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.filter(axis => axis.ID !== item.ID) })}>
-                                        <ReactIcons.TrashCan Color={'Red'} />
-                                    </button>
-                                </div>
-                                <ToolTip Target={`deletebtn-${item.ID}`} Zindex={9999} Show={(deleteHover.Hover && deleteHover.ID === item.ID) && props.ChannelSettings.find(c => c.YAxisID === item.ID) != null ? true : false}>
-                                    <span>Unable to delete axis that's in use by a channel.</span>
-                                </ToolTip>
-                            </>
-                        }
-                    >
-                    </ReactTable.Column>
-                </ReactTable.Table>
+                            }
+                        >
+                            Position
+                        </ReactTable.Column>
+                        <ReactTable.Column<TrenDAP.IYAxis>
+                            Key={'Min'}
+                            AllowSort={true}
+                            Field={'Min'}
+                            Content={({ item }) =>
+                                <>
+                                    <Input<TrenDAP.IYAxis> Label="" Field='Min' Record={item} Type='number' Disabled={item.AutoMinScale} Valid={(field) => true}
+                                        Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
+                                    <ToggleSwitch<TrenDAP.IYAxis> Field="AutoMinScale" Label="Use Data" Record={item}
+                                        Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
+                                </>
+                            }
+                        >
+                            Min
+                        </ReactTable.Column>
+                        <ReactTable.Column<TrenDAP.IYAxis>
+                            Key={'Max'}
+                            AllowSort={true}
+                            Field={'Max'}
+                            Content={({ item }) =>
+                                <>
+                                    <Input<TrenDAP.IYAxis> Label="" Field='Max' Record={item} Type='number' Disabled={item.AutoMaxScale} Valid={(field) => true}
+                                        Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
+                                    <ToggleSwitch<TrenDAP.IYAxis> Field="AutoMaxScale" Label="Use Data" Record={item}
+                                        Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
+                                </>
+                            }
+                        >
+                            Max
+                        </ReactTable.Column>
+                        <ReactTable.Column<TrenDAP.IYAxis>
+                            Key="Delete"
+                            AllowSort={false}
+                            Field="AutoMaxScale"
+                            Content={({ item }) =>
+                                <>
+                                    <div onMouseEnter={() => setDeleteHover({ ID: item.ID, Hover: true })} onMouseLeave={() => setDeleteHover({ ID: item.ID, Hover: false })}>
+                                        <button className="btn btn-link" data-tooltip={`deletebtn-${item.ID}`} disabled={props.ChannelSettings.find(c => c.YAxisID === item.ID) != null ? true : false}
+                                            onClick={() => props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.filter(axis => axis.ID !== item.ID) })}>
+                                            <ReactIcons.TrashCan Color={'Red'} />
+                                        </button>
+                                    </div>
+                                    <ToolTip Target={`deletebtn-${item.ID}`} Zindex={9999} Show={(deleteHover.Hover && deleteHover.ID === item.ID) && props.ChannelSettings.find(c => c.YAxisID === item.ID) != null ? true : false}>
+                                        <span>Unable to delete axis that's in use by a channel.</span>
+                                    </ToolTip>
+                                </>
+                            }
+                        >
+                        </ReactTable.Column>
+                    </ReactTable.Table>
+                </div>
             </div>
         </>
     },
@@ -871,7 +865,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         Field={'ChannelSettings'}
                         Content={({ item }) =>
                             <>
-                                <Select<IChannelSettings> Label="" Record={item.ChannelSettings} Field="YAxisID" Setter={(record) => props.SetChannelSettings(item.Key, { ...item.ChannelSettings, YAxisID: parseInt(record.YAxisID as any) })} Options={props.Settings.YAxis.map(axis => { return { Label: `${axis.ID}`, Value: `${axis.ID}` } })} />
+                                <Select<IChannelSettings> Label="" Record={item.ChannelSettings} Field="YAxisID" Options={props.Settings.YAxis.map(axis => { return { Label: `${axis.Label}`, Value: `${axis.ID}` } })}
+                                    Setter={(record) => props.SetChannelSettings(item.Key, { ...item.ChannelSettings, YAxisID: parseInt(record.YAxisID as any) })} />
                             </>
                         }
                     >
