@@ -385,9 +385,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                 Key={'Channel'}
                                                 Field={'ChannelID'}
                                                 Content={(row) => <Select<IChannelMatch> key={row.index} EmptyOption={true} Record={row.item}
-                                                    Options={allChannels.filter(chan =>
-                                                        chan.ParentID === selectedParentID/*not sure how to handle duplicate ParentIDS in this case as the map is completely empty unless we create a temporary buffer map...*/)
-                                                        .map(p => ({ Value: p.ID, Label: p.Name })) /*filter for selectedParent.*/}
+                                                    Options={allChannels.map(p => ({ Value: p.ID, Label: p.Name })) /*need to be filtering by the mapped parent.. */}
 
                                                     Label={''} Field={'ChannelID'} Setter={(item) => setChannelMatches(channels => {
                                                         const clonedChannels = _.cloneDeep(channels);
