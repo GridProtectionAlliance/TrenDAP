@@ -79,7 +79,12 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
 
     React.useEffect(() => {
         if (workSpace === undefined) return;
-        let json = JSON.parse(workSpace.JSONString) as TrenDAP.WorkSpaceJSON;
+        //temp
+        let json: TrenDAP.WorkSpaceJSON = {Rows: []}
+        try {
+            json = JSON.parse(workSpace.JSONString) as TrenDAP.WorkSpaceJSON;
+        } catch { }
+
         setWorkSpaceJSON(json);
     }, [workSpace]);
 
