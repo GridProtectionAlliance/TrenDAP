@@ -34,7 +34,6 @@ export namespace WidgetTypes {
 
     interface IWidgetProps<T, U> {
         Data: IWidgetData<U>[]
-        SetSettings: (settings: IWidgetProps<T>) => void // This needs to be refactored for specific states instead of settings - leave for now // I think Trend widget might be only one that eneds this
         Settings: T,
         Width: number,
     }
@@ -44,9 +43,14 @@ export namespace WidgetTypes {
         ChannelKey: TrenDAP.IChannelKey
     }
 
-    interface IChannelPair {
-        ID: string, 
-        Settings: any
+    interface ICommonSettings {
+        Width: number, //percentage
+        Label: string,
+        ShowHeader: boolean
+    }
+
+    interface ISelectedChannels<T> extends TrenDAP.IWidgetChannels<T> {
+        MetaData: DataSetTypes.IDataSetMetaData, IsNew: boolean
     }
 
     interface IChannelSelectionProps<S, U> {
@@ -55,7 +59,7 @@ export namespace WidgetTypes {
         AllChannels: DataSetTypes.IDataSetMetaData[],
         AddChannel: (channelID: string, channelSettings: U, updatedKey?: TrenDAP.IChannelKey) => void, 
         RemoveChannel: (channelID: string) => void,
-        SelectedChannels: ISelectedChannels[],
+        SelectedChannels: ISelectedChannels<U>[],
         SetChannelSettings: (channelKey: TrenDAP.IChannelKey, settings: U ) => void,
     }
 
