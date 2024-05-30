@@ -41,7 +41,7 @@ const ChannelSelector: React.FC<WidgetTypes.IChannelSelectionProps<any, any>> = 
     }
 
     return <>
-        <div className="container-fluid d-flex h-100 flex-column p-0" style={{ maxHeight: 'calc(-230px + 100vh)' }}>
+        <div className="h-100">
             <ReactTable.Table<DataSetTypes.IDataSetMetaData>
                 TableClass="table table-hover"
                 TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}

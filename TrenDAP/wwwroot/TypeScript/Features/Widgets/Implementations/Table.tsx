@@ -236,7 +236,7 @@ export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
         }
 
         return <>
-            <div className="container-fluid d-flex h-100 flex-column">
+            <div className="h-100">
                 <ReactTable.Table<DataSetTypes.IDataSetMetaData>
                     TableClass="table table-hover"
                     TableStyle={{ padding: 0, width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0 }}

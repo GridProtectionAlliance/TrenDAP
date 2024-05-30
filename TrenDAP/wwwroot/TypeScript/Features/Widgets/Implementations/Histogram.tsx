@@ -29,7 +29,6 @@ import { TrenDAP, DataSetTypes } from '../../../global';
 import { Input, Select, ColorPicker, CheckBox } from '@gpa-gemstone/react-forms';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { WidgetTypes } from '../Interfaces';
-import { ISelectedChannels } from '../WidgetWrapper'
 
 import _ from 'lodash';
 import * as d3 from 'd3';
@@ -208,7 +207,7 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         }
 
         return <>
-            <div className="container-fluid d-flex h-50 flex-column p-0">
+            <div className="h-50 p-0">
                 <ReactTable.Table<DataSetTypes.IDataSetMetaData>
                     TableClass="table table-hover"
                     TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
@@ -260,8 +259,8 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     </ReactTable.Column>
                 </ReactTable.Table>
             </div>
-            <div className="container-fluid d-flex h-50 flex-column p-0">
-                <ReactTable.Table<ISelectedChannels>
+            <div className="h-50 p-0">
+                <ReactTable.Table<WidgetTypes.ISelectedChannels<IChannelSettings>>
                     TableClass="table table-hover"
                     TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                     TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
@@ -273,7 +272,7 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     Ascending={ascending}
                     KeySelector={(row, idx) => idx}
                 >
-                    <ReactTable.Column<ISelectedChannels>
+                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Name'}
                         AllowSort={true}
                         Field={'MetaData'}
@@ -281,7 +280,7 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     >
                         Channel
                     </ReactTable.Column>
-                    <ReactTable.Column<ISelectedChannels>
+                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Color'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
