@@ -89,16 +89,14 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     const dataSourceStatus = useAppSelector(SelectDataSourcesStatus);
     const dataSetStatus = useAppSelector(SelectDataSetsStatus);
 
-
     const [selectedDataSet, setSelectedDataSet] = React.useState<TrenDAP.iDataSet | null>(null);
 
     const [channelHover, setChannelHover] = React.useState<Hover>({ Hover: 'None', ID: -1 });
 
     const [datasources, setDatasources] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
     const [selectedParentKey, setSelectedParentKey] = React.useState<number>(null);
-    const [selectedParentID, setSelectedParentID] = React.useState<string>(null);
 
-    const [errors, setErrors] = React.useState<string[]>([]);
+    const [channelErrors, setChannelErrors] = React.useState<string[]>([]);
 
     const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([]);
     const [allParents, setAllParents] = React.useState<{ ID: string, Name: string }[]>([]);
@@ -106,7 +104,13 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     const [parentMatches, setParentMatches] = React.useState<IParentMatch[]>([]);
     const [channelMatches, setChannelMatches] = React.useState<IChannelMatch[]>([]);
     const parentChannelMatches = React.useMemo(() => channelMatches.map((c, i) => ({ ...c, Index: i })).filter((c) => c.Key.Parent === selectedParentKey), [channelMatches, selectedParentKey])
+    const channelOptions = React.useMemo(() => {
+        let parent = parentMatches.find(p => p.Key === selectedParentKey)
+        if (parent?.ParentID == null || selectedParentKey == null) return [{ Label: '', Value: '' }];
 
+        let availableChans = allChannels.filter(chan => chan.ParentID === parent.ParentID)
+        return availableChans.map(p => ({ Value: p.ID, Label: p.Name }))
+    }, [parentMatches, selectedParentKey])
 
     React.useEffect(() => {
         let errors = []
@@ -122,7 +126,9 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             }
 
         })
-        setErrors(errors)
+
+        if (!_.isEqual(channelErrors, errors))
+            setChannelErrors(errors)
     }, [parentMatches, channelMatches])
 
     React.useEffect(() => {
@@ -150,6 +156,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             async: true
         }).done((data: DataSourceTypes.IDataSourceDataSet[]) => {
             setDatasources(data);
+            setSelectedParentKey(null);
         });
 
         return () => { dataConnectionHandle.abort() }
@@ -162,7 +169,6 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             return;
         }
 
-        // ToDo Clean up naming and Add Cancelation Logic  for every channel Handler
         const channelHandlers = datasources.map((ds) => {
             const dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
             const implementation: IDataSource<any, any> | null = AllSources.find(t => t.Name == dataSourceView.Type);
@@ -174,7 +180,6 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         Promise.all(channelHandlers).then(d => {
             setAllChannels(d.flat())
             setAllParents(_.uniqBy(d.flat().map(c => ({ ID: c.ParentID, Name: c.ParentName })), (m) => m.ID))
-
         })
 
         return () => { }
@@ -195,9 +200,26 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         setChannelMatches(channels.map(c => ({
             Key: c.Key,
             Status: 'NoMatch',
-            ChannelID: null
+            ChannelID: null,
         })));
     }, [allChannels, props.WorkSpaceJSON.Rows]);
+
+    React.useEffect(() => {
+        let parent = parentMatches.find(p => p.Key === selectedParentKey)
+        if (parent?.ParentID == null || selectedParentKey == null) return;
+
+        let availableChans = allChannels.filter(chan => chan.ParentID === parent.ParentID)
+        parentChannelMatches.filter(chan => chan.Key.Parent === selectedParentKey && chan.Status === 'NoMatch').forEach(chan => {
+            let matchedChans = availableChans.filter(available => chan.Key.Phase === available.Phase && chan.Key.Type === available.Type && chan.Key.Harmonic === available.Harmonic)
+            if (matchedChans.length === 1)
+                setChannelMatches(prev => [...prev.map(match => _.isEqual(match.Key, chan.Key) ? ({ ...match, ChannelID: matchedChans[0].ID, Status: 'SingleMatch' as MatchStatus }) : match)])
+            else if (matchedChans.length > 1)
+                setChannelMatches(prev => [...prev.map(match => _.isEqual(match.Key, chan.Key) ? ({ ...match, Status: 'MultipleMatches' as MatchStatus, ChannelID: null }) : match)])
+            else if (matchedChans.length === 0)
+                setChannelMatches(prev => [...prev.map(match => _.isEqual(match.Key, chan.Key) ? ({ ...match, Status: 'NoMatch' as MatchStatus, ChannelID: null }) : match)])
+        })
+
+    }, [parentMatches])
 
     function loadData() {
         const dataHandlers = datasources.map((ds) => {
@@ -225,15 +247,15 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 ConfirmText={'Apply'}
                 Title={'Select a Data Set'}
                 CallBack={conf => {
-                    if (conf) 
+                    if (conf)
                         props.GenerateMapping(channelMatches.map(match => [match.Key, match.ChannelID]), parentMatches.map((match, index) => [match.ParentID, index]), allChannels, selectedDataSet, loadData());
-                    
+
                     props.SetIsModalOpen(false);
                 }}
                 Size="lg"
-                DisableConfirm={errors?.length > 0 || selectedDataSet == null}
-                ConfirmShowToolTip={errors?.length > 0 || selectedDataSet == null}
-                ConfirmToolTipContent={selectedDataSet == null ? <p>Select a Data Set to continue</p> : errors.length > 0 ? errors.map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>) : null}
+                DisableConfirm={channelErrors?.length > 0 || selectedDataSet == null}
+                ConfirmShowToolTip={channelErrors?.length > 0 || selectedDataSet == null}
+                ConfirmToolTipContent={selectedDataSet == null ? <p>Select a Data Set to continue</p> : channelErrors.length > 0 ? channelErrors.map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>) : null}
                 ShowCancel={false}
             >
                 <div className={'row'}>
@@ -299,7 +321,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                             TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
                                             TbodyStyle={{ display: 'block', overflowY: 'scroll', width: '100%' }}
                                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                            OnClick={({ row }) => { setSelectedParentKey(row.Key); setSelectedParentID(row.ParentID) }}
+                                            OnClick={({ row }) => setSelectedParentKey(row.Key)}
                                             OnSort={data => { }}
                                             SortKey={'Key'}
                                             Data={parentMatches}
@@ -329,11 +351,16 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                 Field={'ParentID'}
                                                 Content={(row) => <Select<IParentMatch> key={row.index} EmptyOption={true} Record={row.item}
                                                     Options={allParents.map(p => ({ Value: p.ID, Label: p.Name }))}
-                                                    Label={''} Field={'ParentID'} Setter={(r) => setParentMatches(d => {
-                                                        const u = _.cloneDeep(d);
-                                                        u[row.index] = { ...r, Status: 'Match' };
-                                                        return u;
-                                                    })} />}
+                                                    Label={''} Field={'ParentID'} Setter={(r) => {
+                                                        //Need to set all the parentChannelMatches to noMatch before setting the parentID in case they pick a new parent
+                                                        setChannelMatches(channelMatches.map(chan => chan.Key.Parent === selectedParentKey ? ({...chan, Status: 'NoMatch'}): chan))
+                                                        setParentMatches(d => {
+                                                            const u = _.cloneDeep(d);
+                                                            u[row.index] = { ...r, Status: 'Match' };
+                                                            return u;
+                                                        })
+
+                                                    }} />}
                                             >
                                                 {'\u200B'}
                                             </ReactTable.Column>
@@ -385,8 +412,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                 Key={'Channel'}
                                                 Field={'ChannelID'}
                                                 Content={(row) => <Select<IChannelMatch> key={row.index} EmptyOption={true} Record={row.item}
-                                                    Options={allChannels.map(p => ({ Value: p.ID, Label: p.Name })) /*need to be filtering by the mapped parent.. */}
-
+                                                    Options={channelOptions}
                                                     Label={''} Field={'ChannelID'} Setter={(item) => setChannelMatches(channels => {
                                                         const clonedChannels = _.cloneDeep(channels);
                                                         clonedChannels[row.item.Index] = { ...item, Status: 'Match' };
