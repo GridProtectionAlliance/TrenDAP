@@ -55,9 +55,9 @@ const WorkspaceSettings: React.FunctionComponent<IProps> = (props) => {
                 ConfirmText={'Save'}
                 Title={props.New ? 'Add Workspace' : 'Edit Workspace'}
                 CallBack={conf => {
-                    if (conf && !props.New)
+                    if (conf && props.New)
                         dispatch(AddWorkSpace(workspace));
-                    else if (conf && props.New)
+                    else if (conf && !props.New)
                         dispatch(UpdateWorkSpace(workspace))
                     props.SetShow(false);
                 }}
