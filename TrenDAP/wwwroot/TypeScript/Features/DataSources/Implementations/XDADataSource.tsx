@@ -214,7 +214,7 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
             }).fail(err => reject(err));
         });
     },
-    LoadDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetData[]> {
+    LoadDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet, events?: TrenDAP.IEvent[]): Promise<DataSetTypes.IDataSetData[]> {
         return new Promise<DataSetTypes.IDataSetData[]>((resolve, reject) => {
             const dataSetSettings = EnsureTypeSafety(setConn.Settings, XDADataSource.DefaultDataSetSettings);
             const returnData: DataSetTypes.IDataSetData[] = dataSetSettings.ChannelIDs.map(id => ({
@@ -229,14 +229,26 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
             let metaData: DataSetTypes.IDataSetMetaData[] = null;
 
             // Handle to query HIDS information (through XDA)
-            const dataHandle = $.ajax({
+            let dataHandle: JQuery.jqXHR<string>;
+            if (events == null) dataHandle = $.ajax({
                 type: "Get",
                 url: `${homePath}api/DataSourceDataSet/Query/${setConn.ID}`,
                 contentType: "application/json; charset=utf-8",
                 dataType: 'text',
                 cache: true,
                 async: true
-            }).done((data: string) => {
+            });
+            else dataHandle = ajax({
+                type: "Post",
+                url: `${homePath}api/DataSourceDataSet/Query/ByEvents/${setConn.ID}`,
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(events),
+                dataType: 'text',
+                cache: true,
+                async: true
+            });
+            
+            dataHandle.done((data: string) => {
                 const newPoints: string[] = data.split("\n");
                 newPoints.forEach(jsonPoint => {
                     let point: TrenDAP.iXDATrendDataPoint = undefined;
