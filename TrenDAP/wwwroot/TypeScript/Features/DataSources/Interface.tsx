@@ -48,7 +48,7 @@ export interface IDataSource<T, U> {
     ConfigUI: React.FC<TrenDAP.ISourceConfig<T>>,
     LoadDataSetMeta: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet)
         => Promise<DataSetTypes.IDataSetMetaData[]>,
-    LoadDataSet: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet)
+    LoadDataSet: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet, events?: TrenDAP.IEvent[])
         => Promise<DataSetTypes.IDataSetData[]>,
     QuickViewDataSet?: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet)
         => string,
