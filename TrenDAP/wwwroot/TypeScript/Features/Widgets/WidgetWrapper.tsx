@@ -231,6 +231,9 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     Title={`${props.Widget.Label} Settings`}
                     CallBack={(conf, deleteBtn) => handleUpdateWidget(conf, deleteBtn)}
                     CancelText={"Delete Widget"}
+                    DisableConfirm={!isPercent(localCommonSettings.Width)}
+                    ConfirmShowToolTip={!isPercent(localCommonSettings.Width) }
+                    ConfirmToolTipContent={<span>Enter a valid width</span>}
                     Size="xlg"
                 >
                     <div className="container-fluid d-flex flex-column p-0" style={{ height: '80vh' }}>
@@ -333,7 +336,6 @@ export const CreateWidget = (type: string, width: number): TrenDAP.IWidgetModel 
     }
 }
 
-//probably a better place for the functions below.. GetColor maybe could be standarized ing emstone
 export const isPercent = (percent: number) => {
     if (percent > 100 || percent < 5)
         return false;
