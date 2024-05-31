@@ -410,7 +410,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                                     onMouseLeave={() => setChannelHover({ Hover: 'None', Index: -1 })}>
                                                                     < ReactIcons.CrossMark Color='red' />
                                                                 </button>
-                                                                <ToolTip Show={channelHover.Hover === 'NoMatch'} Target={`NoMatch-${index}`} Zindex={9991}>No Match found.</ToolTip>
+                                                                <ToolTip Show={channelHover.Hover === 'NoMatch' && channelHover.Index === index} Target={`NoMatch-${index}`} Zindex={9991}>No Match found.</ToolTip>
                                                             </>
                                                         )
                                                     else if (item.Status === 'MultipleMatches')
@@ -420,7 +420,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                                     onMouseLeave={() => setChannelHover({ Hover: 'None', Index: -1 })}>
                                                                     <ReactIcons.Warning Color='yellow' />
                                                                 </button>
-                                                                <ToolTip Show={channelHover.Hover === 'MultipleMatches'} Target={`MultipleMatches-${index}`} Zindex={9991}>Multiple Matches found.</ToolTip>
+                                                                <ToolTip Show={channelHover.Hover === 'MultipleMatches' && channelHover.Index === index} Target={`MultipleMatches-${index}`} Zindex={9991}>Multiple Matches found.</ToolTip>
                                                             </>
                                                         )
                                                     else
@@ -430,7 +430,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                                     onMouseLeave={() => setChannelHover({ Hover: 'None', Index: -1 })}>
                                                                     < ReactIcons.CheckMark Color='green' />
                                                                 </button>
-                                                                <ToolTip Show={channelHover.Hover === 'Match'} Target={`Match-${index}`} Zindex={9991}>Match found.</ToolTip>
+                                                                <ToolTip Show={channelHover.Hover === 'Match' && channelHover.Index === index} Target={`Match-${index}`} Zindex={9991}>Match found.</ToolTip>
                                                             </>
                                                         )
                                                 }}>
