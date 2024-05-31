@@ -79,12 +79,7 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
 
     React.useEffect(() => {
         if (workSpace === undefined) return;
-        //temp
-        let json: TrenDAP.WorkSpaceJSON = {Rows: []}
-        try {
-            json = JSON.parse(workSpace.JSONString) as TrenDAP.WorkSpaceJSON;
-        } catch { }
-
+        let json = JSON.parse(workSpace.JSONString) as TrenDAP.WorkSpaceJSON;
         setWorkSpaceJSON(json);
     }, [workSpace]);
 
@@ -159,7 +154,7 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
                             </li>
                         </ul>
                     </div>
-                    <div className="col-6 d-flex flex-row align-items-center justify-content-end pr-1" style={{zIndex: 9986}}>
+                    <div className="col-6 d-flex flex-row align-items-center justify-content-end pr-1" style={{ zIndex: 9986 }}>
                         <BtnDropdown Label={'Row'} Options={AllWidgets.map(widget => ({ Label: widget.Name, Callback: () => HandleAddObject(widget.Name), Group: 0 })).concat({ Label: 'Row', Callback: () => HandleAddObject('Row'), Group: 1 })}
                             Callback={() => HandleAddObject('Row')} ShowToolTip={true} TooltipContent={<p>Add Object</p>} />
 
