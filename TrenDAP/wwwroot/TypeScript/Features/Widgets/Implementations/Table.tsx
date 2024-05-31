@@ -45,8 +45,8 @@ interface ITableData {
 }
 
 //lets make this a pagedTable as we can get up to 250+ results here and it slows down render times..
-//might not be as easy since we have PagedSearch selector and total pages seletors that come with the generic slice
-//not sure if this can be done without gsf model controller without extra effort of setting up the endpoints needed
+//might not be as easy since we dont have PagedSearch selector and total pages selectors that come with the generic slice
+//not sure if this can be done without gsf model controller without the extra effort of adding the needed controllers/logic
 
 export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
     DefaultSettings: { Precision: 3 },
@@ -112,8 +112,9 @@ export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
             <>
                 <ReactTable.Table<ITableData>
                     TableClass={"table table-hover"}
-                    TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
-                    TbodyStyle={{ display: 'block', overflow: 'hidden', width: '100%' }}
+                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                     SortKey={sortField}
                     OnClick={() => { }}
