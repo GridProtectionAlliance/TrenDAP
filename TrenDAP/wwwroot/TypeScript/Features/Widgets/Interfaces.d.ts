@@ -40,7 +40,6 @@ export namespace WidgetTypes {
 
     interface IWidgetData<T> extends DataSetTypes.IDataSetData {
         ChannelSettings: T,
-        ChannelKey: TrenDAP.IChannelKey
     }
 
     interface ICommonSettings {
@@ -57,18 +56,21 @@ export namespace WidgetTypes {
         Settings: S,
         SetSettings: (settings: S) => void,
         AllChannels: DataSetTypes.IDataSetMetaData[],
-        AddChannel: (channelID: string, channelSettings: U, updatedKey?: TrenDAP.IChannelKey) => void, 
+        AddChannel: (channelID: string, channelSettings: U) => void,
         RemoveChannel: (channelID: string) => void,
         SelectedChannels: ISelectedChannels<U>[],
-        SetChannelSettings: (channelKey: TrenDAP.IChannelKey, settings: U ) => void,
+        SetChannelSettings: (channelKey: TrenDAP.IChannelKey, channelSettings: U) => void,
     }
 
     /*
      S => General Settings Object associated with the Widget
     */
+    /*
+    U => Channel Settings Object associated with each Channel 
+    */
     interface IWidget<S, U> {
         WidgetUI: React.FC<IWidgetProps<S, U>>,
-        SettingsUI?: React.FC<ISettingsProps<S ,U>>,
+        SettingsUI?: React.FC<ISettingsProps<S, U>>,
         ChannelSelectionUI?: React.FC<IChannelSelectionProps<S, U>>,
         DefaultSettings: S,
         DefaultChannelSettings: U,

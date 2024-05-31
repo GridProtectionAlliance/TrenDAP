@@ -137,8 +137,9 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 margin.current.right = margin.current.right + 200;
 
             let currentSvgSize = select(plotRef.current).node().getBoundingClientRect()
+            const sizeChanged = currentSvgSize.width !== plotRef.current.offsetWidth || currentSvgSize.height !== plotRef.current.offsetHeight
 
-            if (svgs.current.length !== svgCount || currentSvgSize.width !== plotRef.current.offsetWidth || currentSvgSize.height !== plotRef.current.offsetHeight) {
+            if (svgs.current.length !== svgCount || sizeChanged) {
                 svgs.current = [];
                 select(plotRef.current).selectAll('svg').remove()
                 for (let i = 0; i < svgCount; i++) {

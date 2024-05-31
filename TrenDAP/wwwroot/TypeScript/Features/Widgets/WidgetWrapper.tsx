@@ -126,8 +126,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
         Promise.all(promises).then(allData => {
             setData(allData);
         });
-        /**********/
-        //Once i get all the channel specific settings out of the way, rework ReadMany so we dont have to map over Read
+        // rework ReadMany so we dont have to map over Read
 
     }, [props.Widget.Channels, props.ChannelMap.Version]);
 
@@ -138,14 +137,14 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
         else setHeaderOpacity(1)
     }, [props.Widget.ShowHeader, editMode])
 
-    function handleAddChannel(channelID: string, defaultSetting: any, updatedKey?: TrenDAP.IChannelKey) {
+    function handleAddChannel(channelID: string, defaultSetting: any) {
         let channel = props.AllChannels.find(channel => channel.ID === channelID);
         let uniqParent = localChannels.reduce((max, chan) => {
             return chan.Key.Parent > max ? chan.Key.Parent : max;
         }, 0);
 
         uniqParent = localChannels.length === 0 ? 0 : uniqParent + 1;
-        let key = updatedKey ?? { Phase: channel.Phase, Type: channel.Type, Harmonic: channel.Harmonic, Parent: uniqParent }
+        let key = { Phase: channel.Phase, Type: channel.Type, Harmonic: channel.Harmonic, Parent: uniqParent }
         let newChannel = {
             MetaData: channel,
             ChannelSettings: defaultSetting,
@@ -162,21 +161,11 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
         if (confBtn) {
             let updatedChannels = [...localChannels];
 
-            //If its a new channel update map first then update the key to the correct map
+            //If its a new channel update map first then update the key to the mapped value
             updatedChannels.forEach(channel => {
                 if (channel.IsNew) {
                     props.AddChannelToMap(channel.Key, channel.MetaData)
                     const updatedKey = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) }
-                    //Remove this and just use ID to match pairs and handle the case where we only have one ID for a pair..
-                    if (localSetting?.Pairs != null) {
-                        let pairs = [...localSetting.Pairs] as { Keys: [TrenDAP.IChannelKey, TrenDAP.IChannelKey], Index: number }[]
-                        pairs.forEach((pair, pairIndex) => {
-                            let chanIndex = pair.Keys.findIndex(p => _.isEqual(p, channel.Key))
-                            if (chanIndex !== -1)
-                                pairs[pairIndex].Keys[chanIndex] = updatedKey
-                        })
-                        setLocalSetting({ ...localSetting, Pairs: pairs })
-                    }
                     channel.Key = updatedKey
                 }
             })
@@ -273,7 +262,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                             <div className="col-8 h-100">
                                 {Implementation?.ChannelSelectionUI !== undefined ?
                                     <Implementation.ChannelSelectionUI
-                                        AddChannel={(channelID, defaultSetting, updatedKey) => handleAddChannel(channelID, defaultSetting, updatedKey)}
+                                        AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
                                         SetChannelSettings={(channelKey, settings) => {
                                             setLocalChannels(prevChannels => {
                                                 const updatedChans = prevChannels.map(chan =>
@@ -294,7 +283,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                         SetSettings={setLocalSetting}
                                         Settings={localSetting}
                                     /> : <ChannelSelector
-                                        AddChannel={(channelID, defaultSetting, channelIDs) => handleAddChannel(channelID, defaultSetting, channelIDs)}
+                                        AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
                                         SetChannelSettings={(channelKey, settings) => {
                                             setLocalChannels(prevChannels => {
                                                 const updatedChans = prevChannels.map(chan =>
