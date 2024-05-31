@@ -186,7 +186,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     }, [datasources])
 
     React.useEffect(() => {
-        const parentID = _.sortedUniq(props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels.map(c => c.Key.Parent)).flat()).flat());
+        const parentID = _.uniq(props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels.map(c => c.Key.Parent)).flat()).flat()).sort((a, b) => a - b);
         setParentMatches(parentID.map(p => ({
             Key: p,
             Name: 'Parent ' + p,
@@ -258,19 +258,16 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 ConfirmToolTipContent={selectedDataSet == null ? <p>Select a Data Set to continue</p> : channelErrors.length > 0 ? channelErrors.map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>) : null}
                 ShowCancel={false}
             >
-                <div className={'row'}>
-                    <div className="col-6">
-                        <div className="row">
-                            <div className="col-12">
+                <div className="container-fluid d-flex flex-column p-0" style={{ height: '80vh' }}>
+                    <div className="row h-100">
+                        <div className="col-6 h-100">
+                            <div className="d-flex flex-column h-100">
                                 Data Set
-                            </div>
-                        </div>
-                        <div className="row">
-                            <div className="col-12">
                                 <ReactTable.Table<TrenDAP.iDataSet>
-                                    TableClass={"table table-hover"}
-                                    TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
-                                    TbodyStyle={{ display: 'block', overflowY: 'scroll', width: '100%' }}
+                                    TableClass="table table-hover"
+                                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                     SortKey={dataSetSortField}
                                     OnClick={data => setSelectedDataSet(data.row)}
@@ -304,29 +301,23 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 </ReactTable.Table>
                             </div>
                         </div>
-
-                    </div>
-                    <div className="col-6">
-                        <div className="row">
-                            <div className="col-12">
+                        <div className="col-6 h-100">
+                            <div className="d-flex flex-column h-50">
                                 Meters or Assets
-                            </div>
-                        </div>
-                        <div className="row">
-                            <div className="col-12">
                                 {parentMatches.length > 0 ?
                                     <>
                                         <ReactTable.Table<IParentMatch>
                                             TableClass={"table table-hover"}
-                                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
-                                            TbodyStyle={{ display: 'block', overflowY: 'scroll', width: '100%' }}
+                                            TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                                            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                             OnClick={({ row }) => setSelectedParentKey(row.Key)}
                                             OnSort={data => { }}
                                             SortKey={'Key'}
                                             Data={parentMatches}
                                             Ascending={false}
-                                            KeySelector={(row) => row.Key}
+                                            KeySelector={(row, index) => index}
                                             Selected={(row) => row.Key === selectedParentKey}
                                         >
                                             <ReactTable.Column<IParentMatch>
@@ -356,32 +347,28 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                             <ReactTable.Column<IParentMatch>
                                                 Key={'Status'}
                                                 Field={'Status'}
-                                                Content={({ item }) =>
-                                                    item.Status === 'NoMatch' ? (<ReactIcons.CrossMark Color='red' />)
-                                                        : item.Status === 'MultipleMatches' ? (
-                                                            <ReactIcons.Warning Color='yellow' />) : (
-                                                            <ReactIcons.CheckMark Color='green' />)
-                                                }>
+                                                Content={({ item }) => {
+                                                    let allMatched = channelMatches.filter(chan => chan.Key.Parent === item.Key && chan.Status === 'NoMatch')
+                                                    if (allMatched.length === 0)
+                                                        return <ReactIcons.CheckMark Color="green" />
+                                                    else
+                                                        return <ReactIcons.CrossMark Color="red" />
+                                                }}>
                                                 {'\u200B'}
                                             </ReactTable.Column>
                                         </ReactTable.Table>
                                     </>
                                     : <p> Please Select a Data Set</p>}
                             </div>
-                        </div>
-                        <div className="row">
-                            <div className="col-12">
+                            <div className="d-flex flex-column h-50">
                                 Channels
-                            </div>
-                        </div>
-                        <div className="row">
-                            <div className="col-12">
                                 {parentChannelMatches.length > 0 ?
                                     <>
                                         <ReactTable.Table<IndexedChannelMatch>
                                             TableClass={"table table-hover"}
-                                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
-                                            TbodyStyle={{ display: 'block', overflowY: 'scroll', width: '100%' }}
+                                            TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                                            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                             OnClick={data => { }}
                                             OnSort={data => { }}
@@ -394,7 +381,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                 Key={'Key'}
                                                 Field={'Key'}
                                                 Content={({ item }) =>
-                                                    <p>{`${item.Key.Phase ?? ''}~${item.Key.Type ?? ''}~${item.Key.Parent ?? ''}~${item.Key.Harmonic ?? -1}`}</p>
+                                                    <p>{`${item.Key.Phase ?? ''}-${item.Key.Type ?? ''}`}</p>
                                                 }>
                                                 {'\u200B'}
                                             </ReactTable.Column>
