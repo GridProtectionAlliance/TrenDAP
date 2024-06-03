@@ -144,8 +144,7 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                                 RowStyle={{ width: 'auto' }}
                                 Content={row =>
                                     <span>
-                                        <button className="btn" onClick={(evt) => { setCurrentIndex(row.index); evt.preventDefault(); }}>{Pencil}</button>
-                                        <button className="btn" onClick={(evt) => {
+                                        <button className="btn pull-right" onClick={(evt) => {
                                             evt.preventDefault();
                                             evt.stopPropagation();
                                             const newConns = [...props.DataSourceConnections];
