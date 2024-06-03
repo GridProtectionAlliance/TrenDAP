@@ -55,9 +55,9 @@ const DataSets: React.FC = () => {
     }, [dispatch, dsStatus]);
 
     return (
-        <div className="row">
-            <div className="col-8">
-                <div className="card">
+        <div className="container-fluid d-flex h-100 flex-row" style={{ height: 'inherit' }}>
+            <div className="col-8" style={{ padding: '0 0 0 0' }}>
+                <div className="card" style={{ width: '100%', height: '100%' }}>
                     <div className="card-header">
                         <div className="row">
                             <div className="col">
@@ -73,14 +73,18 @@ const DataSets: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="card-body">
+                    <div className="card-body" style={{ overflow: "hidden" }}>
                         <ReactTable.Table<TrenDAP.iDataSet>
                             TableClass={"table table-hover"}
-                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
+                            TableStyle={{
+                                padding: 0, width: 'calc(100%)', height: '100%',
+                                tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
+                            }}
+                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             Data={DataSets}
-                            TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
-                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             Ascending={ascending}
                             SortKey={sortField}
                             KeySelector={item => item.ID}
@@ -96,8 +100,6 @@ const DataSets: React.FC = () => {
                                 Key={'Public'}
                                 AllowSort={true}
                                 Field={'Public'}
-                                HeaderStyle={{ width: 75 }}
-                                RowStyle={{ width: 75 }}
                                 Content={(d) => <span>{d.item[d.key] ? HeavyCheckMark : null}</span>}
                             >
                                 Shared
@@ -145,18 +147,22 @@ const DataSets: React.FC = () => {
                 </div>
             </div>
             <div className="col-4" style={{ padding: '0 0 0 0' }}>
-                <div className="card">
+                <div className="card" style={{ width: '100%', height: '100%' }}>
                     <div className="card-header">
                         <h4>
                             Shared Data Sets
                         </h4>
                     </div>
-                    <div className="card-body">
+                    <div className="card-body" style={{ overflow: "hidden" }}>
                         <ReactTable.Table<TrenDAP.iDataSet>
                             TableClass={"table table-hover"}
-                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
-                            TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
-                            RowStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
+                            TableStyle={{
+                                padding: 0, width: 'calc(100%)', height: '100%',
+                                tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
+                            }}
+                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             Data={publicDataSets}
                             Ascending={ascending}
                             OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
