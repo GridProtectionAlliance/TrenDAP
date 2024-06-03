@@ -207,10 +207,11 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
         }
 
         return (
-            <div className="row"style={{ flex: 1, overflow: 'hidden' }}>
-                <div className="col" style={{ height: '100%', overflow: 'hidden' }}>
+            <div className="row" style={{ flex: 1, overflow: 'hidden' }}>
+                <div className="col d-none d-xl-flex" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                     <Select<IDatasetSetting> Record={props.Settings} Field="By" Options={[{ Value: 'Meter', Label: 'Meter' }, { Value: 'Asset', Label: 'Asset' }]} Setter={props.SetSettings} />
-                    <ArrayMultiSelect<IDatasetSetting> Style={{ height: window.innerHeight - 560 }} Record={props.Settings} Field="IDs" Label={props.Settings.By + "(s)"} Setter={props.SetSettings} 
+                    <ArrayMultiSelect<IDatasetSetting> GroupStyle={{ overflowY: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }} Style={{ overflowY: 'scroll', flex: 1 }}
+                        Record={props.Settings} Field="IDs" Label={props.Settings.By + "(s)"} Setter={props.SetSettings} 
                         Options={(props.Settings.By == 'Meter' ? meters?.map(m => ({ Value: m.ID.toString(), Label: m.Name })) : assets?.map(m => ({ Value: m.ID.toString(), Label: m.AssetName }))) ?? []} />
                 </div>
                 <div className="col">

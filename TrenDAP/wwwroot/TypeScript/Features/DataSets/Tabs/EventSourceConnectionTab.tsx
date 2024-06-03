@@ -163,22 +163,16 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                     </div>
                 </div>
             </div>
-            <div className="col-8" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-                <div className="container-fluid d-flex h-100 flex-column" style={{ padding: 0 }}>
-                <div className={'row'} style={{ flex: 1, overflow: 'hidden' }}>
-                        <div className={'col-12'} style={{ height: '100%', overflow: 'hidden' }}>
-                        {props.EventSourceConnections[currentIndex] != null ?
-                            <EventDataSourceWrapper EventDataSource={eventSource} Connection={props.EventSourceConnections[currentIndex]}
-                                DataSet={props.DataSet} SetErrors={addWrapperErrors}
-                                SetConnection={newConn => {
-                                    const newConns = [...props.EventSourceConnections];
-                                    newConns.splice(currentIndex, 1, newConn)
-                                    props.SetEventSourceConnections(newConns);
-                                }} /> : <></>}
-                    </div>
-                </div>
+            <div className="col-8 d-none d-xl-flex" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                {props.EventSourceConnections[currentIndex] != null ?
+                    <EventDataSourceWrapper EventDataSource={eventSource} Connection={props.EventSourceConnections[currentIndex]}
+                        DataSet={props.DataSet} SetErrors={addWrapperErrors}
+                        SetConnection={newConn => {
+                            const newConns = [...props.EventSourceConnections];
+                            newConns.splice(currentIndex, 1, newConn)
+                            props.SetEventSourceConnections(newConns);
+                        }} /> : <></>}
             </div>
-        </div>
         </div>
     );
 

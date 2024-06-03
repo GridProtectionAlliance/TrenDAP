@@ -138,26 +138,34 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
         }, [props.DataSetSettings]);
 
         return (
-            <form>
+            <>
                 <div className="row">
                     <div className="col">
                         <Select<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Field="Aggregate"
                             Options={[{ Value: '', Label: 'None' }, { Value: '1h', Label: 'Hour' }, { Value: '1d', Label: 'Day' }, { Value: '1w', Label: 'Week' }]}
                             Setter={props.SetDataSetSettings} />
                         <Select<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Field="By" Options={[{ Value: 'Meter', Label: 'Meter' }, { Value: 'Asset', Label: 'Asset' }]} Setter={props.SetDataSetSettings} />
-                        <ArrayMultiSelect<TrenDAP.iXDADataSet> Style={{ height: window.innerHeight - 560 }} Record={props.DataSetSettings} Label={props.DataSetSettings.By + "(s)"} 
-                            Options={(props.DataSetSettings.By == 'Meter' ? meters?.map(m => ({ Value: m.ID.toString(), Label: m.Name })) : assets?.map(m => ({ Value: m.ID.toString(), Label: m.AssetName }))) ?? []}
-                            Field="IDs" Setter={props.SetDataSetSettings} />
+
                     </div>
                     <div className="col">
                         <ArrayCheckBoxes<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Checkboxes={phases?.map(m => ({ ID: m.ID.toString(), Label: m.Name })) ?? []} Field="Phases" Setter={props.SetDataSetSettings} />
                         <ArrayCheckBoxes<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Label="Channel Groups" Checkboxes={channelGroups?.map(m => ({ ID: m.ID.toString(), Label: m.Name })) ?? []} Field="Groups" Setter={props.SetDataSetSettings} />
-                        <ArrayMultiSelect<TrenDAP.iXDADataSet> Style={{ height: window.innerHeight - 520 }} Record={props.DataSetSettings}
+
+                    </div>
+                </div>
+                <div className={'row'} style={{ flex: 1, overflow: 'hidden' }}>
+                    <div className="col" style={{height: '100%', overflow: 'hidden'}}>
+                        <ArrayMultiSelect<TrenDAP.iXDADataSet> GroupStyle={{ height: '100%', display: 'flex', flexDirection: 'column' }} Style={{ overflowY: 'scroll', flex: 1 }} Record={props.DataSetSettings} Label={props.DataSetSettings.By + "(s)"}
+                            Options={(props.DataSetSettings.By == 'Meter' ? meters?.map(m => ({ Value: m.ID.toString(), Label: m.Name })) : assets?.map(m => ({ Value: m.ID.toString(), Label: m.AssetName }))) ?? []}
+                            Field="IDs" Setter={props.SetDataSetSettings} />
+                    </div>
+                    <div className="col" style={{height: '100%', overflow: 'hidden'}}>
+                        <ArrayMultiSelect<TrenDAP.iXDADataSet> GroupStyle={{ height: '100%', display: 'flex', flexDirection: 'column' }} Style={{ overflowY: 'scroll', flex: 1 }} Record={props.DataSetSettings}
                             Options={channels?.map(m => ({ Value: m.ID.toString(), Label: `${props.DataSetSettings.By === 'Meter' ? m.Meter : m.Asset} - ${m.Name}` })) ?? []}
                             Field="ChannelIDs" Label="Channel(s)" Setter={props.SetDataSetSettings} />
                     </div>
                 </div>
-            </form>
+            </>
         );
 
     },
