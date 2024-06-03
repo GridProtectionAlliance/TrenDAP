@@ -145,7 +145,7 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                             Options={[{ Value: '', Label: 'None' }, { Value: '1h', Label: 'Hour' }, { Value: '1d', Label: 'Day' }, { Value: '1w', Label: 'Week' }]}
                             Setter={props.SetDataSetSettings} />
                         <Select<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Field="By" Options={[{ Value: 'Meter', Label: 'Meter' }, { Value: 'Asset', Label: 'Asset' }]} Setter={props.SetDataSetSettings} />
-                        <ArrayMultiSelect<TrenDAP.iXDADataSet> Style={{ height: window.innerHeight - 560 }} Record={props.DataSetSettings}
+                        <ArrayMultiSelect<TrenDAP.iXDADataSet> Style={{ height: window.innerHeight - 560 }} Record={props.DataSetSettings} Label={props.DataSetSettings.By + "(s)"} 
                             Options={(props.DataSetSettings.By == 'Meter' ? meters?.map(m => ({ Value: m.ID.toString(), Label: m.Name })) : assets?.map(m => ({ Value: m.ID.toString(), Label: m.AssetName }))) ?? []}
                             Field="IDs" Setter={props.SetDataSetSettings} />
                     </div>
@@ -154,7 +154,7 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                         <ArrayCheckBoxes<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Label="Channel Groups" Checkboxes={channelGroups?.map(m => ({ ID: m.ID.toString(), Label: m.Name })) ?? []} Field="Groups" Setter={props.SetDataSetSettings} />
                         <ArrayMultiSelect<TrenDAP.iXDADataSet> Style={{ height: window.innerHeight - 520 }} Record={props.DataSetSettings}
                             Options={channels?.map(m => ({ Value: m.ID.toString(), Label: `${props.DataSetSettings.By === 'Meter' ? m.Meter : m.Asset} - ${m.Name}` })) ?? []}
-                            Field="ChannelIDs" Setter={props.SetDataSetSettings} />
+                            Field="ChannelIDs" Label="Channel(s)" Setter={props.SetDataSetSettings} />
                     </div>
                 </div>
             </form>
