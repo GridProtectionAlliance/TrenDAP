@@ -141,8 +141,8 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
             <>
                 <div className="row">
                     <div className="col">
-                        <Select<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Field="Aggregate"
-                            Options={[{ Value: '', Label: 'None' }, { Value: '1h', Label: 'Hour' }, { Value: '1d', Label: 'Day' }, { Value: '1w', Label: 'Week' }]}
+                        <Select<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Field="Aggregate" EmptyOption={true} EmptyLabel="None"
+                            Options={[{ Value: '1h', Label: 'Hour' }, { Value: '1d', Label: 'Day' }, { Value: '1w', Label: 'Week' }]}
                             Setter={props.SetDataSetSettings} />
                         <Select<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Field="By" Options={[{ Value: 'Meter', Label: 'Meter' }, { Value: 'Asset', Label: 'Asset' }]} Setter={props.SetDataSetSettings} />
 
