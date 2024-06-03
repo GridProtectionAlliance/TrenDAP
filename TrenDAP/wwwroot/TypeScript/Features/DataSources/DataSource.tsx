@@ -25,7 +25,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { DataSourceTypes, Redux } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { Input, Select, CheckBox, DatePicker } from '@gpa-gemstone/react-forms';
+import { Input, Select, CheckBox } from '@gpa-gemstone/react-forms';
 import { IDataSource } from './Interface';
 import { AllSources } from './DataSources';
 import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from './DataSourcesSlice';
@@ -80,6 +80,7 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
                 Options={AllSources.map((type) => ({ Value: type.Name, Label: type.Name }))} />
             <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="URL" Setter={props.SetDataSource} Valid={() => true} />
             <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="RegistrationKey" Label={'Registration Key'} Setter={props.SetDataSource} Valid={() => true} />
+            <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="APIToken" Label={'API Token'} Setter={props.SetDataSource} Valid={() => true} />
             <div className="row">
                 <div className='col'>
                     <CheckBox<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="Public" Label='Shared' Setter={props.SetDataSource} />
