@@ -25,7 +25,7 @@ import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit'
 import { TrenDAP, Redux } from '../../global';
 import _ from 'lodash';
 import moment from 'moment';
-import { ajax } from 'jquery';
+import $ from 'jquery';
 
 // #region [ Thunks ]
 export const FetchWorkSpaces = createAsyncThunk('WorkSpaces/FetchWorkSpaces', async (_, { dispatch }) => {
@@ -165,7 +165,7 @@ export const SelectWorkSpacesAscending = (state: Redux.StoreState) => state.Work
 
 // #region [ Async Functions ]
 function GetWorkSpaces(): JQuery.jqXHR<TrenDAP.iWorkSpace[]> {
-    return ajax({
+    return $.ajax({
         type: "GET",
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",
@@ -176,7 +176,7 @@ function GetWorkSpaces(): JQuery.jqXHR<TrenDAP.iWorkSpace[]> {
 }
 
 function PostWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWorkSpace> {
-    return ajax({
+    return $.ajax({
         type: "POST",
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",
@@ -188,7 +188,7 @@ function PostWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWor
 }
 
 function DeleteWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWorkSpace> {
-    return ajax({
+    return $.ajax({
         type: "DELETE",
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",
@@ -200,7 +200,7 @@ function DeleteWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iW
 }
 
 function PatchWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWorkSpace> {
-    return ajax({
+    return $.ajax({
         type: "PATCH",
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",
@@ -212,7 +212,7 @@ function PatchWorkSpace(workSpace: TrenDAP.iWorkSpace): JQuery.jqXHR<TrenDAP.iWo
 }
 
 function OCWorkSpace(workSpace: TrenDAP.iWorkSpace, open:boolean): JQuery.jqXHR<TrenDAP.iWorkSpace> {
-    return ajax({
+    return $.ajax({
         type: "PATCH",
         url: `${homePath}api/WorkSpace`,
         contentType: "application/json; charset=utf-8",

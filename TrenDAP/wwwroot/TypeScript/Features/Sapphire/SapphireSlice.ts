@@ -24,7 +24,7 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { Redux, TrenDAP } from '../../global';
-import {ajax } from 'jquery';
+import $ from 'jquery';
 
 export const FetchSapphire = createAsyncThunk<string | object, { dataSourceID: number, table: string }, {}>('Sapphire/FetchSapphire', async (ds ,{ dispatch }) => {
     return await GetSapphire(ds.dataSourceID, ds.table)
@@ -103,7 +103,7 @@ export const SelectSapphireStatus = (state: Redux.StoreState, dsid: number, tabl
 export const NewSapphireDataSet = () => ({ IDs: [], Phases: [], Types: [], Aggregate: 'IS10MIN', Harmonics: '0-100' }) as TrenDAP.iSapphireDataSet;
 
 function GetSapphire(dataSourceID: number, table: string): JQuery.jqXHR<string> {
-    return ajax({
+    return $.ajax({
         type: "GET",
         url: `${homePath}api/Sapphire/${dataSourceID}/${table}`,
         contentType: "application/json; charset=utf-8",

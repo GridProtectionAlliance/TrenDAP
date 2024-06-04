@@ -24,7 +24,7 @@
 
 
 import * as React from 'react';
-import { TrenDAP, Redux } from '../../global';
+import { TrenDAP, Redux, DataSourceTypes } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import styles from '../../../Styles/app.scss';
 import { SelectWorkSpaceByID, UpdateWorkSpace, SelectWorkSpacesStatus, FetchWorkSpaces } from './WorkSpacesSlice';
@@ -160,7 +160,7 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
                                 <>
 
                                     <label>Template Type</label>
-                                    <select className='form-control' value={workSpaceJSON.Type} onChange={(evt) => setWorkSpaceJSON({ ...workSpaceJSON, Type: evt.target.value as TrenDAP.DataSourceType })}>
+                                    <select className='form-control' value={workSpaceJSON.Type} onChange={(evt) => setWorkSpaceJSON({ ...workSpaceJSON, Type: evt.target.value as DataSourceTypes.DataSourceType })}>
                                         <option value=''> </option>
                                         <option value='TrenDAPDB'>TrenDAPDB</option>
                                         <option value='Sapphire'>Sapphire</option>

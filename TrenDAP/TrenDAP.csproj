@@ -38,16 +38,15 @@
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Chart.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\DataSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Histogram.tsx" />
-    <Content Remove="wwwroot\TypeScript\Features\DataSets\Types\DataSetOpenXDA.tsx" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSourceDataSetSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSources.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSourcesSlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\DataSources\DataSourceWrapper.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\DataSourceTypes\DataSourceTypesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\DataSetOpenHistorian.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts" />
-    <Content Remove="wwwroot\TypeScript\Features\OpenXDA\DataSetOpenXDA.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts" />
-    <Content Remove="wwwroot\TypeScript\Features\OpenXDA\QuickViewOpenXDA.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Histogram.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Profile.tsx" />
@@ -137,6 +136,12 @@
 
   <ItemGroup>
     <TypeScriptCompile Include="wwwroot\TypeScript\CirclePlusSVG.tsx" />
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\DataSourceDataSetSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\DataSourceWrapper.tsx">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\hooks.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Constants.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\declarations.d.ts">
@@ -155,7 +160,6 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\DataSlice.ts" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\Histogram.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\ViewDataSet\ViewDataSet.tsx" />
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSets\Types\DataSetOpenXDA.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\EditDataSource.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
@@ -187,14 +191,12 @@
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\DataSetOpenXDA.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\QuickViewOpenXDA.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\Widgets\Regular\Widget\Sapphire\AdditionalInfo.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>

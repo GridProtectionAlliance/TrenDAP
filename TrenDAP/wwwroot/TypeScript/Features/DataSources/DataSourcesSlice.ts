@@ -21,24 +21,24 @@
 //
 //******************************************************************************************************
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { TrenDAP, Redux } from '../../global';
+import { DataSourceTypes, Redux } from '../../global';
 import _ from 'lodash';
-import { ajax } from 'jquery';
+import $ from 'jquery';
 
 // #region [ Thunks ]
 export const FetchDataSources = createAsyncThunk('DataSources/FetchDataSources', async (_, { dispatch }) => {
     return await GetDataSources();
 });
 
-export const AddDataSource = createAsyncThunk('DataSources/AddDataSource', async (dataSource: TrenDAP.iDataSource, { dispatch }) => {
+export const AddDataSource = createAsyncThunk('DataSources/AddDataSource', async (dataSource: DataSourceTypes.IDataSourceView, { dispatch }) => {
     return await PostDataSource(dataSource);
 });
 
-export const RemoveDataSource = createAsyncThunk('DataSources/RemoveDataSource', async (dataSource: TrenDAP.iDataSource, { dispatch }) => {
+export const RemoveDataSource = createAsyncThunk('DataSources/RemoveDataSource', async (dataSource: DataSourceTypes.IDataSourceView, { dispatch }) => {
     return await DeleteDataSource(dataSource);
 });
 
-export const UpdateDataSource = createAsyncThunk('DataSources/UpdateDataSource', async (dataSource: TrenDAP.iDataSource, { dispatch }) => {
+export const UpdateDataSource = createAsyncThunk('DataSources/UpdateDataSource', async (dataSource: DataSourceTypes.IDataSourceView, { dispatch }) => {
     return await PatchDataSource(dataSource);
 });
 // #endregion
@@ -52,7 +52,7 @@ export const DataSourcesSlice = createSlice({
         Error: null,
         SortField: 'Name',
         Ascending: true
-    } as Redux.State<TrenDAP.iDataSource>,
+    } as Redux.State<DataSourceTypes.IDataSourceView>,
     reducers: {
         Sort: (state, action) => {
             if(state.SortField === action.payload.SortField)
@@ -141,8 +141,8 @@ export const SelectDataSourcesAscending = (state: Redux.StoreState) => state.Dat
 
 // #region [ Async Functions ]
 
-function GetDataSources(): JQuery.jqXHR<TrenDAP.iDataSource[]> {
-    return ajax({
+function GetDataSources(): JQuery.jqXHR<DataSourceTypes.IDataSourceView[]> {
+    return $.ajax({
         type: "GET",
         url: `${homePath}api/DataSource`,
         contentType: "application/json; charset=utf-8",
@@ -152,8 +152,8 @@ function GetDataSources(): JQuery.jqXHR<TrenDAP.iDataSource[]> {
     });
 }
 
-function PostDataSource(dataSource: TrenDAP.iDataSource): JQuery.jqXHR<TrenDAP.iDataSource> {
-    return ajax({
+function PostDataSource(dataSource: DataSourceTypes.IDataSourceView): JQuery.jqXHR<DataSourceTypes.IDataSourceView> {
+    return $.ajax({
         type: "POST",
         url: `${homePath}api/DataSource`,
         contentType: "application/json; charset=utf-8",
@@ -164,8 +164,8 @@ function PostDataSource(dataSource: TrenDAP.iDataSource): JQuery.jqXHR<TrenDAP.i
     });
 }
 
-function DeleteDataSource(dataSource: TrenDAP.iDataSource): JQuery.jqXHR<TrenDAP.iDataSource> {
-    return ajax({
+function DeleteDataSource(dataSource: DataSourceTypes.IDataSourceView): JQuery.jqXHR<DataSourceTypes.IDataSourceView> {
+    return $.ajax({
         type: "DELETE",
         url: `${homePath}api/DataSource`,
         contentType: "application/json; charset=utf-8",
@@ -176,8 +176,8 @@ function DeleteDataSource(dataSource: TrenDAP.iDataSource): JQuery.jqXHR<TrenDAP
     });
 }
 
-function PatchDataSource(dataSource: TrenDAP.iDataSource): JQuery.jqXHR<TrenDAP.iDataSource> {
-    return ajax({
+function PatchDataSource(dataSource: DataSourceTypes.IDataSourceView): JQuery.jqXHR<DataSourceTypes.IDataSourceView> {
+    return $.ajax({
         type: "PATCH",
         url: `${homePath}api/DataSource`,
         contentType: "application/json; charset=utf-8",

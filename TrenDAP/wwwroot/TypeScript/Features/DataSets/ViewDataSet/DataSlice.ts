@@ -27,7 +27,7 @@ import { TrenDAP, Redux } from '../../../global';
 import _, { result } from 'lodash';
 import moment from 'moment';
 import TrenDAPDB, { DataSetTableRow } from './../TrenDAPDB';
-import { ajax } from 'jquery';
+import $ from 'jquery';
 
 // #region [ Thunks ]
 
@@ -103,8 +103,8 @@ export const SelectDataSetData = async (state: Redux.StoreState, id: number) => 
     return result.Data as TrenDAP.iDataSetReturn[];
 };
 export const SelectRecord = (state: Redux.StoreState) => state.DataSets.Record;
-export const SelectNewDataSet = () => ({ ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1 }) as TrenDAP.iDataSet;
-export const SelectNewXDADataSet = () => ({ By: 'Meter', IDs: [], Phases: [], Groups: [], Types: [], Aggregate: '' }) as TrenDAP.iXDADataSet;
+export const SelectNewDataSet = () => ({ ID: 0, Name: '', User: '', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1 }) as TrenDAP.iDataSet;
+export const SelectNewXDADataSet = () => ({ By: 'Meter', IDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: '' }) as TrenDAP.iXDADataSet;
 export const SelectDataSetsStatus = (state: Redux.StoreState) => state.DataSets.Status;
 export const SelectDataSetsForUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.User === user);
 export const SelectDataSetsAllPublicNotUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.Public && ws.User !== user);
@@ -122,7 +122,7 @@ export async function GetDataSetDataFromIDB(id: number) {
 
 function GetDataSetData(dataSet: TrenDAP.iDataSet) {
     return new Promise((resolve, reject) => {
-        ajax({
+        $.ajax({
             type: "GET",
             url: `${homePath}api/DataSet/Query/${dataSet.ID}`,
             contentType: "application/json; charset=utf-8",

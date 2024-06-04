@@ -23,7 +23,7 @@
 
 
 import * as React from 'react';
-import { TrenDAP } from '../../../../global';
+import { TrenDAP, DataSourceTypes } from '../../../../global';
 import { CheckBox } from '@gpa-gemstone/react-forms';
 
 import AdditionalInfoXDA from '../Widget/XDA/AdditionalInfo';
@@ -34,7 +34,7 @@ import { Trend } from '../Implementations';
 import "react-datetime/css/react-datetime.css";
 import AdditionalInfo from '../Widget/OpenHistorian/AdditionalInfo';
 
-export default function TemplatePicker(props: { Index: number, Type: TrenDAP.DataSourceType, Series: TrenDAP.iTrendTemplateSeriesXDA, Data: TrenDAP.iDataSetReturnType, Widget: Trend, Callback: () => void }){
+export default function TemplatePicker(props: { Index: number, Type: DataSourceTypes.DataSourceType, Series: TrenDAP.iTrendTemplateSeriesXDA, Data: TrenDAP.iDataSetReturnType, Widget: Trend, Callback: () => void }){
     const [axis, setAxis] = React.useState<number>(props.Series.Axis);
     const [color, setColor] = React.useState<string>(props.Series.Color);
     const [type, setType] = React.useState<TrenDAP.iXDATrendDataPointField>(props.Series.Field);

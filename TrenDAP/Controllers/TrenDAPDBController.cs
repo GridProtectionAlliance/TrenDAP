@@ -1,4 +1,4 @@
-﻿//******************************************************************************************************
+//******************************************************************************************************
 //  TrenDAPDBController.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using Gemstone.Data.Model;
+using HIDS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -29,9 +30,8 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
+using System.Linq;
 using System.Net.Http;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,13 +44,7 @@ namespace TrenDAP.Controllers
     [ApiController]
     public class TrenDAPDBController : ControllerBase 
     {
-
-
         #region [Members ]
-        const ulong ValidHours = 16777215; // Math.Pow(2, 24) - 1
-        const ulong ValidDays = 127; //  (int)(Math.Pow(2, 7) - 1);
-        const ulong ValidWeeks = 9007199254740991; // (int)(Math.Pow(2, 53) - 1);
-        const ulong ValidMonths = 4095;//  (int)(Math.Pow(2, 12) - 1);
 
         public class Search
         {
@@ -74,28 +68,18 @@ namespace TrenDAP.Controllers
             public List<int> IDs { get; set; }
             public List<int> Phases { get; set; }
             public List<int> Groups { get; set; }
-            public List<int> Types { get; set; }
+            public List<int> ChannelIDs { get; set; }
             public string Aggregate { get; set; }
         }
 
         public class HIDSPost
         {
             public DateTime StartTime { get; set; }
-            public DateTime EndTime { get; set; }
-            public string By { get; set; }
-            public string Aggregate { get; set; }
-            public List<int> IDs { get; set; }
-            public List<int> Phases { get; set; }
-            public List<int> Groups { get; set; }
-            public List<int> Types { get; set; }
-            public ulong Hours { get; set; }
-            public ulong Days { get; set; }
-            public ulong Weeks { get; set; }
-            public ulong Months { get; set; }
-
+            public DateTime StopTime { get; set; }
+            public string AggregateDuration { get; set; }
+            public List<int> Channels { get; set; }
+            public List<TimeFilter> TimeFilters { get; set; }
         }
-
-
 
         #endregion
 
@@ -112,7 +96,7 @@ namespace TrenDAP.Controllers
 
         #region [ Http Methods ]
         [HttpGet, Route("{dataSourceID:int}/{table?}")]
-        public virtual ActionResult Get(int dataSourceID, string table = "")
+        public virtual ActionResult GetTable(int dataSourceID, string table = "")
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
@@ -133,14 +117,43 @@ namespace TrenDAP.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError, ex);
                 }
             }
-
         }
 
-        private ActionResult GetOpenXDA(DataSource dataSource, string table) {
+        [HttpPost, Route("Channel/GetTrendChannels/{dataSourceID:int}")]
+        public virtual ActionResult GetChannels(int dataSourceID, [FromBody] JObject filter)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                try
+                {
+                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
+                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    string type = connection.ExecuteScalar<string>("SELECT Name FROM DataSourceType WHERE ID = {0}", dataSource.DataSourceTypeID);
+                    Task<string> rsp;
+
+                    if (type == "TrenDAPDB")
+                    {
+                        rsp = helper.PostAsync("api/Channel/GetTrendSearchData", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
+                    }
+                    else return StatusCode(StatusCodes.Status500InternalServerError, "Only TrenDAPDB datasources supported by this endpoint.");
+
+                    return Ok(rsp.Result);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
+                }
+            }
+        }
+        
+        private ActionResult GetOpenXDA(DataSource dataSource, string table, JObject filter = null)
+        {
             try
             {
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
-                Task<string> rsp = helper.GetAsync($"api/{table}");
+                Task<string> rsp;
+                if (filter is null) rsp = helper.GetAsync($"api/{table}");
+                else rsp = helper.PostAsync($"api/{table}/SearchableList", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
                 return Ok(rsp.Result);
             }
             catch (Exception ex)
@@ -186,97 +199,42 @@ namespace TrenDAP.Controllers
         #endregion
 
         #region [ Static ]
-        public static Task<HttpResponseMessage> QueryHIDS(int dataSourceID, DataSet dataSet, XDADataSetData data,IConfiguration configuration, CancellationToken cancellationToken) 
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
-            {
-                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                DataSourceHelper helper = new DataSourceHelper(dataSource);
-                HIDSPost post = CreatePost(dataSet, data);
-                JObject jObj = (JObject) JToken.FromObject(post);
-                return helper.GetResponseTask("api/HIDS", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
-            }
-        }
-        public static Task<HttpResponseMessage> QueryHids(int dataSourceID, HIDSPost post, IConfiguration configuration, CancellationToken cancellationToken)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
-            {
-                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                DataSourceHelper helper = new DataSourceHelper(dataSource);
-                JObject jObj = (JObject)JToken.FromObject(post);
-                return helper.GetResponseTask("api/HIDS/QueryPoints", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
-            }
-        }
-
-
-        public static DataTable GetDataTable(int dataSourceID, HIDSPost post, IConfiguration configuration, CancellationToken cancellationToken) {
-            using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
-            {
-                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                DataSourceHelper helper = new DataSourceHelper(dataSource);
-                Task<Stream> rsp = helper.GetStreamAsync($"api/HIDS/Table");
-                BinaryFormatter formatter = new BinaryFormatter();
-                DataTable table = (DataTable)formatter.Deserialize(rsp.Result);
-                return table;
-            }
-        }
-
-        public static Task<string> GetEvents(int dataSourceID, HIDSPost post, IConfiguration configuration, CancellationToken cancellationToken)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
-            {
-                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                DataSourceHelper helper = new DataSourceHelper(dataSource);
-                return helper.GetAsync($"api/Event/TrenDAP");
-            }
-        }
-
-        public static async Task<string> GetAlarms(int dataSourceID, HIDSPost post, IConfiguration configuration, CancellationToken cancellationToken)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
-            {
-                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                DataSourceHelper helper = new DataSourceHelper(dataSource);
-                return await helper.GetAsync($"api/AlarmLimits").ConfigureAwait(false);
-            }
-        }
-
-
-
         public static HIDSPost CreatePost(DataSet dataSet, XDADataSetData data)
         {
             DateTime startTime = dataSet.From;
             DateTime endTime = dataSet.To;
-            if(dataSet.Context == "Relative")
+            if (dataSet.Context == "Relative")
             {
                 endTime = DateTime.Now;
-                if(dataSet.RelativeWindow == "Day")
+                if (dataSet.RelativeWindow == "Day")
                     startTime = endTime.AddDays(-dataSet.RelativeValue);
-                else if(dataSet.RelativeWindow == "Week")
-                    startTime = endTime.AddDays(-dataSet.RelativeValue*7);
-                else if(dataSet.RelativeWindow == "Month")
+                else if (dataSet.RelativeWindow == "Week")
+                    startTime = endTime.AddDays(-dataSet.RelativeValue * 7);
+                else if (dataSet.RelativeWindow == "Month")
                     startTime = endTime.AddMonths(-int.Parse(dataSet.RelativeValue.ToString()));
                 else
                     startTime = endTime.AddYears(-int.Parse(dataSet.RelativeValue.ToString()));
             }
 
-            return new HIDSPost()
+            IEnumerable<TimeFilter> ReadTimeFilters(ulong flags, TimeFilter baseFilter, int size) => Enumerable
+                .Range(0, size)
+                .Where(index => (~flags & (1Lu << index)) > 0)
+                .Select(index => baseFilter + index);
+
+            List<TimeFilter> timeFilters = Enumerable.Empty<TimeFilter>()
+                .Concat(ReadTimeFilters((ulong)dataSet.Hours, TimeFilter.Hour00, 24))
+                .Concat(ReadTimeFilters((ulong)dataSet.Days, TimeFilter.Sunday, 7))
+                .Concat(ReadTimeFilters((ulong)dataSet.Weeks, TimeFilter.Week00, 53))
+                .Concat(ReadTimeFilters((ulong)dataSet.Months, TimeFilter.January, 12)).ToList();
+
+            return new HIDSPost
             {
-                By = data.By,
-                IDs = data.IDs,
-                Phases = data.Phases,
-                Groups = data.Groups,
-                Types = data.Types,
                 StartTime = startTime,
-                EndTime = endTime,
-                Hours = (ulong)dataSet.Hours,
-                Days = (ulong)dataSet.Days,
-                Weeks = (ulong)dataSet.Weeks,
-                Months = (ulong)dataSet.Months,
-                Aggregate = data.Aggregate
+                StopTime = endTime,
+                Channels = data.ChannelIDs,
+                AggregateDuration = data.Aggregate,
+                TimeFilters = timeFilters
             };
-
-
         }
 
         public static string GetHIDSSettings(int dataSourceID, IConfiguration configuration)

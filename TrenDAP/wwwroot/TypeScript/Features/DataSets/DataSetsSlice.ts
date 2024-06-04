@@ -26,7 +26,7 @@ import { TrenDAP, Redux } from '../../global';
 import _, { result } from 'lodash';
 import moment from 'moment';
 import TrenDAPDB, { DataSetTableRow } from './TrenDAPDB';
-import { ajax } from 'jquery';
+import $ from 'jquery';
 
 // #region [ Thunks ]
 export const FetchDataSets = createAsyncThunk('DataSets/FetchDataSets', async (_, { dispatch }) => {
@@ -66,6 +66,25 @@ export const PatchDataSetData = createAsyncThunk('DataSets/PatchDataSetData', as
 
 // #endregion
 
+// #region [ Consts ]
+const newDataSet: TrenDAP.iDataSet = {
+    ID: 0,
+    Name: '',
+    User: '',
+    Context: 'Fixed Dates',
+    From: moment().subtract(30, 'days').format('YYYY-MM-DD'),
+    To: moment().format('YYYY-MM-DD'),
+    Hours: Math.pow(2, 24) - 1,
+    Days: Math.pow(2, 7) - 1,
+    Weeks: Math.pow(2, 53) - 1,
+    Months: Math.pow(2, 12) - 1,
+    RelativeValue: 7,
+    RelativeWindow: 'Day',
+    Public: false,
+    UpdatedOn: ''
+}
+// #endregion
+
 // #region [ Slice ]
 export const DataSetsSlice = createSlice({
     name: 'DataSets',
@@ -76,7 +95,7 @@ export const DataSetsSlice = createSlice({
         SortField: 'UpdatedOn',
         Ascending: false,
         Record: {
-            ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', Context: 'Relative', RelativeValue: 30, RelativeWindow: 'Day', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1, Data: {Status: 'unitiated', Error: null} }
+            ID: 0, Name: '', User: '', Context: 'Relative', RelativeValue: 30, RelativeWindow: 'Day', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1, Data: {Status: 'unitiated', Error: null} }
     } as Redux.State<TrenDAP.iDataSet>,
     reducers: {
         Sort: (state, action) => {
@@ -89,7 +108,7 @@ export const DataSetsSlice = createSlice({
             state.Data = sorted as TrenDAP.iDataSet[];
         },
         New: (state, action) => {
-            state.Record = { ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', Context: 'Relative', RelativeValue: 30, RelativeWindow: 'Day', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1 } as TrenDAP.iDataSet
+            state.Record = { ID: 0, Name: '', User: '', Context: 'Relative', RelativeValue: 30, RelativeWindow: 'Day', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1 } as TrenDAP.iDataSet
         },
         SetRecordByID: (state, action) => {
             const record = state.Data.find(ds => ds.ID === action.payload);
@@ -220,8 +239,8 @@ export const SelectDataSetData = async (state: Redux.StoreState, id: number) => 
     return result.Data as TrenDAP.iDataSetReturn[];
 };
 export const SelectRecord = (state: Redux.StoreState) => state.DataSets.Record;
-export const SelectNewDataSet = ()  => ({ ID: 0, Name: '', User: '', JSON: '', JSONString: '[]', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1 }) as TrenDAP.iDataSet;
-export const SelectNewXDADataSet = () => ({ By: 'Meter', IDs: [], Phases: [], Groups: [], Types: [], Aggregate: '' }) as TrenDAP.iXDADataSet;
+export const SelectNewDataSet = () => newDataSet;
+export const SelectNewXDADataSet = () => ({ By: 'Meter', IDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: '' }) as TrenDAP.iXDADataSet;
 export const SelectDataSetsStatus = (state: Redux.StoreState)  => state.DataSets.Status;
 export const SelectDataSetsForUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.User === user);
 export const SelectDataSetsAllPublicNotUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.Public && ws.User !== user);
@@ -237,7 +256,7 @@ export async function GetDataSetDataFromIDB(id: number) {
 }
 
 function GetDataSets(): JQuery.jqXHR<TrenDAP.iDataSet[]> {
-    return ajax({
+    return $.ajax({
         type: "GET",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",
@@ -249,7 +268,7 @@ function GetDataSets(): JQuery.jqXHR<TrenDAP.iDataSet[]> {
 
 function GetDataSetData(dataSet: TrenDAP.iDataSet) {
     return new Promise((resolve, reject) => {
-        ajax({
+        $.ajax({
             type: "GET",
             url: `${homePath}api/DataSet/Query/${dataSet.ID}`,
             contentType: "application/json; charset=utf-8",
@@ -306,7 +325,7 @@ export async function UpdateDataSetData(dataSet: TrenDAP.iDataSet, dataSourceID:
 
 
 function PostDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> {
-    return ajax({
+    return $.ajax({
         type: "POST",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",
@@ -318,7 +337,7 @@ function PostDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> 
 }
 
 function DeleteDataSet(dataSet: TrenDAP.iDataSet){
-    return ajax({
+    return $.ajax({
         type: "DELETE",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",
@@ -334,7 +353,7 @@ function DeleteDataSet(dataSet: TrenDAP.iDataSet){
 }
 
 function PatchDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> {
-    return ajax({
+    return $.ajax({
         type: "PATCH",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",

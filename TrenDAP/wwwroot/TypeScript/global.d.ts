@@ -38,8 +38,9 @@ declare global {
 export namespace Redux {
     interface StoreState {
         DataSets: State<TrenDAP.iDataSet>,
-        DataSources: State<TrenDAP.iDataSource>,
-        DataSourceTypes: State<TrenDAP.iDataSourceType>,
+        DataSources: State<DataSourceTypes.IDataSourceView>,
+        DataSourceDataSets: State<DataSourceTypes.IDataSourceDataSet>, 
+        DataSourceTypes: State<DataSourceTypes.IDataSourceType>,
         WorkSpaces: State<TrenDAP.iWorkSpace>,
         OpenHistorian: { ID: number, State: OpenHistorianState }[],
         Sapphire: { [instance: number]: { [table: string]: Redux.SapphireTableSlice } },
@@ -83,28 +84,99 @@ export namespace OpenXDAExt {
     }
 }
 
+export namespace DataSourceTypes {
+    // The following are how datasources are stored in DB
+    type DataSourceType = 'TrenDAPDB' | 'OpenHistorian' | 'None' | 'Sapphire';
+    interface IDataSourceType { ID: number, Name: DataSourceType }
+    interface IDataSourceView {
+        ID: number,
+        Name: string,
+        DataSourceTypeID: number,
+        URL: string,
+        RegistrationKey: string,
+        Expires: string,
+        Public: boolean,
+        User: string,
+        Settings: string
+    }
+
+    interface IDataSourceDataSet {
+        ID: number,
+        DataSourceID: number,
+        DataSetID: number,
+        Settings: string
+    }
+
+    // Datasource as tsx needs them
+    interface IDataSetProps<T, U> {
+        // Data Source from DB
+        DataSource: IDataSourceView,
+        // Data Set From DB
+        DataSet: TrenDAP.iDataSet,
+        // Additional Source Settings parsed form source view
+        DataSourceSettings: T,
+        // Additional DataSet Settings parsed from dataset
+        DataSetSettings: U,
+        SetDataSetSettings: (newDataSetSettings: U) => void,
+        SetErrors: (errors: string[]) => void
+    }
+
+    interface IConfigProps<T> {
+        Settings: T,
+        SetSettings: (settings: T) => void,
+        SetErrors: (errors: string[]) => void
+    }
+
+    // Datasource coding interface, uses props to get the datasource
+    interface IDataSource<T, U> {
+        DataSetUI: React.FC<IDataSetProps<T, U>>,
+        ConfigUI: React.FC<IConfigProps<T>>,
+        LoadDataSetMeta: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => Promise<DataSetTypes.IDataSetData[]>,
+        LoadDataSet: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => Promise<DataSetTypes.IDataSetData[]>,
+        QuickViewDataSet?: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => string,
+        TestAuth: (dataSource: IDataSourceView) => Promise<boolean>,
+        DefaultSourceSettings: T,
+        DefaultDataSetSettings: U,
+        Name: string,
+    }
+}
+
+export namespace DataSetTypes {
+    interface IDataSetData {
+        ID: string,
+        Name: string,
+        ParentID: string,
+        ParentName: string,
+        Phase: string,
+        Type: string,
+        SeriesData?: Map<string, [...number[]][]>,
+        Longitude?: number,
+        Latitude?: number,
+        Harmonic?: number,
+        Unit?: string
+    }
+}
+
 export namespace TrenDAP{
     type Status = 'loading' | 'idle' | 'error' | 'changed' | 'unitiated';
     type WidgetType = 'Histogram' | 'Profile' | 'Stats' | 'Table' | 'Text' | 'Trend' | 'XvsY';
     type WidgetClass = iHistogram | iTrend | iProfile | iStats | iTable | iText | iXvsY;
     type TemplatableWidgetClass = iTemplatableHistogram | iTemplatableTrend | iTemplatableProfile | iTemplatableStats | iTemplatableTable | iTemplatableText | iTemplatableXvsY;
     type TemplateSeries = iTemplateSeriesXDA | iTemplateSeriesOpenHistorian;
-    type DataSourceType = 'TrenDAPDB' | 'OpenHistorian' |'None' | 'Sapphire';
     type iDataSetReturnType = iXDAReturnData | iOpenHistorianReturn | iSapphireReturnData;
     type ChartAction = 'Click' | 'Pan' | 'ZoomX' | 'ZoomY' | 'ZoomXY';
     type WorkSpaceType = 'Regular' | 'Templatable';
     type TemplateBy = 'Meter' | 'Asset' | 'Device';
     type iTrendDataPoint = iXDATrendDataPoint | iOpenHistorianAggregationPoint | iSapphireTrendDataPoint;
-    // TrenDAP 
-    interface iDataSourceType { ID: number, Name: DataSourceType }
-    interface iDataSource { ID: number, Name: string, DataSourceTypeID: number, URL: string, RegistrationKey: string, Expires: string, Public: boolean, User: string, OIDC: boolean }    
+    // TrenDAP     
     interface iWorkSpace { ID: number, Type: WorkSpaceType, Name: string, User: string, DataSetID: number, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Open: boolean }    
-    interface iDataSet { ID: number, Name: string, Context: 'Relative' | 'Fixed Dates', RelativeValue: number, RelativeWindow: 'Day' | 'Week' | 'Month' | 'Year',From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string, Data?: { Status: Status, Error?: string } }    
+    interface iDataSet { ID: number, Name: string, Context: 'Relative' | 'Fixed Dates', RelativeValue: number, RelativeWindow: 'Day' | 'Week' | 'Month' | 'Year',From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, Public: boolean, UpdatedOn: string, Data?: { Status: Status, Error?: string } }    
     interface iDataSetSource { ID: number, Name: string, DataSourceTypeID: number, JSON: object }
     interface iDataSetReturn<T extends iDataSetReturnType = iDataSetReturnType> { Data: T[], DataSource: { ID: number, Name: string, Type: DataSourceType, OpenSEE?: string}, From: string, To: string }
 
     // XDA
-    interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], Types: number[], Aggregate: '' | '1h' | '1d' | '1w' }
+    interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], ChannelIDs: number[], Aggregate: '' | '1h' | '1d' | '1w' }
+    interface iXDADataSource { PQBrowserUrl: string }
     interface iXDAReturn { ID: number, Meter: string, Name: string, Station: string, Phase: OpenXDA.Types.PhaseName, Type: OpenXDA.Types.MeasurementTypeName, Harmonic: number, Latitude: number, Longitude: number, Asset: string, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Unit: string }
     interface iXDAReturnWithDataSource extends iXDAReturnData { DataSourceID: number, DataSource: string }
     interface iXDAReturnData extends iXDAReturn { Data: iXDATrendDataPoint[], Events: {ID: number, ChannelID: number, StartTime: string}[] }
