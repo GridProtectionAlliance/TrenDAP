@@ -40,8 +40,8 @@ export const AllSources: IDataSource<any, any>[] = [XDADataSource, SapphireDataS
 
 const DataSources: React.FunctionComponent = () => {
     return (
-        <div className="container-fluid d-flex h-100 flex-row" style={{ height: 'inherit' }}>
-            <div className="col-8" style={{ padding: '0 0 0 0' }}>
+        <div className="container-fluid d-flex h-100 flex-row" style={{ height: 'inherit', padding: '0 0 0 0' }}>
+            <div className="col-8" style={{ padding: '0 20px 0 0' }}>
                 <div className="card" style={{ width: '100%', height: '100%' }}>
                     <div className="card-header">
                         <div className="row">
