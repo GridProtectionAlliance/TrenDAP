@@ -87,8 +87,11 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
                 </div>
             </div>
             {implementation != null ?
-                <implementation.ConfigUI SetErrors={setConfigErrors} Settings={settings}
-                    SetSettings={(s) => props.SetDataSource({ ...props.DataSource, Settings: s })} /> : <></>
+                <>
+                    <hr />
+                    <implementation.ConfigUI SetErrors={setConfigErrors} Settings={settings}
+                        SetSettings={(s) => props.SetDataSource({ ...props.DataSource, Settings: s })} />
+                </>: <></>
             }
         </form>
     );

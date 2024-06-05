@@ -71,7 +71,11 @@ const EventSource: React.FunctionComponent<IProps> = (props: IProps) => {
             <Input<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="RegistrationKey" Label={'API Key'} Setter={props.SetEventSource} Valid={() => true} />
             <Input<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="APIToken" Label={'API Token'} Setter={props.SetEventSource} Valid={() => true} />
             <CheckBox<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="Public" Label='Shared' Setter={props.SetEventSource} />
-            {implementation != null ? <implementation.ConfigUI SetErrors={setConfigErrors} Settings={settings} SetSettings={(s) => props.SetEventSource({ ...props.EventSource, Settings: s })} /> : <></>}
+            {implementation != null ?
+                <>
+                    <hr />
+                    <implementation.ConfigUI SetErrors={setConfigErrors} Settings={settings} SetSettings={(s) => props.SetEventSource({ ...props.EventSource, Settings: s })} />
+                </> : <></>}
         </form>
     );
 }
