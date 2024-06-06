@@ -228,13 +228,13 @@ namespace TrenDAP.Controllers
             switch (dataSet.EventWindowUnit.ToLower())
             {
                 case "week":
-                    addition = dataSet.EventWindowSize * 168;
+                    addition = (dataSet.EventWindowSize ?? 0) * 168;
                     break;
                 case "day":
-                    addition = dataSet.EventWindowSize * 24;
+                    addition = (dataSet.EventWindowSize ?? 0) * 24;
                     break;
                 case "hour":
-                    addition = dataSet.EventWindowSize;
+                    addition = (dataSet.EventWindowSize ?? 0);
                     break;
                 default:
                     throw new ArgumentException("Event window units for timespan must be one of the following: hour, day, week");

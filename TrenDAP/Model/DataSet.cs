@@ -73,7 +73,7 @@ namespace TrenDAP.Model
         [UseEscapedName]
         public bool Public { get; set; }
         public DateTime UpdatedOn { get; set; }
-        public double EventWindowSize { get; set; }
+        public double? EventWindowSize { get; set; }
         public string EventWindowUnit { get; set; }
         #endregion
 
