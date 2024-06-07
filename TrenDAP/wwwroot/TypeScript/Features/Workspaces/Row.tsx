@@ -22,55 +22,56 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { TrenDAP } from './../../global';
+import { TrenDAP, DataSetTypes } from './../../global';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ToolTip, Modal, Warning } from '@gpa-gemstone/react-interactive';
-import { CreateWidget } from '../Widgets/WidgetWrapper';
 import WidgetWrapper from '../Widgets/WidgetWrapper';
 import { Input, CheckBox, InputWithButton } from '@gpa-gemstone/react-forms';
 import { CreateGuid } from '@gpa-gemstone/helper-functions';
 import { SelectEditMode } from '../../Store/GeneralSettingsSlice';
 import { useAppSelector } from '../../hooks';
-import { AllWidgets, isPercent } from '../Widgets/WidgetWrapper';
+import { AllWidgets } from '../Widgets/WidgetWrapper';
 import { BtnDropdown } from '@gpa-gemstone/react-interactive';
-import _, { set } from 'lodash';
+import _ from 'lodash';
+import { CreateWidget, isPercent } from '../Widgets/HelperFunctions';
 
 const NavMargin = 85;
 const NavWidth = 200;
 
 type Hover = ('None' | 'Add' | 'Remove' | 'Settings')
 
-interface ISettings {
+interface IProps {
+    AllChannels: DataSetTypes.IDataSetMetaData[],
+    ChannelMap: TrenDAP.IChannelMap,
+    SetChannelMapVersion: (version: number) => void
+    ParentMap: React.MutableRefObject<Map<string, number>>,
     Label: string,
     Height: number,
+    Widgets: TrenDAP.IWidgetModel[],
     ShowHeader: boolean,
-    Widgets: TrenDAP.IWidgetModel[]
+    UpdateRow: (row: TrenDAP.IRowModel) => void,
+    RemoveRow: () => void,
+    MoveRowUp: () => void,
+    MoveRowDown: () => void,
 }
 
-export default function Row(props: TrenDAP.IRow) {
+
+const Row: React.FunctionComponent<IProps> = (props) => {
+    const editMode = useAppSelector(SelectEditMode);
+
     const guid = React.useRef<string>(CreateGuid());
     const containerRef = React.useRef<HTMLDivElement>(null);
 
     const [showModal, setShowModal] = React.useState<boolean>(false);
-    const [settings, setSettings] = React.useState<ISettings>({ Height: props.Height, Label: props.Label, ShowHeader: props.ShowHeader, Widgets: props.Widgets });
-    const [hover, setHover] = React.useState<Hover>('None')
+    const [settings, setSettings] = React.useState<TrenDAP.IRowModel>({ Height: props.Height, Label: props.Label, ShowHeader: props.ShowHeader, Widgets: props.Widgets });
+    const [hover, setHover] = React.useState<Hover>('None');
     const [rowHeaderHover, setRowHeaderHover] = React.useState<boolean>(false);
     const [headerOpacity, setHeaderOpacity] = React.useState<number>(1);
-    const [containerWidth, setContainerWidth] = React.useState<number>(0);
     const [showWarning, setShowWarning] = React.useState<boolean>(false);
-
-    const editMode = useAppSelector(SelectEditMode);
 
     React.useEffect(() => {
         setSettings({ Height: props.Height, Label: props.Label, ShowHeader: props.ShowHeader, Widgets: props.Widgets })
-    },[showModal])
-
-    React.useLayoutEffect(() => {
-        if (containerRef.current != null) {
-            if (containerRef.current.offsetWidth != containerWidth)
-                setContainerWidth(containerRef.current.offsetWidth)
-        }
-    })
+    }, [props])
 
     React.useEffect(() => {
         if (!props.ShowHeader && editMode)
@@ -78,33 +79,34 @@ export default function Row(props: TrenDAP.IRow) {
         else setHeaderOpacity(1)
     }, [props.ShowHeader, editMode])
 
-    function HandleAddObject(type) {
-        let row: TrenDAP.IRow = { ...props, UpdateRow: undefined, RemoveRow: undefined };
+    const HandleAddObject = (type) => {
+        let row: IProps = { ...props, UpdateRow: undefined, RemoveRow: undefined };
         let totalWidth = row.Widgets.reduce((sum, widget) => sum + widget.Width, 0);
-        let remainingWidth = 100 - totalWidth
+        let remainingWidth = 100 - totalWidth;
+
         if (remainingWidth > 5)
-            row.Widgets.push(CreateWidget(type, remainingWidth))
+            row.Widgets.push(CreateWidget(type, remainingWidth));
         else {
-            row.Widgets.push(CreateWidget(type, 5))
-            distributeWidgetWidth(row, row.Widgets.length - 1)
+            row.Widgets.push(CreateWidget(type, 5));
+            row = distributeWidgetWidth(row, row.Widgets.length - 1);
         }
-        props.UpdateRow(row);
+
+        props.UpdateRow({ Height: row.Height, Widgets: row.Widgets, Label: row.Label, ShowHeader: row.ShowHeader });
     }
 
-
-    const distributeWidgetWidth = (row: TrenDAP.IRow, updatedWidgetIndex: number) => {
-        let totalWidth = row.Widgets.reduce((sum, widget) => sum + widget.Width, 0);
-
-        if (totalWidth <= 100) return;
+    const distributeWidgetWidth = (row: IProps, addedWidgetIndex: number): IProps => {
+        let updatedRow = { ...row }
+        let totalWidth = updatedRow.Widgets.reduce((sum, widget) => sum + widget.Width, 0);
+        if (totalWidth <= 100) return updatedRow;
 
         let excessWidth = totalWidth - 100;
 
         // Function to adjust widgets, looping from start index to just before the updated widget index
         const adjustWidgets = (startIndex: number) => {
-            for (let i = startIndex; excessWidth > 0; i = (i + 1) % row.Widgets.length) {
-                if (i === updatedWidgetIndex) break;
+            for (let i = startIndex; excessWidth > 0; i = (i + 1) % updatedRow.Widgets.length) {
+                if (i === addedWidgetIndex) break;
 
-                const currentWidget = row.Widgets[i];
+                const currentWidget = updatedRow.Widgets[i];
                 if (currentWidget.Width > 5) {
                     let reduction = Math.min(currentWidget.Width - 5, excessWidth);
                     currentWidget.Width -= reduction;
@@ -114,25 +116,27 @@ export default function Row(props: TrenDAP.IRow) {
         };
 
         // Start adjusting from the widget immediately to the right of the updated widget
-        adjustWidgets((updatedWidgetIndex + 1) % row.Widgets.length);
+        adjustWidgets((addedWidgetIndex + 1) % updatedRow.Widgets.length);
 
         if (excessWidth > 0) {
             console.log("Unable to resolve excess width.");
         }
-    }
+
+        return updatedRow;
+    };
 
     return (
         <>
-            <div className="card" style={{ height: props.Height }} ref={containerRef}>
+            <div className="card" style={{ height: `${props.Height}%`}} ref={containerRef}>
                 {props.ShowHeader || editMode ?
-                    <div className="card-header" style={{ opacity: headerOpacity, zIndex: 9985}} onMouseEnter={() => setRowHeaderHover(true)} onMouseLeave={() => setRowHeaderHover(false)}>
+                    <div className="card-header" style={{ opacity: headerOpacity, zIndex: 9985 }} onMouseEnter={() => setRowHeaderHover(true)} onMouseLeave={() => setRowHeaderHover(false)}>
                         <div className="row">
                             <div className="d-flex col-6 justify-content-start align-items-center" >{props.Label}</div>
                             <div className="d-flex col-6 justify-content-end align-items-center">
-                                <div style={{ visibility: rowHeaderHover && editMode ? 'visible' : 'hidden'}}>
+                                <div style={{ visibility: rowHeaderHover && editMode ? 'visible' : 'hidden' }}>
                                     <div className="btn-group">
                                         <BtnDropdown Disabled={props.Widgets.length >= 15} Label={AllWidgets[0].Name} Options={AllWidgets.map(widget => ({ Label: widget.Name, Callback: () => HandleAddObject(widget.Name), Disabled: props.Widgets.length >= 15 }))}
-                                            Callback={() => HandleAddObject(AllWidgets[0].Name)} ShowToolTip={true} TooltipContent={<p>Add Widget</p>} />
+                                            Callback={() => HandleAddObject(AllWidgets[0].Name)} ShowToolTip={true} TooltipContent={<p>Add Widget</p>} TooltipLocation="bottom" />
                                         <button className="btn" data-tooltip={"rm-row-btn" + guid.current} onMouseEnter={() => setHover('Remove')} onMouseLeave={() => setHover('None')} onClick={() => props.RemoveRow()}>
                                             <ReactIcons.Minus />
                                         </button>
@@ -140,45 +144,43 @@ export default function Row(props: TrenDAP.IRow) {
                                             <ReactIcons.Settings />
                                         </button>
                                     </div>
-                                    <ToolTip Show={hover === 'Remove'} Position="left" Target={"rm-row-btn" + guid.current} Zindex={9986}>Remove Row</ToolTip>
-                                    <ToolTip Show={hover === 'Settings'} Position="left" Target={"row-settings-btn" + guid.current} Zindex={9986}>Row Settings</ToolTip>
+                                    <ToolTip Show={hover === 'Remove'} Position="bottom" Target={"rm-row-btn" + guid.current} Zindex={9986}>Remove Row</ToolTip>
+                                    <ToolTip Show={hover === 'Settings'} Position="bottom" Target={"row-settings-btn" + guid.current} Zindex={9986}>Row Settings</ToolTip>
                                 </div>
                             </div>
                         </div>
                     </div>
                     : null}
-                <div className="card-body d-flex h-100" style={{ padding: 0, zIndex: 0 }}>
+                <div className="card-body d-flex h-100" style={{ padding: 0, zIndex: 0, overflowY: 'hidden' }}>
                     {props.Widgets.map((widget, index) => {
                         return <WidgetWrapper
                             AllChannels={props.AllChannels}
                             ChannelMap={props.ChannelMap}
                             ParentMap={props.ParentMap}
-                            AddChannelToMap={props.AddChannelToMap}
                             UpdateWidget={(newRecord) => {
                                 let row = { ...props };
                                 let widget = { ...newRecord };
                                 row.Widgets[index] = widget;
                                 distributeWidgetWidth(row, index)
-                                props.UpdateRow(row);
+                                props.UpdateRow({ Height: row.Height, Widgets: row.Widgets, Label: row.Label, ShowHeader: row.ShowHeader });
                             }}
                             RemoveWidget={() => {
                                 let row = { ...props };
                                 row.Widgets.splice(index, 1);
-                                props.UpdateRow(row);
+                                props.UpdateRow({ Height: row.Height, Widgets: row.Widgets, Label: row.Label, ShowHeader: row.ShowHeader });
                             }}
                             Widget={widget}
-                            Height={props.Height}
+                            SetChannelMapVersion={props.SetChannelMapVersion}
                             key={index + widget.Type + guid.current} />
                     }
                     )}
                 </div>
             </div>
             <Modal
-                ConfirmBtnClass="btn btn-success mr-auto"
                 Show={showModal}
                 ShowX={true}
-                ConfirmText='Save'
-                Title={`Row Settings`}
+                ShowTertiary={true}
+                Size="lg"
                 CallBack={(conf, deleteBtn, tertiary) => {
                     if (settings.Widgets.length < props.Widgets.length) {
                         setShowWarning(true);
@@ -192,18 +194,18 @@ export default function Row(props: TrenDAP.IRow) {
                         props.MoveRowUp()
                     setShowModal(false);
                 }}
+                Title={`Row Settings`}
                 CancelText={"Move Row Down"}
-                CancelBtnClass={"btn btn-primary"}
-                Size="lg"
-                ShowTertiary={true}
                 TertiaryText="Move Row Up"
+                ConfirmText='Save'
+                ConfirmBtnClass="btn btn-success mr-auto"
+                CancelBtnClass={"btn btn-primary"}
                 TertiaryBtnClass={"btn btn-primary"}
             >
-                <Input<ISettings> Record={settings} Field={'Label'} Setter={(item) => setSettings(item)} Valid={() => true} />
-                <InputWithButton<ISettings> Label="Height" Field="Height" Type="integer" Valid={() => true /*update this later*/} Record={settings} Setter={(item) => setSettings(item)}
-                    BtnLabel="Full Height" OnBtnClick={() => setSettings({ ...settings, Height: window.innerHeight - NavMargin })} />
-                <CheckBox<ISettings> Field='ShowHeader' Record={settings} Setter={item => setSettings(item)} Label="Show Row Header" />
-
+                <Input<TrenDAP.IRowModel> Record={settings} Field={'Label'} Setter={(item) => setSettings(item)} Valid={() => true} />
+                <Input<TrenDAP.IRowModel> Label="Height (%)" Field='Height' Record={settings} Type='integer' Setter={(item) => setSettings(item)}
+                    Valid={(item) => isPercent(settings[item] as number)} Feedback='Height must be a valid percent and greater than 5' />
+                <CheckBox<TrenDAP.IRowModel> Field='ShowHeader' Record={settings} Setter={item => setSettings(item)} Label="Show Row Header" />
                 <label>Widget Width</label>
                 <ul className='list-group'>
                     {settings.Widgets.map((widget, i) =>
@@ -254,7 +256,7 @@ export default function Row(props: TrenDAP.IRow) {
             </Modal>
             <Warning Show={showWarning} Title={"Delete Widget"} Message={"You deleted a widget are you sure you want to proceed?"} CallBack={(confirmed) => {
                 if (confirmed) {
-                    props.UpdateRow({ ...props, ...settings });
+                    props.UpdateRow(settings);
                     setShowModal(false);
                 }
                 setShowWarning(false);
@@ -263,6 +265,4 @@ export default function Row(props: TrenDAP.IRow) {
     );
 }
 
-
-
-
+export default Row;
