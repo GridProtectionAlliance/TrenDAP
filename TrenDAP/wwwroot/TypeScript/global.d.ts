@@ -144,9 +144,8 @@ export namespace DataSetTypes {
 
 export namespace TrenDAP {
     type Status = 'loading' | 'idle' | 'error' | 'changed' | 'unitiated';
-    type WidgetType = 'Histogram' | 'Profile' | 'Stats' | 'Table' | 'Text' | 'Trend' | 'XvsY';
     type iDataSetReturnType = iXDAReturnData | iOpenHistorianReturn | iSapphireReturnData;
-    type ChartAction = 'Click' | 'Pan' | 'ZoomX' | 'ZoomY' | 'ZoomXY';
+    type ChartAction = 'Click' | 'Pan' | 'ZoomX' ;
     type iTrendDataPoint = iXDATrendDataPoint | iOpenHistorianAggregationPoint | iSapphireTrendDataPoint;
 
     // TrenDAP
@@ -192,9 +191,13 @@ export namespace TrenDAP {
     interface iSapphireTrendDataPoint extends iXDATrendDataPoint { }
     type iSapphireTrendDataPointField = SeriesField;
 
+    interface GeneralSettings {
+        EditMode: boolean
+    }
+
     // Widget JSON interfaces
     interface WorkSpaceJSON {
-        Rows: IRow[]
+        Rows: IRowModel[]
     }
 
     interface IYAxis {
@@ -209,24 +212,11 @@ export namespace TrenDAP {
         AutoMaxScale: boolean
     }
 
-    // Workspace
-    interface IRow {
-        AllChannels: DataSetTypes.IDataSetMetaData[],
-        ChannelMap: IChannelMap,
-        ParentMap: React.MutableRefObject<Map<string, number>>,
+    interface IRowModel {
         Label: string,
         Height: number,
         Widgets: IWidgetModel[],
         ShowHeader: boolean,
-        UpdateRow?: (row: iRow) => void,
-        RemoveRow?: () => void,
-        MoveRowUp?: () => void,
-        MoveRowDown?: () => void,
-        AddChannelToMap: (channelKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData) => void
-    }
-
-    interface GeneralSettings {
-        EditMode: boolean
     }
 
     //Model for Workspace logic
