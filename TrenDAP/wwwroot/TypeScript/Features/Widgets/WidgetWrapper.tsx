@@ -44,6 +44,7 @@ import TrenDAPDB from '../DataSets/TrenDAPDB';
 import { WidgetTypes } from './Interfaces'
 import _ from 'lodash';
 import ChannelSelector from './ChannelSelector';
+import { isPercent } from './HelperFunctions';
 
 export const AllWidgets: WidgetTypes.IWidget<any, any>[] = [TextWidget, TableWidget, StatsWidget, HistogramWidget, XvsYWidget, ProfileWidget, TrendWidget];
 
@@ -232,7 +233,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     CallBack={(conf, deleteBtn) => handleUpdateWidget(conf, deleteBtn)}
                     CancelText={"Delete Widget"}
                     DisableConfirm={!isPercent(localCommonSettings.Width)}
-                    ConfirmShowToolTip={!isPercent(localCommonSettings.Width) }
+                    ConfirmShowToolTip={!isPercent(localCommonSettings.Width)}
                     ConfirmToolTipContent={<span>Enter a valid width</span>}
                     Size="xlg"
                 >

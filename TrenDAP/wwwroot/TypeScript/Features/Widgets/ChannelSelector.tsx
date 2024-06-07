@@ -26,19 +26,12 @@ import { DataSetTypes } from '../../global';
 import { WidgetTypes } from './Interfaces';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import * as _ from 'lodash';
-
+import { sort } from './HelperFunctions';
 
 const ChannelSelector: React.FC<WidgetTypes.IChannelSelectionProps<any, any>> = (props) => {
     const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>(props.AllChannels);
     const [ascending, setAscending] = React.useState<boolean>(false);
     const [sortField, setSortField] = React.useState<keyof DataSetTypes.IDataSetMetaData>('Phase');
-
-
-    const sort = (field: keyof DataSetTypes.IDataSetMetaData, ascend: boolean) => {
-        setSortField(field);
-        setAscending(ascend);
-        setAllChannels((c) => _.orderBy(c, field, [ascend ? "asc" : "desc"]))
-    }
 
     return <>
         <div className="h-100">
@@ -53,7 +46,7 @@ const ChannelSelector: React.FC<WidgetTypes.IChannelSelectionProps<any, any>> = 
                     props.SelectedChannels.forEach(chan => props.RemoveChannel(chan.MetaData.ID));
                     props.AddChannel(item.row.ID, null);
                 }}
-                OnSort={data => sort(data.colField, data.ascending)}
+                OnSort={data => sort(data.colField, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
                 Data={allChannels}
                 Ascending={ascending}
                 KeySelector={(row) => row.ID}

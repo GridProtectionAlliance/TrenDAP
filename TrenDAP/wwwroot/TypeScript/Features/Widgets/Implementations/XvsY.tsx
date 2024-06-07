@@ -31,8 +31,8 @@ import { Modal } from '@gpa-gemstone/react-interactive';
 import { WidgetTypes } from '../Interfaces';
 import { linearRegression, linearRegressionLine, rSquared } from 'simple-statistics';
 import _ from 'lodash'
-
 import { DataSetTypes } from '../../../global';
+import { sort } from '../HelperFunctions';
 
 
 interface IProps {
@@ -509,7 +509,7 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         else if (isChannelSelected ?? false)
                             setSelectedPair(prev => prev.filter(pair => pair.MetaData.ID !== row.ID))
                     }}
-                    OnSort={data => sort(data.colField, data.ascending)}
+                    OnSort={data => sort(data.colField, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
                     Data={allChannels}
                     Ascending={ascending}
                     KeySelector={(row) => row.ID}

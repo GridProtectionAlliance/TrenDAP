@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  Text.tsx - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright Â© 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -22,15 +22,13 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-
 import moment from 'moment';
 import _ from 'lodash';
-
 import { Input } from '@gpa-gemstone/react-forms';
 import { ReactTable } from '@gpa-gemstone/react-table';
-
 import { WidgetTypes } from '../Interfaces';
 import { DataSetTypes } from '../../../global';
+import { sort } from '../HelperFunctions';
 
 interface IProps { Precision: number }
 
@@ -44,9 +42,7 @@ interface ITableData {
     Chan2Average: number
 }
 
-//lets make this a pagedTable as we can get up to 250+ results here and it slows down render times..
-//might not be as easy since we dont have PagedSearch selector and total pages selectors that come with the generic slice
-//not sure if this can be done without gsf model controller without the extra effort of adding the needed controllers/logic
+//lets make this a pagedTable as we can get up to 250+ results here as it slows down render times..
 
 export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
     DefaultSettings: { Precision: 3 },
@@ -226,15 +222,9 @@ export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
         </>
     },
     ChannelSelectionUI: (props) => {
-        const [channels, setChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>(props.AllChannels);
+        const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>(props.AllChannels);
         const [ascending, setAscending] = React.useState<boolean>(false);
         const [sortField, setSortField] = React.useState<keyof DataSetTypes.IDataSetMetaData>('Phase');
-
-        const sort = (field: keyof DataSetTypes.IDataSetMetaData, ascend: boolean) => {
-            setSortField(field);
-            setAscending(ascend);
-            setChannels((c) => _.orderBy(c, field, [ascend ? "asc" : "desc"]))
-        }
 
         return <>
             <div className="h-100">
@@ -252,8 +242,8 @@ export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
                         else if (props.SelectedChannels.length < 2)
                             props.AddChannel(item.row.ID, null); //no channel specific settings here..
                     }}
-                    OnSort={data => sort(data.colField, data.ascending)}
-                    Data={channels}
+                    OnSort={data => sort(data.colField, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
+                    Data={allChannels}
                     Ascending={ascending}
                     KeySelector={(row) => row.ID}
                     Selected={(row) => props.SelectedChannels?.find(c => c.MetaData.ID === row.ID) != null ? true : null}

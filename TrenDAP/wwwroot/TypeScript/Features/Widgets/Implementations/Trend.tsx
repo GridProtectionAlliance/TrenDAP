@@ -30,7 +30,8 @@ import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { ToolTip } from '@gpa-gemstone/react-interactive';
 import _ from 'lodash';
-import moment from 'moment';
+import { sort } from '../HelperFunctions';
+
 export interface IProps {
     AutoXScale: boolean
     Min: string,
@@ -747,12 +748,6 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         const [ascending, setAscending] = React.useState<boolean>(false);
         const [sortField, setSortField] = React.useState<keyof DataSetTypes.IDataSetMetaData>('Phase');
 
-        const sort = (field: keyof DataSetTypes.IDataSetMetaData, ascend: boolean) => {
-            setSortField(field);
-            setAscending(ascend);
-            setAllChannels((c) => _.orderBy(c, field, [ascend ? "asc" : "desc"]))
-        }
-
         return <>
             <div className="h-50 p-0">
                 <ReactTable.Table<DataSetTypes.IDataSetMetaData>
@@ -785,7 +780,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                             props.AddChannel(item.row.ID, { ...TrendWidget.DefaultChannelSettings, YAxisID: yAxisID });
                         }
                     }}
-                    OnSort={data => sort(data.colField, data.ascending)}
+                    OnSort={data => sort(data.colField, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
                     Data={allChannels}
                     Ascending={ascending}
                     KeySelector={(row) => row.ID}

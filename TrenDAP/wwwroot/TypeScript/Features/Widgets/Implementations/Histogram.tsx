@@ -29,6 +29,7 @@ import { TrenDAP, DataSetTypes } from '../../../global';
 import { Input, Select, ColorPicker, CheckBox } from '@gpa-gemstone/react-forms';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { WidgetTypes } from '../Interfaces';
+import { sort } from '../HelperFunctions';
 
 import _ from 'lodash';
 import * as d3 from 'd3';
@@ -205,12 +206,6 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         const [ascending, setAscending] = React.useState<boolean>(false);
         const [sortField, setSortField] = React.useState<keyof DataSetTypes.IDataSetMetaData>('Phase');
 
-        const sort = (field: keyof DataSetTypes.IDataSetMetaData, ascend: boolean) => {
-            setSortField(field);
-            setAscending(ascend);
-            setAllChannels((c) => _.orderBy(c, field, [ascend ? "asc" : "desc"]))
-        }
-
         return <>
             <div className="h-50 p-0">
                 <ReactTable.Table<DataSetTypes.IDataSetMetaData>
@@ -227,7 +222,7 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         else
                             props.AddChannel(item.row.ID, HistogramWidget.DefaultChannelSettings);
                     }}
-                    OnSort={data => sort(data.colField, data.ascending)}
+                    OnSort={data => sort(data.colField, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
                     Data={allChannels}
                     Ascending={ascending}
                     KeySelector={(row) => row.ID}
