@@ -92,14 +92,14 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         React.useEffect(() => {
             if (plotRef.current == null && props.Data.length === 0) return;
 
-                if (props.Settings.Split) {
-                    if (props.Settings.Split && props.Settings.SplitType === 'Axis')
-                        setSvgCount(props.Settings.YAxis.length);
-                    else if (props.Settings.SplitType === 'Series')
-                        setSvgCount(props.Data.length);
-                }
-                else
-                    setSvgCount(1);
+            if (props.Settings.Split) {
+                if (props.Settings.Split && props.Settings.SplitType === 'Axis')
+                    setSvgCount(props.Settings.YAxis.length);
+                else if (props.Settings.SplitType === 'Series')
+                    setSvgCount(props.Data.length);
+            }
+            else
+                setSvgCount(1);
 
         }, [props.Settings])
 
@@ -341,7 +341,6 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 });
         }
 
-        //I believe this is to do with the Event Data Sources
         /*
         function AddEventLine(series: WidgetTypes.IWidgetData, svg, x) {
             const svgHeight = parseInt(svg.attr('height'))
@@ -737,6 +736,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                                 </>
                             }
                         >
+                            {'\u200B'}
                         </ReactTable.Column>
                     </ReactTable.Table>
                 </div>
@@ -871,7 +871,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                             </>
                         }
                     >
-                        Y Axis ID
+                        Y Axis
                     </ReactTable.Column>
                 </ReactTable.Table>
             </div>

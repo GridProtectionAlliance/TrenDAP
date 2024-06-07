@@ -103,8 +103,8 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
                 let x = chans.find(chan => chan.Axis === 'X')
                 let y = chans.find(chan => chan.Axis === 'Y')
-                
-                if (x != null && y !== null) 
+
+                if (x != null && y !== null)
                     combinedData.push(matchDataByTime(x.Data, y.Data, pair.Color, pair.RegressionLine, pair.Id))
             })
 
@@ -253,12 +253,6 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             setPairs(newPairs)
         }, [props.SelectedChannels, props.Settings, showPairSelection])
 
-        const sort = (field: keyof DataSetTypes.IDataSetMetaData, ascend: boolean) => {
-            setSortField(field);
-            setAscending(ascend);
-            setAllChannels((c) => _.orderBy(c, field, [ascend ? "asc" : "desc"]))
-        }
-
         const handleChannelPairSelection = (conf: boolean) => {
             if (conf) {
                 let maxPairID = props.Settings.Pairs.reduce((max, current) => {
@@ -319,13 +313,26 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
                     TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                    SortKey={sortField}
+                    SortKey={""}
                     OnClick={({ row }) => { }}
                     OnSort={() => { }}
                     Data={pairs}
                     Ascending={ascending}
                     KeySelector={(row, idx) => idx}
                 >
+                    <ReactTable.Column<[IPairChannel, IPairChannel]>
+                        Key={'PairParents'}
+                        AllowSort={true}
+                        Field={'0'}
+                        Content={({ item }) =>
+                            <>
+                                <span>{item[0]?.MetaData?.ParentName}</span>
+                                <br />
+                                <span>{item[1]?.MetaData?.ParentName}</span>
+                            </>}
+                    >
+                        Parents
+                    </ReactTable.Column>
                     <ReactTable.Column<[IPairChannel, IPairChannel]>
                         Key={'PairNames'}
                         AllowSort={true}

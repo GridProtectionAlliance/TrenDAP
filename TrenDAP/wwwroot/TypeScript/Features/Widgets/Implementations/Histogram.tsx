@@ -273,12 +273,37 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     KeySelector={(row, idx) => idx}
                 >
                     <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                        Key={'Parent'}
+                        AllowSort={true}
+                        Field={'MetaData'}
+                        Content={(row) => <p>{row.item.MetaData.ParentName}</p>}
+                    >
+                        Parent
+                    </ReactTable.Column>
+                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Name'}
                         AllowSort={true}
                         Field={'MetaData'}
                         Content={(row) => <p>{row.item.MetaData.Name}</p>}
                     >
                         Channel
+                    </ReactTable.Column>
+
+                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                        Key={'Type'}
+                        AllowSort={true}
+                        Field={'MetaData'}
+                        Content={(row) => <p>{row.item.MetaData.Type}</p>}
+                    >
+                        Type
+                    </ReactTable.Column>
+                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                        Key={'Phase'}
+                        AllowSort={true}
+                        Field={'MetaData'}
+                        Content={(row) => <p>{row.item.MetaData.Phase}</p>}
+                    >
+                        Phase
                     </ReactTable.Column>
                     <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Color'}
@@ -303,7 +328,7 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         Field
                     </ReactTable.Column>
                     <ReactTable.Column<TrenDAP.IWidgetChannels<IChannelSettings>>
-                        Key={'SeriesField'}
+                        Key={'Profile'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
                         Content={(row) => <CheckBox<IChannelSettings> Record={row.item?.ChannelSettings} Field="Profile" Setter={(item) => props.SetChannelSettings(row.item.Key, item)} />}
