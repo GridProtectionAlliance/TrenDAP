@@ -50,28 +50,33 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
     DefaultSettings: { XAxisLabel: 'Value', YAxisLabel: 'Count', BinCount: 15 },
     DefaultChannelSettings: { Color: 'Red', Field: 'Average', Profile: false },
     WidgetUI: (props) => {
-        const ref = React.useRef<HTMLDivElement>(null);
+        const plotRef = React.useRef<HTMLDivElement>(null);
+        const [plotSize, setPlotSize] = React.useState<{ Height: number, Width: number }>()
 
-        //this needs a window resize listener or something of the sort
-        //maybe it could live in widgetwrapper.. where we pass in a resize counter to the widgets
-        //alternatively we could have on listen to the flex div in here..
+        React.useLayoutEffect(() => {
+            if (plotRef.current != null) {
+                let newSize = { Height: plotRef.current.offsetHeight, Width: plotRef.current.offsetWidth }
+                if (!_.isEqual(newSize, plotSize))
+                    setPlotSize(newSize)
+            }
+        })
 
         React.useEffect(() => {
             Initialize();
-        }, [props.Data, props.Settings]) // we need some kind of trigger here so that whenever showHeader changes we resize..
+        }, [props.Data, props.Settings, plotSize])
 
         function Initialize() {
             let hasProfile = props.Data.some(data => data.ChannelSettings.Profile);
             const margin = { bottom: 50, left: 50, top: 25, right: (hasProfile ? 50 : 10) };
 
             // Remove old plot
-            d3.select(ref.current).selectAll('svg').remove();
+            d3.select(plotRef.current).selectAll('svg').remove();
 
             // Create new svg
-            const svg = d3.select(ref.current)
+            const svg = d3.select(plotRef.current)
                 .append('svg')
-                .attr('width', ref.current.offsetWidth)
-                .attr('height', ref.current.offsetHeight)
+                .attr('width', plotRef.current.offsetWidth)
+                .attr('height', plotRef.current.offsetHeight)
 
             if (props.Data == null || props.Data.length == 0)
                 return;
@@ -106,21 +111,21 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             // Create X scale
             const xScale = d3.scaleLinear()
                 .domain([xMin, xMax])
-                .range([margin.left, ref.current.offsetWidth - margin.right]);
+                .range([margin.left, plotRef.current.offsetWidth - margin.right]);
 
             // Create Y scale
             const yScale = d3.scaleLinear()
                 .domain([0, yMax])
-                .range([ref.current.offsetHeight - margin.bottom, margin.top]);
+                .range([plotRef.current.offsetHeight - margin.bottom, margin.top]);
 
             // Create X scale
             const profileYScale = d3.scaleLinear()
                 .domain([0, pyMax])
-                .range([ref.current.offsetHeight - margin.bottom, margin.top]);
+                .range([plotRef.current.offsetHeight - margin.bottom, margin.top]);
 
             // Create x axis
             svg.append("g")
-                .attr("transform", `translate(0, ${ref.current.offsetHeight - margin.bottom})`)
+                .attr("transform", `translate(0, ${plotRef.current.offsetHeight - margin.bottom})`)
                 .call(d3.axisBottom(xScale));
 
             //create y axis
@@ -131,12 +136,12 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             // Add X axis label
             svg.append("text")
                 .style("text-anchor", "middle")
-                .attr("transform", `translate(${(ref.current.offsetWidth / 2)},${(ref.current.offsetHeight - margin.bottom / 3)})`)
+                .attr("transform", `translate(${(plotRef.current.offsetWidth / 2)},${(plotRef.current.offsetHeight - margin.bottom / 3)})`)
                 .text(props.Settings.XAxisLabel);
 
             // Add Y axis label
             svg.append("text")
-                .attr("transform", `rotate(-90) translate(-${ref.current.offsetHeight / 2}, ${margin.left / 3})`)
+                .attr("transform", `rotate(-90) translate(-${plotRef.current.offsetHeight / 2}, ${margin.left / 3})`)
                 .style("text-anchor", "middle")
                 .text(props.Settings.YAxisLabel);
 
@@ -161,12 +166,12 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
                 //create profile axis
                 svg.append("g")
-                    .attr("transform", `translate(${ref.current.offsetWidth - margin.right},0)`)
+                    .attr("transform", `translate(${plotRef.current.offsetWidth - margin.right},0)`)
                     .call(d3.axisRight(profileYScale));
 
                 //create profile label
                 svg.append("text")
-                    .attr("transform", `rotate(-90) translate(-${ref.current.offsetHeight / 2}, ${(ref.current.offsetWidth - margin.right / 3) + 10})`)
+                    .attr("transform", `rotate(-90) translate(-${plotRef.current.offsetHeight / 2}, ${(plotRef.current.offsetWidth - margin.right / 3) + 10})`)
                     .style("text-anchor", "middle")
                     .text("Profile")
 
@@ -186,7 +191,7 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         }
 
         return (
-            <div className="d-flex h-100 flex-column" ref={ref}></div>
+            <div className="d-flex h-100 flex-column" ref={plotRef}></div>
         )
     },
     SettingsUI: (props) => {

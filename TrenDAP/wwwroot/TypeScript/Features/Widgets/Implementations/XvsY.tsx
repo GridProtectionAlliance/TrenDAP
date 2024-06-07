@@ -30,7 +30,6 @@ import { ReactIcons } from '@gpa-gemstone/gpa-symbols'
 import { Modal } from '@gpa-gemstone/react-interactive';
 import { WidgetTypes } from '../Interfaces';
 import { linearRegression, linearRegressionLine, rSquared } from 'simple-statistics';
-import moment from 'moment';
 import _ from 'lodash'
 
 import { DataSetTypes } from '../../../global';
@@ -77,11 +76,20 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
     DefaultChannelSettings: { Field: 'Average', Axis: 'Y', PairId: -1 },
     Name: "XvsY",
     WidgetUI: (props) => {
-        const ref = React.useRef<HTMLDivElement>(null);
+        const plotRef = React.useRef<HTMLDivElement>(null);
+        const [plotSize, setPlotSize] = React.useState<{ Height: number, Width: number }>()
+
+        React.useLayoutEffect(() => {
+            if (plotRef.current != null) {
+                let newSize = { Height: plotRef.current.offsetHeight, Width: plotRef.current.offsetWidth }
+                if (!_.isEqual(newSize, plotSize))
+                    setPlotSize(newSize)
+            }
+        })
 
         React.useEffect(() => {
             Initialize()
-        }, [props.Settings, props.Data])
+        }, [props.Settings, props.Data, plotSize])
 
         function Initialize() {
             if (props.Data == null || props?.Data.length == 0) return;
@@ -109,21 +117,21 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             }
 
             const margin = { bottom: 50, left: 70, top: 40, right: 100 };
-            const svgHeight = ref.current.offsetHeight;
+            const svgHeight = plotRef.current.offsetHeight;
 
-            d3.select(ref.current).selectAll('svg').remove()
+            d3.select(plotRef.current).selectAll('svg').remove()
 
             const xScale = d3.scaleLinear()
                 .domain([xMin, xMax])
-                .range([0, ref.current.offsetWidth - margin.left - margin.right]);
+                .range([0, plotRef.current.offsetWidth - margin.left - margin.right]);
             const yScale = d3.scaleLinear()
                 .domain([yMin, yMax])
                 .range([svgHeight - margin.top - margin.bottom, 0]);
 
             //Create svg
-            const svg = d3.select(ref.current)
+            const svg = d3.select(plotRef.current)
                 .append('svg')
-                .attr('width', ref.current.offsetWidth)
+                .attr('width', plotRef.current.offsetWidth)
                 .attr('height', svgHeight);
 
             //CREATE X AXIS AND LABEL
@@ -133,7 +141,7 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
             svg.append("text")
                 .style("text-anchor", "middle")
-                .attr("transform", "translate(" + (ref.current.offsetWidth / 2) + "," + (svgHeight - margin.bottom / 3) + ")")
+                .attr("transform", "translate(" + (plotRef.current.offsetWidth / 2) + "," + (svgHeight - margin.bottom / 3) + ")")
                 .text(props.Settings.XAxisLabel)
 
             //CREATE YAXIS AND LABEL
@@ -190,7 +198,7 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                             .append("text")
                             .attr("class", "r2-text")
                             .attr("stroke", data.Color)
-                            .attr("transform", `translate(${ref.current.offsetWidth - margin.left - margin.right + 25},${margin.top + (i * 15)})`)
+                            .attr("transform", `translate(${plotRef.current.offsetWidth - margin.left - margin.right + 25},${margin.top + (i * 15)})`)
                             .text(`R2 - ${r2.toFixed(3)}`);
                     }
                 });
@@ -198,7 +206,7 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         }
 
         return (
-            <div className="d-flex h-100 flex-column" ref={ref}></div>
+            <div className="d-flex h-100 flex-column" ref={plotRef}></div>
         );
     },
     SettingsUI: (props) => {
