@@ -23,12 +23,12 @@
 
 export default class HashTable<K, V> {
     private map: Map<string, V>;
+    private keyMap: Map<string, K>;
     public hashFunction: (key: K) => string
-
-    //lets make a default constructor here.. 
 
     constructor(hashFunction: (key: K) => string, values: [K,V][] = []) {
         this.map = new Map<string, V>(values.map(v => [hashFunction(v[0]), v[1]]));
+        this.keyMap = new Map<string, K>(values.map(v => [hashFunction(v[0]), v[0]]));
         this.hashFunction = hashFunction
     }
 
@@ -52,9 +52,14 @@ export default class HashTable<K, V> {
         return this.map.has(hashKey);
     }
 
-    *entries(): IterableIterator<[string, V]> {
-        for (const entry of this.map.entries()) {
-            yield entry;
-        }
+    serialize(): string {
+        const tuples: [K, V][] = [];
+        this.map.forEach((value, hashKey) => {
+            const originalKey = this.keyMap.get(hashKey);
+            if (originalKey !== undefined) {
+                tuples.push([originalKey, value]);
+            }
+        });
+        return window.btoa(JSON.stringify(tuples));
     }
 }
