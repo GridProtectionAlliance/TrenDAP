@@ -35,7 +35,6 @@ export namespace WidgetTypes {
     interface IWidgetProps<T, U> {
         Data: IWidgetData<U>[]
         Settings: T,
-        Width: number,
     }
 
     interface IWidgetData<T> extends DataSetTypes.IDataSetData {
@@ -49,7 +48,7 @@ export namespace WidgetTypes {
     }
 
     interface ISelectedChannels<T> extends TrenDAP.IWidgetChannels<T> {
-        MetaData: DataSetTypes.IDataSetMetaData, IsNew: boolean
+        MetaData: DataSetTypes.IDataSetMetaData
     }
 
     interface IChannelSelectionProps<S, U> {
