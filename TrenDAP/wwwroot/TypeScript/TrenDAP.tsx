@@ -44,16 +44,6 @@ const ViewDataSet = React.lazy(() => import(/* webpackChunkName: "ViewDataSet" *
 const TrenDAP: React.FunctionComponent = (props: {}) => {
     const workSpaces = useAppSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
 
-    const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
-
-    React.useEffect(() => {
-        window.addEventListener('resize', () => forceUpdate());
-
-        return () => {
-            window.removeEventListener('resize', () => { });
-        }
-    }, []);
-
     return (
         <>
             <Application
