@@ -24,7 +24,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import DataSourcesReducuer from '../Features/DataSources/DataSourcesSlice';
 import EventSourcesReducuer from '../Features/EventSources/Slices/EventSourcesSlice';
-import WorkSpaceReducer from '../Features/WorkSpaces/WorkSpacesSlice';
+import WorkSpaceReducer from '../Features/Workspaces/WorkspacesSlice';
 import DataSetReducer from '../Features/DataSets/DataSetsSlice';
 import OpenXDAReducer from '../Features/OpenXDA/OpenXDASlice';
 import OpenHistorianReducer from '../Features/OpenHistorian/OpenHistorianSlice';

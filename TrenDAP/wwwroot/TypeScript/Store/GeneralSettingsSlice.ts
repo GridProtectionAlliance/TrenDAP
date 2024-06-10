@@ -1,7 +1,7 @@
 //******************************************************************************************************
-//  WorkSpacesSlice.ts - Gbtc
+//  GeneralSettingsSlice.ts - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright Â© 2024, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,16 +16,15 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/25/2020 - Billy Ernest
+//  06/07/2024 - Preston Crawford
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-import { createSlice, createAsyncThunk, createSelector, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { TrenDAP, Redux } from '../global';
 import _ from 'lodash';
-import moment from 'moment';
-import { ajax } from 'jquery';
+
 
 // #region [ Thunks ]
 // #endregion
@@ -41,7 +40,7 @@ export const GeneralSettingsSlice = createSlice({
             state.EditMode = action.payload;
         }
     },
-    extraReducers: (builder) => {}
+    extraReducers: () => {}
 });
 // #endregion
 
