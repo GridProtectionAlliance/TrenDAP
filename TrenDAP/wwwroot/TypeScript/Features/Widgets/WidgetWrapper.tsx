@@ -23,15 +23,15 @@
 
 import * as React from 'react';
 import { ServerErrorIcon, Modal, ToolTip, Warning } from '@gpa-gemstone/react-interactive';
-import { RandomColor, CreateGuid } from '@gpa-gemstone/helper-functions';
+import { CreateGuid } from '@gpa-gemstone/helper-functions';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ErrorBoundary } from '@gpa-gemstone/common-pages';
-import { Input, CheckBox, InputWithButton } from '@gpa-gemstone/react-forms';
+import { Input, CheckBox } from '@gpa-gemstone/react-forms';
 
 import { TrenDAP, DataSetTypes } from '../../global';
-import { useAppSelector, useAppDispatch } from '../../hooks';
+import { useAppSelector } from '../../hooks';
 
-import { TextWidget } from './Implementations/Text'
+import { TextWidget } from './Implementations/Text';
 import { TableWidget } from './Implementations/Table';
 import { StatsWidget } from './Implementations/Stats';
 import { HistogramWidget } from './Implementations/Histogram';
@@ -54,9 +54,8 @@ interface IProps {
     UpdateWidget: (widget: TrenDAP.IWidgetModel) => void,
     AllChannels: DataSetTypes.IDataSetMetaData[],
     ChannelMap: TrenDAP.IChannelMap,
+    SetChannelMapVersion: (version: number) => void,
     ParentMap: React.MutableRefObject<Map<string, number>>,
-    Height: number,
-    AddChannelToMap: (channelKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData) => void
 }
 
 const WidgetWrapper: React.FC<IProps> = (props) => {
@@ -99,7 +98,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             return
         }
 
-        let channels = props.Widget.Channels.map(chan => ({ ...chan, MetaData: props.AllChannels.find(c => c.ID === props.ChannelMap.Map.current.get(chan.Key)), IsNew: false }))
+        let channels: WidgetTypes.ISelectedChannels<any>[] = props.Widget.Channels.map(chan => ({ ...chan, MetaData: props.AllChannels.find(c => c.ID === props.ChannelMap.Map.current.get(chan.Key)) }))
         setLocalChannels(channels)
     }, [props.Widget.Channels, props.AllChannels, props.ChannelMap.Version, showSettingsModal])
 
@@ -150,7 +149,6 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             MetaData: channel,
             ChannelSettings: defaultSetting,
             Key: key,
-            IsNew: true
         };
 
         setLocalChannels(prevLocalChannels => {
@@ -161,14 +159,10 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     const handleUpdateWidget = (confBtn: boolean, deleteBtn: boolean) => {
         if (confBtn) {
             let updatedChannels = [...localChannels];
-
-            //If its a new channel update map first then update the key to the mapped value
             updatedChannels.forEach(channel => {
-                if (channel.IsNew) {
-                    props.AddChannelToMap(channel.Key, channel.MetaData)
+                AddChannelToMap(channel.Key, channel.MetaData)
                     const updatedKey = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) }
                     channel.Key = updatedKey
-                }
             })
 
             props.UpdateWidget({
@@ -187,6 +181,22 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             setShowSettingsModal(false);
     }
 
+    const AddChannelToMap = (chanKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData) => {
+        let maxValue = -1
+
+        for (let value of props.ParentMap.current.values()) {
+            if (value > maxValue)
+                maxValue = value
+        }
+
+        if (!props.ParentMap.current.has(channel.ParentID))
+            props.ParentMap.current.set(channel.ParentID, maxValue + 1)
+
+        let parent = props.ParentMap.current.get(channel.ParentID)
+        props.ChannelMap.Map.current.set({ ...chanKey, Parent: parent }, channel.ID)
+        props.SetChannelMapVersion(props.ChannelMap.Version + 1)
+    }
+
     return <>
         {Implementation == null ? <div className="card">
             <div className="card-header">
@@ -197,7 +207,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             </div>
         </div>
             : <ErrorBoundary HeaderErrorMessage={`${props.Widget.Label} - Error`} BodyErrorMessage={`Widget ${props.Widget.Label} has encoutered an error.`} Width={`${props.Widget.Width}%`} Height={'100%'}>
-                <div className="card" style={{ width: `${props.Widget.Width}%`, height: '100%', overflowY: 'auto' }}>
+                <div className="card" style={{ width: `${props.Widget.Width}%`, height: '100%', overflowY: 'hidden' }}>
                     {props.Widget.ShowHeader || editMode ?
                         <div className="card-header" style={{ opacity: headerOpacity }} onMouseEnter={() => setHeaderHover(true)} onMouseLeave={() => setHeaderHover(false)}>
                             <div className="row">
@@ -211,16 +221,15 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                             onMouseEnter={() => setSettingHover(true)} onMouseLeave={() => setSettingHover(false)}>
                                             <ReactIcons.Settings />
                                         </button>
-                                        <ToolTip Show={settingHover} Target={'widget-setting-btn' + guid.current} Position="left">Widget Settings</ToolTip>
+                                        <ToolTip Show={settingHover} Target={'widget-setting-btn' + guid.current} Position="bottom">Widget Settings</ToolTip>
                                     </>
                                 </div>
                             </div>
                         </div> : null}
-                    <div className="card-body" style={{ maxHeight: props.Height }}>
+                    <div className="card-body">
                         <Implementation.WidgetUI
                             Data={data}
-                            Width={props.Widget.Width}
-                            Settings={props.Widget.Settings}
+                            Settings={Settings}
                         />
                     </div>
                 </div>
