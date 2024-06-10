@@ -241,4 +241,12 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
     );
 }
 
-export default WorkSpace;
+const WorkspaceWrapper = (props: {}) => {
+    const { workspaceId } = props['useParams'];
+
+    return (
+        <Workspace key={workspaceId}  />
+    );
+};
+
+export default WorkspaceWrapper;

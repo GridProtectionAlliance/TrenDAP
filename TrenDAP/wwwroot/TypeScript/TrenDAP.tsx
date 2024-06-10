@@ -31,17 +31,17 @@ import { Application, Page, Section } from '@gpa-gemstone/react-interactive';
 import { SVGIcons } from '@gpa-gemstone/gpa-symbols';
 import { Redux } from './global';
 import { useAppSelector } from './hooks';
-import { SelectWorkSpacesForUser } from './Features/WorkSpaces/WorkSpacesSlice';
+import { SelectWorkSpacesForUser } from './Features/Workspaces/WorkspacesSlice';
 
 const DataSources = React.lazy(() => import(/* webpackChunkName: "DataSources" */ './Features/DataSources/DataSources'));
 const ByEventSources = React.lazy(() => import(/* webpackChunkName: "EventSources" */ './Features/EventSources/ByEventSources'));
 const DataSets = React.lazy(() => import(/* webpackChunkName: "DataSets" */ './Features/DataSets/DataSets'));
-const Workspaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/WorkSpaces/Workspaces'));
+const Workspaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/Workspaces/Workspaces'));
 const EditDataSet = React.lazy(() => import(/* webpackChunkName: "EditDataSet" */ './Features/DataSets/EditDataSet'));
-const WorkSpaceEditor = React.lazy(() => import(/* webpackChunkName: "WorkSpaceEditor" */ './Features/WorkSpaces/Workspace'));
+const WorkspaceWrapper = React.lazy(() => import(/* webpackChunkName: "Workspace" */ './Features/Workspaces/Workspace'));
 const ViewDataSet = React.lazy(() => import(/* webpackChunkName: "ViewDataSet" */ './Features/DataSets/ViewDataSet/ViewDataSet'));
 
-const TrenDAP: React.FunctionComponent = (props: {}) => {
+const TrenDAP: React.FunctionComponent = () => {
     const workSpaces = useAppSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
 
     return (
@@ -73,7 +73,7 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                 </Page>
                 <Section Label={"Recent Workspaces"}>
                     {workSpaces.map((item, i) =>
-                        <Page key={i} Name={`WorkSpaceEditor/${item.ID}`} Icon={SVGIcons.Document} Label={item.Name} />
+                        <Page key={i} Name={`Workspace/${item.ID}`} Icon={SVGIcons.Document} Label={item.Name} />
                     )}
                 </Section>
             </Application>
