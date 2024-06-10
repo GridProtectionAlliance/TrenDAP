@@ -46,7 +46,7 @@ const WorkspaceSettings: React.FunctionComponent<IProps> = (props) => {
             return true;
     }
 
-    return ( 
+    return (
         <>
             <Modal
                 ConfirmBtnClass={"btn btn-success mr-auto"}
@@ -56,14 +56,14 @@ const WorkspaceSettings: React.FunctionComponent<IProps> = (props) => {
                 Title={props.New ? 'Add Workspace' : 'Edit Workspace'}
                 CallBack={conf => {
                     if (conf && props.New)
-                        dispatch(AddWorkSpace(workspace));
+                        dispatch(AddWorkSpace({ ...workspace, JSONString: props.Workspace.JSONString }));
                     else if (conf && !props.New)
-                        dispatch(UpdateWorkSpace(workspace))
+                        dispatch(UpdateWorkSpace({ ...workspace, JSONString: props.Workspace.JSONString }));
                     props.SetShow(false);
                 }}
             >
-                <Input<TrenDAP.iWorkSpace> Record={workspace} Field="Name" Setter={(record) => setWorkspace(record)} Valid={isNameValid} />
-                <CheckBox<TrenDAP.iWorkSpace> Record={workspace} Field="Public" Label='Shared' Setter={(record) => setWorkspace(record)} />
+                <Input<TrenDAP.iWorkSpace> Record={workspace} Field="Name" Setter={record => setWorkspace(record)} Valid={isNameValid} />
+                <CheckBox<TrenDAP.iWorkSpace> Record={workspace} Field="Public" Label='Shared' Setter={record => setWorkspace(record)} />
             </Modal>
         </>
     );
