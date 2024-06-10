@@ -101,7 +101,9 @@ const Workspace: React.FunctionComponent = () => {
             return;
         }
 
-        let chans = channelMapping.current.serialize()
+        const channelMap = workSpaceJSON.Rows
+        .flatMap(row => row.Widgets.flatMap(widget => widget.Channels.map(channel => [channel.Key, channelMapping.current.get(channel.Key)])));
+        const chans = new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, channelMap as [TrenDAP.IChannelKey, string][]).serialize();
 
         let pathName = _.cloneDeep(window.location.pathname)
         const origin = _.cloneDeep(window.location.origin)
