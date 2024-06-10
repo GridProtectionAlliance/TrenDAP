@@ -24,58 +24,90 @@
 import * as React from 'react';
 import { TrenDAP, Redux, DataSetTypes } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { SelectWorkSpaceByID, UpdateWorkSpace, SelectWorkSpacesStatus, FetchWorkSpaces } from './WorkSpacesSlice';
+import { SelectWorkSpaceByID, UpdateWorkSpace, SelectWorkSpacesStatus, FetchWorkSpaces } from './WorkspacesSlice';
 import { SetEditMode, SelectEditMode } from '../../Store/GeneralSettingsSlice';
 
-import { CreateWidget, AllWidgets } from '../Widgets/WidgetWrapper';
+import { AllWidgets } from '../Widgets/WidgetWrapper';
 
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ToggleSwitch } from '@gpa-gemstone/react-forms';
-import { ToolTip, BtnDropdown } from '@gpa-gemstone/react-interactive';
+import { ToolTip, BtnDropdown, Modal } from '@gpa-gemstone/react-interactive';
 import Row from './Row';
 import HashTable from './HashTable';
 
 import * as _ from 'lodash';
 import DataSetSelector from './DataSetSelector';
 import WorkspaceSettings from './WorkspaceSettings';
+import { CreateWidget } from '../Widgets/HelperFunctions';
+import { useParams } from 'react-router-dom';
 
-type Hover = ('Export' | 'Save' | 'None' | 'Settings' | 'Add')
+type Hover = ('Share' | 'Save' | 'Settings' | 'Add' | 'SaveIcon' | 'None' | 'ShareDisabled')
 
-
-const WorkSpace: React.FunctionComponent<{}> = (props) => {
+const Workspace: React.FunctionComponent = () => {
     const dispatch = useAppDispatch();
 
-    const workSpace: TrenDAP.iWorkSpace = useAppSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, parseInt(props['useParams']?.id ?? -1))); //this needs a type..
-    const editMode = useAppSelector(SelectEditMode);
+    const { dataSetID, workspaceId } = useParams();
+    const workSpace: TrenDAP.iWorkSpace = useAppSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, parseInt(workspaceId ?? '-1')));
     const workspaceStatus = useAppSelector(SelectWorkSpacesStatus);
+    const editMode = useAppSelector(SelectEditMode);
 
-    /* Mapping */
+    /* Maps */
     const channelMapping = React.useRef<HashTable<TrenDAP.IChannelKey, string>>(new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`));
-    const parentMapping = React.useRef<Map<string, number>>(new Map<string, number>()); //parentID => to number we already generate this in datastseletor
-
-
+    const parentMapping = React.useRef<Map<string, number>>(new Map<string, number>());
     const [mapVersion, setMapVersion] = React.useState<number>(0);
 
-    const rowContainer = React.useRef<HTMLDivElement>(null);
-
     const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [] });
-    const [showSettingsModal, setShowSettingsModal] = React.useState<boolean>(false);
+    const [workspaceLink, setWorkspaceLink] = React.useState<string>(null);
+    const [showWorkspaceLink, setShowWorkspaceLink] = React.useState<boolean>(false);
+
+    const [showCopiedTooltip, setShowCopiedTooltip] = React.useState<boolean>(false);
     const [hover, setHover] = React.useState<Hover>('None');
+    const [showSettingsModal, setShowSettingsModal] = React.useState<boolean>(false);
     const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([])
-    const [rowContainerWidth, setRowContainerWidth] = React.useState<number>(0);
-
-    //think of future in the sense that someone can send a link with dataset pre selected
     const [showShowDataSetModal, setShowDataSetModal] = React.useState<boolean>(true)
-    const [loading, setLoading] = React.useState<boolean>(false); //need to utilize this state
-
+    const [loading, setLoading] = React.useState<boolean>(false);
     const [dataSet, setDataset] = React.useState<TrenDAP.iDataSet>(null)
+    const [isLinkShareable, setIsLinkShareable] = React.useState<{ DisabledMessage: string, Shareable: boolean }>({ Shareable: false, DisabledMessage: '' });
 
-    React.useLayoutEffect(() => {
-        if (rowContainer.current != null) {
-            if (rowContainerWidth !== rowContainer.current.offsetWidth)
-                setRowContainerWidth(rowContainer.current.offsetWidth)
+    //Effect to update isLinkShareable
+    React.useEffect(() => {
+        if (workSpace == null || workSpace?.JSONString == null) {
+            setIsLinkShareable({ Shareable: false, DisabledMessage: '' });
+            return;
         }
-    })
+
+        const isWorkspaceSaved = _.isEqual(workSpaceJSON, JSON.parse(workSpace.JSONString));
+        const shareable = dataSet?.Public && workSpace?.Public && isWorkspaceSaved;
+        let disabledMessage = '';
+    
+        if (!dataSet?.Public || !workSpace?.Public) {
+            setIsLinkShareable({ Shareable: false, DisabledMessage: `Workspace and dataset must be public${!isWorkspaceSaved ? ' and workspace must be saved' : ''}` });
+            return;
+        }
+    
+        if (!isWorkspaceSaved) {
+            setIsLinkShareable({ Shareable: false, DisabledMessage: 'Workspace must be saved' });
+            return;
+        }
+    
+        setIsLinkShareable({ Shareable: shareable, DisabledMessage: disabledMessage });
+    }, [workSpace, dataSet, workSpaceJSON]);
+    
+
+    //Effect to set the workspace link
+    React.useEffect(() => {
+        if (!showWorkspaceLink) {
+            setWorkspaceLink(null)
+            return;
+        }
+
+        let chans = channelMapping.current.serialize()
+
+        let pathName = _.cloneDeep(window.location.pathname)
+        const origin = _.cloneDeep(window.location.origin)
+        pathName = `/Workspace/${workspaceId}/DataSet/${dataSetID}/Channels/${chans}`
+        setWorkspaceLink(origin + pathName)
+    }, [showWorkspaceLink]);
 
     React.useEffect(() => {
         if (workSpace === undefined) return;
@@ -86,7 +118,6 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
     React.useEffect(() => {
         if (workspaceStatus == 'unitiated' || workspaceStatus == 'changed')
             dispatch(FetchWorkSpaces());
-
     }, [dispatch, workspaceStatus]);
 
     function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], allChannels: DataSetTypes.IDataSetMetaData[], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
@@ -161,28 +192,59 @@ const WorkSpace: React.FunctionComponent<{}> = (props) => {
                         <div className="btn-group align-items-center pl-1">
                             <ToggleSwitch Record={{ editMode }} Field="editMode" Label={'Edit'} Setter={(item) => dispatch(SetEditMode(item.editMode))} Help="This enables/disables editing of rows/widgets"
                                 Style={{ color: 'white', display: 'flex', alignItems: 'center' }} />
-                            <button className="btn" data-tooltip="export-btn" data-toggle='dropdown' aria-haspopup='true' aria-expanded='false' onMouseEnter={() => setHover('Export')} onMouseLeave={() => setHover('None')}>
-                                <ReactIcons.Download Color="white" />
+
+                            </div>
+                            <div className="btn-group">
+                                <button className="btn" onMouseEnter={() => setHover('Save')} onMouseLeave={() => setHover('None')} data-tooltip="save-btn" onClick={() => {
+                                    dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(workSpaceJSON) }));
+                                }}>
+                                    <ReactIcons.FloppyDisk Color="white" />
+                                    <ReactIcons.CircleCheckMark Color={_.isEqual(workSpaceJSON, (JSON.parse(workSpace.JSONString))) ? "green" : "red"} Size={16} Style={{ marginTop: 16, marginLeft: -10 }} />
                             </button>
-                            <ToolTip Show={hover === "Export"} Position="top" Target="export-btn">Export Current Data Set</ToolTip>
-                            <div className="dropdown-menu">
-                                <a className="dropdown-item" href="#">PDF</a>
-                                <a className="dropdown-item" href="#">CSV</a>
+
+                                <div data-tooltip="wrkspace-disabled-div" onMouseEnter={() => setHover('ShareDisabled')} onMouseLeave={() => setHover('None')}>
+                                    <button className="btn" data-tooltip="wrkspace-share-btn" onMouseEnter={() => setHover('Share')} onMouseLeave={() => setHover('None')}
+                                        onClick={() => setShowWorkspaceLink(true)} disabled={!isLinkShareable.Shareable}>
+                                        <ReactIcons.Share Style={{ marginLeft: -12 }} Color="white" />
+                                    </button>
                             </div>
                         </div>
-
-                        <button className="btn" onMouseEnter={() => setHover('Save')} onMouseLeave={() => setHover('None')} data-tooltip="save-btn" onClick={(e) => {
-                            e.preventDefault();
-                            dispatch(UpdateWorkSpace({ ...workSpace, JSONString: JSON.stringify(workSpaceJSON) }));
-                        }}><ReactIcons.FloppyDisk Color="white" /></button>
-                        <ToolTip Show={hover === "Save"} Position="left" Target="save-btn">Save Current Workspace</ToolTip>
 
                         <button className="btn" data-tooltip="wrkspace-settings-btn" onMouseEnter={() => setHover("Settings")} onMouseLeave={() => setHover('None')} onClick={() => setShowSettingsModal(true)}>
                             <ReactIcons.Settings Color="white" />
                         </button>
-                        <ToolTip Show={hover === "Settings"} Position="left" Target="wrkspace-settings-btn">Workspace Settings</ToolTip>
-                        <WorkspaceSettings New={false} Workspace={workSpace} Show={showSettingsModal} SetShow={setShowSettingsModal} />
 
+                            <WorkspaceSettings New={false} Workspace={{ ...workSpace, JSONString: JSON.stringify(workSpaceJSON) }} Show={showSettingsModal} SetShow={setShowSettingsModal} />
+                            <ToolTip Show={hover === "Save"} Position="bottom" Target="save-btn" Zindex={9991}>
+                                Save Workspace {_.isEqual(workSpaceJSON, (JSON.parse(workSpace.JSONString))) ? `(Up to date)` : `(Unsaved changes)`}
+                            </ToolTip>
+                            <ToolTip Show={hover === "Settings"} Position="bottom" Target="wrkspace-settings-btn" Zindex={9991}>Workspace Settings</ToolTip>
+                            <ToolTip Show={hover === "Share"} Position="bottom" Target="wrkspace-share-btn" Zindex={9991}>Share Workspace</ToolTip>
+                            <ToolTip Show={hover === "ShareDisabled" && !isLinkShareable.Shareable} Position="bottom" Target="wrkspace-disabled-div" Zindex={9991}>{isLinkShareable.DisabledMessage}</ToolTip>
+
+                            <ToolTip Show={showCopiedTooltip} Position="bottom" Target="wrkspace-link" Zindex={9991}>Copied to clipboard</ToolTip>
+
+                            <Modal
+                                Show={showWorkspaceLink}
+                                Title="Workspace Link"
+                                ShowCancel={false}
+                                ConfirmText="Copy to Clipboard"
+                                ShowX={true}
+                                CallBack={confBtn => {
+                                    if (confBtn) {
+                                        navigator.clipboard.writeText(workspaceLink).then(() => {
+                                            setShowCopiedTooltip(true);
+                                            setTimeout(() => {
+                                                setShowCopiedTooltip(false);
+                                            }, 2500);
+                                        });
+                                    }
+                                    else
+                                        setShowWorkspaceLink(false)
+                                }}
+                            >
+                                <div data-tooltip="wrkspace-link" style={{ wordWrap: 'break-word' }}>{workspaceLink}</div>
+                            </Modal>
                     </div>
                 </div>
                 <div className="flex-grow-1 d-flex flex-column" style={{ overflowY: 'auto', overflowX: 'hidden' }} ref={rowContainer}>

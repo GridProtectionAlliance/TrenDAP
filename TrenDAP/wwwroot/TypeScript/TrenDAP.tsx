@@ -65,8 +65,8 @@ const TrenDAP: React.FunctionComponent = () => {
                 <Page Name={'EditDataSet/:id'}>
                     <EditDataSet />
                 </Page>
-                <Page Name={'WorkSpaceEditor/:id'}>
-                    <WorkSpaceEditor />
+                <Page Name={'Workspace/:workspaceId'} Paths={['/DataSet/:dataSetID', '/DataSet/:dataSetID/Channels/:channels']}>
+                    <WorkspaceWrapper />
                 </Page>
                 <Page Name={'ViewDataSet/:id'}>
                     <ViewDataSet />

@@ -25,7 +25,6 @@ import * as React from 'react';
 import * as $ from 'jquery';
 import { TrenDAP, Redux, DataSourceTypes, DataSetTypes } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { UpdateWorkSpace } from './WorkSpacesSlice';
 import { SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, Sort, SelectDataSetsSortField, SelectDataSetsAscending, FetchDataSets, SelectDataSetsStatus } from '../DataSets/DataSetsSlice';
 import { SelectDataSources, FetchDataSources, SelectDataSourcesStatus } from '../DataSources/DataSourcesSlice';
 
@@ -37,6 +36,7 @@ import { Select } from '@gpa-gemstone/react-forms';
 import TrenDAPDB from '../DataSets/TrenDAPDB';
 import { IDataSource } from '../DataSources/Interface';
 import { AllSources } from '../DataSources/DataSources';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import * as _ from 'lodash';
 
@@ -112,7 +112,20 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         return availableChans.map(p => ({ Value: p.ID, Label: p.Name }))
     }, [parentMatches, selectedParentKey])
 
+    //Effect to setSelectedDataSet when dataSetID queryParam is set
     React.useEffect(() => {
+        if (dataSetID == null) return;
+        let dataSet = dataSetsForUser.concat(publicDataSets).find(ds => ds.ID === parseInt(dataSetID))
+        if (dataSet != null) {
+            setSelectedDataSet(dataSet)
+            if(channels != null) props.SetIsModalOpen(false);
+        }
+
+    }, [dataSetID, workspaceId, dataSetsForUser.length, publicDataSets.length])
+
+    //Effect to set errors based on match status
+    React.useEffect(() => {
+        if (channels != null) return;
         let errors = []
 
         channelMatches.forEach(channel => {
@@ -180,9 +193,24 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         Promise.all(channelHandlers).then(d => {
             setAllChannels(d.flat())
             setAllParents(_.uniqBy(d.flat().map(c => ({ ID: c.ParentID, Name: c.ParentName })), (m) => m.ID))
+
+            //Generate mapping if channels query param is set..
+            if (channels != null) {
+                let chanMap: [TrenDAP.IChannelKey, string][] = JSON.parse(window.atob(channels));
+                let parentKeys = _.uniq(chanMap.map(chan => chan[0].Parent))
+
+                let parentMap: [string, number][] = parentKeys.map((key, index) => {
+                    let chanID = chanMap.find(chan => chan[0].Parent === key)[1]
+                    return [d.flat().find(chan => chan.ID = chanID).ParentID, index]
         })
 
-        return () => { }
+                props.GenerateMapping(chanMap, parentMap, selectedDataSet, loadData());
+                //Remove Channels param from queryParams, since we dont update this param 
+                navigate(`${homePath}Workspace/${workspaceId}/DataSet/${dataSetID}`)
+            }
+
+        })
+
     }, [datasources])
 
     React.useEffect(() => {
@@ -270,7 +298,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                     TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                     SortKey={dataSetSortField}
-                                    OnClick={data => setSelectedDataSet(data.row)}
+                                    OnClick={data => { setSelectedDataSet(data.row); navigate(`${homePath}Workspace/${workspaceId}/DataSet/${data.row.ID}`) }}
                                     OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                                     Data={dataSetsForUser.concat(publicDataSets)}
                                     Ascending={dataSetAscending}
