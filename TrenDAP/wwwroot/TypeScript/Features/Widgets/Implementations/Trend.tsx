@@ -25,7 +25,7 @@ import { axisBottom, axisLeft, axisRight, brushX, format, line, scaleLinear, sca
 import * as React from 'react';
 import { DataSetTypes, TrenDAP } from '../../../global';
 import { WidgetTypes } from '../Interfaces';
-import { Input, Select, ToggleSwitch, DatePicker, ColorPicker } from '@gpa-gemstone/react-forms';
+import { Input, Select, ToggleSwitch, DatePicker, ColorPicker, RadioButtons } from '@gpa-gemstone/react-forms';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { ToolTip } from '@gpa-gemstone/react-interactive';
@@ -570,26 +570,12 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
         return (
             <div className="d-flex h-100 flex-column" ref={plotRef} style={{ userSelect: 'none' }}>
-                <div style={{ position: 'absolute', left: 10, zIndex: 1010 }}>
-                    <button className='btn btn-light' onClick={HandleReset}>
-                        Reset Limits
-                    </button>
-                    <div className="form-check-inline">
-                        <label className="form-check-label">
-                            <input type="radio" className="form-check-input" checked={chartAction == 'Pan'} onChange={(evt) => setChartAction('Pan')} />Pan
-                        </label>
+                <div className="d-flex align-items-center" style={{ position: 'absolute', zIndex: 1010 }}>
+                        <button className='btn btn-light' onClick={HandleReset}>
+                            Reset Limits
+                        </button>
+                        <RadioButtons Record={{ chartAction }} Field="chartAction" Setter={(record) => setChartAction(record.chartAction)} Options={[{ Label: 'Pan', Value: 'Pan'}, { Label: 'ZoomX', Value: 'ZoomX' }, { Label: 'Click', Value: 'Click' }]} />
                     </div>
-                    <div className="form-check-inline">
-                        <label className="form-check-label">
-                            <input type="radio" className="form-check-input" checked={chartAction == 'ZoomX'} onChange={(evt) => setChartAction('ZoomX')} />Zoom X
-                        </label>
-                    </div>
-                    <div className="form-check-inline">
-                        <label className="form-check-label">
-                            <input type="radio" className="form-check-input" checked={chartAction == 'Click'} onChange={(evt) => setChartAction('Click')} />Click
-                        </label>
-                    </div>
-                </div>
             </div>
         );
     },
