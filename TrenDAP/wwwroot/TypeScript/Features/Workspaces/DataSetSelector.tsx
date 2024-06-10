@@ -390,7 +390,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                 Key={'Status'}
                                                 Field={'Status'}
                                                 Content={({ item }) => {
-                                                    let allMatched = channelMatches.filter(chan => chan.Key.Parent === item.Key && chan.Status === 'NoMatch')
+                                                    let allMatched = channelMatches.filter(chan => chan.Key.Parent === item.Key && (chan.Status === 'NoMatch' || chan.Status === 'MultipleMatches'))
                                                     if (allMatched.length === 0)
                                                         return <ReactIcons.CheckMark Color="green" />
                                                     else
