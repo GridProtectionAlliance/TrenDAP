@@ -105,7 +105,7 @@ const Workspace: React.FunctionComponent = () => {
 
         let pathName = _.cloneDeep(window.location.pathname)
         const origin = _.cloneDeep(window.location.origin)
-        pathName = `/Workspace/${workspaceId}/DataSet/${dataSetID}/Channels/${chans}`
+        pathName = `/Workspaces/${workspaceId}/DataSet/${dataSetID}/Channels/${chans}`
         setWorkspaceLink(origin + pathName)
     }, [showWorkspaceLink]);
 
@@ -179,7 +179,7 @@ const Workspace: React.FunctionComponent = () => {
                                 <div data-tooltip="wrkspace-disabled-div" onMouseEnter={() => setHover('ShareDisabled')} onMouseLeave={() => setHover('None')}>
                                     <button className="btn" data-tooltip="wrkspace-share-btn" onMouseEnter={() => setHover('Share')} onMouseLeave={() => setHover('None')}
                                         onClick={() => setShowWorkspaceLink(true)} disabled={!isLinkShareable.Shareable}>
-                                        <ReactIcons.Share Style={{ marginLeft: -12 }} Color="white" />
+                                        <ReactIcons.ShareNetwork Style={{ marginLeft: -12 }} Color="white" />
                                     </button>
                                 </div>
                             </div>

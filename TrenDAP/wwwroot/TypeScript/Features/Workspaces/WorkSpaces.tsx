@@ -100,7 +100,7 @@ const Workspaces: React.FunctionComponent = () => {
                                 SortKey={sortField}
                                 OnClick={(data, evt) => {
                                     if (evt.target.tagName.toLowerCase() === 'td')
-                                        navigate(`${homePath}Workspace/${data.row.ID}`)
+                                        navigate(`${homePath}Workspaces/${data.row.ID}`)
                                 }}
                                 OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                                 Data={workSpaces}
@@ -168,7 +168,7 @@ const Workspaces: React.FunctionComponent = () => {
                                 SortKey={sortField}
                                 OnClick={(data, evt) => {
                                     if (evt.target.tagName.toLowerCase() === 'td')
-                                        navigate(`${homePath}Workspace/${data.row.ID}`)
+                                        navigate(`${homePath}Workspaces/${data.row.ID}`)
                                 }}
                                 OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                                 Data={publicWorkSpaces}

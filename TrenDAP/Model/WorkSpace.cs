@@ -44,7 +44,7 @@ namespace TrenDAP.Model
         public string Name { get; set; }
         [UseEscapedName]
         public string User { get; set; }
-        public byte[] JSON { get; set; } //this should be named settings as JSON really isnt descriptive at all..
+        public byte[] JSON { get; set; }
         [NonRecordField]
         public string JSONString
         {

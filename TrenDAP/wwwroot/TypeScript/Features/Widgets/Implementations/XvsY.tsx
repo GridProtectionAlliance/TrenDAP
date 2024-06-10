@@ -449,7 +449,9 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                                     setEdittedPair([{ ...chans[0], LabelValue: item[0].LabelValue }, { ...chans[1], LabelValue: item[1].LabelValue }]);
                                     setSelectedPair([{ MetaData: chans[0].MetaData, Axis: item[0].ChannelSettings.Axis }, { MetaData: chans[1].MetaData, Axis: item[1].ChannelSettings.Axis }])
                                 }}><ReactIcons.Pencil Size={15} /></button>
+                                {/*
                                 <button className="btn" onClick={() => setShowPairSelection(true)}> <ReactIcons.Copy Size={15} /></button>
+                                */}
                                 <button className="btn" onClick={() => {
                                     props.RemoveChannel(item[0].MetaData.ID);
                                     props.RemoveChannel(item[1].MetaData.ID);

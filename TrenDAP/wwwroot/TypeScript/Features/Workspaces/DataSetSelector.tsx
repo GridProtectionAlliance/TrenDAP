@@ -187,7 +187,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
                 props.GenerateMapping(chanMap, parentMap, selectedDataSet, loadData());
                 //Remove Channels param from queryParams, since we dont update this param 
-                navigate(`${homePath}Workspace/${workspaceId}/DataSet/${dataSetID}`)
+                navigate(`${homePath}Workspaces/${workspaceId}/DataSet/${dataSetID}`)
             }
 
         })
@@ -312,7 +312,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                     TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                     SortKey={dataSetSortField === "UpdatedOn" ? "Name" : dataSetSortField}
-                                    OnClick={data => { setSelectedDataSet(data.row); navigate(`${homePath}Workspace/${workspaceId}/DataSet/${data.row.ID}`) }}
+                                    OnClick={data => { setSelectedDataSet(data.row); navigate(`${homePath}Workspaces/${workspaceId}/DataSet/${data.row.ID}`) }}
                                     OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                                     Data={dataSetsForUser.concat(publicDataSets)}
                                     Ascending={dataSetAscending}

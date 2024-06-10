@@ -53,27 +53,27 @@ const TrenDAP: React.FunctionComponent = () => {
                 <Page Name={'DataSources'} Label={'Data Sources'} Icon={SVGIcons.DataContainer}>
                     <DataSources />
                 </Page>
-                <Page Name={'ByEventSources'} Label={'Event Sources'} Icon={SVGIcons.Alert}>
+                <Page Name={'EventSources'} Label={'Event Sources'} Icon={SVGIcons.Alert}>
                     <ByEventSources />
                 </Page>
                 <Page Name={'DataSets'} Label={'Data Sets'} Icon={SVGIcons.Cube}>
                     <DataSets />
                 </Page>
-                <Page Name={'WorkSpaces'} Label={'Workspaces'} Icon={SVGIcons.House}>
-                    <Workspaces />
-                </Page>
-                <Page Name={'EditDataSet/:id'}>
+                <Page Name={'DataSets/EditDataSet/:id'}>
                     <EditDataSet />
                 </Page>
-                <Page Name={'Workspace/:workspaceId'} Paths={['/DataSet/:dataSetID', '/DataSet/:dataSetID/Channels/:channels']}>
-                    <WorkspaceWrapper />
-                </Page>
-                <Page Name={'ViewDataSet/:id'}>
+                <Page Name={'DataSets/ViewDataSet/:id'}>
                     <ViewDataSet />
+                </Page>
+                <Page Name={'Workspaces'} Label={'Workspaces'} Icon={SVGIcons.House}>
+                    <Workspaces />
+                </Page>
+                <Page Name={'Workspaces/:workspaceId'} Paths={['/DataSet/:dataSetID', '/DataSet/:dataSetID/Channels/:channels']}>
+                    <WorkspaceWrapper />
                 </Page>
                 <Section Label={"Recent Workspaces"}>
                     {workSpaces.map((item, i) =>
-                        <Page key={i} Name={`Workspace/${item.ID}`} Icon={SVGIcons.Document} Label={item.Name} />
+                        <Page key={i} Name={`Workspaces/${item.ID}`} Icon={SVGIcons.Document} Label={item.Name} />
                     )}
                 </Section>
             </Application>
