@@ -34,6 +34,7 @@ import { OpenXDA } from '@gpa-gemstone/application-typings';
 
 const encodedDateFormat = 'MM/DD/YYYY';
 const encodedTimeFormat = 'HH:mm:ss.SSS';
+const xdaServerFormat = "YYYY-MM-DD[T]HH:mm:ss.SSSSSSS";
 
 interface ISetting { PQBrowserUrl: string }
 interface IDatasetSetting {
@@ -55,6 +56,13 @@ interface IDatasetSetting {
     SwellMin: number | null,
     SwellMax: number | null,
     SwellType: 'LL' | 'LN' | 'both'
+}
+
+interface IxdaEvent {
+    StartTime: string,
+    EndTime: string,
+    Name: string,
+    Description: string
 }
 
 const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
@@ -406,7 +414,18 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
                 cache: true,
                 async: true
             }).done((data: string) => {
-                resolve(JSON.parse(data));
+                const xdaEvents: IxdaEvent[] = JSON.parse(data);
+                const tdapEvents: TrenDAP.IEvent[] = xdaEvents.map(evt => {
+                    console.log(evt.StartTime);
+                    const startTime = moment.utc(evt.StartTime, xdaServerFormat).valueOf();
+                    return {
+                        Time: startTime,
+                        Duration: moment.utc(evt.EndTime, xdaServerFormat).valueOf() - startTime,
+                        Title: evt.Name,
+                        Description: evt.Description
+                    }
+                });
+                resolve(tdapEvents);
             }).fail(err => reject(err));
         });
     },
