@@ -223,6 +223,8 @@ namespace TrenDAP.Controllers
         }
         public static HIDSPostTimeSpans CreatePostTimeSpans(DataSet dataSet, XDADataSetData data, List<Event> events)
         {
+            if (events.Count() == 0) throw new ArgumentException("Post message could not be correctly formed, no events specified.");
+
             double addition;
 
             switch (dataSet.EventWindowUnit.ToLower())
@@ -246,7 +248,6 @@ namespace TrenDAP.Controllers
                     DateTime evtStartTime = DateTime.UnixEpoch.AddMilliseconds(evt.Time);
                     return new DateTime[] { evtStartTime.AddHours(-addition), evtStartTime.AddMilliseconds(evt.Duration).AddHours(addition) };
                 });
-
 
             return new HIDSPostTimeSpans
             {

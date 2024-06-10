@@ -227,7 +227,6 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                 SeriesData: { Minimum: [], Maximum: [], Average: [] }
             }));
             let metaData: DataSetTypes.IDataSetMetaData[] = null;
-
             // Handle to query HIDS information (through XDA)
             let dataHandle: JQuery.jqXHR<string>;
             if (events == null) dataHandle = $.ajax({
@@ -235,18 +234,19 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                 url: `${homePath}api/DataSourceDataSet/Query/${setConn.ID}`,
                 contentType: "application/json; charset=utf-8",
                 dataType: 'text',
-                cache: true,
+                cache: false,
                 async: true
             });
-            else dataHandle = ajax({
+            else if (events.length !== 0) dataHandle = ajax({
                 type: "Post",
                 url: `${homePath}api/DataSourceDataSet/Query/ByEvents/${setConn.ID}`,
                 contentType: "application/json; charset=utf-8",
                 data: JSON.stringify(events),
                 dataType: 'text',
-                cache: true,
+                cache: false,
                 async: true
             });
+            else resolve([]);
             
             dataHandle.done((data: string) => {
                 const newPoints: string[] = data.split("\n");
