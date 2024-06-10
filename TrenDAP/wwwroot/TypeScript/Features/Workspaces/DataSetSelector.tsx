@@ -27,15 +27,20 @@ import { TrenDAP, Redux, DataSourceTypes, DataSetTypes } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, Sort, SelectDataSetsSortField, SelectDataSetsAscending, FetchDataSets, SelectDataSetsStatus } from '../DataSets/DataSetsSlice';
 import { SelectDataSources, FetchDataSources, SelectDataSourcesStatus } from '../DataSources/DataSourcesSlice';
+import { SelectEventSources, FetchEventSources, SelectEventSourcesStatus } from '../EventSources/Slices/EventSourcesSlice';
 
-import { ReactIcons } from '@gpa-gemstone/gpa-symbols'
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { Modal, ToolTip } from '@gpa-gemstone/react-interactive';
-import { ReactTable } from '@gpa-gemstone/react-table'
+import { ReactTable } from '@gpa-gemstone/react-table';
 import { Select } from '@gpa-gemstone/react-forms';
+import { Application } from '@gpa-gemstone/application-typings';
 
 import TrenDAPDB from '../DataSets/TrenDAPDB';
 import { IDataSource } from '../DataSources/Interface';
 import { AllSources } from '../DataSources/DataSources';
+import { IEventSource } from '../EventSources/Interface';
+import { EventDataSources } from '../EventSources/ByEventSources';
+import { EventSourceTypes } from '../EventSources/Interface';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import * as _ from 'lodash';
@@ -87,10 +92,18 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     const dataSourceStatus = useAppSelector(SelectDataSourcesStatus);
     const dataSetStatus = useAppSelector(SelectDataSetsStatus);
 
+    const eventSourceViews = useAppSelector(SelectEventSources);
+    const eventSourceStatus = useAppSelector(SelectEventSourcesStatus);
+
     const [selectedDataSet, setSelectedDataSet] = React.useState<TrenDAP.iDataSet | null>(null);
     const [channelHover, setChannelHover] = React.useState<IChannelHover>({ Hover: 'None', Index: -1 });
     const [datasources, setDatasources] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
     const [selectedParentKey, setSelectedParentKey] = React.useState<number | null>(null);
+
+    const [evtStatus, setEvtStatus] = React.useState<Application.Types.Status>('unintiated')
+    const [eventSources, setEventSources] = React.useState<EventSourceTypes.IEventSourceDataSet[]>([]);
+    const [allEvents, setAllEvents] = React.useState<TrenDAP.IEvent[]>([]);
+
     const [channelErrors, setChannelErrors] = React.useState<string[]>([]);
     const [allParents, setAllParents] = React.useState<{ ID: string, Name: string }[]>([]);
 
@@ -141,6 +154,21 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     //Effect to load all datasources for the selected dataset
     React.useEffect(() => {
+        if (dataSourceStatus === 'unitiated' || dataSourceStatus === 'changed')
+            dispatch(FetchDataSources());
+    }, [dataSourceStatus]);
+
+    React.useEffect(() => {
+        if (eventSourceStatus === 'unitiated' || eventSourceStatus === 'changed')
+            dispatch(FetchEventSources());
+    }, [eventSourceStatus]);
+
+    React.useEffect(() => {
+        if (dataSetStatus === 'unitiated' || dataSetStatus === 'changed')
+            dispatch(FetchDataSets());
+    }, [dataSetStatus]);
+
+    React.useEffect(() => {
         if (selectedDataSet == null)
             return;
 
@@ -157,10 +185,29 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         });
 
         return () => { dataConnectionHandle.abort() }
-    }, [selectedDataSet])
+    }, [selectedDataSet]);
+
+    React.useEffect(() => {
+        if (selectedDataSet == null) return;
+
+        setEvtStatus('loading');
+        const eventConnectionHandle = $.ajax({
+            type: "GET",
+            url: `${homePath}api/EventSourceDataSet/${selectedDataSet.ID}`,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            cache: false,
+            async: true
+        }).done((data: EventSourceTypes.IEventSourceDataSet[]) => {
+            setEventSources(data);
+        });
+
+        return () => { if (eventConnectionHandle != null && eventConnectionHandle.abort != null) eventConnectionHandle.abort() }
+    }, [selectedDataSet]);
 
     //Effect to load all parents and channels from the selected dataset
     React.useEffect(() => {
+
         if (datasources.length == 0)
             return;
 
@@ -191,10 +238,28 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 //Remove Channels param from queryParams, since we dont update this param 
                 navigate(`${homePath}Workspaces/${workspaceId}/DataSet/${dataSetID}`)
             }
+        })
+    }, [datasources]);
+    
+    React.useEffect(() => {
+        if (eventSources.length == 0) {
+            setEvtStatus('idle');
+            return;
+        }
 
+        const eventSrcHandlers = eventSources.map(ds => {
+            const eventSourceView = eventSourceViews.find(d => d.ID === ds.EventSourceID);
+            const implementation: IEventSource<any, any> | null = EventDataSources.find(t => t.Name == eventSourceView.Type);
+            if (implementation === null)
+                return Promise.resolve([]);
+            return implementation.Load(eventSourceView, selectedDataSet, ds);
         })
 
-    }, [datasources])
+        Promise.all(eventSrcHandlers).then(d => {
+            setEvtStatus('idle');
+            setAllEvents(d.flat());
+        });
+    }, [eventSources]);
 
     // Effect to initialize parent matches
     React.useEffect(() => {
@@ -255,23 +320,16 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     }, [parentMatches])
 
-    React.useEffect(() => {
-        if (dataSourceStatus === 'unitiated' || dataSourceStatus === 'changed')
-            dispatch(FetchDataSources());
-    }, [dataSourceStatus]);
-
-    React.useEffect(() => {
-        if (dataSetStatus === 'unitiated' || dataSetStatus === 'changed')
-            dispatch(FetchDataSets());
-    }, [dataSetStatus]);
-
     const loadData = () => {
+        // Assumption that 0 is user error, meant to be null.
+        // Not neccessarily true, but the use case of a 0 window is pretty narrow...
+        const useEvts = selectedDataSet.EventWindowSize != null && selectedDataSet.EventWindowSize !== 0;
         const dataHandlers = datasources.map((ds) => {
             const dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
             const implementation: IDataSource<any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
             if (implementation == null)
                 return Promise.resolve([] as DataSetTypes.IDataSetData[]);
-            return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds)
+            return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds, useEvts ? allEvents : undefined);
         })
 
         const loaded = Promise.all(dataHandlers).then(d => {
@@ -297,7 +355,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                     props.SetIsModalOpen(false);
                 }}
                 Size="xlg"
-                DisableConfirm={channelErrors?.length > 0 || selectedDataSet == null}
+                DisableConfirm={channelErrors?.length > 0 || selectedDataSet == null || evtStatus !== 'idle'}
                 ConfirmShowToolTip={channelErrors?.length > 0 || selectedDataSet == null}
                 ConfirmToolTipContent={selectedDataSet == null ? <p>Select a Data Set to continue</p> : channelErrors.length > 0 ? channelErrors.map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>) : null}
                 ShowCancel={false}
