@@ -22,16 +22,16 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import {  TrenDAP } from '../../global';
+import { TrenDAP } from '../../global';
 import { useAppDispatch } from '../../hooks';
-import { AddWorkSpace, UpdateWorkSpace } from './WorkSpacesSlice'
+import { AddWorkSpace, UpdateWorkSpace } from './WorkspacesSlice'
 import { Modal } from '@gpa-gemstone/react-interactive';
 import { Input, CheckBox } from '@gpa-gemstone/react-forms';
 
 interface IProps {
     New: boolean,
     Workspace: TrenDAP.iWorkSpace,
-    Show: boolean, 
+    Show: boolean,
     SetShow: (show: boolean) => void
 }
 
@@ -41,12 +41,12 @@ const WorkspaceSettings: React.FunctionComponent<IProps> = (props) => {
 
     function isNameValid(field: keyof (TrenDAP.iWorkSpace)): boolean {
         if (field == 'Name')
-            return workspace != null && workspace.Name.length > 0 && workspace.Name.length <= 200;
+            return workspace != null && workspace?.Name?.length > 0 && workspace?.Name?.length <= 200;
         else
             return true;
     }
 
-    return (
+    return ( 
         <>
             <Modal
                 ConfirmBtnClass={"btn btn-success mr-auto"}
