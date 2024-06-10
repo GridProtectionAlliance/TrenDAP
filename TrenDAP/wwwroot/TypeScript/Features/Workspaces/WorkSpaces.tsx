@@ -25,7 +25,7 @@
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { Sort, FetchWorkSpaces, SelectWorkSpacesStatus, RemoveWorkSpace, SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, SelectWorkSpacesSortField, SelectWorkSpacesAscending, SelectNewWorkSpace } from './WorkSpacesSlice';
+import { Sort, FetchWorkSpaces, SelectWorkSpacesStatus, RemoveWorkSpace, SelectWorkSpacesForUser, SelectWorkSpacesAllPublicNotUser, SelectWorkSpacesSortField, SelectWorkSpacesAscending, SelectNewWorkSpace } from './WorkspacesSlice';
 import WorkspaceSettings from './WorkspaceSettings';
 import moment from 'moment';
 import { SelectDataSetsStatus, FetchDataSets } from '../DataSets/DataSetsSlice';
@@ -100,7 +100,7 @@ const Workspaces: React.FunctionComponent = () => {
                                 SortKey={sortField}
                                 OnClick={(data, evt) => {
                                     if (evt.target.tagName.toLowerCase() === 'td')
-                                        navigate(`${homePath}WorkSpaceEditor/${data.row.ID}`)
+                                        navigate(`${homePath}Workspace/${data.row.ID}`)
                                 }}
                                 OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                                 Data={workSpaces}
@@ -168,7 +168,7 @@ const Workspaces: React.FunctionComponent = () => {
                                 SortKey={sortField}
                                 OnClick={(data, evt) => {
                                     if (evt.target.tagName.toLowerCase() === 'td')
-                                        navigate(`${homePath}WorkSpaceEditor/${data.row.ID}`)
+                                        navigate(`${homePath}Workspace/${data.row.ID}`)
                                 }}
                                 OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                                 Data={publicWorkSpaces}
