@@ -39,6 +39,10 @@ const WorkspaceSettings: React.FunctionComponent<IProps> = (props) => {
     const dispatch = useAppDispatch();
     const [workspace, setWorkspace] = React.useState<TrenDAP.iWorkSpace>(props.Workspace);
 
+    React.useEffect(() => {
+        setWorkspace(props.Workspace)
+    }, [props.Workspace])
+
     function isNameValid(field: keyof (TrenDAP.iWorkSpace)): boolean {
         if (field == 'Name')
             return workspace != null && workspace?.Name?.length > 0 && workspace?.Name?.length <= 200;
@@ -48,23 +52,25 @@ const WorkspaceSettings: React.FunctionComponent<IProps> = (props) => {
 
     return (
         <>
-            <Modal
-                ConfirmBtnClass={"btn btn-success mr-auto"}
-                Show={props.Show}
-                ShowX={true}
-                ConfirmText={'Save'}
-                Title={props.New ? 'Add Workspace' : 'Edit Workspace'}
-                CallBack={conf => {
-                    if (conf && props.New)
-                        dispatch(AddWorkSpace({ ...workspace, JSONString: props.Workspace.JSONString }));
-                    else if (conf && !props.New)
-                        dispatch(UpdateWorkSpace({ ...workspace, JSONString: props.Workspace.JSONString }));
-                    props.SetShow(false);
-                }}
-            >
-                <Input<TrenDAP.iWorkSpace> Record={workspace} Field="Name" Setter={record => setWorkspace(record)} Valid={isNameValid} />
-                <CheckBox<TrenDAP.iWorkSpace> Record={workspace} Field="Public" Label='Shared' Setter={record => setWorkspace(record)} />
-            </Modal>
+            {workspace != null ?
+                <Modal
+                    ConfirmBtnClass={"btn btn-success mr-auto"}
+                    Show={props.Show}
+                    ShowX={true}
+                    ConfirmText={'Save'}
+                    Title={props.New ? 'Add Workspace' : 'Edit Workspace'}
+                    CallBack={conf => {
+                        if (conf && props.New)
+                            dispatch(AddWorkSpace({ ...workspace, JSONString: props.Workspace.JSONString }));
+                        else if (conf && !props.New)
+                            dispatch(UpdateWorkSpace({ ...workspace, JSONString: props.Workspace.JSONString }));
+                        props.SetShow(false);
+                    }}
+                >
+                    <Input<TrenDAP.iWorkSpace> Record={workspace} Field="Name" Setter={record => setWorkspace(record)} Valid={isNameValid} />
+                    <CheckBox<TrenDAP.iWorkSpace> Record={workspace} Field="Public" Label='Shared' Setter={record => setWorkspace(record)} />
+                </Modal>
+                : null}
         </>
     );
 }

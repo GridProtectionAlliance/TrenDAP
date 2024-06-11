@@ -49,7 +49,8 @@ const Workspaces: React.FunctionComponent = () => {
 
     const headerRef = React.useRef<HTMLDivElement>();
     const [cardHeaderHeight, setCardHeaderHeight] = React.useState<number>(50);
-    const [deletedWorkSpace, setDeletedWorkSpace] = React.useState<TrenDAP.iWorkSpace>(null);
+    const [deletedWorkspace, setDeletedWorkspace] = React.useState<TrenDAP.iWorkSpace>(null);
+    const [edittedWorkspace, setEdittedWorkspace] = React.useState<TrenDAP.iWorkSpace>(null);
     const [showAddModal, setShowAddModal] = React.useState<boolean>(false);
     const [showEditModal, setShowEditModal] = React.useState<boolean>(false);
 
@@ -118,7 +119,7 @@ const Workspaces: React.FunctionComponent = () => {
                                     Key={'Public'}
                                     AllowSort={true}
                                     Field={'Public'}
-                                    Content={(row) => <span>{row.item[row.key] ? <ReactIcons.CheckMark Color="green"/> : null}</span>}
+                                    Content={(row) => <span>{row.item[row.key] ? <ReactIcons.CheckMark Color="green" /> : null}</span>}
                                 >
                                     Shared
                                 </ReactTable.Column>
@@ -136,15 +137,15 @@ const Workspaces: React.FunctionComponent = () => {
                                     Content={(row) =>
                                         <>
                                             <span>
-                                                <button className="btn" onClick={() => setShowEditModal(true)}><ReactIcons.Pencil /></button>
-                                                <WorkspaceSettings Workspace={row.item} New={false} Show={showEditModal} SetShow={setShowEditModal} />
-                                                <button className="btn" onClick={() => setDeletedWorkSpace(row.item)}><ReactIcons.TrashCan Color="red"/></button>
+                                                <button className="btn" onClick={() => { setEdittedWorkspace(row.item); setShowEditModal(true);  }}><ReactIcons.Pencil /></button>
+                                                <button className="btn" onClick={() => setDeletedWorkspace(row.item)}><ReactIcons.TrashCan Color="red" /></button>
                                             </span>
                                         </>
                                     }>
                                     {'\u200B'}
                                 </ReactTable.Column>
                             </ReactTable.Table>
+                            <WorkspaceSettings Workspace={edittedWorkspace} New={false} Show={showEditModal && edittedWorkspace != null} SetShow={setShowEditModal} />
                         </div>
                     </div>
                 </div>
@@ -192,11 +193,11 @@ const Workspaces: React.FunctionComponent = () => {
                                 </ReactTable.Column>
                             </ReactTable.Table>
                         </div>
-                        <Warning Title={'Delete ' + deletedWorkSpace?.Name} Show={deletedWorkSpace != null} Message={"This will remove the workspace and can not be undone."}
+                        <Warning Title={'Delete ' + deletedWorkspace?.Name} Show={deletedWorkspace != null} Message={"This will remove the workspace and can not be undone."}
                             CallBack={(c) => {
                                 if (c)
-                                    dispatch(RemoveWorkSpace(deletedWorkSpace));
-                                setDeletedWorkSpace(null);
+                                    dispatch(RemoveWorkSpace(deletedWorkspace));
+                                setDeletedWorkspace(null);
                             }}
                         />
                     </div>
