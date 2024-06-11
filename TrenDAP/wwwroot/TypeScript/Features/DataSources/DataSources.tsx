@@ -1,4 +1,4 @@
-﻿//******************************************************************************************************
+//******************************************************************************************************
 //  DataSources.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
@@ -40,7 +40,7 @@ export const AllSources: IDataSource<any, any>[] = [XDADataSource, SapphireDataS
 
 const DataSources: React.FunctionComponent = () => {
     return (
-        <div className="row" style={{ margin: 10}}>
+        <div className="row">
             <div className="col-6">
                 <div className="card">
                     <div className="card-header">
