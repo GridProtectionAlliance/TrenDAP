@@ -43,18 +43,10 @@ const DataSets: React.FunctionComponent = (props: {}) => {
 
     const [deleteItem, setDeleteItem] = React.useState<TrenDAP.iDataSet>(null);
     const [hover, setHover] = React.useState<Hover>('None')
-    const cardHeaderRef = React.useRef<HTMLDivElement>(null);
-    const [cardHeaderHeight, setCardHeaderHeight] = React.useState<number>(50)
-
     const dsStatus = useAppSelector(SelectDataSetsStatus);
 
     const sortField = useAppSelector(SelectDataSetsSortField);
     const ascending = useAppSelector(SelectDataSetsAscending);
-
-    React.useLayoutEffect(() => {
-        if (cardHeaderHeight !== cardHeaderRef.current?.offsetHeight)
-            setCardHeaderHeight(cardHeaderRef.current.offsetHeight)
-    })
 
     React.useEffect(() => {
         if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
@@ -66,7 +58,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
         <div className="row" style={{ margin: 10 }}>
             <div className="col-8" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header" ref={cardHeaderRef}>
+                    <div className="card-header">
                         <div className="row">
                             <div className="col">
                                 <h4>My DataSets</h4>
@@ -153,7 +145,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
             </div>
             <div className="col-4" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header" style={{ height: cardHeaderHeight }}>
+                    <div className="card-header">
                         <h4>
                             Shared DataSets
                         </h4>
