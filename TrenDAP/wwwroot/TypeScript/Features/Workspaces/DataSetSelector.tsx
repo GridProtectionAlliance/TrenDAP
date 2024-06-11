@@ -223,9 +223,9 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     //Effect to intialize channel matches
     React.useEffect(() => {
-        const channels = props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels).flat()).flat();
-        setChannelMatches(channels.map(c => ({
-            Key: c.Key,
+        const channelKeys = _.uniqWith(props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels).flat()).flat().map(chan => chan.Key), _.isEqual);
+        setChannelMatches(channelKeys.map(c => ({
+            Key: c,
             Status: 'NoMatch',
             ChannelID: null,
         })));
