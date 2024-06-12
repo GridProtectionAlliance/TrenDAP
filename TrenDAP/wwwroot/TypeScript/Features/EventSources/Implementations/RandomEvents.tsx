@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import _ from 'lodash';
 import { EventSourceTypes, IEventSource } from '../Interface';
 import { TrenDAP } from '../../../global';
 import { Input } from '@gpa-gemstone/react-forms';

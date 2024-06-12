@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as _ from 'lodash';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { Pencil, Plus, TrashCan } from '@gpa-gemstone/gpa-symbols';
 import { TrenDAP } from '../../../global';
@@ -120,7 +119,7 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                             Data={props.EventSourceConnections}
                             SortKey={null}
                             Ascending={null}
-                            OnSort={(d) => { }}
+                            OnSort={() => { }}
                             TableStyle={{
                                 padding: 0, width: '100%', height: '100%',
                                 tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column'

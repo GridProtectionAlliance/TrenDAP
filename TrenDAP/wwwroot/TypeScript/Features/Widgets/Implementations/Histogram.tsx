@@ -56,7 +56,7 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
         React.useLayoutEffect(() => {
             if (plotRef.current != null) {
-                let newSize = { Height: plotRef.current.offsetHeight, Width: plotRef.current.offsetWidth }
+                const newSize = { Height: plotRef.current.offsetHeight, Width: plotRef.current.offsetWidth }
                 if (!_.isEqual(newSize, plotSize))
                     setPlotSize(newSize)
             }
@@ -67,7 +67,8 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         }, [props.Data, props.Settings, plotSize])
 
         function Initialize() {
-            let hasProfile = props.Data.some(data => data.ChannelSettings.Profile);
+            if(plotRef.current == null || props.Data.length === 0) return;
+            const hasProfile = props.Data.some(data => data.ChannelSettings.Profile);
             const margin = { bottom: 50, left: 50, top: 25, right: (hasProfile ? 50 : 10) };
 
             // Remove old plot
@@ -101,7 +102,7 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             });
 
             const allBins = binsAndProfiles.flatMap(({ bins, settings }) => bins.map(bin => ({ bin, settings })));
-            const profiles = binsAndProfiles.map(({ profile, settings }) => profile ? { Color: settings.Color, Profile: profile } : null).filter(p => p != null);
+            const profiles = binsAndProfiles.map(({ profile, settings }) => profile != null ? { Color: settings.Color, Profile: profile } : null).filter(p => p != null);
 
             //Make sure to use min and max from bins instead of from the data itself or scaling issues will occur..
             const xMax = d3.max(allBins, d => d.bin.x1);
@@ -111,12 +112,12 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
             // Create X scale
             const xScale = d3.scaleLinear()
-                .domain([xMin, xMax])
+                .domain([xMin as number, xMax as number])
                 .range([margin.left, plotRef.current.offsetWidth - margin.right]);
 
             // Create Y scale
             const yScale = d3.scaleLinear()
-                .domain([0, yMax])
+                .domain([0, yMax as number])
                 .range([plotRef.current.offsetHeight - margin.bottom, margin.top]);
 
             // Create X scale
@@ -157,9 +158,9 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .append("rect")
                 .attr("fill", d => d.settings.Color)
                 .attr("opacity", 0.5)
-                .attr("x", d => xScale(d.bin.x0) + 1)
+                .attr("x", d => xScale(d.bin.x0 as number) + 1)
                 .attr("y", d => yScale(d.bin.length))
-                .attr("width", d => xScale(d.bin.x1) - xScale(d.bin.x0) - 1)
+                .attr("width", d => xScale(d.bin.x1 as number) - xScale(d.bin.x0 as number) - 1)
                 .attr("height", d => yScale(0) - yScale(d.bin.length));
 
             // Plot profile lines
@@ -185,7 +186,7 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     .append("path")
                     .attr("fill", "none")
                     .attr("stroke-width", 1.5)
-                    .attr("stroke", d => d.Color)
+                    .attr("stroke", d => d?.Color as string)
                     .attr("d", d => lineFunc(d.Profile));
             }
 
@@ -197,8 +198,8 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
     },
     SettingsUI: (props) => {
         return <>
-            <Input<IProps> Field='XAxisLabel' Label="X Axis Label" Record={props.Settings} Type='text' Setter={(r) => props.SetSettings(r)} Valid={(field) => true} />
-            <Input<IProps> Field='BinCount' Label='Bins' Record={props.Settings} Type='number' Setter={(r) => props.SetSettings(r)} Valid={(field) => true} />
+            <Input<IProps> Field='XAxisLabel' Label="X Axis Label" Record={props.Settings} Type='text' Setter={(r) => props.SetSettings(r)} Valid={() => true} />
+            <Input<IProps> Field='BinCount' Label='Bins' Record={props.Settings} Type='number' Setter={(r) => props.SetSettings(r)} Valid={() => true} />
         </>
     },
     ChannelSelectionUI: (props) => {
@@ -216,13 +217,13 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                     SortKey={sortField}
                     OnClick={(item) => {
-                        const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID);
-                        if (isSelected ?? false)
+                        const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID) != null;
+                        if (isSelected)
                             props.RemoveChannel(item.row.ID);
                         else
                             props.AddChannel(item.row.ID, HistogramWidget.DefaultChannelSettings);
                     }}
-                    OnSort={data => sort(data.colField, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
+                    OnSort={data => sort(data.colField as keyof DataSetTypes.IDataSetMetaData, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
                     Data={allChannels}
                     Ascending={ascending}
                     KeySelector={(row) => row.ID}
@@ -270,7 +271,7 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     OnSort={() => { }}
                     Data={props.SelectedChannels}
                     Ascending={ascending}
-                    KeySelector={(row, idx) => idx}
+                    KeySelector={(row, idx) => idx as number}
                 >
                     <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Parent'}

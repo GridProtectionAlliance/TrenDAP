@@ -47,17 +47,10 @@ const Workspaces: React.FunctionComponent = () => {
     const sortField = useAppSelector(SelectWorkSpacesSortField);
     const ascending = useAppSelector(SelectWorkSpacesAscending);
 
-    const headerRef = React.useRef<HTMLDivElement>();
-    const [cardHeaderHeight, setCardHeaderHeight] = React.useState<number>(50);
-    const [deletedWorkspace, setDeletedWorkspace] = React.useState<TrenDAP.iWorkSpace>(null);
-    const [edittedWorkspace, setEdittedWorkspace] = React.useState<TrenDAP.iWorkSpace>(null);
+    const [deletedWorkspace, setDeletedWorkspace] = React.useState<TrenDAP.iWorkSpace | null>(null);
+    const [edittedWorkspace, setEdittedWorkspace] = React.useState<TrenDAP.iWorkSpace | null>(null);
     const [showAddModal, setShowAddModal] = React.useState<boolean>(false);
     const [showEditModal, setShowEditModal] = React.useState<boolean>(false);
-
-    React.useLayoutEffect(() => {
-        if (cardHeaderHeight !== headerRef.current?.offsetHeight)
-            setCardHeaderHeight(headerRef.current.offsetHeight)
-    })
 
     React.useEffect(() => {
         if (wsStatus != 'unitiated' && wsStatus != 'changed') return;
@@ -76,7 +69,7 @@ const Workspaces: React.FunctionComponent = () => {
         <div className="row">
             <div className="col-12 col-md-6 col-xl-8">
                 <div className="card h-100">
-                    <div className="card-header" ref={headerRef}>
+                    <div className="card-header">
                         <div className="row">
                             <div className="d-flex col-6 justify-content-start">
                                 <h4>My Workspaces</h4>
@@ -119,7 +112,7 @@ const Workspaces: React.FunctionComponent = () => {
                                     Key={'Public'}
                                     AllowSort={true}
                                     Field={'Public'}
-                                    Content={(row) => <span>{row.item[row.key] ? <ReactIcons.CheckMark Color="green" /> : null}</span>}
+                                    Content={(row) => <span>{row.item[row.key] != null ? <ReactIcons.CheckMark Color="green" /> : null}</span>}
                                 >
                                     Shared
                                 </ReactTable.Column>
@@ -195,7 +188,7 @@ const Workspaces: React.FunctionComponent = () => {
                         </div>
                         <Warning Title={'Delete ' + deletedWorkspace?.Name} Show={deletedWorkspace != null} Message={"This will remove the workspace and can not be undone."}
                             CallBack={(c) => {
-                                if (c)
+                                if (c && deletedWorkspace != null)
                                     dispatch(RemoveWorkSpace(deletedWorkspace));
                                 setDeletedWorkspace(null);
                             }}

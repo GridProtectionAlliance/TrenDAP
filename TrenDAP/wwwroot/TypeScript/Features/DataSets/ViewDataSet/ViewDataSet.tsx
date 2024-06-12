@@ -28,8 +28,10 @@ import { /*UpdateDataSetData,*/ SelectDataSetsStatus, FetchDataSets, SelectRecor
 import PagedTable from './PagedTable';
 import Chart from './Chart';
 import Histogram from './Histogram';
-import { InputNumbers } from '@gpa-gemstone/gpa-symbols';
 import { Plus } from '../../../Constants';
+
+//Disabling ESLint temporarly for this file as it needs to be reworked
+/* eslint-disable */
 
 export default function ViewDataSet(props) {
     const dispatch = useAppDispatch();
@@ -176,11 +178,11 @@ export default function ViewDataSet(props) {
                             <label>Criteria</label>
                             <ul style={{ listStyle: 'none'}}>
                                 {criteria.map((c, Index) => <FlagCriteria key={Index} {...c} Update={(record) => {
-                                    let newCrits = [...criteria];
+                                    const newCrits = [...criteria];
                                     newCrits[Index] = record;
                                     setCriteria(newCrits);
                                 }} Add={() => {
-                                    let newCrits = [ ...criteria];
+                                    const newCrits = [ ...criteria];
                                     newCrits[Index].AndOr = 'And';
                                     newCrits.push({ Field: 'Average', Condition: '>', Value: 0, AndOr: 'None' });
                                     setCriteria(newCrits);
@@ -190,16 +192,16 @@ export default function ViewDataSet(props) {
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-primary pull-left" onClick={() => {
-                                let points = selectedData.filter(f => (f.QualityFlags/Math.pow(2,3) & 1) !== 0);
+                                const points = selectedData.filter(f => (f.QualityFlags/Math.pow(2,3) & 1) !== 0);
                                 points.forEach(p => p.QualityFlags = p.QualityFlags- Math.pow(2, 3));
                                 FlagData(points);
                                 setToggle(false);
                             }}>Unflag All</button>
 
                             <button type="button" className="btn btn-primary" onClick={() => {
-                                let points = selectedData.filter(f => {
+                                const points = selectedData.filter(f => {
 
-                                    let pre = criteria.map(c => {
+                                    const pre = criteria.map(c => {
                                         if (c.Condition == '<')
                                             return { Value: f[c.Field] < c.Value, AndOr: c.AndOr };
                                         else if (c.Condition == '<=')

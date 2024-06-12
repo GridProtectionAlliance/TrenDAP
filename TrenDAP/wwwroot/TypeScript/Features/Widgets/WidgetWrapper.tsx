@@ -48,6 +48,9 @@ import _ from 'lodash';
 import ChannelSelector from './ChannelSelector';
 import { isPercent } from './HelperFunctions';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+
 export const AllWidgets: WidgetTypes.IWidget<any, any>[] = [TextWidget, TableWidget, StatsWidget, HistogramWidget, XvsYWidget, ProfileWidget, TrendWidget, Map];
 
 interface IProps {
@@ -61,7 +64,7 @@ interface IProps {
 }
 
 const WidgetWrapper: React.FC<IProps> = (props) => {
-    const Implementation: WidgetTypes.IWidget<any, any> | null = React.useMemo(() => AllWidgets.find(item => item.Name === props.Widget.Type), [props.Widget.Type]);
+    const Implementation: WidgetTypes.IWidget<any, any> | undefined = React.useMemo(() => AllWidgets.find(item => item.Name === props.Widget.Type), [props.Widget.Type]);
     const guid = React.useRef<string>(CreateGuid());
 
     const editMode = useAppSelector(SelectEditMode);
@@ -81,16 +84,17 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     const Settings: any = React.useMemo(() => {
         if (props.Widget.Settings == null)
             return Implementation?.DefaultSettings ?? {};
-        const s = _.cloneDeep(Implementation?.DefaultSettings ?? {});
+        const settings = _.cloneDeep(Implementation?.DefaultSettings ?? {});
         let custom = {};
         if (props.Widget.Settings != null)
             custom = props.Widget.Settings;
 
-        for (const [k, v] of Object.entries(Implementation?.DefaultSettings ?? {})) {
-            if (custom.hasOwnProperty(k))
-                s[k] = _.cloneDeep(custom[k]);
+        for (const [k] of Object.entries(Implementation?.DefaultSettings ?? {})) {
+            if (Object.prototype.hasOwnProperty.call(custom, k) != null)
+                settings[k] = _.cloneDeep(custom[k]);
         }
-        return s;
+
+        return settings;
     }, [Implementation, props.Widget.Settings, showSettingsModal]);
 
     React.useEffect(() => {
@@ -99,7 +103,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             return
         }
 
-        const channels: WidgetTypes.ISelectedChannels<any>[] = props.Widget.Channels.map(chan => ({ ...chan, MetaData: [...props.AllChannels].find(c => c.ID === props.ChannelMap.Map.current.get(chan.Key)) }))
+        const channels: WidgetTypes.ISelectedChannels<any>[] = props.Widget.Channels.map(chan => ({ ...chan, MetaData: [...props.AllChannels].find(c => c.ID === props.ChannelMap.Map.current.get(chan.Key)) as DataSetTypes.IDataSetMetaData }))
         setLocalChannels(channels)
     }, [props.Widget.Channels, props.AllChannels, props.ChannelMap.Version, showSettingsModal])
 
@@ -139,14 +143,14 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     }, [props.Widget.ShowHeader, editMode])
 
     function handleAddChannel(channelID: string, defaultSetting: any) {
-        let channel = props.AllChannels.find(channel => channel.ID === channelID);
+        const channel = props.AllChannels.find(channel => channel.ID === channelID) as DataSetTypes.IDataSetMetaData;
         let uniqParent = localChannels.reduce((max, chan) => {
             return chan.Key.Parent > max ? chan.Key.Parent : max;
         }, 0);
 
         uniqParent = localChannels.length === 0 ? 0 : uniqParent + 1;
-        let key = { Phase: channel.Phase, Type: channel.Type, Harmonic: channel.Harmonic, Parent: uniqParent }
-        let newChannel = {
+        const key = { Phase: channel.Phase, Type: channel.Type, Harmonic: channel.Harmonic, Parent: uniqParent }
+        const newChannel = {
             MetaData: channel,
             ChannelSettings: defaultSetting,
             Key: key,
@@ -159,12 +163,12 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
 
     const handleUpdateWidget = (confBtn: boolean, deleteBtn: boolean) => {
         if (confBtn) {
-            let updatedChannels = [...localChannels];
+            const updatedChannels = [...localChannels];
             const hasChannelsChanged = !_.isEqual(localChannels.map(chan => ({ Key: chan.Key, ChannelSettings: chan.ChannelSettings })), props.Widget.Channels)
             if (hasChannelsChanged)
                 updatedChannels.forEach(channel => {
                     AddChannelToMap(channel.Key, channel.MetaData)
-                    const updatedKey = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) }
+                    const updatedKey = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) } as TrenDAP.IChannelKey
                     channel.Key = updatedKey
                 })
 
@@ -187,7 +191,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     const AddChannelToMap = (chanKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData) => {
         let maxValue = -1
 
-        for (let value of props.ParentMap.current.values()) {
+        for (const value of props.ParentMap.current.values()) {
             if (value > maxValue)
                 maxValue = value
         }
@@ -195,7 +199,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
         if (!props.ParentMap.current.has(channel.ParentID))
             props.ParentMap.current.set(channel.ParentID, maxValue + 1)
 
-        let parent = props.ParentMap.current.get(channel.ParentID)
+        const parent = props.ParentMap.current.get(channel.ParentID)
         props.ChannelMap.Map.current.set({ ...chanKey, Parent: parent }, channel.ID)
         props.SetChannelMapVersion(props.ChannelMap.Version + 1)
     }
@@ -254,7 +258,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                             <div className="col-4 d-flex flex-column h-100">
                                 <div className="row">
                                     <div className="col-12">
-                                        <Input<WidgetTypes.ICommonSettings> Field='Label' Record={localCommonSettings} Type='text' Setter={(r) => setCommonLocalSettings(r)} Valid={(field) => true} />
+                                        <Input<WidgetTypes.ICommonSettings> Field='Label' Record={localCommonSettings} Type='text' Setter={(r) => setCommonLocalSettings(r)} Valid={() => true} />
                                     </div>
                                 </div>
                                 <div className="row">
@@ -275,7 +279,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                 />}
                             </div>
                             <div className="col-8 h-100">
-                                {Implementation?.ChannelSelectionUI !== undefined ?
+                                {Implementation?.ChannelSelectionUI != null ?
                                     <Implementation.ChannelSelectionUI
                                         AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
                                         SetChannelSettings={(channelKey, settings) => {

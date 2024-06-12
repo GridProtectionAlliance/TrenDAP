@@ -37,7 +37,7 @@ export default class TrenDAPDB {
     private OpenDB() {
 
         return new Promise<IDBDatabase>((resolve, reject) => {
-            let req = indexedDB.open('TrenDAP', 2);
+            const req = indexedDB.open('TrenDAP', 2);
 
             req.onupgradeneeded = this.AddTables;
 
@@ -57,9 +57,9 @@ export default class TrenDAPDB {
     }
 
     private AddTables(evt: any) {
-        let upgradeDB = evt.target.result as IDBDatabase;
+        const upgradeDB = evt.target.result as IDBDatabase;
         if (!upgradeDB.objectStoreNames.contains('Channel')) {
-            let ds = upgradeDB.createObjectStore('Channel', { keyPath: 'ID', autoIncrement: false });
+            const ds = upgradeDB.createObjectStore('Channel', { keyPath: 'ID', autoIncrement: false });
             ds.createIndex("ID", "ID", { unique: true });
         }
 
@@ -67,10 +67,10 @@ export default class TrenDAPDB {
 
     public Read(key: string) {
         return new Promise<(ChannelTableRow)>(async (resolve, reject) => {
-            let db = await this.OpenDB();
-            let tx = db.transaction('Channel', 'readonly');
-            let store = tx.objectStore('Channel');
-            let result = store.get(key);
+            const db = await this.OpenDB();
+            const tx = db.transaction('Channel', 'readonly');
+            const store = tx.objectStore('Channel');
+            const result = store.get(key);
 
             result.onsuccess = (evt: any) => {
                 resolve(evt.target.result);
@@ -92,16 +92,16 @@ export default class TrenDAPDB {
                 return;
             }
     
-            let db = await this.OpenDB();
-            let tx = db.transaction('Channel', 'readonly');
-            let store = tx.objectStore('Channel');
-            let results: { Data: ChannelTableRow, ChannelSettings: any, ChannelKey: TrenDAP.IChannelKey }[] = [];
+            const db = await this.OpenDB();
+            const tx = db.transaction('Channel', 'readonly');
+            const store = tx.objectStore('Channel');
+            const results: { Data: ChannelTableRow, ChannelSettings: any, ChannelKey: TrenDAP.IChannelKey }[] = [];
     
             let completed = 0;
             channels.forEach(channel => {
                 if (channel.ID == null) return;
     
-                let request = store.get(channel.ID);
+                const request = store.get(channel.ID);
                 request.onsuccess = (evt: any) => {
                     results.push({ Data: evt.target.result, ChannelSettings: channel.ChannelSettings, ChannelKey: channel.ChannelKey });
                     completed++;
@@ -127,10 +127,10 @@ export default class TrenDAPDB {
     public ReadAll() {
         return new Promise<(ChannelTableRow)[]>(async (resolve, reject) => {
 
-            let db = await this.OpenDB();
-            let tx = db.transaction('Channel', 'readonly');
-            let store = tx.objectStore('Channel');
-            let result = store.getAll();
+            const db = await this.OpenDB();
+            const tx = db.transaction('Channel', 'readonly');
+            const store = tx.objectStore('Channel');
+            const result = store.getAll();
 
             result.onsuccess = (evt: any) => {
                 resolve(evt.target.result);
@@ -145,11 +145,11 @@ export default class TrenDAPDB {
 
     public Add(record: ChannelTableRow) {
         return new Promise(async (resolve, reject) => {
-            let db = await this.OpenDB();
+            const db = await this.OpenDB();
 
-            let tx = db.transaction('Channel', 'readwrite');
-            let store = tx.objectStore('Channel');
-            let result = store.put({ ID: record.ID, Created: moment().format(TimeFormat), Data: record });
+            const tx = db.transaction('Channel', 'readwrite');
+            const store = tx.objectStore('Channel');
+            const result = store.put({ ID: record.ID, Created: moment().format(TimeFormat), Data: record });
 
             result.onsuccess = (evt: any) => {
                 resolve(evt.target.result);
@@ -165,12 +165,12 @@ export default class TrenDAPDB {
 
     public AddMultiple(record: DataSetTypes.IDataSetData[]) {
         return new Promise(async (resolve, reject) => {
-            let db = await this.OpenDB();
+            const db = await this.OpenDB();
 
-            let tx = db.transaction('Channel', 'readwrite');
-            let store = tx.objectStore('Channel');
+            const tx = db.transaction('Channel', 'readwrite');
+            const store = tx.objectStore('Channel');
             Promise.all(record.map(r => new Promise((res, rej) => {
-                let result = store.put({ ID: r.ID, Created: moment().format(TimeFormat), Data: r });
+                const result = store.put({ ID: r.ID, Created: moment().format(TimeFormat), Data: r });
 
                 result.onsuccess = (evt: any) => {
                     res(evt.target.result);
@@ -189,11 +189,11 @@ export default class TrenDAPDB {
     public Delete(id: number) {
         return new Promise(async (resolve, reject) => {
 
-        let db = await this.OpenDB();
+        const db = await this.OpenDB();
 
-        let tx = db.transaction('Channel', 'readwrite');
-        let store = tx.objectStore('Channel');
-        let result = store.delete(id);
+        const tx = db.transaction('Channel', 'readwrite');
+        const store = tx.objectStore('Channel');
+        const result = store.delete(id);
         result.onsuccess = (evt: any) => {
             resolve(evt.target.result);
         };

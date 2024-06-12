@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  XDADataSource.tsx - Gbtc
 //
-//  Copyright © 2024, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright ï¿½ 2024, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -66,12 +66,15 @@ const OpenHistorianDataSource: IDataSource<{}, TrenDAP.iOpenHistorianDataSet> = 
         );
 
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     LoadDataSetMeta: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetMetaData[]> {
         throw new Error('Function not implemented.');
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     LoadDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetData[]> {
         throw new Error('Function not implemented.');
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     TestAuth: function (dataSource: DataSourceTypes.IDataSourceView): Promise<boolean> {
         throw new Error('Function not implemented.');
     }

@@ -47,7 +47,7 @@ const Workspace: React.FunctionComponent = () => {
     const dispatch = useAppDispatch();
 
     const { dataSetID, workspaceId } = useParams();
-    const workSpace: TrenDAP.iWorkSpace = useAppSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, parseInt(workspaceId ?? '-1')));
+    const workSpace: TrenDAP.iWorkSpace | undefined = useAppSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, parseInt(workspaceId ?? '-1')));
     const workspaceStatus = useAppSelector(SelectWorkSpacesStatus);
     const editMode = useAppSelector(SelectEditMode);
 
@@ -57,7 +57,7 @@ const Workspace: React.FunctionComponent = () => {
     const [mapVersion, setMapVersion] = React.useState<number>(0);
 
     const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [] });
-    const [workspaceLink, setWorkspaceLink] = React.useState<string>(null);
+    const [workspaceLink, setWorkspaceLink] = React.useState<string | null>(null);
     const [showWorkspaceLink, setShowWorkspaceLink] = React.useState<boolean>(false);
 
     const [showCopiedTooltip, setShowCopiedTooltip] = React.useState<boolean>(false);
@@ -66,7 +66,7 @@ const Workspace: React.FunctionComponent = () => {
     const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([])
     const [showShowDataSetModal, setShowDataSetModal] = React.useState<boolean>(true)
     const [loading, setLoading] = React.useState<boolean>(false);
-    const [dataSet, setDataset] = React.useState<TrenDAP.iDataSet>(null)
+    const [dataSet, setDataset] = React.useState<TrenDAP.iDataSet | null>(null)
     const [isLinkShareable, setIsLinkShareable] = React.useState<{ DisabledMessage: string, Shareable: boolean }>({ Shareable: false, DisabledMessage: '' });
 
     //Effect to update isLinkShareable
@@ -77,8 +77,7 @@ const Workspace: React.FunctionComponent = () => {
         }
 
         const isWorkspaceSaved = _.isEqual(workSpaceJSON, JSON.parse(workSpace.JSONString));
-        const shareable = dataSet?.Public && workSpace?.Public && isWorkspaceSaved;
-        let disabledMessage = '';
+        const shareable = (dataSet?.Public ?? false) && (workSpace?.Public ?? false) && isWorkspaceSaved;
 
         if (!dataSet?.Public || !workSpace?.Public) {
             setIsLinkShareable({ Shareable: false, DisabledMessage: `Workspace and dataset must be public${!isWorkspaceSaved ? ' and workspace must be saved' : ''}` });
@@ -90,7 +89,7 @@ const Workspace: React.FunctionComponent = () => {
             return;
         }
 
-        setIsLinkShareable({ Shareable: shareable, DisabledMessage: disabledMessage });
+        setIsLinkShareable({ Shareable: shareable, DisabledMessage: '' });
     }, [workSpace, dataSet, workSpaceJSON]);
 
 
@@ -113,7 +112,7 @@ const Workspace: React.FunctionComponent = () => {
 
     React.useEffect(() => {
         if (workSpace === undefined) return;
-        let json = JSON.parse(workSpace.JSONString) as TrenDAP.WorkSpaceJSON;
+        const json = JSON.parse(workSpace.JSONString) as TrenDAP.WorkSpaceJSON;
         setWorkSpaceJSON(json);
     }, [workSpace]);
 
@@ -207,7 +206,7 @@ const Workspace: React.FunctionComponent = () => {
                                 ConfirmText="Copy to Clipboard"
                                 ShowX={true}
                                 CallBack={confBtn => {
-                                    if (confBtn) {
+                                    if (confBtn && workspaceLink != null) {
                                         navigator.clipboard.writeText(workspaceLink).then(() => {
                                             setShowCopiedTooltip(true);
                                             setTimeout(() => {
@@ -237,19 +236,19 @@ const Workspace: React.FunctionComponent = () => {
                                     Height={row.Height}
                                     ShowHeader={row.ShowHeader}
                                     UpdateRow={(record) => {
-                                        let json = { ...workSpaceJSON };
+                                        const json = { ...workSpaceJSON };
                                         json.Rows[index] = record;
                                         setWorkSpaceJSON(json)
                                     }}
                                     RemoveRow={() => {
-                                        let json = { ...workSpaceJSON };
+                                        const json = { ...workSpaceJSON };
                                         json.Rows.splice(index, 1);
                                         setWorkSpaceJSON(json)
                                     }}
                                     MoveRowUp={() => {
                                         if (index <= 0) return;
                                         const newIndex = index - 1
-                                        let json = { ...workSpaceJSON };
+                                        const json = { ...workSpaceJSON };
                                         const a = json.Rows[newIndex];
                                         const b = json.Rows[index];
                                         json.Rows[newIndex] = b;
@@ -257,7 +256,7 @@ const Workspace: React.FunctionComponent = () => {
                                         setWorkSpaceJSON(json)
                                     }}
                                     MoveRowDown={() => {
-                                        let json = { ...workSpaceJSON };
+                                        const json = { ...workSpaceJSON };
                                         if (index >= json.Rows.length) return;
                                         const newIndex = index + 1
                                         const a = json.Rows[newIndex];

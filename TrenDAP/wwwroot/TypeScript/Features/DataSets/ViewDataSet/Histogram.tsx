@@ -26,6 +26,8 @@ import { TrenDAP } from '../../../global';
 import * as d3 from 'd3';
 import moment from 'moment';
 
+//Disabling ESLint as this needs to get reworked
+/* eslint-disable */
 
 
 export default function Histogram(props: { Data: TrenDAP.iXDATrendDataPoint[] }) {
@@ -45,14 +47,14 @@ export default function Histogram(props: { Data: TrenDAP.iXDATrendDataPoint[] })
             .attr('width', svgWidth)
             .attr('height', svgHeight);
 
-        let histogram = d3.histogram<number, number>()
+        const histogram = d3.histogram<number, number>()
             .value(function (d) { return d; })   // I need to give the vector of value
             .domain(d3.extent(props.Data.filter(d => !isNaN(d[type])), d => d[type]) as [number, number])  // then the domain of the graphic
             .thresholds(40); // then the numbers of bins
 
         const bins = histogram(props.Data.map(d => d[type]).filter(d => !isNaN(d)));
 
-        let yMax = Math.max(...bins.map(b => b.length));
+        const yMax = Math.max(...bins.map(b => b.length));
 
         const x = d3.scaleLinear()
             .domain([Math.min(...bins.map(a => a.x0)), Math.max(...bins.map(a => a.x1))])     // can use this instead of 1000 to have the max of data: d3.max(data, function(d) { return +d.price })

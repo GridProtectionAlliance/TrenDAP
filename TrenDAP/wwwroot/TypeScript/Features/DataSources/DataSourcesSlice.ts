@@ -26,7 +26,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 
 // #region [ Thunks ]
-export const FetchDataSources = createAsyncThunk('DataSources/FetchDataSources', async (_, { dispatch }) => {
+export const FetchDataSources = createAsyncThunk('DataSources/FetchDataSources', async (_) => {
     return await GetDataSources();
 });
 
@@ -34,11 +34,11 @@ export const AddDataSource = createAsyncThunk('DataSources/AddDataSource', async
     return await PostDataSource(dataSource);
 });
 
-export const RemoveDataSource = createAsyncThunk('DataSources/RemoveDataSource', async (dataSource: DataSourceTypes.IDataSourceView, { dispatch }) => {
+export const RemoveDataSource = createAsyncThunk('DataSources/RemoveDataSource', async (dataSource: DataSourceTypes.IDataSourceView) => {
     return await DeleteDataSource(dataSource);
 });
 
-export const UpdateDataSource = createAsyncThunk('DataSources/UpdateDataSource', async (dataSource: DataSourceTypes.IDataSourceView, { dispatch }) => {
+export const UpdateDataSource = createAsyncThunk('DataSources/UpdateDataSource', async (dataSource: DataSourceTypes.IDataSourceView) => {
     return await PatchDataSource(dataSource);
 });
 // #endregion
@@ -74,7 +74,7 @@ export const DataSourcesSlice = createSlice({
             state.Data = sorted;
 
         });
-        builder.addCase(FetchDataSources.pending, (state, action) => {
+        builder.addCase(FetchDataSources.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(FetchDataSources.rejected, (state, action) => {
@@ -82,7 +82,7 @@ export const DataSourcesSlice = createSlice({
             state.Error = action.error.message;
 
         });
-        builder.addCase(AddDataSource.pending, (state, action) => {
+        builder.addCase(AddDataSource.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(AddDataSource.rejected, (state, action) => {
@@ -90,11 +90,11 @@ export const DataSourcesSlice = createSlice({
             state.Error = action.error.message;
 
         });
-        builder.addCase(AddDataSource.fulfilled, (state, action) => {
+        builder.addCase(AddDataSource.fulfilled, (state) => {
             state.Status = 'changed';
             state.Error = null;
         });
-        builder.addCase(RemoveDataSource.pending, (state, action) => {
+        builder.addCase(RemoveDataSource.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(RemoveDataSource.rejected, (state, action) => {
@@ -102,11 +102,11 @@ export const DataSourcesSlice = createSlice({
             state.Error = action.error.message;
 
         });
-        builder.addCase(RemoveDataSource.fulfilled, (state, action) => {
+        builder.addCase(RemoveDataSource.fulfilled, (state) => {
             state.Status = 'changed';
             state.Error = null;
         });
-        builder.addCase(UpdateDataSource.pending, (state, action) => {
+        builder.addCase(UpdateDataSource.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(UpdateDataSource.rejected, (state, action) => {
@@ -114,7 +114,7 @@ export const DataSourcesSlice = createSlice({
             state.Error = action.error.message;
 
         });
-        builder.addCase(UpdateDataSource.fulfilled, (state, action) => {
+        builder.addCase(UpdateDataSource.fulfilled, (state) => {
             state.Status = 'changed';
             state.Error = null;
         });

@@ -42,7 +42,7 @@ const EventDataSourceWrapper: React.FunctionComponent<IProps> = (props: IProps) 
         if (implementation == null)
             return {};
         const s = _.cloneDeep(implementation.DefaultDataSetSettings ?? {});
-        let custom = props.Connection.Settings;
+        const custom = props.Connection.Settings;
 
         for (const [k] of Object.entries(implementation?.DefaultDataSetSettings ?? {})) {
             if (custom.hasOwnProperty(k))
@@ -57,7 +57,7 @@ const EventDataSourceWrapper: React.FunctionComponent<IProps> = (props: IProps) 
             return props.EventDataSource;
         const src = _.cloneDeep(props.EventDataSource);
         const sourceSettings = _.cloneDeep(implementation.DefaultSourceSettings ?? {});
-        let custom = props.EventDataSource.Settings;
+        const custom = props.EventDataSource.Settings;
         for (const [k] of Object.entries(sourceSettings)) {
             if (custom.hasOwnProperty(k))
                 sourceSettings[k] = _.cloneDeep(custom[k]);

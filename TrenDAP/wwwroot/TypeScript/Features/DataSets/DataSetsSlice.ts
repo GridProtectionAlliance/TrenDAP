@@ -28,29 +28,29 @@ import moment from 'moment';
 import $ from 'jquery';
 
 // #region [ Thunks ]
-export const FetchDataSets = createAsyncThunk('DataSets/FetchDataSets', async (_, { dispatch }) => {
+export const FetchDataSets = createAsyncThunk('DataSets/FetchDataSets', async (_) => {
     return await GetDataSets();
 });
 
-export const AddDataSet = createAsyncThunk('DataSets/AddDataSet', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
+export const AddDataSet = createAsyncThunk('DataSets/AddDataSet', async (DataSet: TrenDAP.iDataSet) => {
     return await PostDataSet(DataSet);
 });
 
 
-export const CloneDataSet = createAsyncThunk('DataSets/CloneDataSet', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
-    let dataSet = { ...DataSet };
+export const CloneDataSet = createAsyncThunk('DataSets/CloneDataSet', async (DataSet: TrenDAP.iDataSet) => {
+    const dataSet = { ...DataSet };
     dataSet.ID = 0;
     dataSet.Name = `Copy of ${DataSet.Name}`;
     return await PostDataSet(dataSet);
 });
 
-export const RemoveDataSet = createAsyncThunk('DataSets/RemoveDataSet', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
+export const RemoveDataSet = createAsyncThunk('DataSets/RemoveDataSet', async (DataSet: TrenDAP.iDataSet) => {
     return await DeleteDataSet(DataSet);
 });
 
 export const DataSetsHaveChanged = createAsyncThunk('DataSets/DataSetsHaveChanged', async () => { return; });
 
-export const UpdateDataSet = createAsyncThunk('DataSets/UpdateDataSet', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
+export const UpdateDataSet = createAsyncThunk('DataSets/UpdateDataSet', async (DataSet: TrenDAP.iDataSet) => {
     return await PatchDataSet(DataSet);
 });
 
@@ -98,7 +98,7 @@ export const DataSetsSlice = createSlice({
             const sorted = _.orderBy(state.Data, [state.SortField], [state.Ascending ? "asc" : "desc"])
             state.Data = sorted as TrenDAP.iDataSet[];
         },
-        New: (state, action) => {
+        New: (state) => {
             state.Record = { ID: 0, Name: '', User: '', Context: 'Relative', RelativeValue: 30, RelativeWindow: 'Day', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1 } as TrenDAP.iDataSet
         },
         SetRecordByID: (state, action) => {
@@ -119,61 +119,61 @@ export const DataSetsSlice = createSlice({
             const sorted = _.orderBy(results, [state.SortField], [state.Ascending ? "asc" : "desc"]) as TrenDAP.iDataSet[];
             state.Data = sorted;
         });
-        builder.addCase(FetchDataSets.pending, (state, action) => {
+        builder.addCase(FetchDataSets.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(FetchDataSets.rejected, (state, action) => {
             state.Status = 'error';
-            state.Error = action.error.message;
+            state.Error = (action.error.message == null ? '' : action.error.message);
 
         });
-        builder.addCase(AddDataSet.pending, (state, action) => {
+        builder.addCase(AddDataSet.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(AddDataSet.rejected, (state, action) => {
             state.Status = 'error';
-            state.Error = action.error.message;
+            state.Error = (action.error.message == null ? '' : action.error.message);
 
         });
-        builder.addCase(AddDataSet.fulfilled, (state, action) => {
+        builder.addCase(AddDataSet.fulfilled, (state) => {
             state.Status = 'changed';
             state.Error = null;
         });
 
-        builder.addCase(CloneDataSet.pending, (state, action) => {
+        builder.addCase(CloneDataSet.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(CloneDataSet.rejected, (state, action) => {
             state.Status = 'error';
-            state.Error = action.error.message;
+            state.Error = (action.error.message == null ? '' : action.error.message);
 
         });
-        builder.addCase(CloneDataSet.fulfilled, (state, action) => {
+        builder.addCase(CloneDataSet.fulfilled, (state) => {
             state.Status = 'changed';
             state.Error = null;
         });
 
-        builder.addCase(RemoveDataSet.pending, (state, action) => {
+        builder.addCase(RemoveDataSet.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(RemoveDataSet.rejected, (state, action) => {
             state.Status = 'error';
-            state.Error = action.error.message;
+            state.Error = (action.error.message == null ? '' : action.error.message);
 
         });
-        builder.addCase(RemoveDataSet.fulfilled, (state, action) => {
+        builder.addCase(RemoveDataSet.fulfilled, (state) => {
             state.Status = 'changed';
             state.Error = null;
         });
-        builder.addCase(UpdateDataSet.pending, (state, action) => {
+        builder.addCase(UpdateDataSet.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(UpdateDataSet.rejected, (state, action) => {
             state.Status = 'error';
-            state.Error = action.error.message;
+            state.Error = (action.error.message == null ? '' : action.error.message);
 
         });
-        builder.addCase(UpdateDataSet.fulfilled, (state, action) => {
+        builder.addCase(UpdateDataSet.fulfilled, (state) => {
             state.Status = 'changed';
             state.Error = null;
         });
@@ -224,7 +224,7 @@ function PostDataSet(DataSet: TrenDAP.iDataSet): JQuery.jqXHR<TrenDAP.iDataSet> 
 }
 
 function DeleteDataSet(dataSet: TrenDAP.iDataSet){
-    let deleteHandler =  $.ajax({
+    const deleteHandler =  $.ajax({
         type: "DELETE",
         url: `${homePath}api/DataSet`,
         contentType: "application/json; charset=utf-8",

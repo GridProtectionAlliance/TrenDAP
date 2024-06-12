@@ -78,7 +78,7 @@ const DataSetSettingsTab: React.FunctionComponent<IProps> = (props: IProps) => {
 
     function validWeek(h: string) {
         const i = parseInt(h);
-        let x = ComputeValidWeeks(props.DataSet);
+        const x = ComputeValidWeeks(props.DataSet);
         return Math.floor(ComputeValidWeeks(props.DataSet)/ Math.pow(2, i))%2 == 0
     }
 

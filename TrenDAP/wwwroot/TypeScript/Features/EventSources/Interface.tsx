@@ -25,6 +25,8 @@ import { TrenDAP } from '../../global'
 // The intrefaces for Event Datasources
 // Interfaces = connection points to other pieces in the architecture
 
+/* eslint-disable */
+
 export namespace EventSourceTypes {
     // The following are how event sources are stored in DB
     export interface IEventSourceView {
