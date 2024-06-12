@@ -49,7 +49,7 @@ export const StatsWidget: WidgetTypes.IWidget<IProps, any> = {
 
         React.useEffect(() => {
             setData(getStats(props));
-        }, [props.Data])
+        }, [props.Data, props.Settings])
 
         const getStats = (oldstats: WidgetTypes.IWidgetProps<IProps, any>): IStatData[] => {
 
