@@ -93,12 +93,12 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     }, [Implementation, props.Widget.Settings, showSettingsModal]);
 
     React.useEffect(() => {
-        if (props.Widget.Channels.length === 0 || props.Widget.Channels == null) {
+        if (props.Widget.Channels.length === 0 || props.Widget.Channels == null || props.AllChannels.length == 0) {
             setLocalChannels([])
             return
         }
 
-        let channels: WidgetTypes.ISelectedChannels<any>[] = props.Widget.Channels.map(chan => ({ ...chan, MetaData: props.AllChannels.find(c => c.ID === props.ChannelMap.Map.current.get(chan.Key)) }))
+        const channels: WidgetTypes.ISelectedChannels<any>[] = props.Widget.Channels.map(chan => ({ ...chan, MetaData: [...props.AllChannels].find(c => c.ID === props.ChannelMap.Map.current.get(chan.Key)) }))
         setLocalChannels(channels)
     }, [props.Widget.Channels, props.AllChannels, props.ChannelMap.Version, showSettingsModal])
 
@@ -159,6 +159,8 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     const handleUpdateWidget = (confBtn: boolean, deleteBtn: boolean) => {
         if (confBtn) {
             let updatedChannels = [...localChannels];
+            const hasChannelsChanged = !_.isEqual(localChannels.map(chan => ({ Key: chan.Key, ChannelSettings: chan.ChannelSettings })), props.Widget.Channels)
+            if (hasChannelsChanged)
             updatedChannels.forEach(channel => {
                 AddChannelToMap(channel.Key, channel.MetaData)
                     const updatedKey = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) }
@@ -171,7 +173,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                 Width: localCommonSettings.Width,
                 Label: localCommonSettings.Label,
                 ShowHeader: localCommonSettings.ShowHeader,
-                Channels: updatedChannels
+                Channels: hasChannelsChanged ? updatedChannels.map(chan => ({ ChannelSettings: chan.ChannelSettings, Key: chan.Key })) : props.Widget.Channels
             })
             setShowSettingsModal(false)
         }
