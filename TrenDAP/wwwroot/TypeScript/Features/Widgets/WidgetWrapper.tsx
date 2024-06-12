@@ -38,6 +38,8 @@ import { HistogramWidget } from './Implementations/Histogram';
 import { XvsYWidget } from './Implementations/XvsY';
 import { ProfileWidget } from './Implementations/Profile';
 import { TrendWidget } from './Implementations/Trend';
+import { Map } from './Implementations/Map';
+
 import { SelectEditMode } from '../../Store/GeneralSettingsSlice';
 
 import TrenDAPDB from '../DataSets/TrenDAPDB';
@@ -46,7 +48,7 @@ import _ from 'lodash';
 import ChannelSelector from './ChannelSelector';
 import { isPercent } from './HelperFunctions';
 
-export const AllWidgets: WidgetTypes.IWidget<any, any>[] = [TextWidget, TableWidget, StatsWidget, HistogramWidget, XvsYWidget, ProfileWidget, TrendWidget];
+export const AllWidgets: WidgetTypes.IWidget<any, any>[] = [TextWidget, TableWidget, StatsWidget, HistogramWidget, XvsYWidget, ProfileWidget, TrendWidget, Map];
 
 interface IProps {
     Widget: TrenDAP.IWidgetModel,
@@ -74,7 +76,6 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     const [localChannels, setLocalChannels] = React.useState<WidgetTypes.ISelectedChannels<any>[]>([]);
     const [localSetting, setLocalSetting] = React.useState<any | null>(null);
     const [localCommonSettings, setCommonLocalSettings] = React.useState<WidgetTypes.ICommonSettings>({ Width: props.Widget.Width, Label: props.Widget.Label, ShowHeader: props.Widget.ShowHeader });
-
     const [showWarning, setShowWarning] = React.useState<boolean>(false);
 
     const Settings: any = React.useMemo(() => {
@@ -161,11 +162,11 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             let updatedChannels = [...localChannels];
             const hasChannelsChanged = !_.isEqual(localChannels.map(chan => ({ Key: chan.Key, ChannelSettings: chan.ChannelSettings })), props.Widget.Channels)
             if (hasChannelsChanged)
-            updatedChannels.forEach(channel => {
-                AddChannelToMap(channel.Key, channel.MetaData)
+                updatedChannels.forEach(channel => {
+                    AddChannelToMap(channel.Key, channel.MetaData)
                     const updatedKey = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) }
                     channel.Key = updatedKey
-            })
+                })
 
             props.UpdateWidget({
                 ...props.Widget,
@@ -267,7 +268,6 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                         <CheckBox<WidgetTypes.ICommonSettings> Field='ShowHeader' Record={localCommonSettings} Setter={r => setCommonLocalSettings(r)} Label="Show Widget Header" />
                                     </div>
                                 </div>
-
                                 {Implementation?.SettingsUI === undefined ? <></> : <Implementation.SettingsUI
                                     Settings={localSetting ?? Settings}
                                     SetSettings={setLocalSetting}
@@ -334,4 +334,5 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
         }
     </>
 }
+
 export default WidgetWrapper;
