@@ -58,6 +58,7 @@ interface IProps {
     RemoveWidget: () => void,
     UpdateWidget: (widget: TrenDAP.IWidgetModel) => void,
     AllChannels: DataSetTypes.IDataSetMetaData[],
+    LoadedEvents: TrenDAP.IEvent[],
     ChannelMap: TrenDAP.IChannelMap,
     SetChannelMapVersion: (version: number) => void,
     ParentMap: React.MutableRefObject<Map<string, number>>,

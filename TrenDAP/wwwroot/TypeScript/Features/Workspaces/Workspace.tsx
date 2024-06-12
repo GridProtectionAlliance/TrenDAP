@@ -63,7 +63,8 @@ const Workspace: React.FunctionComponent = () => {
     const [showCopiedTooltip, setShowCopiedTooltip] = React.useState<boolean>(false);
     const [hover, setHover] = React.useState<Hover>('None');
     const [showSettingsModal, setShowSettingsModal] = React.useState<boolean>(false);
-    const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([])
+    const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([]);
+    const [loadedEvents, setLoadedEvents] = React.useState<TrenDAP.IEvent[]>([]);
     const [showShowDataSetModal, setShowDataSetModal] = React.useState<boolean>(true)
     const [loading, setLoading] = React.useState<boolean>(false);
     const [dataSet, setDataset] = React.useState<TrenDAP.iDataSet | null>(null)
@@ -121,11 +122,12 @@ const Workspace: React.FunctionComponent = () => {
             dispatch(FetchWorkSpaces());
     }, [dispatch, workspaceStatus]);
 
-    function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
+    function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], evts: TrenDAP.IEvent[], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
         setLoading(true);
         loadHandle.then(() => setLoading(false));
 
         setDataset(dataset);
+        setLoadedEvents(evts);
         channelMapping.current = new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, channelMap);
         parentMapping.current = new Map<string, number>(parentMap);
         setMapVersion(version => version + 1);
@@ -231,6 +233,7 @@ const Workspace: React.FunctionComponent = () => {
                                     SetChannelMapVersion={setMapVersion}
                                     ParentMap={parentMapping}
                                     AllChannels={allChannels}
+                                    LoadedEvents={loadedEvents}
                                     Label={row?.Label}
                                     Widgets={row.Widgets}
                                     Height={row.Height}

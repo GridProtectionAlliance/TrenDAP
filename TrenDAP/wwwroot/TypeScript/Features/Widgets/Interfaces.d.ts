@@ -33,12 +33,13 @@ export namespace WidgetTypes {
     }
 
     interface IWidgetProps<T, U> {
-        Data: IWidgetData<U>[]
+        Data: IWidgetData<U>[],
         Settings: T,
     }
 
     interface IWidgetData<T> extends DataSetTypes.IDataSetData {
         ChannelSettings: T,
+        Events: TrenDAP.Ievent[]
     }
 
     interface ICommonSettings {

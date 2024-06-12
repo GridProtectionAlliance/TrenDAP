@@ -77,7 +77,13 @@ interface IProps {
     WorkSpaceJSON: TrenDAP.WorkSpaceJSON,
     AllChannels: DataSetTypes.IDataSetMetaData[],
     SetAllChannels: (chans: DataSetTypes.IDataSetMetaData[]) => void,
-    GenerateMapping: (channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], dataSet: TrenDAP.iDataSet, loadHandle: Promise<void>) => void,
+    GenerateMapping: (
+        channelMap: [TrenDAP.IChannelKey, string][],
+        parentMap: [string, number][],
+        loadedEvents: TrenDAP.IEvent[],
+        dataSet: TrenDAP.iDataSet,
+        loadHandle: Promise<void>) => void
+}
 }
 
 const DataSetSelector: React.FC<IProps> = (props) => {
@@ -102,7 +108,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     const [evtStatus, setEvtStatus] = React.useState<Application.Types.Status>('unintiated')
     const [eventSources, setEventSources] = React.useState<EventSourceTypes.IEventSourceDataSet[]>([]);
-    const [allEvents, setAllEvents] = React.useState<TrenDAP.IEvent[]>([]);
+    const [loadedEvents, setLoadedEvents] = React.useState<TrenDAP.IEvent[]>([]);
 
     const [channelErrors, setChannelErrors] = React.useState<string[]>([]);
     const [allParents, setAllParents] = React.useState<{ ID: string, Name: string }[]>([]);
@@ -257,7 +263,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
         Promise.all(eventSrcHandlers).then(d => {
             setEvtStatus('idle');
-            setAllEvents(d.flat());
+            setLoadedEvents(d.flat());
         });
     }, [eventSources]);
 
@@ -329,7 +335,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             const implementation: IDataSource<any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
             if (implementation == null)
                 return Promise.resolve([] as DataSetTypes.IDataSetData[]);
-            return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds, useEvts ? allEvents : undefined);
+            return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds, useEvts ? loadedEvents : undefined);
         })
 
         const loaded = Promise.all(dataHandlers).then(d => {
@@ -350,7 +356,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 Title={'Select a Data Set'}
                 CallBack={conf => {
                     if (conf)
-                        props.GenerateMapping(channelMatches.map(match => [match.Key, match.ChannelID]  as [TrenDAP.IChannelKey, string]), parentMatches.map(match => [match.ParentID, match.Key] as [string, number]), selectedDataSet as TrenDAP.iDataSet, loadData());
+                        props.GenerateMapping(channelMatches.map(match => [match.Key, match.ChannelID]  as [TrenDAP.IChannelKey, string]), parentMatches.map(match => [match.ParentID, match.Key] as [string, number]), loadedEvents, selectedDataSet as TrenDAP.iDataSet, loadData());
 
                     props.SetIsModalOpen(false);
                 }}

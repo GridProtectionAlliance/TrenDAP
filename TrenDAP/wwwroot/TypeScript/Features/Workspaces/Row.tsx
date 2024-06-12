@@ -153,6 +153,7 @@ const Row: React.FunctionComponent<IProps> = (props) => {
                     {props.Widgets.map((widget, index) => {
                         return <WidgetWrapper
                             AllChannels={props.AllChannels}
+                            LoadedEvents={props.LoadedEvents}
                             ChannelMap={props.ChannelMap}
                             ParentMap={props.ParentMap}
                             UpdateWidget={(newRecord) => {
