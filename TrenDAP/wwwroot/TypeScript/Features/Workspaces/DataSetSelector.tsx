@@ -172,17 +172,18 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         })
 
         Promise.all(channelHandlers).then(d => {
-            props.SetAllChannels(d.flat())
-            setAllParents(_.uniqBy(d.flat().map(c => ({ ID: c.ParentID, Name: c.ParentName })), (m) => m.ID))
+            const allChannels: DataSetTypes.IDataSetMetaData[] = d.flat()
+            props.SetAllChannels(allChannels)
+            setAllParents(_.uniqBy(allChannels.map(c => ({ ID: c.ParentID, Name: c.ParentName })), (m) => m.ID))
 
             //Generate mapping if channels query param is set..
             if (channels != null) {
                 let chanMap: [TrenDAP.IChannelKey, string][] = JSON.parse(window.atob(channels));
-                let parentKeys = _.uniq(chanMap.map(chan => chan[0].Parent))
 
+                let parentKeys = _.uniq(chanMap.map(chan => chan[0].Parent))
                 let parentMap: [string, number][] = parentKeys.map((key, index) => {
                     let chanID = chanMap.find(chan => chan[0].Parent === key)[1]
-                    return [d.flat().find(chan => chan.ID = chanID).ParentID, index]
+                    return [allChannels.find(chan => chan.ID === chanID).ParentID, index]
                 })
 
                 props.GenerateMapping(chanMap, parentMap, selectedDataSet, loadData());
