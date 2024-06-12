@@ -62,7 +62,8 @@ namespace TrenDAP.Model
         {
             get
             {
-                return JObject.Parse(SettingsString);
+                try { return JObject.Parse(SettingsString); }
+                catch { return new JObject(); }
             }
         }
         public static DataSource GetDataSource(IConfiguration configuration, int id)
