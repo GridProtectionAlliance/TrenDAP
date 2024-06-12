@@ -24,28 +24,30 @@
 import * as React from 'react';
 import moment from 'moment';
 import _ from 'lodash';
-import { Input } from '@gpa-gemstone/react-forms';
+import { Input, ToggleSwitch } from '@gpa-gemstone/react-forms';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { WidgetTypes } from '../Interfaces';
-import { DataSetTypes } from '../../../global';
+import { DataSetTypes, TrenDAP } from '../../../global';
 import { sort } from '../HelperFunctions';
 
-interface IProps { Precision: number }
+interface IProps { Precision: number, ShowEvents: boolean }
 
 interface ITableData {
     Timestamp: number,
-    Chan1Minimum: number,
-    Chan1Maximum: number,
-    Chan1Average: number,
-    Chan2Minimum: number | null,
-    Chan2Maximum: number | null,
-    Chan2Average: number | null
+    Event?: TrenDAP.IEvent,
+    Chan1Minimum?: number,
+    Chan1Maximum?: number,
+    Chan1Average?: number,
+    Chan2Minimum?: number,
+    Chan2Maximum?: number,
+    Chan2Average?: number,
+    IsInEvent: boolean
 }
 
 //lets make this a pagedTable as we can get up to 250+ results here as it slows down render times..
 
 export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
-    DefaultSettings: { Precision: 3 },
+    DefaultSettings: { Precision: 3, ShowEvents: false },
     DefaultChannelSettings: null,
     Name: "Table",
     WidgetUI: (props) => {
@@ -60,20 +62,43 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
             // Process first channel data
             const firstChannelData = props.Data[0]?.SeriesData;
             if (firstChannelData != null && firstChannelData?.Average != null) {
-                results = firstChannelData.Average.map((avgItem, index) => {
+                let inactiveEvents: TrenDAP.IEvent[] = [];
+                if (props.Settings.ShowEvents) {
+                    if (props.Data[0]?.Events != null) inactiveEvents = props.Data[0].Events;
+                    if (props.Data[1]?.Events != null && props.Data[1].ParentID != props.Data[0].ParentID) inactiveEvents.concat(props.Data[1].Events);
+                    inactiveEvents = _.orderBy(inactiveEvents, 'Time', 'desc');
+                }
+                let activeEvents: TrenDAP.IEvent[] = [];
+
+                firstChannelData.Average.forEach((avgItem, index) => {
                     const [timestamp, avg] = avgItem;
                     const min = firstChannelData?.Minimum?.[index][1];
                     const max = firstChannelData?.Maximum?.[index][1];
 
-                    return {
+                    // Check to see if a new event becomes active
+                    while (inactiveEvents.length !== 0) {
+                        if (timestamp > inactiveEvents[inactiveEvents.length - 1].Time) {
+                            const newActiveEvent = inactiveEvents.pop();
+
+                            results.push({
+                                Timestamp: newActiveEvent.Time,
+                                Event: newActiveEvent,
+                                IsInEvent: true
+                            });
+                            activeEvents.push(newActiveEvent);
+                        }
+                        else break;
+                    }
+                    // Filter away any now non-active event
+                    activeEvents = activeEvents.filter(evt => timestamp < evt.Time + evt.Duration);
+
+                    results.push({
                         Timestamp: timestamp,
-                        Chan1Minimum: min ?? null,
-                        Chan1Maximum: max ?? null,
-                        Chan1Average: avg ?? null,
-                        Chan2Minimum: null,
-                        Chan2Maximum: null,
-                        Chan2Average: null
-                    };
+                        Chan1Minimum: min,
+                        Chan1Maximum: max,
+                        Chan1Average: avg,
+                        IsInEvent: activeEvents.length !== 0
+                    });
                 });
             }
 
@@ -124,7 +149,8 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
                     }}
                     Data={data}
                     Ascending={ascending}
-                    KeySelector={(item) => item.Timestamp}
+                    KeySelector={item => item.Timestamp}
+                    Selected={item => item.IsInEvent}
                 >
                     <ReactTable.Column<ITableData>
                         Key={'Timestamp'}
@@ -139,10 +165,11 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
                         AllowSort={true}
                         Field={'Chan1Minimum'}
                         Content={row => {
+                            if (row.item?.Event != null)
+                                return row.item.Event.Title;
                             if (row.item?.Chan1Minimum != null)
-                                return row.item.Chan1Minimum.toFixed(props.Settings.Precision)
-                            else
-                                return 'n/a'
+                                return row.item.Chan1Minimum.toFixed(props.Settings.Precision);
+                            return 'n/a'
                         }}
                     >
                         {props.Data[0]?.Name ?? 'Chan 1'} Min
@@ -152,10 +179,11 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
                         AllowSort={true}
                         Field={'Chan1Maximum'}
                         Content={row => {
+                            if (row.item?.Event != null)
+                                return row.item.Event.Description;
                             if (row.item?.Chan1Maximum != null)
-                                return row.item.Chan1Maximum.toFixed(props.Settings.Precision)
-                            else 
-                                return 'n/a'
+                                return row.item.Chan1Maximum.toFixed(props.Settings.Precision);
+                            return 'n/a'
                         }}
                     >
                         {props.Data[0]?.Name ?? 'Chan 1'} Max
@@ -165,10 +193,10 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
                         AllowSort={true}
                         Field={'Chan1Average'}
                         Content={row => {
-                            if(row.item?.Chan1Average != null)
-                                return row.item.Chan1Average.toFixed(props.Settings.Precision)
-                            else
-                                return 'n/a'
+                            if (row.item?.Event != null) return '';
+                            if (row.item?.Chan1Average != null)
+                                return row.item.Chan1Average.toFixed(props.Settings.Precision);
+                            return 'n/a'
                         }}
                     >
                         {props.Data[0]?.Name ?? 'Chan 1'} Avg
@@ -178,10 +206,10 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
                         AllowSort={true}
                         Field={'Chan2Minimum'}
                         Content={row => {
-                            if(row.item?.Chan2Minimum != null)
-                                return row.item.Chan2Minimum.toFixed(props.Settings.Precision)
-                            else 
-                                return 'n/a'
+                            if (row.item?.Event != null) return '';
+                            if (row.item?.Chan2Minimum != null)
+                                return row.item.Chan2Minimum.toFixed(props.Settings.Precision);
+                            return 'n/a';
                         }}
                     >
                         {props.Data[1]?.Name ?? 'Chan 2'} Min
@@ -191,10 +219,10 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
                         AllowSort={true}
                         Field={'Chan2Maximum'}
                         Content={row => {
-                            if(row.item?.Chan2Maximum != null)
-                                return row.item.Chan2Maximum.toFixed(props.Settings.Precision)
-                            else
-                                return 'n/a'
+                            if (row.item?.Event != null) return '';
+                            if (row.item?.Chan2Maximum != null)
+                                return row.item.Chan2Maximum.toFixed(props.Settings.Precision);
+                            return 'n/a';
                         }}
                     >
                         {props.Data[1]?.Name ?? 'Chan 2'} Max
@@ -204,10 +232,10 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
                         AllowSort={true}
                         Field={'Chan2Average'}
                         Content={row => {
-                            if(row.item?.Chan2Average != null)
-                                return row.item.Chan2Average.toFixed(props.Settings.Precision)
-                            else 
-                                return 'n/a'
+                            if (row.item?.Event != null) return '';
+                            if (row.item?.Chan2Average != null)
+                                return row.item.Chan2Average.toFixed(props.Settings.Precision);
+                            return 'n/a';
                         }}
                     >
                         {props.Data[1]?.Name ?? 'Chan 2'} Avg
@@ -219,6 +247,7 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
     SettingsUI: (props) => {
         return <>
             <Input<IProps> Record={props.Settings} Field={'Precision'} Setter={(item) => props.SetSettings(item)} Valid={() => true} AllowNull={true} />
+            <ToggleSwitch<IProps> Record={props.Settings} Field={'ShowEvents'} Label="Show Events" Setter={props.SetSettings} />
         </>
     },
     ChannelSelectionUI: (props) => {
