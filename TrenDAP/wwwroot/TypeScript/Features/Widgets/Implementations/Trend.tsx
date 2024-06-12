@@ -77,6 +77,9 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         const [chartAction, setChartAction] = React.useState<TrenDAP.ChartAction>('Pan');
         const [plotSize, setPlotSize] = React.useState<{ Height: number, Width: number }>()
 
+        const [evtHover, setEvtHover] = React.useState<TrenDAP.IEvent>(null);
+        const [showTooltip, setShowTooltip] = React.useState<boolean>(false);
+
         React.useLayoutEffect(() => {
             if (plotRef.current != null) {
                 const newSize = { Height: plotRef.current.offsetHeight, Width: plotRef.current.offsetWidth }
@@ -203,10 +206,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .attr("stroke-width", 1.5)
                 .attr("stroke", series.ChannelSettings.Color)
                 .attr("d", lineFunc(data));
-            /*
-            if (series.ChannelSettings.YAxis.ShowEvents) {
-                //AddEventLine(series, svg, x);
-            }*/
+
+            if (axis.ShowEvents) AddEventLine(series.Events, svg);
 
             svg.selectAll("g.legend").remove();
             if (props.Settings.Legend) {
@@ -250,7 +251,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
                 })
 
-            //series.forEach(s => AddEventLine(s, svg, x))
+            if (axis.ShowEvents) series.forEach(s => AddEventLine(s.Events, svg));
 
             svg.selectAll("g.legend").remove();
             if (props.Settings.Legend) {
@@ -302,7 +303,11 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
             svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg))
 
-            //props.Data.filter(channel => channel.ChannelSettings.ShowEvents).forEach(series => AddEventLine(channel, svg, x));
+            props.Data.filter(series =>
+                props.Settings.YAxis.find(axis =>
+                    axis.ID === series.ChannelSettings.YAxisID
+                )?.ShowEvents ?? false).forEach(series =>
+                    AddEventLine(series.Events, svg));
 
         }
 
@@ -333,30 +338,31 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 });
         }
 
-        /*
-        function AddEventLine(series: WidgetTypes.IWidgetData, svg, x) {
-            const svgHeight = parseInt(svg.attr('height'))
-
-            let datum = GetChannelData(series);
-            let d = datum?.Events ?? [];
+        function AddEventLine(events: TrenDAP.IEvent[], svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, ) {
+            const svgHeight = parseInt(svg.attr('height'));
 
             svg.selectAll('g.event-line').remove();
             const g = svg.selectAll('g.event-line')
-                .data(d)
+                .data(events)
                 .enter()
                 .append('g')
                 .classed('event-line', true)
             g.append('path')
                 .attr('stroke-width', '2px')
-                .attr("d", d => `M0,${svgHeight - margin.current.bottom - margin.current.top}L-10,${svgHeight - margin.current.bottom - margin.current.top + 10},L10,${svgHeight - margin.current.bottom - margin.current.top + 10}L0,${svgHeight - margin.current.bottom - margin.current.top}Z`)
-                .attr("transform", d => `translate(${x(moment(d.StartTime, 'YYYY-MM-DDTHH:mm:ss.fff'))},${margin.current.top})`)
+                .attr("d", _ => `M0,${svgHeight - margin.current.bottom - margin.current.top}L-10,${svgHeight - margin.current.bottom - margin.current.top + 10},L10,${svgHeight - margin.current.bottom - margin.current.top + 10}L0,${svgHeight - margin.current.bottom - margin.current.top}Z`)
+                .attr("transform", d => `translate(${xScaleRef.current(d.Time)},${margin.current.top})`)
                 .attr('stroke', 'red')
                 .attr('fill', 'red')
+                .attr('data-tooltip', d => d.Title)
+                .on('mouseenter', (_, d) => { setEvtHover(d); setShowTooltip(true); })
+                .on('mouseleave', _ => setShowTooltip(false))
+                /* Add onclick to quickview?
                 .style('cursor', 'pointer')
                 .on('click', (e, d) => {
                     window.open(record.Data.find(ds => ds.DataSource.ID === series.DataSourceID).DataSource.OpenSEE + '?eventID=' + d.ID)
-                })
-        }*/
+                });
+                */
+        }
 
         function AddXAxis(svg) {
             const svgWidth = parseInt(svg.attr('width'));
@@ -570,8 +576,11 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     <button className='btn btn-light' onClick={HandleReset}>
                         Reset Limits
                     </button>
-                    <RadioButtons Record={{ chartAction }} Field="chartAction" Label="" Setter={(record) => setChartAction(record.chartAction)} Options={[{ Label: 'Pan', Value: 'Pan' }, { Label: 'ZoomX', Value: 'ZoomX' }, { Label: 'Click', Value: 'Click' }]} />
+                    <RadioButtons Record={{ chartAction }} Field="chartAction" Label="" Setter={(record) => setChartAction(record.chartAction)} Options={[{ Label: 'Pan', Value: 'Pan'}, { Label: 'ZoomX', Value: 'ZoomX' }, { Label: 'Click', Value: 'Click' }]} />
                 </div>
+                <ToolTip Show={showTooltip && evtHover?.Title != null && evtHover?.Title != ''} Position='top' Target={evtHover?.Title}>
+                    {`${evtHover?.Title}${(evtHover?.Description != null && evtHover.Description != '') ? (" - " + evtHover.Description) : ''}`}
+                </ToolTip>
             </div>
         );
     },
@@ -665,6 +674,17 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                             Field={'Position'}
                             Content={({ item }) =>
                                 <Select<TrenDAP.IYAxis> Label="" Record={item} Field="Position" Options={[{ Label: 'Left', Value: 'left' }, { Label: 'Right', Value: 'right' }]}
+                                    Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
+                            }
+                        >
+                            Position
+                        </ReactTable.Column>
+                        <ReactTable.Column<TrenDAP.IYAxis>
+                            Key={'ShowEvents'}
+                            AllowSort={true}
+                            Field={'ShowEvents'}
+                            Content={({ item }) =>
+                                <ToggleSwitch<TrenDAP.IYAxis> Field="ShowEvents" Label="Show Events" Record={item}
                                     Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
                             }
                         >
