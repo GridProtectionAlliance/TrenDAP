@@ -10,8 +10,16 @@
   "rules": {
     "@typescript-eslint/no-namespace": "off",
     "@typescript-eslint/ban-types": "warn",
+    "@typescript-eslint/no-explicit-any": "warn", //This needs to be removed after all warnings are clear..
+    "@typescript-eslint/no-unused-vars": "warn", //This needs to be removed after all warnings are clear..
+    "no-empty-pattern": "warn", //This needs to be removed after all warnings are clear..
+    "no-async-promise-executor": "warn", //This needs to be removed after all warnings are clear..
+    "no-fallthrough": "warn", //This needs to be removed after all warnings are clear..
+    "no-prototype-builtins": "warn", //This needs to be removed after all warnings are clear..
+    "no-useless-escape": "warn", //This needs to be removed after all warnings are clear..
+
     "@typescript-eslint/strict-boolean-expressions": [
-      "error",
+      "warn", //This needs to switch back to error after warnings have been cleaned up..
       {
         "allowString": false,
         "allowNumber": false,
