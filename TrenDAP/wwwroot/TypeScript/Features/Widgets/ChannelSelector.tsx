@@ -25,7 +25,6 @@ import * as React from 'react';
 import { DataSetTypes } from '../../global';
 import { WidgetTypes } from './Interfaces';
 import { ReactTable } from '@gpa-gemstone/react-table';
-import * as _ from 'lodash';
 import { sort } from './HelperFunctions';
 
 const ChannelSelector: React.FC<WidgetTypes.IChannelSelectionProps<any, any>> = (props) => {

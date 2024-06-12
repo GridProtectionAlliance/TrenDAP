@@ -128,8 +128,8 @@ const Workspace: React.FunctionComponent = () => {
 
         setDataset(dataset);
         channelMapping.current = new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, channelMap);
-        parentMapping.current = new Map<string, number>(parentMap)
-        setMapVersion(version => version + 1)
+        parentMapping.current = new Map<string, number>(parentMap);
+        setMapVersion(version => version + 1);
     }
 
     function HandleAddObject(type: string | 'Row') {

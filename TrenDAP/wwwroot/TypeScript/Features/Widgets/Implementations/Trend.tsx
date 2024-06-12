@@ -574,7 +574,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         <button className='btn btn-light' onClick={HandleReset}>
                             Reset Limits
                         </button>
-                        <RadioButtons Record={{ chartAction }} Field="chartAction" Setter={(record) => setChartAction(record.chartAction)} Options={[{ Label: 'Pan', Value: 'Pan'}, { Label: 'ZoomX', Value: 'ZoomX' }, { Label: 'Click', Value: 'Click' }]} />
+                        <RadioButtons Record={{ chartAction }} Field="chartAction" Label="" Setter={(record) => setChartAction(record.chartAction)} Options={[{ Label: 'Pan', Value: 'Pan'}, { Label: 'ZoomX', Value: 'ZoomX' }, { Label: 'Click', Value: 'Click' }]} />
                     </div>
             </div>
         );

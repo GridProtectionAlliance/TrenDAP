@@ -35,8 +35,6 @@ import { BtnDropdown } from '@gpa-gemstone/react-interactive';
 import _ from 'lodash';
 import { CreateWidget, isPercent } from '../Widgets/HelperFunctions';
 
-const NavMargin = 85;
-const NavWidth = 200;
 
 type Hover = ('None' | 'Add' | 'Remove' | 'Settings')
 
