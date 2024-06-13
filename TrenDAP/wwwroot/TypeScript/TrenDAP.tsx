@@ -47,7 +47,7 @@ const TrenDAP: React.FunctionComponent = () => {
     return (
         <>
             <Application
-                HomePath={homePath} DefaultPath={"WorkSpaces"}
+                HomePath={homePath} DefaultPath={"Workspaces"}
                 Logo={homePath + "Images/trendaplogo.png"}
                 OnSignOut={() => { window.location.href = `/@GSF/Web/Security/Views/Login.cshtml?logout=yes`; }}> { /*need to make sure this page exists on the backend..*/}
                 <Page Name={'DataSources'} Label={'Data Sources'} Icon={SVGIcons.DataContainer}>
