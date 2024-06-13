@@ -85,40 +85,42 @@ export default class TrenDAPDB {
         });
     }
 
-    public ReadMany(keys: string[]) {
-        return new Promise<(ChannelTableRow[])>(async (resolve, reject) => {
-            if (keys == null || keys.length === 0) {
+    public ReadMany(channels: { ID: string, ChannelSettings: any, ChannelKey: TrenDAP.IChannelKey }[]) {
+        return new Promise<{ Data: ChannelTableRow, ChannelSettings: any, ChannelKey: TrenDAP.IChannelKey }[]>(async (resolve, reject) => {
+            if (channels == null || channels.length === 0) {
                 resolve([]);
                 return;
             }
-
+    
             let db = await this.OpenDB();
             let tx = db.transaction('Channel', 'readonly');
             let store = tx.objectStore('Channel');
-            let results = [];
-
-            keys.forEach(key => {
-                if (key == null)
-                    return
-                let request = store.get(key);
+            let results: { Data: ChannelTableRow, ChannelSettings: any, ChannelKey: TrenDAP.IChannelKey }[] = [];
+    
+            let completed = 0;
+            channels.forEach(channel => {
+                if (channel.ID == null) return;
+    
+                let request = store.get(channel.ID);
                 request.onsuccess = (evt: any) => {
-                    results.push(evt.target.result);  
+                    results.push({ Data: evt.target.result, ChannelSettings: channel.ChannelSettings, ChannelKey: channel.ChannelKey });
+                    completed++;
+                    if (completed === channels.length) {
+                        db.close();
+                        resolve(results);
+                    }
                 };
                 request.onerror = (evt: any) => {
-                    reject(evt.target.error);  
+                    reject(evt.target.error);
                 };
             });
-
-            tx.oncomplete = () => {
-                db.close();
-                resolve(results);  
-            };
-
+    
             tx.onerror = (evt: any) => {
-                reject(evt.target.error); 
+                reject(evt.target.error);
             };
         });
     }
+    
 
 
 

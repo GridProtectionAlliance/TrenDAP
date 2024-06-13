@@ -63,7 +63,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     const guid = React.useRef<string>(CreateGuid());
 
     const editMode = useAppSelector(SelectEditMode);
-
+    
     const [headerOpacity, setHeaderOpacity] = React.useState<number>(1);
     const [showSettingsModal, setShowSettingsModal] = React.useState<boolean>(false);
     const [headerHover, setHeaderHover] = React.useState<boolean>(false);
@@ -119,14 +119,14 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
         const channels = props.Widget.Channels.map(channel => ({ ChannelSettings: channel.ChannelSettings, ID: props.ChannelMap.Map.current.get(channel.Key), ChannelKey: channel.Key }));
         const db = new TrenDAPDB();
 
-        const promises = channels.map(chan =>
-            db.Read(chan.ID).then(data => ({ ...data.Data, ChannelSettings: chan.ChannelSettings, ChannelKey: chan.ChannelKey }))
-        );
-
-        Promise.all(promises).then(allData => {
+        db.ReadMany(channels).then(data => {
+            const allData = data.map(item => ({
+                ...item.Data.Data,
+                ChannelSettings: item.ChannelSettings,
+                ChannelKey: item.ChannelKey
+            }));
             setData(allData);
         });
-        // rework ReadMany so we dont have to map over Read
 
     }, [props.Widget.Channels, props.ChannelMap.Version]);
 
