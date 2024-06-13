@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  AddNewDataSource.tsx - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright Â© 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -22,25 +22,45 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { DataSourceTypes } from '../../global';
-import { useAppDispatch } from '../../hooks';
+import { DataSourceTypes, Redux } from '../../global';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { AddDataSource } from './DataSourcesSlice'
 import DataSource from './DataSource';
 import { Modal } from '@gpa-gemstone/react-interactive';
 import { CrossMark } from '@gpa-gemstone/gpa-symbols';
+import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from './DataSourcesSlice';
 
 const AddNewDataSource: React.FunctionComponent = () => {
     const dispatch = useAppDispatch();
+    const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as DataSourceTypes.IDataSourceView[];
+    const publicDataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as DataSourceTypes.IDataSourceView[];
+    const dsStatus = useAppSelector(SelectDataSourcesStatus);
+
     const [dataSource, setDataSource] = React.useState<DataSourceTypes.IDataSourceView>({ ID: -1, Name: "", DataSourceTypeID: 1, URL: '', RegistrationKey: '', Expires: null, Public: false, User: '', Settings: '{}' });
     const [showModal, setShowModal] = React.useState<boolean>(false);
     const [errors, setErrors] = React.useState<string[]>([]);
 
     React.useEffect(() => {
         const e = [];
-        if (dataSource.Name == null || dataSource.Name.trim().length == 0)
+        if (dataSource.Name == null || dataSource.Name.trim().length == 0) {
             e.push("A Name has to be entered.")
+            setErrors(e);
+            return;
+        }
+
+        if (dataSources.map(ds => ds.Name.toLowerCase()).includes(dataSource.Name.toLowerCase()))
+            e.push("A datasource with this name already exists.")
+        else if (dataSources.concat(publicDataSources).map(ds => ds.Name.toLowerCase()).includes(dataSource.Name.toLowerCase()))
+            e.push("A shared datasource with this name was already created by another user.");
+
         setErrors(e);
     }, [dataSource]);
+
+    React.useEffect(() => {
+        if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
+        dispatch(FetchDataSources());
+
+    }, [dsStatus]);
 
     return (
         <>
