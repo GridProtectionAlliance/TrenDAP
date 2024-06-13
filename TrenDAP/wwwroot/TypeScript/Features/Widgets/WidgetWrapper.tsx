@@ -334,24 +334,4 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
         }
     </>
 }
-
-
-//Helper Functions
-export const CreateWidget = (type: string, width: number): TrenDAP.IWidgetModel => {
-    return {
-        Width: width,
-        Label: `${type}`,
-        Type: type,
-        ShowHeader: true,
-        Settings: null,
-        Channels: []
-    }
-}
-
-export const isPercent = (percent: number) => {
-    if (percent > 100 || percent < 5)
-        return false;
-    return true
-}
-
 export default WidgetWrapper;
