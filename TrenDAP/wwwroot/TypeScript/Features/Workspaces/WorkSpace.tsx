@@ -75,24 +75,24 @@ const Workspace: React.FunctionComponent = () => {
             setIsLinkShareable({ Shareable: false, DisabledMessage: '' });
             return;
         }
-    
+
         const isWorkspaceSaved = _.isEqual(workSpaceJSON, JSON.parse(workSpace.JSONString));
         const shareable = dataSet?.Public && workSpace?.Public && isWorkspaceSaved;
         let disabledMessage = '';
-    
+
         if (!dataSet?.Public || !workSpace?.Public) {
             setIsLinkShareable({ Shareable: false, DisabledMessage: `Workspace and dataset must be public${!isWorkspaceSaved ? ' and workspace must be saved' : ''}` });
             return;
         }
-    
+
         if (!isWorkspaceSaved) {
             setIsLinkShareable({ Shareable: false, DisabledMessage: 'Workspace must be saved' });
             return;
         }
-    
+
         setIsLinkShareable({ Shareable: shareable, DisabledMessage: disabledMessage });
     }, [workSpace, dataSet, workSpaceJSON]);
-    
+
 
     //Effect to set the workspace link
     React.useEffect(() => {
@@ -102,7 +102,7 @@ const Workspace: React.FunctionComponent = () => {
         }
 
         const channelMap = workSpaceJSON.Rows
-        .flatMap(row => row.Widgets.flatMap(widget => widget.Channels.map(channel => [channel.Key, channelMapping.current.get(channel.Key)])));
+            .flatMap(row => row.Widgets.flatMap(widget => widget.Channels.map(channel => [channel.Key, channelMapping.current.get(channel.Key)])));
         const chans = new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, channelMap as [TrenDAP.IChannelKey, string][]).serialize();
 
         let pathName = _.cloneDeep(window.location.pathname)
@@ -223,51 +223,53 @@ const Workspace: React.FunctionComponent = () => {
                             </Modal>
                         </div>
                     </div>
-                    <div className="row flex-grow-1 d-flex flex-column" style={{ overflowY: 'auto', overflowX: 'hidden' }}>
-                        <div className="col-12 h-100 p-0">
-                            {workSpaceJSON.Rows.map((row, index) => <Row
-                                key={index}
-                                ChannelMap={{ Map: channelMapping, Version: mapVersion }}
-                                SetChannelMapVersion={setMapVersion}
-                                ParentMap={parentMapping}
-                                AllChannels={allChannels}
-                                Label={row?.Label}
-                                Widgets={row.Widgets}
-                                Height={row.Height}
-                                ShowHeader={row.ShowHeader}
-                                UpdateRow={(record) => {
-                                    let json = { ...workSpaceJSON };
-                                    json.Rows[index] = record;
-                                    setWorkSpaceJSON(json)
-                                }}
-                                RemoveRow={() => {
-                                    let json = { ...workSpaceJSON };
-                                    json.Rows.splice(index, 1);
-                                    setWorkSpaceJSON(json)
-                                }}
-                                MoveRowUp={() => {
-                                    if (index <= 0) return;
-                                    const newIndex = index - 1
-                                    let json = { ...workSpaceJSON };
-                                    const a = json.Rows[newIndex];
-                                    const b = json.Rows[index];
-                                    json.Rows[newIndex] = b;
-                                    json.Rows[index] = a;
-                                    setWorkSpaceJSON(json)
-                                }}
-                                MoveRowDown={() => {
-                                    let json = { ...workSpaceJSON };
-                                    if (index >= json.Rows.length) return;
-                                    const newIndex = index + 1
-                                    const a = json.Rows[newIndex];
-                                    const b = json.Rows[index];
-                                    json.Rows[newIndex] = b;
-                                    json.Rows[index] = a;
-                                    setWorkSpaceJSON(json)
-                                }}
-                            />)}
+                    {dataSet == null ? <div className="d-flex">Select a dataset to continue</div> :
+                        <div className="row flex-grow-1 d-flex flex-column" style={{ overflowY: 'auto', overflowX: 'hidden' }}>
+                            <div className="col-12 h-100 p-0">
+                                {workSpaceJSON.Rows.map((row, index) => <Row
+                                    key={index}
+                                    ChannelMap={{ Map: channelMapping, Version: mapVersion }}
+                                    SetChannelMapVersion={setMapVersion}
+                                    ParentMap={parentMapping}
+                                    AllChannels={allChannels}
+                                    Label={row?.Label}
+                                    Widgets={row.Widgets}
+                                    Height={row.Height}
+                                    ShowHeader={row.ShowHeader}
+                                    UpdateRow={(record) => {
+                                        let json = { ...workSpaceJSON };
+                                        json.Rows[index] = record;
+                                        setWorkSpaceJSON(json)
+                                    }}
+                                    RemoveRow={() => {
+                                        let json = { ...workSpaceJSON };
+                                        json.Rows.splice(index, 1);
+                                        setWorkSpaceJSON(json)
+                                    }}
+                                    MoveRowUp={() => {
+                                        if (index <= 0) return;
+                                        const newIndex = index - 1
+                                        let json = { ...workSpaceJSON };
+                                        const a = json.Rows[newIndex];
+                                        const b = json.Rows[index];
+                                        json.Rows[newIndex] = b;
+                                        json.Rows[index] = a;
+                                        setWorkSpaceJSON(json)
+                                    }}
+                                    MoveRowDown={() => {
+                                        let json = { ...workSpaceJSON };
+                                        if (index >= json.Rows.length) return;
+                                        const newIndex = index + 1
+                                        const a = json.Rows[newIndex];
+                                        const b = json.Rows[index];
+                                        json.Rows[newIndex] = b;
+                                        json.Rows[index] = a;
+                                        setWorkSpaceJSON(json)
+                                    }}
+                                />)}
+                            </div>
                         </div>
-                    </div>
+                    }
                 </>}
             <DataSetSelector key={workspaceId} IsModalOpen={showShowDataSetModal} SetIsModalOpen={setShowDataSetModal} WorkSpaceJSON={workSpaceJSON} GenerateMapping={GenerateMapping} AllChannels={allChannels} SetAllChannels={setAllChannels} />
         </div>
@@ -278,7 +280,7 @@ const WorkspaceWrapper = (props: {}) => {
     const { workspaceId } = props['useParams'];
 
     return (
-        <Workspace key={workspaceId}  />
+        <Workspace key={workspaceId} />
     );
 };
 
