@@ -77,7 +77,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         const [chartAction, setChartAction] = React.useState<TrenDAP.ChartAction>('Pan');
         const [plotSize, setPlotSize] = React.useState<{ Height: number, Width: number }>()
 
-        const [evtHover, setEvtHover] = React.useState<TrenDAP.IEvent>(null);
+        const [evtHover, setEvtHover] = React.useState<{ Event: TrenDAP.IEvent, Target: string }>(null);
         const [showTooltip, setShowTooltip] = React.useState<boolean>(false);
 
         React.useLayoutEffect(() => {
@@ -340,20 +340,21 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
         function AddEventLine(events: TrenDAP.IEvent[], svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, ) {
             const svgHeight = parseInt(svg.attr('height'));
+            const identifiedEvents = events.map((evt, index) => ({Event: evt, Target: `event-${index}`}))
 
             svg.selectAll('g.event-line').remove();
             const g = svg.selectAll('g.event-line')
-                .data(events)
+                .data(identifiedEvents)
                 .enter()
                 .append('g')
                 .classed('event-line', true)
             g.append('path')
                 .attr('stroke-width', '2px')
                 .attr("d", _ => `M0,${svgHeight - margin.current.bottom - margin.current.top}L-10,${svgHeight - margin.current.bottom - margin.current.top + 10},L10,${svgHeight - margin.current.bottom - margin.current.top + 10}L0,${svgHeight - margin.current.bottom - margin.current.top}Z`)
-                .attr("transform", d => `translate(${xScaleRef.current(d.Time)},${margin.current.top})`)
+                .attr("transform", d => `translate(${xScaleRef.current(d.Event.Time)},${margin.current.top})`)
                 .attr('stroke', 'red')
                 .attr('fill', 'red')
-                .attr('data-tooltip', d => d.Title)
+                .attr('data-tooltip', d => d.Target)
                 .on('mouseenter', (_, d) => { setEvtHover(d); setShowTooltip(true); })
                 .on('mouseleave', _ => setShowTooltip(false))
                 /* Add onclick to quickview?
@@ -578,8 +579,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     </button>
                     <RadioButtons Record={{ chartAction }} Field="chartAction" Label="" Setter={(record) => setChartAction(record.chartAction)} Options={[{ Label: 'Pan', Value: 'Pan'}, { Label: 'ZoomX', Value: 'ZoomX' }, { Label: 'Click', Value: 'Click' }]} />
                 </div>
-                <ToolTip Show={showTooltip && evtHover?.Title != null && evtHover?.Title != ''} Position='top' Target={evtHover?.Title}>
-                    {`${evtHover?.Title}${(evtHover?.Description != null && evtHover.Description != '') ? (" - " + evtHover.Description) : ''}`}
+                <ToolTip Show={showTooltip && evtHover?.Event?.Title != null && evtHover?.Event?.Title != ''} Position='top' Target={evtHover?.Target}>
+                    {`${evtHover?.Event?.Title}${(evtHover?.Event?.Description != null && evtHover.Event.Description != '') ? (" - " + evtHover.Event.Description) : ''}`}
                 </ToolTip>
             </div>
         );
