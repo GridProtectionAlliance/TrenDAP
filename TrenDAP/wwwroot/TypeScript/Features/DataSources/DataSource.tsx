@@ -22,22 +22,38 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { DataSourceTypes } from '../../global';
-import { useAppSelector } from '../../hooks';
+import { DataSourceTypes, Redux } from '../../global';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { Input, Select, CheckBox, DatePicker } from '@gpa-gemstone/react-forms';
 import { SelectDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 import DataSourceWrapper from './DataSourceWrapper';
+import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from './DataSourcesSlice';
 
 const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSourceView, SetDataSource: (ds: DataSourceTypes.IDataSourceView) => void, SetErrors: (e: string[]) => void }> = (props) => {
+    const dispatch = useAppDispatch();
+    const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as DataSourceTypes.IDataSourceView[];
+    const publicDataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as DataSourceTypes.IDataSourceView[];
+    const dsStatus = useAppSelector(SelectDataSourcesStatus);
+
+
     const dataSourceTypes: DataSourceTypes.IDataSourceType[] = useAppSelector(SelectDataSourceTypes);
     const [useExpiredField, setUseExpiredField] = React.useState<boolean>(props.DataSource.Expires != null);
     const [wrapperErrors, setWrapperErrors] = React.useState<string[]>([]);
 
     React.useEffect(() => {
+        if (dsStatus === 'unitiated' || dsStatus === 'changed') dispatch(FetchDataSources());
+    }, [dsStatus]);
+
+    React.useEffect(() => {
         const errors: string[] = [];
         if (!valid('Name')) errors.push("Name between 0 and 200 characters is required.");
+        else if (dataSources.filter(ds => ds.ID !== props.DataSource.ID).map(ds => ds.Name.toLowerCase()).includes(props.DataSource.Name.toLowerCase()))
+            errors.push("A datasource with this name already exists.")
+        else if (dataSources.filter(ds => ds.ID !== props.DataSource.ID).concat(publicDataSources).map(ds => ds.Name.toLowerCase()).includes(props.DataSource.Name.toLowerCase()))
+            errors.push("A shared datasource with this name was already created by another user.");
+
         props.SetErrors(wrapperErrors.concat(errors));
-    }, [props.DataSource, wrapperErrors])
+    }, [props.DataSource, wrapperErrors]);
 
     function valid(field: keyof (DataSourceTypes.IDataSourceView)): boolean {
         if (field == 'Name')
