@@ -31,9 +31,12 @@ import EditWorkSpace from './EditWorkSpace';
 import { TrashCan, HeavyCheckMark } from './../../Constants';
 import moment from 'moment';
 import { SelectDataSets } from '../DataSets/DataSetsSlice';
+import { useNavigate } from 'react-router-dom'
 
 const WorkSpaces: React.FunctionComponent = (props: {}) => {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+
     const workSpaces = useAppSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
     const publicWorkSpaces = useAppSelector((state: Redux.StoreState) => SelectWorkSpacesAllPublicNotUser(state, userName));
     const dataSets = useAppSelector(SelectDataSets);
@@ -80,7 +83,7 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                             sortKey={sortField}
                             onClick={(data, evt) => {
                                 if (evt.target.tagName.toLowerCase() === 'td')
-                                    window.location.href = `${homePath}WorkSpaceEditor/${data.row.ID}`
+                                    navigate(`${homePath}WorkSpaceEditor/${data.row.ID}`)
                             }}
                             onSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             data={workSpaces}
@@ -109,7 +112,7 @@ const WorkSpaces: React.FunctionComponent = (props: {}) => {
                             sortKey={sortField}
                             onClick={(data, evt) => {
                                 if (evt.target.tagName.toLowerCase() === 'td')
-                                    window.location.href = `${homePath}WorkSpaceEditor/${data.row.ID}`
+                                    navigate(`${homePath}WorkSpaceEditor/${data.row.ID}`)
                             }}
                             onSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             data={publicWorkSpaces}

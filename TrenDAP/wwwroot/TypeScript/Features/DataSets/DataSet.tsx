@@ -25,7 +25,7 @@ import * as React from 'react';
 import { TrenDAP, DataSourceTypes } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { SelectDataSources, SelectDataSourcesStatus, FetchDataSources } from '../DataSources/DataSourcesSlice';
-import styles from '../../../Styles/app.scss';
+
 import DataSetGlobalSettings from './Types/DataSetGlobalSettings';
 import DataSourceWrapper from '../DataSources/DataSourceWrapper';
 
@@ -33,14 +33,14 @@ interface IProps {
     DataSet: TrenDAP.iDataSet,
     SetDataSet: (ws: TrenDAP.iDataSet) => void,
     Connections: DataSourceTypes.IDataSourceDataSet[],
-    SetConnections: (arg: DataSourceTypes.IDataSourceDataSet[]) => void
+    SetConnections: (arg: DataSourceTypes.IDataSourceDataSet[]) => void,
+    Tab: string
 }
 
 const DataSet: React.FunctionComponent<IProps> = (props: IProps) => {
     const dispatch = useAppDispatch();
-    const dataSources = useAppSelector(SelectDataSources) as DataSourceTypes.IDataSourceView[];
+    const dataSources = useAppSelector(SelectDataSources);
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
-    const [tab, setTab] = React.useState<string>('settings');
 
     React.useEffect(() => {
         if (dsStatus === 'unitiated' || dsStatus === 'changed') dispatch(FetchDataSources());
@@ -68,37 +68,20 @@ const DataSet: React.FunctionComponent<IProps> = (props: IProps) => {
    
     return (
         <>
-            <ul className="nav nav-tabs" style={{padding:10}}>
-                <li className="nav-item">
-                    <a className="nav-link active" data-toggle="tab" onClick={() => setTab('settings') }>Settings</a>
-                </li>
-                {
-                    props.Connections.map((conn, index) => (
-                        <li className={"nav-item " + styles.workspacetab}  key={index}>
-                            <a className="nav-link" data-toggle="tab" onClick={() => setTab(index.toString())}>
-                                {dataSources.find(ds => ds.ID === conn.DataSourceID)?.Name}
-                            </a>
-                            <span onClick={() => deleteConn(index)}>X</span>
-                        </li>
-                    ))
-                }
-            </ul>
-            <div className="tab-content">
-                <div className={"tab-pane container " + (tab === "settings" ? 'active' : 'fade')}>
+        <div className="tab-content" style={{height: '100%', width: '100%'}}>
+                <div className={"tab-pane container " + (props.Tab === "settings" ? 'active' : 'fade')} style={{height: '100%', width: '100%'}}>
                     <DataSetGlobalSettings DataSet={props.DataSet} SetDataSet={props.SetDataSet} Connections={props.Connections} SetConnections={props.SetConnections} />
                 </div>
                 {
                     props.Connections.map((conn, index) => (
-                        <div className={"tab-pane container " + (tab === index.toString() ? 'active' : 'fade')} id={index.toString()} key={index}>
+                        <div className={"tab-pane container " + (dataSources.find(ds => ds.ID === conn.DataSourceID)?.Name + index.toString() === props.Tab ? 'active' : 'fade')} id={index.toString()} key={index}>
                             <DataSourceWrapper DataSource={dataSources.find(ds => ds.ID === conn.DataSourceID)}
                                 ComponentType='datasetConfig' DataSet={props.DataSet}
                                 DataSetConn={conn} SetDataSetConn={newConn => changeConn(index, newConn)} />
                         </div>
                     ))
-
                 }
             </div>
-
         </>
     );
 }

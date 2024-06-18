@@ -23,20 +23,40 @@
 
 import * as React from 'react';
 import _ from 'lodash';
-import { DataSourceTypes, Redux } from '../../global';
+import { DataSourceTypes } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { FetchDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSources } from './DataSourcesSlice'
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 import EditDataSource from './EditDataSource';
-import { TrashCan, HeavyCheckMark } from './../../Constants'
+import { TrashCan, HeavyCheckMark } from './../../Constants';
+import AddNewDataSource from './AddNewDataSource';
+import { Warning } from '@gpa-gemstone/react-interactive';
 
-const DataSources: React.FunctionComponent = (props: {}) => {
+
+const DataSources: React.FunctionComponent = () => {
+    const dispatch = useAppDispatch();
+    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
+
+    React.useEffect(() => {
+        if (dstStatus === 'unitiated' || dstStatus === 'changed')
+            dispatch(FetchDataSourceTypes());
+    }, [dstStatus]);
+
     return (
         <div className="row" style={{ margin: 10}}>
             <div className="col-6" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header">My DataSources</div>
+                    <div className="card-header">
+                        <div className="row">
+                            <div className="d-flex col-6 justify-content-start">
+                                <h4>My DataSources</h4>
+                            </div>
+                            <div className="d-flex col-6 justify-content-end">
+                                <AddNewDataSource/>
+                            </div>
+                        </div>
+                    </div>
                     <div className="card-body">
                         <DataSourceTable OwnedByUser={true}/>
                     </div>
@@ -44,7 +64,7 @@ const DataSources: React.FunctionComponent = (props: {}) => {
             </div>
             <div className="col-6" style={{ padding: '0 0 0 0' }}>
                 <div className="card">
-                    <div className="card-header">Shared DataSources</div>
+                    <div className="card-header"><h4>Shared DataSources</h4></div>
                     <div className="card-body">
                         <DataSourceTable OwnedByUser={false} />
                     </div>
@@ -64,14 +84,10 @@ const DataSourceTable = React.memo((props: ITableProps) => {
     const [dataSources, setDataSources] = React.useState<DataSourceTypes.IDataSourceView[]>([]);
 
     const dispatch = useAppDispatch();
-    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
     const dataSourceTypes = useAppSelector(SelectDataSourceTypes);
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
     const allDataSources = useAppSelector(SelectDataSources);
-
-    React.useEffect(() => {
-        if (dstStatus === 'unitiated' || dstStatus === 'changed') dispatch(FetchDataSourceTypes());
-    }, [dstStatus]);
+    const [deleteItem, setDeleteItem] = React.useState<DataSourceTypes.IDataSourceView>(null);
 
     React.useEffect(() => {
         if (dsStatus === 'unitiated' || dsStatus === 'changed') dispatch(FetchDataSources());
@@ -85,6 +101,7 @@ const DataSourceTable = React.memo((props: ITableProps) => {
     }, [sortField, ascending, allDataSources, props.OwnedByUser]);
 
     return (
+        <>
         <ReactTable.Table<DataSourceTypes.IDataSourceView>
             TableClass="table table-hover"
             TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
@@ -114,13 +131,20 @@ const DataSourceTable = React.memo((props: ITableProps) => {
                     <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Delete'} Field={'Public'}
                         Content={row =>
                             <span>
-                                <EditDataSource DataSource={row.item} />
-                                <button className="btn" onClick={() => dispatch(RemoveDataSource(row.item))}>{TrashCan}</button>
+                                <EditDataSource DataSource={row.item}/>
+                                <button className="btn" onClick={() => setDeleteItem(row.item)}>{TrashCan}</button>
                             </span>}
                     ><></></ReactTable.Column>
                     : <></>
             }
-        </ReactTable.Table>
+            </ReactTable.Table>
+            <Warning Title={'Delete ' + deleteItem?.Name} Show={deleteItem != null} Message={"This will remove the DataSource and can not be undone."}
+                CallBack={(c) => {
+                    if (c)
+                        dispatch(RemoveDataSource(deleteItem));
+                    setDeleteItem(null);
+                }} />
+        </>
     );
 });
 

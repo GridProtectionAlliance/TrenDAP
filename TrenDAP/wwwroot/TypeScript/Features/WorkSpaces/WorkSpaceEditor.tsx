@@ -36,6 +36,7 @@ import { CreateWidget as CreateTemplatableWidget } from './../Widgets/Templatabl
 
 import RegularEditor from './Regular/Editor';
 import TemplatableEditor from './Templatable/Editor';
+import { useNavigate } from 'react-router-dom'
 
 const NavMargin = 85;
 const NavWidth = 200;
@@ -43,6 +44,7 @@ const NavWidth = 200;
 const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
     const [data, setData] = React.useState<TrenDAP.iDataSetReturn<TrenDAP.iDataSetReturnType>[]>([]);
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const workSpace = useAppSelector((state: Redux.StoreState) => SelectWorkSpaceByID(state, parseInt(props['useParams']?.id ?? -1)));
     const dataSet = useAppSelector((state: Redux.StoreState) => SelectDataSetByID(state, workSpace?.DataSetID ?? 0));
     const wsStatus = useAppSelector(SelectWorkSpacesStatus);
@@ -99,16 +101,13 @@ const WorkSpaceEditor: React.FunctionComponent<{}> = (props) => {
     return (
         <>
             <div style={{ height: 42 }}>
-
                 <div className={styles.navbarbuttons}>
-
                     <span style={{ padding: '6px 12px', position: 'relative' }}>Data Set:
                         <button className='btn btn-link'
                             onClick={() => {
-                                `${homePath}EditDataSet/${dataSet?.ID}`;
+                                navigate(`${homePath}EditDataSet/${dataSet?.ID}`);
                             }}
                         >{dataSet?.Name}</button>
-                        <DataSetData {...dataSet} />
                     </span>
                     <div className="btn-group">
                         <button className="btn" title='Add Object' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><i className="fa fa-plus" ></i></button>

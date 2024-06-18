@@ -96,28 +96,30 @@ const DataSetGlobalSettings: React.FunctionComponent<IProps> = (props: IProps) =
     }
 
     return (
-        <form>
-            <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="Name" Setter={(record) => props.SetDataSet(record)} Valid={valid} Feedback={"A unique Name has to be specified"} />
-            <RelativeDateRangePicker Record={props.DataSet} Setter={(record) => props.SetDataSet(record)} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Hours" Label="Hour of Day" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Days" Label="Day of Week" Setter={(record) => props.SetDataSet(record)} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} IsDisabled={validDay} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Weeks" Label="Week of Year" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 53 }, (_, i) => i.toString())} IsDisabled={validWeek} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Months" Label="Month of Year" Setter={(record) => props.SetDataSet(record)} Enum={['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']} />
-            <CheckBox<TrenDAP.iDataSet> Record={props.DataSet} Field="Public" Label='Shared' Setter={(record) => props.SetDataSet(record)} />
-            <div className="form-group">
-                <div className="dropup">
-                    <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        {Plus} DataSource
-                    </button>
-                    <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        <div className="dropdown-header">Your DataSources</div>
-                        {dataSources.map(ds => <a key={ds.ID} className="dropdown-item" onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
-                        <div className="dropdown-header">Shared DataSources</div>
-                        {publicDataSources.map(ds => <a key={ds.ID} className="dropdown-item" onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
+        <div className="d-flex flex-column h-100">
+            <form className="d-flex flex-column h-100">
+                <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="Name" Setter={(record) => props.SetDataSet(record)} Valid={valid} Feedback={"A Unique Name has to be specified"} />
+                <RelativeDateRangePicker Record={props.DataSet} Setter={(record) => props.SetDataSet(record)} />
+                <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Hours" Label="Hour of Day" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
+                <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Days" Label="Day of Week" Setter={(record) => props.SetDataSet(record)} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} IsDisabled={validDay} />
+                <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Weeks" Label="Week of Year" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 53 }, (_, i) => i.toString())} IsDisabled={validWeek} />
+                <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Months" Label="Month of Year" Setter={(record) => props.SetDataSet(record)} Enum={['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']} />
+                <CheckBox<TrenDAP.iDataSet> Record={props.DataSet} Field="Public" Label='Shared' Setter={(record) => props.SetDataSet(record)} />
+                <div className="form-group">
+                    <div className="dropup">
+                        <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {Plus} DataSource
+                        </button>
+                        <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <div className="dropdown-header">Your DataSources</div>
+                            {dataSources.map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
+                            <div className="dropdown-header">Shared DataSources</div>
+                            {publicDataSources.map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddDS(ds)}>{ds.Name} ({dataSourceTypes.find(dst => dst.ID === ds.DataSourceTypeID)?.Name})</a>)}
+                        </div>
                     </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     );
 
 }

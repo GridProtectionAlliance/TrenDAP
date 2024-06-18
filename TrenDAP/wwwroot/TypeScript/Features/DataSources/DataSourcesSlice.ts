@@ -30,7 +30,7 @@ export const FetchDataSources = createAsyncThunk('DataSources/FetchDataSources',
     return await GetDataSources();
 });
 
-export const AddDataSource = createAsyncThunk('DataSources/AddDataSource', async (dataSource: DataSourceTypes.IDataSourceView, { dispatch }) => {
+export const AddDataSource = createAsyncThunk('DataSources/AddDataSource', async (dataSource: DataSourceTypes.IDataSourceView) => {
     return await PostDataSource(dataSource);
 });
 
