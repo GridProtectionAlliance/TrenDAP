@@ -64,7 +64,7 @@ const Workspace: React.FunctionComponent = () => {
     const [hover, setHover] = React.useState<Hover>('None');
     const [showSettingsModal, setShowSettingsModal] = React.useState<boolean>(false);
     const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([]);
-    const [loadedEvents, setLoadedEvents] = React.useState<TrenDAP.IEvent[]>([]);
+    const [allEvents, setAllEvents] = React.useState<TrenDAP.IEventSourceMetaData[]>([]);
     const [showShowDataSetModal, setShowDataSetModal] = React.useState<boolean>(true)
     const [loading, setLoading] = React.useState<boolean>(false);
     const [dataSet, setDataset] = React.useState<TrenDAP.iDataSet | null>(null)
@@ -233,7 +233,7 @@ const Workspace: React.FunctionComponent = () => {
                                     SetChannelMapVersion={setMapVersion}
                                     ParentMap={parentMapping}
                                     AllChannels={allChannels}
-                                    LoadedEvents={loadedEvents}
+                                    AllEventSources={allEvents}
                                     Label={row?.Label}
                                     Widgets={row.Widgets}
                                     Height={row.Height}
@@ -273,7 +273,10 @@ const Workspace: React.FunctionComponent = () => {
                         </div>
                     }
                 </>}
-            <DataSetSelector key={workspaceId} IsModalOpen={showShowDataSetModal} SetIsModalOpen={setShowDataSetModal} WorkSpaceJSON={workSpaceJSON} GenerateMapping={GenerateMapping} AllChannels={allChannels} SetAllChannels={setAllChannels} />
+            <DataSetSelector key={workspaceId} IsModalOpen={showShowDataSetModal}
+                SetIsModalOpen={setShowDataSetModal} WorkSpaceJSON={workSpaceJSON}
+                GenerateMapping={GenerateMapping}
+                AllChannels={allChannels} SetAllChannels={setAllChannels} SetAllEventSources={setAllEvents} />
         </div>
     );
 }

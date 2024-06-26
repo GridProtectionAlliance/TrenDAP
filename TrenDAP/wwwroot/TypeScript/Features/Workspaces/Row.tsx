@@ -40,6 +40,7 @@ type Hover = ('None' | 'Add' | 'Remove' | 'Settings')
 
 interface IProps {
     AllChannels: DataSetTypes.IDataSetMetaData[],
+    AllEventSources: TrenDAP.IEventSourceMetaData[],
     ChannelMap: TrenDAP.IChannelMap,
     SetChannelMapVersion: (version: number) => void
     ParentMap: React.MutableRefObject<Map<string, number>>,
@@ -153,7 +154,7 @@ const Row: React.FunctionComponent<IProps> = (props) => {
                     {props.Widgets.map((widget, index) => {
                         return <WidgetWrapper
                             AllChannels={props.AllChannels}
-                            LoadedEvents={props.LoadedEvents}
+                            AllEventSources={props.AllEventSources}
                             ChannelMap={props.ChannelMap}
                             ParentMap={props.ParentMap}
                             UpdateWidget={(newRecord) => {

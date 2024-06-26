@@ -31,7 +31,8 @@ export const CreateWidget = (type: string, width: number): TrenDAP.IWidgetModel 
         Type: type,
         ShowHeader: true,
         Settings: null,
-        Channels: []
+        Channels: [],
+        EventSources: []
     }
 }
 

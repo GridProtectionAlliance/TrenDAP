@@ -244,13 +244,27 @@ export namespace TrenDAP {
         Type: string,
         ShowHeader: boolean,
         Settings: any,
-        Channels: IWidgetChannels<any>[]
+        Channels: IWidgetChannels<any>[],
+        EventSources: IWidgetEventSources<any>[]
     }
 
     //might be better in widgettypes namespace..
     interface IWidgetChannels<T> {
         Key: TrenDAP.IChannelKey,
         ChannelSettings: T
+    }
+
+    interface IEventSourceMetaData {
+        ID: number,
+        Name: string,
+        SourceType: string,
+        Logo?: string
+    }
+
+    interface IWidgetEventSources<T> {
+        Key: number,
+        Enabled: boolean,
+        EventSettings: T
     }
 
     interface IChannelKey {

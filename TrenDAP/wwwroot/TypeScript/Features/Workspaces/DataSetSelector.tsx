@@ -77,13 +77,13 @@ interface IProps {
     WorkSpaceJSON: TrenDAP.WorkSpaceJSON,
     AllChannels: DataSetTypes.IDataSetMetaData[],
     SetAllChannels: (chans: DataSetTypes.IDataSetMetaData[]) => void,
+    SetAllEventSources: (evtSrc: TrenDAP.IEventSourceMetaData[]) => void,
     GenerateMapping: (
         channelMap: [TrenDAP.IChannelKey, string][],
         parentMap: [string, number][],
         loadedEvents: TrenDAP.IEvent[],
         dataSet: TrenDAP.iDataSet,
         loadHandle: Promise<void>) => void
-}
 }
 
 const DataSetSelector: React.FC<IProps> = (props) => {
@@ -108,7 +108,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     const [evtStatus, setEvtStatus] = React.useState<Application.Types.Status>('unintiated')
     const [eventSources, setEventSources] = React.useState<EventSourceTypes.IEventSourceDataSet[]>([]);
-    const [loadedEvents, setLoadedEvents] = React.useState<TrenDAP.IEvent[]>([]);
+    const [loadedEvents, setLoadedEvents] = React.useState<IEventData[]>(undefined);
 
     const [channelErrors, setChannelErrors] = React.useState<string[]>([]);
     const [allParents, setAllParents] = React.useState<{ ID: string, Name: string }[]>([]);
@@ -214,7 +214,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     //Effect to load all parents and channels from the selected dataset
     React.useEffect(() => {
 
-        if (datasources.length == 0)
+        // Events will be set in generate mapping, so we should wait for them to be ready in case we need them
+        if (datasources.length == 0 || evtStatus !== 'idle')
             return;
 
         const channelHandlers = datasources.map((ds) => {
@@ -245,26 +246,28 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 navigate(`${homePath}Workspaces/${workspaceId}/DataSet/${dataSetID}`)
             }
         })
-    }, [datasources]);
+    }, [datasources, evtStatus]);
     
     React.useEffect(() => {
         if (eventSources.length == 0) {
             setEvtStatus('idle');
             return;
         }
+        const newEvents: IEventData[] = [];
 
         const eventSrcHandlers = eventSources.map(ds => {
             const eventSourceView = eventSourceViews.find(d => d.ID === ds.EventSourceID);
             const implementation: IEventSource<any, any> | null = EventDataSources.find(t => t.Name == eventSourceView.Type);
             if (implementation === null)
                 return Promise.resolve([]);
-            return implementation.Load(eventSourceView, selectedDataSet, ds);
-        })
-
-        Promise.all(eventSrcHandlers).then(d => {
-            setEvtStatus('idle');
-            setLoadedEvents(d.flat());
+            const logoString = implementation?.GetLogo != null ? implementation.GetLogo(eventSourceView) : undefined;
+            implementation.Load(eventSourceView, selectedDataSet, ds).then(d => {
+                newEvents.push({ ID: eventSourceView.ID, SourceType: eventSourceView.Type, Name: eventSourceView.Name, Data: d, Logo: logoString });
         });
+        });
+
+        Promise.all(eventSrcHandlers).then(_ => { setEvtStatus('idle'); setLoadedEvents(newEvents); });
+
     }, [eventSources]);
 
     // Effect to initialize parent matches
@@ -329,19 +332,23 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     const loadData = () => {
         // Assumption that 0 is user error, meant to be null.
         // Not neccessarily true, but the use case of a 0 window is pretty narrow...
-        const useEvts = selectedDataSet.EventWindowSize != null && selectedDataSet.EventWindowSize !== 0;
+        const allEvents = (selectedDataSet.EventWindowSize != null && selectedDataSet.EventWindowSize !== 0) ?
+            loadedEvents.flatMap(d => d.Data) : undefined;
+
+        props.SetAllEventSources(loadedEvents.map(d => ({ ID: d.ID, Name: d.Name, SourceType: d.SourceType, Logo: d?.Logo })));
         const dataHandlers = datasources.map((ds) => {
             const dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
             const implementation: IDataSource<any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
             if (implementation == null)
                 return Promise.resolve([] as DataSetTypes.IDataSetData[]);
-            return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds, useEvts ? loadedEvents : undefined);
-        })
+            return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds, allEvents);
+        });
 
         const loaded = Promise.all(dataHandlers).then(d => {
             const db = new TrenDAPDB();
-            db.AddMultiple(d.flat())
-        })
+            db.AddMultipleEvents(loadedEvents);
+            db.AddMultiple(d.flat());
+        });
 
         return loaded;
     }
