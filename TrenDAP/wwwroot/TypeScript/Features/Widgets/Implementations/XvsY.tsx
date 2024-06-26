@@ -71,9 +71,10 @@ interface IPairData {
     Axis: ('X' | 'Y')
 }
 
-export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
+export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any> = {
     DefaultSettings: { XAxisLabel: "X Axis", YAxisLabel: 'Y Axis', Pairs: [] },
     DefaultChannelSettings: { Field: 'Average', Axis: 'Y', PairId: -1 },
+    DefaultEventSourceSettings: null,
     Name: "XvsY",
     WidgetUI: (props) => {
         const plotRef = React.useRef<HTMLDivElement>(null);

@@ -46,10 +46,11 @@ interface IChannelSettings {
     Profile: boolean,
 }
 
-export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
+export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any> = {
     Name: "Histogram",
     DefaultSettings: { XAxisLabel: 'Value', YAxisLabel: 'Count', BinCount: 15 },
     DefaultChannelSettings: { Color: 'Red', Field: 'Average', Profile: false },
+    DefaultEventSourceSettings: null,
     WidgetUI: (props) => {
         const plotRef = React.useRef<HTMLDivElement>(null);
         const [plotSize, setPlotSize] = React.useState<{ Height: number, Width: number }>()

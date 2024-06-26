@@ -46,6 +46,7 @@ import TrenDAPDB from '../DataSets/TrenDAPDB';
 import { WidgetTypes } from './Interfaces'
 import _ from 'lodash';
 import ChannelSelector from './ChannelSelector';
+import EventSelector from './EventSelector';
 import { isPercent } from './HelperFunctions';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -76,8 +77,12 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     const [settingHover, setSettingHover] = React.useState<boolean>(false);
 
     const [data, setData] = React.useState<WidgetTypes.IWidgetData<any>[]>([]);
+    const [events, setEvents] = React.useState<WidgetTypes.IWidgetEvents<any>[]>([]);
+
+    const [tab, setTab] = React.useState<string>('channel');
 
     const [localChannels, setLocalChannels] = React.useState<WidgetTypes.ISelectedChannels<any>[]>([]);
+    const [localEventSources, setLocalEventSources] = React.useState<WidgetTypes.ISelectedEvents<any>[]>([]);
     const [localSetting, setLocalSetting] = React.useState<any | null>(null);
     const [localCommonSettings, setCommonLocalSettings] = React.useState<WidgetTypes.ICommonSettings>({ Width: props.Widget.Width, Label: props.Widget.Label, ShowHeader: props.Widget.ShowHeader });
     const [showWarning, setShowWarning] = React.useState<boolean>(false);
@@ -109,6 +114,25 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     }, [props.Widget.Channels, props.AllChannels, props.ChannelMap.Version, showSettingsModal])
 
     React.useEffect(() => {
+        if (Implementation == null || props.Widget.EventSources == null || props.AllEventSources == null || props.AllEventSources.length == 0) {
+            setLocalEventSources([]);
+            return;
+        }
+        const eventSources: WidgetTypes.ISelectedEvents<any>[] = props.AllEventSources.map(evtSrc => {
+            let eventSourceKey = props.EventMap.current.get(evtSrc.ID);
+            if (eventSourceKey == null) {
+                eventSourceKey = props.EventMap.current.size;
+                props.EventMap.current.set(evtSrc.ID, eventSourceKey);
+                props.SetEventMapVersion(props.EventMapVersion + 1);
+            }
+            const widgetSettings: TrenDAP.IWidgetEventSources<any> = props.Widget.EventSources.find(src => src.Key === eventSourceKey) ??
+                { Key: eventSourceKey, Enabled: false, EventSettings: Implementation.DefaultEventSourceSettings };
+            return { ...evtSrc, ...widgetSettings };
+        });
+        setLocalEventSources(eventSources);
+    }, [props.Widget?.EventSources, props.AllEventSources, showSettingsModal, Implementation])
+
+    React.useEffect(() => {
         setCommonLocalSettings({ Width: props.Widget.Width, Label: props.Widget.Label, ShowHeader: props.Widget.ShowHeader })
     }, [props.Widget.Width, props.Widget.Label, props.Widget.ShowHeader, showSettingsModal])
 
@@ -136,12 +160,32 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
 
     }, [props.Widget.Channels, props.ChannelMap.Version]);
 
+    React.useEffect(() => {
+        if (props.Widget.EventSources == null || props.Widget.EventSources.length === 0) {
+            setEvents([]);
+            return;
+        }
+
+        const eventSources: WidgetTypes.ISelectedEvents<any>[] = props.Widget.EventSources
+            .filter(evtSrc => evtSrc.Enabled)
+            .map(evtSrc => ({ ...evtSrc, ...props.AllEventSources.find(src => props.EventMap.current.get(src.ID) === evtSrc.Key) }));
+
+        const db = new TrenDAPDB();
+        db.ReadManyEvents(eventSources).then(eventData => setEvents(eventData));
+    }, [props.Widget.EventSources, props.EventMapVersion]);
 
     React.useEffect(() => {
         if (!props.Widget.ShowHeader && editMode)
             setHeaderOpacity(0.5)
         else setHeaderOpacity(1)
-    }, [props.Widget.ShowHeader, editMode])
+    }, [props.Widget.ShowHeader, editMode]);
+
+    function handleChangeEventSource(newSource: WidgetTypes.IWidgetEvents<any>) {
+        const evtSrcs = [...localEventSources];
+        const ind = localEventSources.findIndex(src => src.Key === newSource.Key);
+        evtSrcs[ind] = newSource;
+        setLocalEventSources(evtSrcs);
+    }
 
     function handleAddChannel(channelID: string, defaultSetting: any) {
         const channel = props.AllChannels.find(channel => channel.ID === channelID) as DataSetTypes.IDataSetMetaData;
@@ -171,7 +215,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     AddChannelToMap(channel.Key, channel.MetaData)
                     const updatedKey = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) } as TrenDAP.IChannelKey
                     channel.Key = updatedKey
-                })
+                });
 
             props.UpdateWidget({
                 ...props.Widget,
@@ -179,7 +223,8 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                 Width: localCommonSettings.Width,
                 Label: localCommonSettings.Label,
                 ShowHeader: localCommonSettings.ShowHeader,
-                Channels: hasChannelsChanged ? updatedChannels.map(chan => ({ ChannelSettings: chan.ChannelSettings, Key: chan.Key })) : props.Widget.Channels
+                Channels: hasChannelsChanged ? updatedChannels.map(chan => ({ ChannelSettings: chan.ChannelSettings, Key: chan.Key })) : props.Widget.Channels,
+                EventSources: localEventSources.map(src => ({Key: src.Key, EventSettings: src.EventSettings, Enabled: src.Enabled}))
             })
             setShowSettingsModal(false)
         }
@@ -236,6 +281,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                         </div> : null}
                     <div className="card-body">
                         <Implementation.WidgetUI
+                            Events={events}
                             Data={data}
                             Settings={Settings}
                         />
@@ -254,9 +300,9 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     ConfirmToolTipContent={<span>Enter a valid width</span>}
                     Size="xlg"
                 >
-                    <div className="container-fluid d-flex flex-column p-0" style={{ height: '80vh' }}>
-                        <div className="row h-100">
-                            <div className="col-4 d-flex flex-column h-100">
+                    <div className="container-fluid d-flex h-100 flex-column">
+                        <div className="row h-100" style={{ overflow: 'hidden' }}>
+                            <div className="col-4">
                                 <div className="row">
                                     <div className="col-12">
                                         <Input<WidgetTypes.ICommonSettings> Field='Label' Record={localCommonSettings} Type='text' Setter={(r) => setCommonLocalSettings(r)} Valid={() => true} />
@@ -279,8 +325,12 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                     ChannelSettings={localChannels.map(chan => chan.ChannelSettings)}
                                 />}
                             </div>
-                            <div className="col-8 h-100">
-                                {Implementation?.ChannelSelectionUI != null ?
+                            <div className="col-8">
+                                <TabSelector CurrentTab={tab} SetTab={setTab} Tabs={
+                                    [{ Id: 'channel', Label: 'Channels' },
+                                        { Id: 'evtSrc', Label: 'Event Sources' }]} />
+                                {tab === 'channel' ?
+                                    Implementation?.ChannelSelectionUI != null ?
                                     <Implementation.ChannelSelectionUI
                                         AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
                                         SetChannelSettings={(channelKey, settings) => {
@@ -323,7 +373,13 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                         SelectedChannels={localChannels}
                                         SetSettings={setLocalSetting}
                                         Settings={localSetting}
-                                    />}
+                                        />
+                                : <></>}
+                                {tab === 'evtSrc' ?
+                                    Implementation?.EventSourceSelectionUI !== undefined ?
+                                        <Implementation.EventSourceSelectionUI SetSource={handleChangeEventSource} SelectedSources={localEventSources} /> :
+                                        <EventSelector SetSource={handleChangeEventSource} SelectedSources={localEventSources} />
+                                : <></>}
                             </div>
                         </div>
                     </div>

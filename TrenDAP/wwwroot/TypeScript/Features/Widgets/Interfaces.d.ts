@@ -32,14 +32,18 @@ export namespace WidgetTypes {
         ChannelSettings: U[]
     }
 
-    interface IWidgetProps<T, U> {
+    interface IWidgetProps<T, U, V> {
         Data: IWidgetData<U>[],
+        Events: IWidgetEvents<V>[],
         Settings: T,
     }
 
     interface IWidgetData<T> extends DataSetTypes.IDataSetData {
-        ChannelSettings: T,
-        Events: TrenDAP.Ievent[]
+        ChannelSettings: T
+    }
+
+    interface IWidgetEvents<T> extends ISelectedEvents<T> {
+        Events: TrenDAP.IEvent[]
     }
 
     interface ICommonSettings {
@@ -52,6 +56,8 @@ export namespace WidgetTypes {
         MetaData: DataSetTypes.IDataSetMetaData
     }
 
+    interface ISelectedEvents<T> extends TrenDAP.IWidgetEventSources<T>, TrenDAP.IEventSourceMetaData { }
+
     interface IChannelSelectionProps<S, U> {
         Settings: S,
         SetSettings: (settings: S) => void,
@@ -62,18 +68,28 @@ export namespace WidgetTypes {
         SetChannelSettings: (channelKey: TrenDAP.IChannelKey, channelSettings: U) => void,
     }
 
+    interface IEventSourceSelectionProps<U> {
+        SetSource: (changedSource: ISelectedEvents<U>) => void,
+        SelectedSources: ISelectedEvents<U>[]
+    }
+
     /*
      S => General Settings Object associated with the Widget
     */
     /*
     U => Channel Settings Object associated with each Channel 
     */
-    interface IWidget<S, U> {
-        WidgetUI: React.FC<IWidgetProps<S, U>>,
+    /*
+    V => Event Source Settings Object associated with each Event Source 
+    */
+    interface IWidget<S, U, V> {
+        WidgetUI: React.FC<IWidgetProps<S, U, V>>,
         SettingsUI?: React.FC<ISettingsProps<S, U>>,
         ChannelSelectionUI?: React.FC<IChannelSelectionProps<S, U>>,
+        EventSourceSelectionUI?: React.FC<IEventSourceSelectionProps<V>>,
         DefaultSettings: S,
         DefaultChannelSettings: U,
+        DefaultEventSourceSettings: V,
         Name: string
     }
 }

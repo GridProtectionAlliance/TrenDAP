@@ -46,9 +46,10 @@ interface ITableData {
 
 //lets make this a pagedTable as we can get up to 250+ results here as it slows down render times..
 
-export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
-    DefaultSettings: { Precision: 3, ShowEvents: false },
+export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
+    DefaultSettings: { Precision: 3 },
     DefaultChannelSettings: null,
+    DefaultEventSourceSettings: null,
     Name: "Table",
     WidgetUI: (props) => {
         const [sortField, setSortField] = React.useState<keyof ITableData>('Timestamp');
@@ -56,19 +57,16 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
         const [data, setData] = React.useState<ITableData[]>([]);
 
         React.useEffect(() => {
-            if (props.Data == null || props.Data.length === 0) return;
-            let results: ITableData[] = []
+            if (props.Data == null || props.Events == null || props.Data.length === 0) return;
+            let results: ITableData[] = [];
 
             // Process first channel data
             const firstChannelData = props.Data[0]?.SeriesData;
             if (firstChannelData != null && firstChannelData?.Average != null) {
-                let inactiveEvents: TrenDAP.IEvent[] = [];
-                if (props.Settings.ShowEvents) {
-                    if (props.Data[0]?.Events != null) inactiveEvents = props.Data[0].Events;
-                    if (props.Data[1]?.Events != null && props.Data[1].ParentID != props.Data[0].ParentID) inactiveEvents.concat(props.Data[1].Events);
-                    inactiveEvents = _.orderBy(inactiveEvents, 'Time', 'desc');
-                }
-                let activeEvents: TrenDAP.IEvent[] = [];
+                const inactiveEvents: { Event: TrenDAP.IEvent, Logo?: string }[] = _.orderBy(props.Events.flatMap(evtSrc => evtSrc.Events
+                    .map(event => ({ Event: event, Logo: evtSrc.Logo }))), 'Event.Time', 'desc');
+                let activeEvents: { Event: TrenDAP.IEvent, Logo?: string }[] = [];
+                let dataIndex = 0;
 
                 firstChannelData.Average.forEach((avgItem, index) => {
                     const [timestamp, avg] = avgItem;
@@ -77,28 +75,33 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
 
                     // Check to see if a new event becomes active
                     while (inactiveEvents.length !== 0) {
-                        if (timestamp > inactiveEvents[inactiveEvents.length - 1].Time) {
+                        if (timestamp > inactiveEvents[inactiveEvents.length - 1].Event.Time) {
                             const newActiveEvent = inactiveEvents.pop();
 
                             results.push({
-                                Timestamp: newActiveEvent.Time,
-                                Event: newActiveEvent,
+                                ID: dataIndex,
+                                Timestamp: newActiveEvent.Event.Time,
+                                Event: newActiveEvent.Event,
+                                Logo: newActiveEvent?.Logo,
                                 IsInEvent: true
                             });
+                            dataIndex += 1;
                             activeEvents.push(newActiveEvent);
                         }
                         else break;
                     }
                     // Filter away any now non-active event
-                    activeEvents = activeEvents.filter(evt => timestamp < evt.Time + evt.Duration);
+                    activeEvents = activeEvents.filter(evt => timestamp < evt.Event.Time + evt.Event.Duration);
 
                     results.push({
+                        ID: dataIndex,
                         Timestamp: timestamp,
                         Chan1Minimum: min,
                         Chan1Maximum: max,
                         Chan1Average: avg,
                         IsInEvent: activeEvents.length !== 0
                     });
+                    dataIndex += 1;
                 });
             }
 
@@ -122,7 +125,7 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
             }
 
             setData(results);
-        }, [props.Data]);
+        }, [props.Data, props.Events]);
 
         React.useEffect(() => {
             const ordered = _.orderBy(data, [sortField], [ascending ? 'asc' : 'desc'])
@@ -149,7 +152,7 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
                     }}
                     Data={data}
                     Ascending={ascending}
-                    KeySelector={item => item.Timestamp}
+                    KeySelector={item => item.ID}
                     Selected={item => item.IsInEvent}
                 >
                     <ReactTable.Column<ITableData>

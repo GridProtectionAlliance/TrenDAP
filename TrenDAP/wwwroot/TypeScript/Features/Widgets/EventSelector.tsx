@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  ChannelSelector.tsx - Gbtc
+//  EventSelector.tsx - Gbtc
 //
 //  Copyright (c) 2024, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,24 +16,28 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/03/2024 - Preston Crawford / CHristoph Lackner
+//  06/18/2024 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 import * as React from 'react';
-import { DataSetTypes } from '../../global';
+import _ from 'lodash';
 import { WidgetTypes } from './Interfaces';
 import { ReactTable } from '@gpa-gemstone/react-table';
-import { sort } from './HelperFunctions';
 
-const ChannelSelector: React.FC<WidgetTypes.IChannelSelectionProps<unknown, unknown>> = (props) => {
-    const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>(props.AllChannels);
+const EventSelector: React.FC<WidgetTypes.IEventSourceSelectionProps<any>> = (props) => {
+    const [allEventSources, setAllEventSources] = React.useState<WidgetTypes.ISelectedEvents<any>[]>([]);
     const [ascending, setAscending] = React.useState<boolean>(false);
-    const [sortField, setSortField] = React.useState<keyof DataSetTypes.IDataSetMetaData>('Phase');
+    const [sortField, setSortField] = React.useState<keyof WidgetTypes.ISelectedEvents<any>>('Name');
+
+    React.useEffect(() => {
+        if (props.SelectedSources.length === 0) return;
+        setAllEventSources(_.orderBy(props.SelectedSources, [sortField], [ascending ? 'asc' : 'desc']));
+    }, [ascending, sortField, props.SelectedSources]);
 
     return (
-        <ReactTable.Table<DataSetTypes.IDataSetMetaData>
+        <ReactTable.Table<WidgetTypes.ISelectedEvents<any>>
             TableClass="table table-hover"
             TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
@@ -41,44 +45,37 @@ const ChannelSelector: React.FC<WidgetTypes.IChannelSelectionProps<unknown, unkn
             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
             SortKey={sortField}
             OnClick={(item) => {
-                props.SelectedChannels.forEach(chan => props.RemoveChannel(chan.MetaData.ID));
-                props.AddChannel(item.row.ID, null);
+                const changedSource = { ...item.row };
+                changedSource.Enabled = !changedSource.Enabled;
+                props.SetSource(changedSource)
             }}
-            OnSort={data => sort(data.colField as keyof DataSetTypes.IDataSetMetaData, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
-            Data={allChannels}
+            OnSort={data => {
+                if (sortField === data.colField) setAscending(a => !a);
+                else {
+                    setSortField(data.colField);
+                    setAscending(true);
+                }
+            }}
+            Data={allEventSources}
             Ascending={ascending}
-            KeySelector={(row) => row.ID}
-            Selected={(row) => props.SelectedChannels.find(c => c.MetaData.ID === row.ID) != null ? true : false}
+            KeySelector={(row) => row.Key}
+            Selected={(row) => row.Enabled}
         >
-            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
-                Key={'ParentName'}
-                AllowSort={true}
-                Field={'ParentName'}
-            >
-                Parent
-            </ReactTable.Column>
-            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+            <ReactTable.Column<WidgetTypes.ISelectedEvents<any>>
                 Key={'Name'}
                 AllowSort={true}
                 Field={'Name'}
             >
                 Name
             </ReactTable.Column>
-            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+            <ReactTable.Column<WidgetTypes.ISelectedEvents<any>>
                 Key={'Type'}
                 AllowSort={true}
-                Field={'Type'}
+                Field={'SourceType'}
             >
                 Type
-            </ReactTable.Column>
-            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
-                Key={'Phase'}
-                AllowSort={true}
-                Field={'Phase'}
-            >
-                Phase
             </ReactTable.Column>
         </ReactTable.Table>);
 }
 
-export default ChannelSelector;
+export default EventSelector;

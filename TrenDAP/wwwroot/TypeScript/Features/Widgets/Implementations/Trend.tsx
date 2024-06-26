@@ -48,10 +48,56 @@ interface IChannelSettings {
     YAxisID: number,
 }
 
+type allowedSymbols = 'ArrowDropUp' | 'ArrowDropDown' | 'Exclamation' | 'Square' | 'Circle';
+
+interface IEventSourceSettings {
+    Color: string,
+    Symbol: allowedSymbols
+}
+
 interface IYScale {
     ID: number,
     Scale: d3.ScaleLinear<number, number, never>
 }
+
+function GetPath(type: allowedSymbols, widthOffset: number, heightOffset: number) {
+    switch (type) {
+        case 'ArrowDropUp':
+            return `M${widthOffset},${heightOffset} l-10,10 l20,0 l-10,-10`;
+        case 'ArrowDropDown':
+            return `M${widthOffset},${heightOffset} l-10,-10 l20,0 l-10,10`;
+        case 'Circle':
+            return `M${widthOffset},${heightOffset}a5 5 0 1 1 0 10 a5 5 0 1 1 0 -10`;
+        case 'Square':
+            return `M${widthOffset -5},${heightOffset} l0,10 l10,0 l0,-10 l-10,0`;
+        case 'Exclamation':
+            return `M${widthOffset},${heightOffset-2}, l 0,-2 m 0,-3 l 0,-9`
+    }
+}
+
+const PreviewEventIcon = React.memo((props: { Symbol: allowedSymbols }) => {
+    const verticalOffSet = React.useMemo(() => {
+        switch (props.Symbol) {
+            case 'ArrowDropUp':
+                return 2;
+            case 'ArrowDropDown':
+                return 22;
+            case 'Circle':
+                return 7;
+            case 'Square':
+                return 7;
+            case 'Exclamation':
+                return 23;
+        }
+    }, [props.Symbol])
+
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" style={{ width: 40, height: 24 }} viewBox="0 0 40 24" fill="currentColor"
+            stroke={"currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-check-circle">
+            <path d={GetPath(props.Symbol, 20, verticalOffSet)} />
+        </svg>
+    );
+});
 
 export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
     DefaultSettings: {
@@ -64,6 +110,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         AutoXScale: true
     },
     DefaultChannelSettings: { Field: 'Average', Color: 'Red', YAxisID: -1 },
+    DefaultEventSourceSettings: { Color: 'Green', Symbol: 'ArrowDropUp' },
     Name: "Trend",
     WidgetUI: (props) => {
         const plotRef = React.useRef<HTMLDivElement | null>(null);
@@ -113,6 +160,10 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         React.useEffect(() => {
             chartActionRef.current = chartAction;
         }, [chartAction]);
+
+        React.useEffect(() => {
+            svgs.current.forEach((svg, i) => AddEventLine(svg, i));
+        }, [props.Events]);
 
         function GetChannelData(channel: WidgetTypes.IWidgetData<IChannelSettings>) {
             return props.Data.find(data => data.ID === channel.ID).SeriesData[channel.ChannelSettings.Field].map(data => [data[0], data[1]]);
@@ -207,7 +258,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .attr("stroke", series.ChannelSettings.Color)
                 .attr("d", lineFunc(data));
 
-            if (axis.ShowEvents) AddEventLine(series.Events, svg);
+            AddEventLine(svg, dataIndex);
 
             svg.selectAll("g.legend").remove();
             if (props.Settings.Legend) {
@@ -251,7 +302,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
                 })
 
-            if (axis.ShowEvents) series.forEach(s => AddEventLine(s.Events, svg));
+            AddEventLine(svg, axisIndex);
 
             svg.selectAll("g.legend").remove();
             if (props.Settings.Legend) {
@@ -303,12 +354,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
             svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg))
 
-            props.Data.filter(series =>
-                props.Settings.YAxis.find(axis =>
-                    axis.ID === series.ChannelSettings.YAxisID
-                )?.ShowEvents ?? false).forEach(series =>
-                    AddEventLine(series.Events, svg));
-
+            AddEventLine(svg, clipIndex);
         }
 
         function AddLegend(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, data: WidgetTypes.IWidgetData<IChannelSettings>[]) {
@@ -338,9 +384,11 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 });
         }
 
-        function AddEventLine(events: TrenDAP.IEvent[], svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, ) {
+        function AddEventLine(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, axisIndex: number) {
             const svgHeight = parseInt(svg.attr('height'));
-            const identifiedEvents = events.map((evt, index) => ({Event: evt, Target: `event-${index}`}))
+            const identifiedEvents = props.Events.flatMap((evtSrc, srcInd) =>
+                evtSrc.Events.map((evt, evtInd) => ({ Event: evt, Target: `event-${axisIndex}-${srcInd}-${evtInd}`, Settings: evtSrc.EventSettings }))
+            );
 
             svg.selectAll('g.event-line').remove();
             const g = svg.selectAll('g.event-line')
@@ -350,10 +398,10 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .classed('event-line', true)
             g.append('path')
                 .attr('stroke-width', '2px')
-                .attr("d", _ => `M0,${svgHeight - margin.current.bottom - margin.current.top}L-10,${svgHeight - margin.current.bottom - margin.current.top + 10},L10,${svgHeight - margin.current.bottom - margin.current.top + 10}L0,${svgHeight - margin.current.bottom - margin.current.top}Z`)
+                .attr("d", d => GetPath(d.Settings.Symbol, 0, svgHeight - margin.current.bottom - margin.current.top))
                 .attr("transform", d => `translate(${xScaleRef.current(d.Event.Time)},${margin.current.top})`)
-                .attr('stroke', 'red')
-                .attr('fill', 'red')
+                .attr('stroke', d => d.Settings.Color)
+                .attr('fill', d => d.Settings.Color)
                 .attr('data-tooltip', d => d.Target)
                 .on('mouseenter', (_, d) => { setEvtHover(d); setShowTooltip(true); })
                 .on('mouseleave', _ => setShowTooltip(false))
@@ -773,7 +821,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                                     yAxisID = props.Settings.YAxis.reduce((max, current) => {
                                         return current.ID > max ? current.ID : max
                                     }, 0) + 1
-                                const newAxis: TrenDAP.IYAxis = { ID: yAxisID, Min: 0, Max: 10, AutoMaxScale: true, AutoMinScale: true, Label: '', Type: item.row.Type, Position: 'left', ShowEvents: false }
+                                const newAxis: TrenDAP.IYAxis = { ID: yAxisID, Min: 0, Max: 10, AutoMaxScale: true, AutoMinScale: true, Label: '', Type: item.row.Type, Position: 'left' }
 
                                 props.SetSettings({
                                     ...props.Settings,
@@ -880,6 +928,97 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 </ReactTable.Table>
             </div>
         </>
+    },
+    EventSourceSelectionUI: (props) => {
+        const [allEventSources, setAllEventSources] = React.useState<WidgetTypes.ISelectedEvents<IEventSourceSettings>[]>([]);
+        const [ascending, setAscending] = React.useState<boolean>(false);
+        const [sortField, setSortField] = React.useState<keyof WidgetTypes.ISelectedEvents<IEventSourceSettings>>('Name');
+
+        React.useEffect(() => {
+            if (props.SelectedSources.length === 0) return;
+            setAllEventSources(_.orderBy(props.SelectedSources, [sortField], [ascending ? 'asc' : 'desc']));
+        }, [ascending, sortField, props.SelectedSources]);
+
+        const symbolOptions: { Value: allowedSymbols, Element: any }[] = React.useMemo(() => [
+            { Value: 'ArrowDropUp', Element: <PreviewEventIcon Symbol='ArrowDropUp' /> },
+            { Value: 'ArrowDropDown', Element: <PreviewEventIcon Symbol='ArrowDropDown' /> },
+            { Value: 'Circle', Element: <PreviewEventIcon Symbol='Circle' /> },
+            { Value: 'Square', Element: <PreviewEventIcon Symbol='Square' /> },
+            { Value: 'Exclamation', Element: <PreviewEventIcon Symbol='Exclamation' /> },
+        ], []);
+
+        return (
+            <ReactTable.Table<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                TableClass="table table-hover"
+                TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                SortKey={sortField}
+                OnClick={() => { }}
+                OnSort={data => {
+                    if (sortField === data.colField) setAscending(a => !a);
+                    else {
+                        setSortField(data.colField);
+                        setAscending(true);
+                    }
+                }}
+                Data={allEventSources}
+                Ascending={ascending}
+                KeySelector={(row) => row.Key}
+                Selected={() => false}
+            >
+                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                    Key={'Name'}
+                    AllowSort={true}
+                    Field={'Name'}
+                >
+                    Name
+                </ReactTable.Column>
+                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                    Key={'Type'}
+                    AllowSort={true}
+                    Field={'SourceType'}
+                >
+                    Type
+                </ReactTable.Column>
+                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                    Key={'Display'}
+                    AllowSort={false}
+                    Content={({ item }) =>
+                        <ToggleSwitch Record={item} Label="" Field="Enabled" Setter={props.SetSource} />
+                    }
+                >
+                    Display
+                </ReactTable.Column>
+                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                    Key={'Symbol'}
+                    AllowSort={false}
+                    Content={({ item }) =>
+                        <StylableSelect<IEventSourceSettings> Record={item.EventSettings} Label="" Field="Symbol" Options={symbolOptions}
+                            Setter={(newSettings) => props.SetSource({ ...item, EventSettings: newSettings })} />
+                    }
+                >
+                    Symbol
+                </ReactTable.Column>
+                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                    Key={'Color'}
+                    AllowSort={false}
+                    Content={({ item }) => 
+                        <ColorPicker<IEventSourceSettings> Record={item.EventSettings} Label="Color" Field="Color"
+                            Setter={(newSettings) => {
+                                const newSrc = { ...item };
+                                newSrc.EventSettings = newSettings;
+                                console.log(newSrc);
+                                props.SetSource(newSrc);
+                            }}
+                            Style={{ backgroundColor: item.EventSettings?.Color, borderColor: item.EventSettings?.Color}} />
+                    }
+                >
+                    Color
+                </ReactTable.Column>
+            </ReactTable.Table>
+        );
     }
 }
 

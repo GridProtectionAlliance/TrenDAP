@@ -25,10 +25,11 @@ import * as React from 'react';
 import { WidgetTypes } from '../Interfaces';
 
 
-export const ProfileWidget: WidgetTypes.IWidget<null, null> = {
+export const ProfileWidget: WidgetTypes.IWidget<null, null, null> = {
     DefaultSettings: null,
     Name: "Profile",
     DefaultChannelSettings: null,
+    DefaultEventSourceSettings: null,
     WidgetUI: () => {
         return <>
         </>

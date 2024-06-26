@@ -225,7 +225,6 @@ export namespace TrenDAP {
         Type: string,
         Label: string,
         Position: 'left' | 'right',
-        ShowEvents: boolean,
         AutoMinScale: boolean,
         AutoMaxScale: boolean
     }
