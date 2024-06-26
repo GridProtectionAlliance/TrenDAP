@@ -44,6 +44,9 @@ interface IProps {
     ChannelMap: TrenDAP.IChannelMap,
     SetChannelMapVersion: (version: number) => void
     ParentMap: React.MutableRefObject<Map<string, number>>,
+    EventMap: React.MutableRefObject<Map<number, number>>,
+    EventMapVersion: number,
+    SetEventMapVersion: (version: number) => void
     Label: string,
     Height: number,
     Widgets: TrenDAP.IWidgetModel[],
@@ -157,6 +160,7 @@ const Row: React.FunctionComponent<IProps> = (props) => {
                             AllEventSources={props.AllEventSources}
                             ChannelMap={props.ChannelMap}
                             ParentMap={props.ParentMap}
+                            EventMap={props.EventMap}
                             UpdateWidget={(newRecord) => {
                                 const row = { ...props };
                                 const widget = { ...newRecord };
@@ -171,6 +175,8 @@ const Row: React.FunctionComponent<IProps> = (props) => {
                             }}
                             Widget={widget}
                             SetChannelMapVersion={props.SetChannelMapVersion}
+                            EventMapVersion={props.EventMapVersion}
+                            SetEventMapVersion={props.SetEventMapVersion}
                             key={index + widget.Type + guid.current} />
                     }
                     )}

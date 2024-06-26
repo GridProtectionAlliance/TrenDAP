@@ -56,7 +56,7 @@ export default class TrenDAPDB {
                 secondReq.onupgradeneeded = secondEvt => this.AddTable(secondEvt, 'Event');
                 secondReq.onsuccess = (secondEvt: any) => {
                     resolve(secondEvt.target.result as IDBDatabase);
-            };
+                };
             }
 
             req.onerror = (evt: any) => {
@@ -135,7 +135,7 @@ export default class TrenDAPDB {
             };
         });
     }
-    
+
     public ReadManyEvents(eventSources: WidgetTypes.ISelectedEvents<any>[]) {
         return new Promise<WidgetTypes.IWidgetEvents<any>[]>(async (resolve, reject) => {
             if (eventSources == null || eventSources.length === 0) {

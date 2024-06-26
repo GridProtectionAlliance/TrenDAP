@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { ServerErrorIcon, Modal, ToolTip, Warning } from '@gpa-gemstone/react-interactive';
+import { ServerErrorIcon, Modal, ToolTip, Warning, TabSelector } from '@gpa-gemstone/react-interactive';
 import { CreateGuid } from '@gpa-gemstone/helper-functions';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ErrorBoundary } from '@gpa-gemstone/common-pages';
@@ -60,11 +60,14 @@ interface IProps {
     AllEventSources: TrenDAP.IEventSourceMetaData[],
     ChannelMap: TrenDAP.IChannelMap,
     SetChannelMapVersion: (version: number) => void,
+    EventMapVersion: number,
+    SetEventMapVersion: (version: number) => void
     ParentMap: React.MutableRefObject<Map<string, number>>,
+    EventMap: React.MutableRefObject<Map<number, number>>,
 }
 
 const WidgetWrapper: React.FC<IProps> = (props) => {
-    const Implementation: WidgetTypes.IWidget<any, any> | undefined = React.useMemo(() => AllWidgets.find(item => item.Name === props.Widget.Type), [props.Widget.Type]);
+    const Implementation: WidgetTypes.IWidget<any, any, any> | undefined = React.useMemo(() => AllWidgets.find(item => item.Name === props.Widget.Type), [props.Widget.Type]);
     const guid = React.useRef<string>(CreateGuid());
 
     const editMode = useAppSelector(SelectEditMode);
@@ -106,8 +109,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             setLocalChannels([])
             return
         }
-
-        const channels: WidgetTypes.ISelectedChannels<any>[] = props.Widget.Channels.map(chan => ({ ...chan, MetaData: [...props.AllChannels].find(c => c.ID === props.ChannelMap.Map.current.get(chan.Key)) as DataSetTypes.IDataSetMetaData }))
+        const channels: WidgetTypes.ISelectedChannels<any>[] = props.Widget.Channels.map(chan => ({ ...chan, MetaData: props.AllChannels.find(c => c.ID === props.ChannelMap.Map.current.get(chan.Key)) as DataSetTypes.IDataSetMetaData }))
         setLocalChannels(channels)
     }, [props.Widget.Channels, props.AllChannels, props.ChannelMap.Version, showSettingsModal])
 
@@ -329,48 +331,48 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                         { Id: 'evtSrc', Label: 'Event Sources' }]} />
                                 {tab === 'channel' ?
                                     Implementation?.ChannelSelectionUI != null ?
-                                    <Implementation.ChannelSelectionUI
-                                        AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
-                                        SetChannelSettings={(channelKey, settings) => {
-                                            setLocalChannels(prevChannels => {
-                                                const updatedChans = prevChannels.map(chan =>
-                                                    _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
-                                                );
+                                        <Implementation.ChannelSelectionUI
+                                            AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
+                                            SetChannelSettings={(channelKey, settings) => {
+                                                setLocalChannels(prevChannels => {
+                                                    const updatedChans = prevChannels.map(chan =>
+                                                        _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
+                                                    );
 
-                                                return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
-                                            });
-                                        }}
-                                        RemoveChannel={channel => setLocalChannels(channels => {
-                                            const updatedChannels = [...channels];
-                                            const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
-                                            index !== -1 ? updatedChannels.splice(index, 1) : null;
-                                            return updatedChannels;
-                                        })}
-                                        AllChannels={props.AllChannels}
-                                        SelectedChannels={localChannels}
-                                        SetSettings={setLocalSetting}
-                                        Settings={localSetting}
-                                    /> : <ChannelSelector
-                                        AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
-                                        SetChannelSettings={(channelKey, settings) => {
-                                            setLocalChannels(prevChannels => {
-                                                const updatedChans = prevChannels.map(chan =>
-                                                    _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
-                                                );
+                                                    return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
+                                                });
+                                            }}
+                                            RemoveChannel={channel => setLocalChannels(channels => {
+                                                const updatedChannels = [...channels];
+                                                const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
+                                                index !== -1 ? updatedChannels.splice(index, 1) : null;
+                                                return updatedChannels;
+                                            })}
+                                            AllChannels={props.AllChannels}
+                                            SelectedChannels={localChannels}
+                                            SetSettings={setLocalSetting}
+                                            Settings={localSetting}
+                                        /> : <ChannelSelector
+                                            AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
+                                            SetChannelSettings={(channelKey, settings) => {
+                                                setLocalChannels(prevChannels => {
+                                                    const updatedChans = prevChannels.map(chan =>
+                                                        _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
+                                                    );
 
-                                                return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
-                                            });
-                                        }}
-                                        RemoveChannel={channel => setLocalChannels(channels => {
-                                            const updatedChannels = [...channels];
-                                            const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
-                                            index !== -1 ? updatedChannels.splice(index, 1) : null;
-                                            return updatedChannels;
-                                        })}
-                                        AllChannels={props.AllChannels}
-                                        SelectedChannels={localChannels}
-                                        SetSettings={setLocalSetting}
-                                        Settings={localSetting}
+                                                    return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
+                                                });
+                                            }}
+                                            RemoveChannel={channel => setLocalChannels(channels => {
+                                                const updatedChannels = [...channels];
+                                                const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
+                                                index !== -1 ? updatedChannels.splice(index, 1) : null;
+                                                return updatedChannels;
+                                            })}
+                                            AllChannels={props.AllChannels}
+                                            SelectedChannels={localChannels}
+                                            SetSettings={setLocalSetting}
+                                            Settings={localSetting}
                                         />
                                 : <></>}
                                 {tab === 'evtSrc' ?

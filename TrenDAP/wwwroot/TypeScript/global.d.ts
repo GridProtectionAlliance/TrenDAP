@@ -279,4 +279,9 @@ export namespace TrenDAP {
         Version: number
     }
 
+    interface IEventMap {
+        Map: React.MutableRefObject<Map<number, number>>,
+        Version: number
+    }
+
 }

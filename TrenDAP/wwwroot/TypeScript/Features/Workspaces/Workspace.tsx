@@ -54,7 +54,9 @@ const Workspace: React.FunctionComponent = () => {
     /* Maps */
     const channelMapping = React.useRef<HashTable<TrenDAP.IChannelKey, string>>(new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`));
     const parentMapping = React.useRef<Map<string, number>>(new Map<string, number>());
+    const eventMapping = React.useRef<Map<number, number>>(new Map<number, number>());
     const [mapVersion, setMapVersion] = React.useState<number>(0);
+    const [eventMapVersion, setEventMapVersion] = React.useState<number>(0);
 
     const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [] });
     const [workspaceLink, setWorkspaceLink] = React.useState<string | null>(null);
@@ -122,14 +124,15 @@ const Workspace: React.FunctionComponent = () => {
             dispatch(FetchWorkSpaces());
     }, [dispatch, workspaceStatus]);
 
-    function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], evts: TrenDAP.IEvent[], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
+    function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], eventMap: [number, number][], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
         setLoading(true);
         loadHandle.then(() => setLoading(false));
 
         setDataset(dataset);
-        setLoadedEvents(evts);
         channelMapping.current = new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, channelMap);
         parentMapping.current = new Map<string, number>(parentMap);
+        eventMapping.current = new Map<number, number>(eventMap);
+        setEventMapVersion(version => version + 1);
         setMapVersion(version => version + 1);
     }
 
@@ -232,6 +235,9 @@ const Workspace: React.FunctionComponent = () => {
                                     ChannelMap={{ Map: channelMapping, Version: mapVersion }}
                                     SetChannelMapVersion={setMapVersion}
                                     ParentMap={parentMapping}
+                                    EventMap={eventMapping}
+                                    EventMapVersion={eventMapVersion}
+                                    SetEventMapVersion={setEventMapVersion}
                                     AllChannels={allChannels}
                                     AllEventSources={allEvents}
                                     Label={row?.Label}
