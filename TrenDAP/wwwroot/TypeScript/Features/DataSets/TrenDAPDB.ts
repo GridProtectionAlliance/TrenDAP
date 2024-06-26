@@ -31,19 +31,28 @@ export interface ChannelTableRow {
 }
 
 const TimeFormat = 'MM/DD/YYYY HH:mm:ss';
+type TrenDAPTable = 'Channel' | 'Event';
 //To DO Add Documentation on what each function does...
 export default class TrenDAPDB {
 
     private OpenDB() {
 
         return new Promise<IDBDatabase>((resolve, reject) => {
-            const req = indexedDB.open('TrenDAP', 2);
+            const req = indexedDB.open('TrenDAP');
 
-            req.onupgradeneeded = this.AddTables;
+            req.onupgradeneeded = evt => this.AddTable(evt, 'Channel');
 
             req.onsuccess = (evt: any) => {
-                resolve(evt.target.result as IDBDatabase);
+                let database = evt.target.result;
+                const version = parseInt(database.version);
+                database.close();
+                let secondReq = indexedDB.open('TrenDAP', version + 1);
+                secondReq.onupgradeneeded = secondEvt => this.AddTable(secondEvt, 'Event');
+                secondReq.onsuccess = (secondEvt: any) => {
+                    resolve(secondEvt.target.result as IDBDatabase);
             };
+            }
+
             req.onerror = (evt: any) => {
                 reject(evt.target.error);
             };
@@ -56,20 +65,20 @@ export default class TrenDAPDB {
 
     }
 
-    private AddTables(evt: any) {
+    private AddTable(evt: any, table: string) {
         const upgradeDB = evt.target.result as IDBDatabase;
-        if (!upgradeDB.objectStoreNames.contains('Channel')) {
-            const ds = upgradeDB.createObjectStore('Channel', { keyPath: 'ID', autoIncrement: false });
+        if (!upgradeDB.objectStoreNames.contains(table)) {
+            const ds = upgradeDB.createObjectStore(table, { keyPath: 'ID', autoIncrement: false });
             ds.createIndex("ID", "ID", { unique: true });
         }
 
     }
 
-    public Read(key: string) {
+    public Read(key: string, tableName: TrenDAPTable = 'Channel') {
         return new Promise<(ChannelTableRow)>(async (resolve, reject) => {
             const db = await this.OpenDB();
-            const tx = db.transaction('Channel', 'readonly');
-            const store = tx.objectStore('Channel');
+            const tx = db.transaction(tableName, 'readonly');
+            const store = tx.objectStore(tableName);
             const result = store.get(key);
 
             result.onsuccess = (evt: any) => {
@@ -186,13 +195,13 @@ export default class TrenDAPDB {
     }
 
 
-    public Delete(id: number) {
+    public Delete(id: number, table: TrenDAPTable = 'Channel') {
         return new Promise(async (resolve, reject) => {
 
         const db = await this.OpenDB();
 
-        const tx = db.transaction('Channel', 'readwrite');
-        const store = tx.objectStore('Channel');
+        const tx = db.transaction(table, 'readwrite');
+        const store = tx.objectStore(table);
         const result = store.delete(id);
         result.onsuccess = (evt: any) => {
             resolve(evt.target.result);
