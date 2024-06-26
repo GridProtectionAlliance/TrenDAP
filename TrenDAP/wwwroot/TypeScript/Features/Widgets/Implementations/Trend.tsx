@@ -46,6 +46,7 @@ interface IChannelSettings {
     Field: TrenDAP.SeriesField,
     Color: string,
     YAxisID: number,
+    Continuous: boolean
 }
 
 type allowedSymbols = 'ArrowDropUp' | 'ArrowDropDown' | 'Exclamation' | 'Square' | 'Circle';
@@ -109,7 +110,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
         SplitType: 'Axis',
         AutoXScale: true
     },
-    DefaultChannelSettings: { Field: 'Average', Color: 'Red', YAxisID: -1 },
+    DefaultChannelSettings: { Field: 'Average', Color: 'Red', YAxisID: -1, Continuous: false },
     DefaultEventSourceSettings: { Color: 'Green', Symbol: 'ArrowDropUp' },
     Name: "Trend",
     WidgetUI: (props) => {
@@ -242,8 +243,21 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
             svg.selectAll('g.yaxis').remove();
             AddYAxisLeft(axis, svg);
 
-            const lineFunc = line<number[]>().x(dd => xScale(dd[0])).y(dd => yScale.Scale(dd[1]));
             const data = GetChannelData(series);
+
+            // Any data gap above 2x the average of the first 5 points should be considered a gap
+            let count = 0;
+            let gapValue = 0;
+            while (count < 5 && count < data.length - 2) {
+                count++;
+                gapValue += data[count + 1][0] - data[count][0];
+            }
+            gapValue /= (count / 2);
+            const lineFunc = line<number[]>()
+                .defined((dd, ind, data) => {
+                    if (series.ChannelSettings.Continuous || ind === 0) return true;
+                    return dd[0] - data[ind - 1][0] <= gapValue;
+                }).x(dd => xScale(dd[0])).y(dd => yScale.Scale(dd[1]));
 
             svg.selectAll("g.line").remove();
             svg.selectAll('g.line')
@@ -296,8 +310,20 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                 .attr("stroke-width", 1.5)
                 .attr("stroke", (s) => s.ChannelSettings.Color)
                 .attr("d", (s) => {
-                    const lineFunc = line<number[]>().x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
                     const data = GetChannelData(s);
+                    // Any data gap above 2x the average of the first 5 points should be considered a gap
+                    let count = 0;
+                    let gapValue = 0;
+                    while (count < 5 && count < data.length - 2) {
+                        count++;
+                        gapValue += data[count + 1][0] - data[count][0];
+                    }
+                    gapValue /= (count / 2);
+                    const lineFunc = line<number[]>()
+                        .defined((dd, ind, data) => {
+                            if (s.ChannelSettings.Continuous || ind === 0) return true;
+                            return dd[0] - data[ind - 1][0] <= gapValue;
+                        }).x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
                     return lineFunc(data);
 
                 })
@@ -347,8 +373,20 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                 .attr("stroke", d => d.ChannelSettings.Color)
                 .attr("d", d => {
                     const yScale = yScalesRef.current.find(scale => d.ChannelSettings.YAxisID === scale.ID)?.Scale;
-                    const lineFunc = line<number[]>().x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
                     const data = GetChannelData(d);
+                    // Any data gap above 2x the average of the first 5 points should be considered a gap
+                    let count = 0;
+                    let gapValue = 0;
+                    while (count < 5 && count < data.length - 2) {
+                        count++;
+                        gapValue += data[count + 1][0] - data[count][0];
+                    }
+                    gapValue /= (count / 2);
+                    const lineFunc = line<number[]>()
+                        .defined((dd, ind, data) => {
+                            if (d.ChannelSettings.Continuous || ind === 0) return true;
+                            return dd[0] - data[ind - 1][0] <= gapValue;
+                    }).x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
                     return lineFunc(data);
                 })
 
@@ -687,7 +725,6 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                         props.SetSettings({
                             ...props.Settings, YAxis: [...props.Settings.YAxis, {
                                 Max: 10, Min: 0, Position: 'left', Type: `None`, AutoMaxScale: true, AutoMinScale: true, Label: '',
-                                ShowEvents: false,
                                 ID: props.Settings.YAxis.length !== 0 ? maxID + 1 : 0
                             }]
                         });
@@ -726,17 +763,6 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                             Field={'Position'}
                             Content={({ item }) =>
                                 <Select<TrenDAP.IYAxis> Label="" Record={item} Field="Position" Options={[{ Label: 'Left', Value: 'left' }, { Label: 'Right', Value: 'right' }]}
-                                    Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
-                            }
-                        >
-                            Position
-                        </ReactTable.Column>
-                        <ReactTable.Column<TrenDAP.IYAxis>
-                            Key={'ShowEvents'}
-                            AllowSort={true}
-                            Field={'ShowEvents'}
-                            Content={({ item }) =>
-                                <ToggleSwitch<TrenDAP.IYAxis> Field="ShowEvents" Label="Show Events" Record={item}
                                     Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
                             }
                         >
@@ -903,6 +929,16 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                         }
                     >
                         Color
+                    </ReactTable.Column>
+                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                        Key={'Continuous'}
+                        AllowSort={true}
+                        Field={'ChannelSettings'}
+                        Content={({ item }) =>
+                            <ToggleSwitch<IChannelSettings> Record={item?.ChannelSettings} Label="" Field="Continuous" Setter={(record) => props.SetChannelSettings(item.Key, record)}/>
+                        }
+                    >
+                        Continuous
                     </ReactTable.Column>
                     <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'SeriesField'}
