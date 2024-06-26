@@ -59,6 +59,7 @@ interface IDatasetSetting {
 }
 
 interface IxdaEvent {
+    ID: number,
     StartTime: string,
     EndTime: string,
     Name: string,
@@ -404,7 +405,7 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
         );
 
     },
-    Load: function (_dataSource: EventSourceTypes.IEventSourceView, _dataSet: TrenDAP.iDataSet, setConn: EventSourceTypes.IEventSourceDataSet): Promise<TrenDAP.IEvent[]> {
+    Load: function (eventSource: EventSourceTypes.IEventSourceView, _dataSet: TrenDAP.iDataSet, setConn: EventSourceTypes.IEventSourceDataSet): Promise<TrenDAP.IEvent[]> {
         return new Promise<TrenDAP.IEvent[]>((resolve, reject) => {
             $.ajax({
                 type: "Get",
@@ -414,15 +415,34 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
                 cache: true,
                 async: true
             }).done((data: string) => {
+                const dataSetSettings = EnsureTypeSafety(setConn.Settings, OpenXDAEvents.DefaultDataSetSettings);
+                const sourceSettings = EnsureTypeSafety(eventSource.Settings, OpenXDAEvents.DefaultSourceSettings);
+
+                // Settings query params common to all events
+                const queryParams: any = {};
+                if (dataSetSettings.IDs.length > 0 && dataSetSettings.IDs.length < 100)
+                    dataSetSettings.IDs.forEach((arg, index) => queryParams[dataSetSettings.By === 'Meter' ? 'meters' : 'assets' + index] = arg);
+                queryParams['windowSize'] = 3;
+                queryParams['timeWindowUnits'] = 3; // hours
+
+                // Parse events from response data
                 const xdaEvents: IxdaEvent[] = JSON.parse(data);
+
+                // Map XDA event to trenDAP event
                 const tdapEvents: TrenDAP.IEvent[] = xdaEvents.map(evt => {
-                    console.log(evt.StartTime);
-                    const startTime = moment.utc(evt.StartTime, xdaServerFormat).valueOf();
+                    const startTime = moment.utc(evt.StartTime, xdaServerFormat);
+                    queryParams['time'] = startTime.format(encodedTimeFormat);
+                    queryParams['date'] = startTime.format(encodedDateFormat);
+                    queryParams['eventid'] = evt.ID;
+
+                    const queryUrl = queryString.stringify(queryParams, "&", "=", { encodeURIComponent: queryString.escape });
+                    // Regex removes trailing /
                     return {
-                        Time: startTime,
-                        Duration: moment.utc(evt.EndTime, xdaServerFormat).valueOf() - startTime,
+                        Time: startTime.valueOf(),
+                        Duration: moment.utc(evt.EndTime, xdaServerFormat).valueOf() - startTime.valueOf(),
                         Title: evt.Name,
-                        Description: evt.Description
+                        Description: evt.Description,
+                        Link: `${sourceSettings.PQBrowserUrl.replace(/[\/]$/, '')}/eventsearch?${queryUrl}`
                     }
                 });
                 resolve(tdapEvents);
@@ -482,6 +502,10 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
         const queryUrl = queryString.stringify(queryParams, "&", "=", { encodeURIComponent: queryString.escape });
         // Regex removes trailing /
         return `${sourceSettings.PQBrowserUrl.replace(/[\/]$/, '')}/eventsearch?${queryUrl}`;
+    },
+    GetLogo: function (eventSource: EventSourceTypes.IEventSourceView) {
+        const sourceSettings = EnsureTypeSafety(eventSource.Settings, OpenXDAEvents.DefaultSourceSettings);
+        return `${sourceSettings.PQBrowserUrl.replace(/[\/]$/, '')}/Images/icon.png`;
     },
     TestAuth: function (eventSource: EventSourceTypes.IEventSourceView): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {

@@ -25,7 +25,7 @@ import { axisBottom, axisLeft, axisRight, brushX, format, line, scaleLinear, sca
 import * as React from 'react';
 import { DataSetTypes, TrenDAP } from '../../../global';
 import { WidgetTypes } from '../Interfaces';
-import { Input, Select, ToggleSwitch, DatePicker, ColorPicker, RadioButtons } from '@gpa-gemstone/react-forms';
+import { Input, Select, ToggleSwitch, DatePicker, ColorPicker, RadioButtons, StylableSelect } from '@gpa-gemstone/react-forms';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { ToolTip } from '@gpa-gemstone/react-interactive';
@@ -99,7 +99,7 @@ const PreviewEventIcon = React.memo((props: { Symbol: allowedSymbols }) => {
     );
 });
 
-export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
+export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSourceSettings> = {
     DefaultSettings: {
         Min: new Date().toISOString(),
         Max: new Date().toISOString(),
@@ -405,12 +405,15 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .attr('data-tooltip', d => d.Target)
                 .on('mouseenter', (_, d) => { setEvtHover(d); setShowTooltip(true); })
                 .on('mouseleave', _ => setShowTooltip(false))
-                /* Add onclick to quickview?
-                .style('cursor', 'pointer')
+                .style('cursor', d => d.Event?.Link != null ? 'pointer' : undefined)
                 .on('click', (e, d) => {
-                    window.open(record.Data.find(ds => ds.DataSource.ID === series.DataSourceID).DataSource.OpenSEE + '?eventID=' + d.ID)
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (d.Event?.Link != null) {
+                        const handle = setTimeout(() => window.open(d.Event.Link, '_blank'), 500);
+                        return (() => { clearTimeout(handle); })
+                    }
                 });
-                */
         }
 
         function AddXAxis(svg) {

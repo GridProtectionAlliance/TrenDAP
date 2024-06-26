@@ -85,6 +85,7 @@ export interface IEventSource<T, U> {
     ConfigUI: React.FC<TrenDAP.ISourceConfig<T>>,
     Load: (eventSource: EventSourceTypes.IEventSourceView, dataSet: TrenDAP.iDataSet, dataConn: EventSourceTypes.IEventSourceDataSet) => Promise<TrenDAP.IEvent[]>,
     QuickView?: (eventSource: EventSourceTypes.IEventSourceView, dataSet: TrenDAP.iDataSet, dataConn: EventSourceTypes.IEventSourceDataSet) => string,
+    GetLogo?: (eventSource: EventSourceTypes.IEventSourceView) => string,
     TestAuth: (eventSource: EventSourceTypes.IEventSourceView) => Promise<boolean>,
     DefaultSourceSettings: T,
     DefaultDataSetSettings: U,

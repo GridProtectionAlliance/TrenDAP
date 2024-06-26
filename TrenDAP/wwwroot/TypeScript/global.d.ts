@@ -184,7 +184,8 @@ export namespace TrenDAP {
         Title: string,
         Time: number,
         Duration: number,
-        Description: string
+        Description: string,
+        Link?: string
     }
 
     // XDA

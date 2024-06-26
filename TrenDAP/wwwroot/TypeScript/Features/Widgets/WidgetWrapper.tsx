@@ -50,9 +50,7 @@ import EventSelector from './EventSelector';
 import { isPercent } from './HelperFunctions';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-
-export const AllWidgets: WidgetTypes.IWidget<any, any>[] = [TextWidget, TableWidget, StatsWidget, HistogramWidget, XvsYWidget, ProfileWidget, TrendWidget, Map];
+export const AllWidgets: WidgetTypes.IWidget<any, any, any>[] = [TextWidget, TableWidget, StatsWidget, HistogramWidget, XvsYWidget, ProfileWidget, TrendWidget, Map];
 
 interface IProps {
     Widget: TrenDAP.IWidgetModel,

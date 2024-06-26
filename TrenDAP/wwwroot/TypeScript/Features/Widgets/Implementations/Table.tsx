@@ -24,17 +24,20 @@
 import * as React from 'react';
 import moment from 'moment';
 import _ from 'lodash';
-import { Input, ToggleSwitch } from '@gpa-gemstone/react-forms';
+import { Input } from '@gpa-gemstone/react-forms';
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { WidgetTypes } from '../Interfaces';
 import { DataSetTypes, TrenDAP } from '../../../global';
 import { sort } from '../HelperFunctions';
 
-interface IProps { Precision: number, ShowEvents: boolean }
+interface IProps { Precision: number }
 
 interface ITableData {
+    ID: number,
     Timestamp: number,
     Event?: TrenDAP.IEvent,
+    Logo?: string,
     Chan1Minimum?: number,
     Chan1Maximum?: number,
     Chan1Average?: number,
@@ -141,7 +144,14 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
                     TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                     SortKey={sortField}
-                    OnClick={() => { }}
+                    OnClick={(data, evt) => {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                        if (data.row?.Event?.Link != null) {
+                            const handle = setTimeout(() => window.open(data.row.Event.Link, '_blank'), 500);
+                            return (() => { clearTimeout(handle); })
+                        }
+                    }}
                     OnSort={(data) => {
                         if (data.colField === sortField)
                             setAscending(!ascending)
@@ -196,7 +206,12 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
                         AllowSort={true}
                         Field={'Chan1Average'}
                         Content={row => {
-                            if (row.item?.Event != null) return '';
+                            if (row.item?.Event?.Link != null) {
+                                if (row.item?.Logo != null) {
+                                    return <img style={{ maxHeight: 24 }} src={row.item.Logo} />
+                                }
+                                return <ReactIcons.ShareArrowDiagonal Size={24} />;
+                            }
                             if (row.item?.Chan1Average != null)
                                 return row.item.Chan1Average.toFixed(props.Settings.Precision);
                             return 'n/a'
@@ -250,7 +265,6 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
     SettingsUI: (props) => {
         return <>
             <Input<IProps> Record={props.Settings} Field={'Precision'} Setter={(item) => props.SetSettings(item)} Valid={() => true} AllowNull={true} />
-            <ToggleSwitch<IProps> Record={props.Settings} Field={'ShowEvents'} Label="Show Events" Setter={props.SetSettings} />
         </>
     },
     ChannelSelectionUI: (props) => {
