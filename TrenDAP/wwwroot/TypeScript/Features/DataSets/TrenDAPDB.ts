@@ -22,12 +22,18 @@
 //******************************************************************************************************
 
 import { TrenDAP, DataSetTypes } from "../../global";
+import { WidgetTypes } from "../Widgets/Interfaces";
 import moment from "moment";
 
 export interface ChannelTableRow {
     ID: string,
     Created: string,
     Data: DataSetTypes.IDataSetData
+}
+export interface EventTableRow {
+    ID: number,
+    Created?: string,
+    Data: TrenDAP.IEvent[]
 }
 
 const TimeFormat = 'MM/DD/YYYY HH:mm:ss';
@@ -130,8 +136,41 @@ export default class TrenDAPDB {
         });
     }
     
+    public ReadManyEvents(eventSources: WidgetTypes.ISelectedEvents<any>[]) {
+        return new Promise<WidgetTypes.IWidgetEvents<any>[]>(async (resolve, reject) => {
+            if (eventSources == null || eventSources.length === 0) {
+                resolve([]);
+                return;
+            }
 
+            let db = await this.OpenDB();
+            let tx = db.transaction('Event', 'readonly');
+            let store = tx.objectStore('Event');
+            let results: WidgetTypes.IWidgetEvents<any>[] = [];
 
+            let completed = 0;
+            eventSources.forEach(eventSource => {
+                if (eventSource.ID == null) return;
+
+                let request = store.get(eventSource.ID);
+                request.onsuccess = (evt: any) => {
+                    results.push({ ...eventSource, Events: evt.target.result.Data });
+                    completed++;
+                    if (completed === eventSources.length) {
+                        db.close();
+                        resolve(results);
+                    }
+                };
+                request.onerror = (evt: any) => {
+                    reject(evt.target.error);
+                };
+            });
+
+            tx.onerror = (evt: any) => {
+                reject(evt.target.error);
+            };
+        });
+    }
 
     public ReadAll() {
         return new Promise<(ChannelTableRow)[]>(async (resolve, reject) => {
@@ -150,6 +189,48 @@ export default class TrenDAPDB {
             };
             tx.oncomplete = () => db.close();
         });
+    }
+
+    public AddEvent(record: EventTableRow) {
+        return new Promise(async (resolve, reject) => {
+            let db = await this.OpenDB();
+
+            let tx = db.transaction('Event', 'readwrite');
+            let store = tx.objectStore('Event');
+            let result = store.put({ ID: record.ID, Created: moment().format(TimeFormat), Data: record.Data });
+
+            result.onsuccess = (evt: any) => {
+                resolve(evt.target.result);
+            };
+
+            result.onerror = (evt: any) => {
+                reject(evt.target.error);
+            };
+
+            tx.oncomplete = () => db.close();
+        })
+    }
+
+    public AddMultipleEvents(records: EventTableRow[]) {
+        return new Promise(async (resolve, reject) => {
+            let db = await this.OpenDB();
+
+            let tx = db.transaction('Event', 'readwrite');
+            let store = tx.objectStore('Event');
+            Promise.all(records.map(r => new Promise((res, rej) => {
+                let result = store.put({ ID: r.ID, Created: moment().format(TimeFormat), Data: r.Data });
+
+                result.onsuccess = (evt: any) => {
+                    res(evt.target.result);
+                };
+
+                result.onerror = (evt: any) => {
+                    rej(evt.target.error);
+                };
+            }))).then(d => resolve(d)).catch(err => reject(err));
+
+            tx.oncomplete = () => db.close();
+        })
     }
 
     public Add(record: ChannelTableRow) {
