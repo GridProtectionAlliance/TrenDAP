@@ -77,14 +77,7 @@ namespace TrenDAP.Model
 
     public class DataSetController : ModelController<DataSet>
     {
-        #region [ Properties ]
-        private IConfiguration Configuration { get; }
-        #endregion
-
-        public DataSetController(IConfiguration configuration) : base(configuration)
-        {
-            Configuration = configuration;
-        }
+        public DataSetController(IConfiguration configuration) : base(configuration) {}
 
         public override ActionResult Post([FromBody] JObject record)
         {
@@ -104,8 +97,9 @@ namespace TrenDAP.Model
                 JArray connections = (JArray)record.GetValue("Connections");
                 foreach (JObject conn in connections)
                 {
+                    conn["SettingsString"] = record["Settings"].ToString();
+                    conn["DataSetID"] = dataSetId;
                     DataSourceDataSet connRecord = conn.ToObject<DataSourceDataSet>();
-                    connRecord.DataSetID = dataSetId;
                     result += new TableOperations<DataSourceDataSet>(connection).AddNewRecord(connRecord);
                 }
                 return Ok(result);

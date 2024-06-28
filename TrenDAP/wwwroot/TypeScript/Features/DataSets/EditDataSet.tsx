@@ -28,9 +28,11 @@ import { UpdateDataSet, SelectDataSetsStatus, FetchDataSets, SelectDataSets, Set
 import {  SelectDataSourceDataSets, SelectDataSourceDataSetStatus, FetchDataSourceDataSets, RemoveDataSourceDataSet, UpdateDataSourceDataSet, AddDataSourceDataSet } from '../DataSources/DataSourceDataSetSlice';
 import DataSet from './DataSet';
 import { useNavigate } from "react-router-dom";
-import { TabSelector } from '@gpa-gemstone/react-interactive';
+import { TabSelector, ToolTip } from '@gpa-gemstone/react-interactive';
 import * as _ from 'lodash';
 import { SelectDataSources } from '../DataSources/DataSourcesSlice'
+import moment from 'moment';
+import { CrossMark, Warning } from '@gpa-gemstone/gpa-symbols';
 
 const EditDataSet: React.FunctionComponent<{}> = (props) => {
     const navigate = useNavigate();
@@ -41,6 +43,10 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
     const wsStatus = useAppSelector(SelectDataSetsStatus);
     const dataSources = useAppSelector(SelectDataSources);
 
+    const [warnings, setWarning] = React.useState<string[]>([]);
+    const [errors, setErrors] = React.useState<string[]>([]);
+    const [sourceErrors, setSourceErrors] = React.useState<string[]>([]);
+    const [hover, setHover] = React.useState<boolean>(false);
     const [connections, setConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
     const [deletedConnections, setDeletedConnections] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
     const [dataSet, setDataSet] = React.useState<TrenDAP.iDataSet>(undefined);
@@ -67,6 +73,42 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
             setConnections(sourceSetConnections.filter(conn => conn.DataSetID === dataSet.ID));
     }, [dsdsStatus, dataSet?.ID]);
 
+    React.useEffect(() => {
+        if (dataSet == null) return;
+        const w = [];
+        if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Day' && dataSet.RelativeValue < 7)
+            w.push("With the current Time Context and Day of Week Filter it is possible for the dataset to be empty at times.")
+        if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Week' && dataSet.RelativeValue < 53)
+            w.push("With the current Time Context and Week of Year Filter it is possible for the dataset to be empty at times.")
+        if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Day' && dataSet.RelativeValue < 366)
+            w.push("With the current Time Context and Week of Year Filter it is possible for the dataset to be empty at times.")
+        setWarning(w);
+    }, [dataSet]);
+
+    React.useEffect(() => {
+        if (dataSet == null) return;
+        const e = [];
+        if (dataSet.Name == null || dataSet.Name.trim().length == 0)
+            e.push("A Name has to be entered.")
+        if (dataSet.Name != null && dataSet.Name.length > 200)
+            e.push("Name has to be less than 200 characters.");
+        if (dataSet.Name != null && dataSets.findIndex(ds => ds.ID !== dataSet.ID && ds.Name.toLowerCase() == dataSet.Name.toLowerCase()) > -1)
+            e.push("A DataSet with this name already exists.");
+        if (dataSet.Context == 'Fixed Dates' && moment(dataSet.From).isAfter(moment(dataSet.To)))
+            e.push("A valid Timeframe has to be selected.")
+        if (dataSet.Hours == 0)
+            e.push("At least 1 Hour has to be selected.")
+        if (dataSet.Days == 0)
+            e.push("At least 1 Day has to be selected.")
+        if (dataSet.Months == 0)
+            e.push("At least 1 Month has to be selected.")
+        if (dataSet.Weeks == 0)
+            e.push("At least 1 Week has to be selected.")
+        if (connections.length == 0)
+            e.push("At least 1 DataSource needs to be added.");
+        setErrors(e.concat(sourceErrors));
+    }, [dataSet, connections, sourceErrors]);
+
     if (dataSet === undefined) return null;
     return (
         <div className="card" style={{ width: '100%', height: '100%' }}>
@@ -82,13 +124,17 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
                     })),
                 ]}
                  SetTab={(item) => setTab(item)} CurrentTab={tab} />
-                <DataSet DataSet={dataSet} SetDataSet={setDataSet} Connections={connections} SetConnections={setConnections} Tab={tab}/>
+                <DataSet DataSet={dataSet} SetDataSet={setDataSet} Connections={connections} SetConnections={setConnections} Tab={tab} SetErrors={setSourceErrors} />
             </div>
             <div className="card-footer">
                 <div className="row">
                     <div className="d-flex col-6 justify-content-start">
-                        <button className='btn btn-success'
+                        <button data-tooltip="newBtn"
+                            className={"btn btn-success" + (errors.length > 0 ? ' disabled' : '')}
+                            onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
                             onClick={() => {
+                                if (errors.length > 0)
+                                    return;
                                 dispatch(UpdateDataSet(dataSet));
                                 connections.forEach(conn => {
                                     if (conn.ID !== -1) dispatch(UpdateDataSourceDataSet(conn));
@@ -99,6 +145,10 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
                             }}
                         >Save</button>
                     </div>
+                    <ToolTip Target="newBtn" Show={hover && (warnings.length > 0 || errors.length > 0)} Position={'top'}>
+                        {warnings.map((w, i) => <p key={2 * i}>{Warning} {w} </p>)}
+                        {errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
+                    </ToolTip>
                     {tab !== 'settings' ?
                         <div className="d-flex col-6 justify-content-end">
                             <button className='btn btn-danger' onClick={() => {

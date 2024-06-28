@@ -33,7 +33,7 @@ const OpenHistorianDataSource: DataSourceTypes.IDataSource<{}, TrenDAP.iOpenHist
     DefaultSourceSettings: {},
     DefaultDataSetSettings: { Devices: [], Phases: [], Types: [], Instance: "", Aggregate: '1w'},
     ConfigUI: () => { return <></>; },
-    DataSetUI: (props: DataSourceTypes.IDataSetProps<{}, TrenDAP.iOpenHistorianDataSet>) => {
+    DataSetUI: (props: DataSourceTypes.IDataSourceDataSetProps<{}, TrenDAP.iOpenHistorianDataSet>) => {
         const dispatch = useAppDispatch();
         const devices: Redux.OpenHistorianState = useAppSelector((state: Redux.StoreState) => SelectOpenHistorian(state, props.DataSource.ID));
 

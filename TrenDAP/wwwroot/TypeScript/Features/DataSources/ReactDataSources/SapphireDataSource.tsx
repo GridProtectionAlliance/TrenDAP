@@ -32,7 +32,7 @@ const SapphireDataSource: DataSourceTypes.IDataSource<{}, TrenDAP.iSapphireDataS
     DefaultSourceSettings: {},
     DefaultDataSetSettings: { IDs: [], Phases: [], Types: [], Aggregate: "", Harmonics: "" },
     ConfigUI: () => { return <></>; },
-    DataSetUI: (props: DataSourceTypes.IDataSetProps<{}, TrenDAP.iSapphireDataSet>) => {
+    DataSetUI: (props: DataSourceTypes.IDataSourceDataSetProps<{}, TrenDAP.iSapphireDataSet>) => {
         const dispatch = useAppDispatch();
         const resolutions: any[] = useAppSelector((state: Redux.StoreState) => SelectSapphire(state, props.DataSource.ID, 'Resolution'));
         const rStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectSapphireStatus(state, props.DataSource.ID, 'Resolution'));

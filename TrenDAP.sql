@@ -76,7 +76,7 @@ CREATE TABLE DataSource
     RegistrationKey VARCHAR(50) NOT NULL UNIQUE,
     APIToken VARCHAR(50) NOT NULL,
     Expires DATETIME NULL,
-    Settings VARCHAR(MAX) NOT NULL DEFAULT '{}'
+    SettingsString VARCHAR(MAX) NOT NULL DEFAULT '{}'
 )
 GO
 
@@ -104,7 +104,7 @@ CREATE TABLE DataSourceDataSet
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     DataSourceID INT NOT NULL REFERENCES DataSource(ID),
     DataSetID INT NOT NULL REFERENCES DataSet(ID),
-    Settings VARCHAR(MAX) NOT NULL DEFAULT '{}'
+    SettingsString VARCHAR(MAX) NOT NULL DEFAULT '{}'
 )
 GO
 

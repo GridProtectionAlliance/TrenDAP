@@ -23,45 +23,19 @@
 
 
 import * as React from 'react';
-import { DataSourceTypes, Redux } from '../../global';
-import { useAppDispatch, useAppSelector } from '../../hooks';
+import { DataSourceTypes } from '../../global';
+import { useAppDispatch } from '../../hooks';
 import { UpdateDataSource } from './DataSourcesSlice'
 import DataSource from './DataSource';
 import { Modal } from '@gpa-gemstone/react-interactive';
 import { CrossMark, Pencil } from '@gpa-gemstone/gpa-symbols';
-import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from './DataSourcesSlice';
 
 const EditDataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSourceView }> = (props) => {
     const dispatch = useAppDispatch();
-    const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as DataSourceTypes.IDataSourceView[];
-    const publicDataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as DataSourceTypes.IDataSourceView[];
-    const dsStatus = useAppSelector(SelectDataSourcesStatus);
 
     const [dataSource, setDataSource] = React.useState<DataSourceTypes.IDataSourceView>(props.DataSource);
     const [show, setShow] = React.useState<boolean>(false);
     const [errors, setErrors] = React.useState<string[]>([]);
-
-    React.useEffect(() => {
-        const e = [];
-        if (dataSource.Name == null || dataSource.Name.trim().length == 0) {
-            e.push("A Name has to be entered.")
-            setErrors(e);
-            return;
-        }
-
-        if (dataSources.filter(ds => ds.ID !== props.DataSource.ID).map(ds => ds.Name.toLowerCase()).includes(dataSource.Name.toLowerCase()))
-            e.push("A datasource with this name already exists.")
-        else if (dataSources.filter(ds => ds.ID !== props.DataSource.ID).concat(publicDataSources).map(ds => ds.Name.toLowerCase()).includes(dataSource.Name.toLowerCase()))
-            e.push("A shared datasource with this name was already created by another user.");
-
-        setErrors(e);
-    }, [dataSource]);
-
-    React.useEffect(() => {
-        if (dsStatus != 'unitiated' && dsStatus != 'changed') return;
-        dispatch(FetchDataSources());
-
-    }, [dsStatus]);
 
     return (
         <>
@@ -81,7 +55,7 @@ const EditDataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDat
                     setShow(false);
                 }}
             >
-                <DataSource DataSource={dataSource} SetDataSource={setDataSource} />
+                <DataSource DataSource={dataSource} SetDataSource={setDataSource} SetErrors={setErrors} />
             </Modal>
         </>
     );

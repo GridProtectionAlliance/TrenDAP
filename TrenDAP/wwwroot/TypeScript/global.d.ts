@@ -97,18 +97,18 @@ export namespace DataSourceTypes {
         Expires: string | null,
         Public: boolean,
         User: string,
-        Settings: string
+        Settings: any
     }
 
     interface IDataSourceDataSet {
         ID: number,
         DataSourceID: number,
         DataSetID: number,
-        Settings: string
+        Settings: any
     }
 
     // Datasource as tsx needs them
-    interface IDataSetProps<T, U> {
+    interface IDataSourceDataSetProps<T, U> {
         // Data Source from DB
         DataSource: IDataSourceView,
         // Data Set From DB
@@ -129,11 +129,11 @@ export namespace DataSourceTypes {
 
     // Datasource coding interface, uses props to get the datasource
     interface IDataSource<T, U> {
-        DataSetUI: React.FC<IDataSetProps<T, U>>,
+        DataSetUI: React.FC<IDataSourceDataSetProps<T, U>>,
         ConfigUI: React.FC<IConfigProps<T>>,
-        LoadDataSetMeta: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => Promise<DataSetTypes.IDataSetMetaData[]>,
-        LoadDataSet: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => Promise<DataSetTypes.IDataSetData[]>,
-        QuickViewDataSet?: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet) => string,
+        LoadDataSetMeta: (dataSource: IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: IDataSourceDataSet) => Promise<DataSetTypes.IDataSetMetaData[]>,
+        LoadDataSet: (dataSource: IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: IDataSourceDataSet) => Promise<DataSetTypes.IDataSetData[]>,
+        QuickViewDataSet?: (dataSource: IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: IDataSourceDataSet) => string,
         TestAuth: (dataSource: IDataSourceView) => Promise<boolean>,
         DefaultSourceSettings: T,
         DefaultDataSetSettings: U,
@@ -155,7 +155,9 @@ export namespace DataSetTypes {
         Unit?: string
     }
     interface IDataSetData extends IDataSetMetaData {
-        SeriesData: Map<string, [...number[]][]>
+        SeriesData: {
+            [key: string]: [...number[]][]
+        }
     }
 }
 

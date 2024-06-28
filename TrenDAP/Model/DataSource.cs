@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json.Linq;
 using openXDA.APIAuthentication;
 using System;
 using System.Collections.Generic;
@@ -55,8 +56,16 @@ namespace TrenDAP.Model
         public bool Public { get; set; }
         [UseEscapedName]
         public string User { get; set; }
-        public string Settings { get; set; }
-
+        public string SettingsString { get; set; }
+        [NonRecordField]
+        public JObject Settings
+        {
+            get
+            {
+                try { return JObject.Parse(SettingsString); }
+                catch { return new JObject(); }
+            }
+        }
         public static DataSource GetDataSource(IConfiguration configuration, int id)
         {
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
@@ -64,13 +73,23 @@ namespace TrenDAP.Model
                 return new Gemstone.Data.Model.TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", id);
             }
         }
-
     }
 
     public class DataSourceController: ModelController<DataSource>
     {
-        public DataSourceController(IConfiguration configuration) : base(configuration){}
-    
+        public DataSourceController(IConfiguration configuration) : base(configuration){ }
+
+        public override ActionResult Post([FromBody] JObject record)
+        {
+            record["SettingsString"] = record["Settings"].ToString();
+            return base.Post(record);
+        }
+        public override ActionResult Patch([FromBody] JObject record)
+        {
+            record["SettingsString"] = record["Settings"].ToString();
+            return base.Patch(record);
+        }
+
         [HttpGet, Route("TestAuth/{dataSourceID:int}")]
         public ActionResult TestAuth(int dataSourceID)
         {
