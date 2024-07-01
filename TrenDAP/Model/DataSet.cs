@@ -39,6 +39,7 @@ using HIDSPoint = HIDS.Point;
 using TrenDAP.Controllers.Sapphire;
 using System.IO;
 using System.Net.Http;
+using HIDS;
 
 namespace TrenDAP.Model
 {
@@ -95,6 +96,20 @@ namespace TrenDAP.Model
                     startTime = endTime.AddYears(-int.Parse(RelativeValue.ToString()));
             }
             return new Tuple<DateTime, DateTime>(startTime, endTime);
+        }
+
+        public IEnumerable<TimeFilter> GetTimeFilters()
+        {
+            IEnumerable<TimeFilter> ReadTimeFilters(ulong flags, TimeFilter baseFilter, int size) => Enumerable
+                .Range(0, size)
+                .Where(index => (~flags & (1Lu << index)) > 0)
+                .Select(index => baseFilter + index);
+
+            return Enumerable.Empty<TimeFilter>()
+                .Concat(ReadTimeFilters((ulong)Hours, TimeFilter.Hour00, 24))
+                .Concat(ReadTimeFilters((ulong)Days, TimeFilter.Sunday, 7))
+                .Concat(ReadTimeFilters((ulong)Weeks, TimeFilter.Week00, 53))
+                .Concat(ReadTimeFilters((ulong)Months, TimeFilter.January, 12));
         }
         #endregion
     }

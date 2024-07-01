@@ -33,6 +33,8 @@ using Gemstone.Data;
 using GSF.Data.Model;
 using TrenDAP.Attributes;
 using System.Net.Http;
+using HIDS;
+using System.Collections.Generic;
 
 namespace TrenDAP.Model
 {
@@ -102,6 +104,8 @@ namespace TrenDAP.Model
                     Tuple<DateTime, DateTime> timeEnds = dataset.ComputeTimeEnds();
                     json.Add("StartTime", timeEnds.Item1);
                     json.Add("EndTime", timeEnds.Item2);
+                    IEnumerable<TimeFilter> timeFilters = dataset.GetTimeFilters();
+                    json.Add("TimeFilters", new JArray(timeFilters));
                     return helper.GetActionResult("api/Event/TrenDAP", new StringContent(json.ToString(), Encoding.UTF8, "application/json"));
                 }
                 else
