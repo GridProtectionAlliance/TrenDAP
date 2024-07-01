@@ -35,10 +35,9 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
     const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as DataSourceTypes.IDataSourceView[];
     const publicDataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as DataSourceTypes.IDataSourceView[];
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
-    const dataSourceTypes: DataSourceTypes.IDataSourceType[] = useAppSelector(SelectDataSourceTypes);
     const [configErrors, setConfigErrors] = React.useState<string[]>([]);
     const implementation: IDataSource<any, any> | null = React.useMemo(() =>
-        AllSources.find(t => t.Name == props.DataSource.Type), [props.DataSource.Type])
+        AllSources.find(t => t.Name == props.DataSource.Type), [props.DataSource.Type]);
 
     const settings = React.useMemo(() => {
         if (implementation == null)
