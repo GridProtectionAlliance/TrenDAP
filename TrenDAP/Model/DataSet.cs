@@ -32,7 +32,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TrenDAP.Controllers;
@@ -128,7 +127,7 @@ namespace TrenDAP.Model
                 JArray eventConnections = (JArray)record.GetValue("EventConnections");
                 foreach (JObject conn in eventConnections)
                 {
-                    conn["SettingsBin"] = Encoding.UTF8.GetBytes(conn["Settings"].ToString());
+                    conn["SettingsString"] = record["Settings"].ToString();
                     conn["DataSetID"] = dataSetId;
                     EventSourceDataSet connRecord = conn.ToObject<EventSourceDataSet>();
                     result += new TableOperations<EventSourceDataSet>(connection).AddNewRecord(connRecord);
@@ -145,7 +144,7 @@ namespace TrenDAP.Model
             IEnumerable<DataSourceDataSet> newDataRecords = dataConenctions.Select(recordToken =>
             {
                 JObject record = (JObject)recordToken;
-                record["SettingsBin"] = Encoding.UTF8.GetBytes(record["Settings"].ToString());
+                record["SettingsString"] = record["Settings"].ToString();
                 DataSourceDataSet recordObj = record.ToObject<DataSourceDataSet>();
                 return recordObj;
             });
@@ -153,7 +152,7 @@ namespace TrenDAP.Model
             IEnumerable<EventSourceDataSet> newEventRecords = eventConenctions.Select(recordToken =>
             {
                 JObject record = (JObject)recordToken;
-                record["SettingsBin"] = Encoding.UTF8.GetBytes(record["Settings"].ToString());
+                record["SettingsString"] = record["Settings"].ToString();
                 EventSourceDataSet recordObj = record.ToObject<EventSourceDataSet>();
                 return recordObj;
             });

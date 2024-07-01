@@ -64,7 +64,7 @@ namespace TrenDAP.Model
             DataSourceDataSet.ID,
             DataSourceDataSet.DataSourceID,
             DataSourceDataSet.DataSetID,
-            DataSourceDataSet.SettingsBin,
+            DataSourceDataSet.SettingsString,
             DataSource.Name as DataSourceName,
             DataSet.Name as DataSetName
         From 
@@ -81,17 +81,6 @@ namespace TrenDAP.Model
     public class DataSourceDataSetController : ModelController<DataSourceDataSetView>
     {
         public DataSourceDataSetController(IConfiguration configuration) : base(configuration) { }
-
-        public override ActionResult Post([FromBody] JObject record)
-        {
-            record["SettingsString"] = record["Settings"].ToString();
-            return base.Post(record);
-        }
-        public override ActionResult Patch([FromBody] JObject record)
-        {
-            record["SettingsString"] = record["Settings"].ToString();
-            return base.Patch(record);
-        }
         
         [HttpGet, Route("Query/{dataSourceDataSetID:int}")]
         public IActionResult GetData(int dataSourceDataSetID, CancellationToken cancellationToken)

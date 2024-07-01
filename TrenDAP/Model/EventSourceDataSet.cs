@@ -43,15 +43,15 @@ namespace TrenDAP.Model
         public int EventSourceID { get; set; }
         [ParentKey(typeof(DataSet))]
         public int DataSetID { get; set; }
-        public byte[] SettingsBin { get; set; }
+        public string SettingsString { get; set; }
         [NonRecordField]
         public JObject Settings
         {
             get
             {
-                try { return JObject.Parse(Encoding.UTF8.GetString(SettingsBin)); }
+                try { return JObject.Parse(SettingsString); }
                 catch { return new JObject(); }
-            } 
+            }
         }
     }
 
@@ -60,7 +60,7 @@ namespace TrenDAP.Model
             EventSourceDataSet.ID,
             EventSourceDataSet.EventSourceID,
             EventSourceDataSet.DataSetID,
-            EventSourceDataSet.SettingsBin,
+            EventSourceDataSet.SettingsString,
             EventSource.Name as EventSourceName,
             DataSet.Name as DataSetName
         From 
@@ -73,6 +73,7 @@ namespace TrenDAP.Model
         public string EventSourceName { get; set; }
         public string DataSetName { get; set; }
     }
+
     public class EventSourceDataSetController : ModelController<EvenSourceDataSetView>
     {
         public EventSourceDataSetController(IConfiguration configuration) : base(configuration) { }

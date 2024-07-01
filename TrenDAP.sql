@@ -112,7 +112,7 @@ CREATE TABLE EventSourceDataSet
     ID INT IDENTITY(1, 1) NOT NULL PRIMARY KEY,
     EventSourceID INT NOT NULL REFERENCES EventSource(ID),
     DataSetID INT NOT NULL REFERENCES DataSet(ID),
-    SettingsBin varbinary(max) NOT NULL DEFAULT '0x7B7D'
+    SettingsString VARCHAR(MAX) NOT NULL DEFAULT '{}'
 )
 GO
 
