@@ -56,11 +56,11 @@ const DataSetSettingsTab: React.FunctionComponent<IProps> = (props: IProps) => {
                 return false;
             }
             else if (dataSets.findIndex(ds => (ds.Public || ds.User === userName) && ds.ID !== props.DataSet.ID && ds.Name.toLowerCase() == props.DataSet.Name.toLowerCase()) > -1) {
-                setNameFeedback("A DataSet with this name already exists.")
+                setNameFeedback("A Data Set with this name already exists.")
                 return false;
             }
             else if (props.DataSet.Public && dataSets.findIndex(ds => ds.ID !== props.DataSet.ID && ds.Name.toLowerCase() == props.DataSet.Name.toLowerCase()) > -1) {
-                setNameFeedback("A DataSet with this name was already created by another user.");
+                setNameFeedback("A Data Set with this name was already created by another user.");
                 return false;
             } else return true;
         }

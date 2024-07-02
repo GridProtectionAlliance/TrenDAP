@@ -101,11 +101,11 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
         if (dataSet == null) return;
         const w = [];
         if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Day' && dataSet.RelativeValue < 7)
-            w.push("With the current Time Context and Day of Week Filter it is possible for the dataset to be empty at times.")
+            w.push("With the current Time Context and Day of Week Filter it is possible for the data set to be empty at times.")
         if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Week' && dataSet.RelativeValue < 53)
-            w.push("With the current Time Context and Week of Year Filter it is possible for the dataset to be empty at times.")
+            w.push("With the current Time Context and Week of Year Filter it is possible for the data set to be empty at times.")
         if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Day' && dataSet.RelativeValue < 366)
-            w.push("With the current Time Context and Week of Year Filter it is possible for the dataset to be empty at times.")
+            w.push("With the current Time Context and Week of Year Filter it is possible for the data set to be empty at times.")
         setWarning(w);
     }, [dataSet]);
 
@@ -117,9 +117,9 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
         else if (dataSet.Name.length > 200)
             e.push("Name has to be less than 200 characters.");
         else if (dataSets.findIndex(ds => (ds.Public || ds.User === userName) && ds.ID !== dataSet.ID && ds.Name.toLowerCase() == dataSet.Name.toLowerCase()) > -1)
-            e.push("A DataSet with this name already exists.");
+            e.push("A Data Set with this name already exists.");
         else if (dataSet.Public && dataSets.findIndex(ds => ds.ID !== dataSet.ID && ds.Name.toLowerCase() == dataSet.Name.toLowerCase()) > -1)
-            e.push("A DataSet with this name was already created by another user.");
+            e.push("A Data Set with this name was already created by another user.");
         if (dataSet.Context == 'Fixed Dates' && moment(dataSet.From).isAfter(moment(dataSet.To)))
             e.push("A valid Timeframe has to be selected.")
         if (dataSet.Hours == 0)
