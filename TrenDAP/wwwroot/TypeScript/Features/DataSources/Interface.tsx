@@ -41,7 +41,7 @@ export function EnsureTypeSafety<T>(settingsObj: any, defaultSettings: T): T {
 /*
  Interface that needs to be implemented by an DataSource
  {T} => Settings Associated with this Datasource
- {U} => Settings associated with the speicific Datasource and Dataset
+ {U} => Settings associated with the specific Datasource and Dataset
 */
 export interface IDataSource<T, U> {
     DataSetUI: React.FC<DataSourceTypes.IDataSourceDataSetProps<T, U>>,
