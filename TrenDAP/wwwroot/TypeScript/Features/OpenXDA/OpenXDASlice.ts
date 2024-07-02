@@ -149,7 +149,7 @@ export const SelectSearchOpenXDAStatus = (state: Redux.StoreState, dsid: number,
 function GetOpenXDA(sourceID: number, type: 'event' | 'data',  table: string): JQuery.jqXHR<string> {
     return $.ajax({
         type: "GET",
-        url: `${homePath}api/TrenDAPDB/${sourceID}/${table}/${type}`,
+        url: `${homePath}api/${type === 'data' ? 'TrenDAPDB' : 'OpenXDA'}/${sourceID}/${table}`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
         cache: true,
@@ -159,7 +159,7 @@ function GetOpenXDA(sourceID: number, type: 'event' | 'data',  table: string): J
 function PostOpenXDA(sourceID: number, type: 'event' | 'data', table: string, filters: Search.IFilter<any>[]): JQuery.jqXHR<string> {
     return $.ajax({
         type: "Post",
-        url: `${homePath}api/TrenDAPDB/${sourceID}/${table}/${type}`,
+        url: `${homePath}api/${type === 'data' ? 'TrenDAPDB' : 'OpenXDA'}/${sourceID}/${table}`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
         // Todo: If there is no ID col, this won't work. Every single one does, but this should still be more resilient

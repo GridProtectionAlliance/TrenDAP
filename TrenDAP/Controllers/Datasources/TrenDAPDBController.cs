@@ -94,32 +94,16 @@ namespace TrenDAP.Controllers
         #endregion
 
         #region [ Http Methods ]
-        [HttpGet, Route("{sourceID:int}/{table?}/{type?}")]
-        public virtual ActionResult GetTable(int sourceID, string table = "", string type = "data")
+        [HttpGet, Route("{sourceID:int}/{table?}")]
+        public virtual ActionResult GetTable(int sourceID, string table = "")
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
-
                 try
                 {
-                    if (type == "data")
-                    {
-                        DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
-                        if (dataSource.Type == "TrenDAPDB")
-                            return GetOpenXDA(dataSource, table);
-                        else if (dataSource.Type == "OpenHistorian")
-                            return GetOpenHistorian(dataSource, table);
-                        else return StatusCode(StatusCodes.Status400BadRequest, "Datasource type not supported");
-                    }
-                    else if (type == "event")
-                    {
-                        EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
-                        if (eventSource.Type == "OpenXDA")
-                            return GetOpenXDA(eventSource, table);
-                        else return StatusCode(StatusCodes.Status400BadRequest, "Eventsource type not supported");
-
-                    }
-                    return StatusCode(StatusCodes.Status400BadRequest, "Source type not supported");
+                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
+                    if (dataSource.Type == "TrenDAPDB") return GetOpenXDA(dataSource, table);
+                    else return StatusCode(StatusCodes.Status500InternalServerError, "Only TrenDAPDB datasources are supported by this endpoint.");
                 }
                 catch (Exception ex)
                 {
@@ -162,36 +146,6 @@ namespace TrenDAP.Controllers
                 Task<string> rsp;
                 if (filter is null) rsp = helper.GetAsync($"api/{table}");
                 else rsp = helper.PostAsync($"api/{table}/SearchableList", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
-                return Ok(rsp.Result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex);
-            }
-        }
-
-        private ActionResult GetOpenXDA(EventSource eventSource, string table, JObject filter = null)
-        {
-            try
-            {
-                EventSourceHelper helper = new EventSourceHelper(eventSource);
-                Task<string> rsp;
-                if (filter is null) rsp = helper.GetAsync($"api/{table}");
-                else rsp = helper.PostAsync($"api/{table}/SearchableList", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
-                return Ok(rsp.Result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex);
-            }
-        }
-
-        private ActionResult GetOpenHistorian(DataSource dataSource, string table)
-        {
-            try
-            {
-                DataSourceHelper helper = new DataSourceHelper(dataSource);
-                Task<string> rsp = helper.GetAsync($"api/trendap/{table}");
                 return Ok(rsp.Result);
             }
             catch (Exception ex)
