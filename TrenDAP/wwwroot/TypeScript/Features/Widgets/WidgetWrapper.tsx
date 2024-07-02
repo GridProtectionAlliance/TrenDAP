@@ -118,17 +118,24 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             setLocalEventSources([]);
             return;
         }
-        const eventSources: WidgetTypes.ISelectedEvents<any>[] = props.AllEventSources.map(evtSrc => {
-            let eventSourceKey = props.EventMap.current.get(evtSrc.ID);
-            if (eventSourceKey == null) {
-                eventSourceKey = props.EventMap.current.size;
-                props.EventMap.current.set(evtSrc.ID, eventSourceKey);
-                props.SetEventMapVersion(props.EventMapVersion + 1);
-            }
-            const widgetSettings: TrenDAP.IWidgetEventSources<any> = props.Widget.EventSources.find(src => src.Key === eventSourceKey) ??
-                { Key: eventSourceKey, Enabled: false, EventSettings: Implementation.DefaultEventSourceSettings };
-            return { ...evtSrc, ...widgetSettings };
+
+        const mappedIds = _.uniq([...props.EventMap.current.values()]);
+        const newIds = _.uniq(props.AllEventSources.map(src => src.ID)).filter(id => mappedIds.find(mapId => mapId === id) == null);
+
+        // Update Map, if we have new things
+        newIds.forEach(id => props.EventMap.current.set(props.EventMap.current.size, id));
+        if (newIds.length > 0) {
+            props.SetEventMapVersion(props.EventMapVersion + 1);
+        }
+
+        const eventSources: WidgetTypes.ISelectedEvents<any>[] = [...props.EventMap.current.keys()].map(key => {
+            const id = props.EventMap.current.get(key);
+            const sourceMetaData: TrenDAP.IEventSourceMetaData = props.AllEventSources.find(source => source.ID === id);
+            let widgetEventSource: TrenDAP.IWidgetEventSources<any> = props.Widget.EventSources.find(source => source.Key === key);
+            if (widgetEventSource == null) widgetEventSource = { Key: key, Enabled: false, EventSettings: Implementation.DefaultEventSourceSettings };
+            return { ...widgetEventSource, ...sourceMetaData };
         });
+
         setLocalEventSources(eventSources);
     }, [props.Widget?.EventSources, props.AllEventSources, showSettingsModal, Implementation])
 
@@ -168,7 +175,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
 
         const eventSources: WidgetTypes.ISelectedEvents<any>[] = props.Widget.EventSources
             .filter(evtSrc => evtSrc.Enabled)
-            .map(evtSrc => ({ ...evtSrc, ...props.AllEventSources.find(src => props.EventMap.current.get(src.ID) === evtSrc.Key) }));
+            .map(evtSrc => ({ ...evtSrc, ...props.AllEventSources.find(src => props.EventMap.current.get(evtSrc.Key) === src.ID) }));
 
         const db = new TrenDAPDB();
         db.ReadManyEvents(eventSources).then(eventData => setEvents(eventData));

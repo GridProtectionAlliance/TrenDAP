@@ -1048,7 +1048,6 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                             Setter={(newSettings) => {
                                 const newSrc = { ...item };
                                 newSrc.EventSettings = newSettings;
-                                console.log(newSrc);
                                 props.SetSource(newSrc);
                             }}
                             Style={{ backgroundColor: item.EventSettings?.Color, borderColor: item.EventSettings?.Color}} />

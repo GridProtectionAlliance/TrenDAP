@@ -124,7 +124,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     const [evtStatus, setEvtStatus] = React.useState<Application.Types.Status>('unintiated')
     const [eventSources, setEventSources] = React.useState<EventSourceTypes.IEventSourceDataSet[]>([]);
-    const [loadedEvents, setLoadedEvents] = React.useState<IEventData[]>(undefined);
+    const [loadedEvents, setLoadedEvents] = React.useState<IEventData[]>([]);
 
     const [channelErrors, setChannelErrors] = React.useState<string[]>([]);
     const [eventErrors, setEventErrors] = React.useState<string[]>([]);
@@ -330,12 +330,17 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     //Effect to intialize event matches
     React.useEffect(() => {
+        let loadedEventSourceIndex = 0;
         const eventKeys = _.uniqWith(props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.EventSources).flat()).flat().map(eventSrc => eventSrc.Key), _.isEqual);
-        setEventMatches(eventKeys.map(c => ({
-            Key: c,
-            Match: 'NoMatch',
-            ID: null
-        })));
+        setEventMatches(eventKeys.map(c => {
+            const newMatch: IEventMatch = {
+                Key: c,
+                Match: 'NoMatch',
+                ID: loadedEventSourceIndex < loadedEvents.length ? loadedEvents[loadedEventSourceIndex].ID : null
+            }
+            loadedEventSourceIndex++;
+            return newMatch;
+        }));
     }, [props.WorkSpaceJSON.Rows]);
 
     //Effect to intialize channel matches
@@ -398,7 +403,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         switch (step) {
             case dataSetStep: return selectedDataSet == null;
             case parentStep: return channelErrors?.length > 0;
-            case eventStep: return eventErrors?.length > 0;
+            case eventStep: return loadedEvents.length !== 0 && eventErrors?.length > 0;
         }
     }, [selectedDataSet, channelErrors, eventErrors, step]);
 
@@ -426,7 +431,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                             props.GenerateMapping(
                                 channelMatches.map(match => [match.Key, match.ChannelID] as [TrenDAP.IChannelKey, string]),
                                 parentMatches.map(match => [match.ParentID, match.Key] as [string, number]),
-                                eventMatches.map(match => [match.ID, match.Key] as [number, string]),
+                                eventMatches.map(match => [match.Key, match.ID] as [number, number]),
                                 selectedDataSet as TrenDAP.iDataSet,
                                 loadData()
                             );
@@ -687,8 +692,10 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                 Field={'ID'}
                                                 Content={({ item }) => {
                                                     switch (item.Match) {
-                                                        case 'NoMatch': case 'MultipleMatches':
+                                                        case 'NoMatch':
                                                             return <ReactIcons.CrossMark Color="red" />
+                                                        case 'MultipleMatches':
+                                                            return <ReactIcons.Warning Color="black" />
                                                         case 'Match':
                                                             return <ReactIcons.CheckMark Color="green" />
                                                     }
