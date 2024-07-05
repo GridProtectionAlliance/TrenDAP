@@ -292,12 +292,14 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             if (implementation === null)
                 return Promise.resolve([]);
             const logoString = implementation?.GetLogo != null ? implementation.GetLogo(eventSourceView) : undefined;
-            implementation.Load(eventSourceView, selectedDataSet, ds).then(d => {
+            return implementation.Load(eventSourceView, selectedDataSet, ds).then(d => {
                 newEvents.push({ ID: eventSourceView.ID, SourceType: eventSourceView.Type, Name: eventSourceView.Name, Data: d, Logo: logoString });
             });
         });
 
-        Promise.all(eventSrcHandlers).then(_ => { setEvtStatus('idle'); setLoadedEvents(newEvents); });
+        Promise.all(eventSrcHandlers).then(_ => {
+            setEvtStatus('idle'); setLoadedEvents(newEvents);
+        });
 
         }, [eventSources]);
 
@@ -331,17 +333,19 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     //Effect to intialize event matches
     React.useEffect(() => {
         let loadedEventSourceIndex = 0;
+        if (loadedEvents.length === 0) return;
         const eventKeys = _.uniqWith(props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.EventSources).flat()).flat().map(eventSrc => eventSrc.Key), _.isEqual);
         setEventMatches(eventKeys.map(c => {
+            const autoMatched = loadedEventSourceIndex < loadedEvents.length;
             const newMatch: IEventMatch = {
                 Key: c,
-                Match: 'NoMatch',
-                ID: loadedEventSourceIndex < loadedEvents.length ? loadedEvents[loadedEventSourceIndex].ID : null
+                Match: autoMatched ? 'Match' : 'NoMatch',
+                ID: autoMatched ? loadedEvents[loadedEventSourceIndex].ID : null
             }
             loadedEventSourceIndex++;
             return newMatch;
         }));
-    }, [props.WorkSpaceJSON.Rows]);
+    }, [props.WorkSpaceJSON.Rows, loadedEvents]);
 
     //Effect to intialize channel matches
     React.useEffect(() => {
