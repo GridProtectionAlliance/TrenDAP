@@ -62,7 +62,7 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
     }, [dataSetStatus]);
 
     React.useEffect(() => {
-        if (dataSetStatus !== 'idle') return;  //SelectNewDataSet
+        if (dataSetStatus !== 'idle') return;
         const id = (props['useParams']?.id ?? -1);
         if (id < 0) setDataSet(SelectNewDataSet());
         else setDataSet(dataSets.find(set => set.ID == id));
@@ -101,11 +101,11 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
         if (dataSet == null) return;
         const w = [];
         if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Day' && dataSet.RelativeValue < 7)
-            w.push("With the current Time Context and Day of Week Filter it is possible for the dataset to be empty at times.")
+            w.push("With the current Time Context and Day of Week Filter it is possible for the data set to be empty at times.")
         if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Week' && dataSet.RelativeValue < 53)
-            w.push("With the current Time Context and Week of Year Filter it is possible for the dataset to be empty at times.")
+            w.push("With the current Time Context and Week of Year Filter it is possible for the data set to be empty at times.")
         if (dataSet.Context == 'Relative' && dataSet.RelativeWindow == 'Day' && dataSet.RelativeValue < 366)
-            w.push("With the current Time Context and Week of Year Filter it is possible for the dataset to be empty at times.")
+            w.push("With the current Time Context and Week of Year Filter it is possible for the data set to be empty at times.")
         setWarning(w);
     }, [dataSet]);
 
@@ -114,10 +114,12 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
         const e = [];
         if (dataSet.Name == null || dataSet.Name.trim().length == 0)
             e.push("A Name has to be entered.")
-        if (dataSet.Name != null && dataSet.Name.length > 200)
+        else if (dataSet.Name.length > 200)
             e.push("Name has to be less than 200 characters.");
-        if (dataSet.Name != null && dataSets.findIndex(ds => ds.ID !== dataSet.ID && ds.Name.toLowerCase() == dataSet.Name.toLowerCase()) > -1)
-            e.push("A DataSet with this name already exists.");
+        else if (dataSets.findIndex(ds => (ds.Public || ds.User === userName) && ds.ID !== dataSet.ID && ds.Name.toLowerCase() == dataSet.Name.toLowerCase()) > -1)
+            e.push("A Data Set with this name already exists.");
+        else if (dataSet.Public && dataSets.findIndex(ds => ds.ID !== dataSet.ID && ds.Name.toLowerCase() == dataSet.Name.toLowerCase()) > -1)
+            e.push("A Data Set with this name was already created by another user.");
         if (dataSet.Context == 'Fixed Dates' && moment(dataSet.From).isAfter(moment(dataSet.To)))
             e.push("A valid Timeframe has to be selected.")
         if (dataSet.Hours == 0)

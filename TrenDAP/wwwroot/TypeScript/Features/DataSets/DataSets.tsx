@@ -61,7 +61,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                     <div className="card-header">
                         <div className="row">
                             <div className="col">
-                                <h4>My DataSets</h4>
+                                <h4>My Data Sets</h4>
                             </div>
                             <div className="col">
                                 <button className="btn btn-primary pull-right"
@@ -147,7 +147,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                 <div className="card">
                     <div className="card-header">
                         <h4>
-                            Shared DataSets
+                            Shared Data Sets
                         </h4>
                     </div>
                     <div className="card-body">

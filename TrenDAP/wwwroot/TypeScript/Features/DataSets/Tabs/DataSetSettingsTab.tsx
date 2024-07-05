@@ -39,6 +39,7 @@ interface IProps {
 }
 
 const DataSetSettingsTab: React.FunctionComponent<IProps> = (props: IProps) => {
+    const [nameFeedback, setNameFeedback] = React.useState<string>("A Data Set with this name already exists.");
     const dispatch = useAppDispatch();
     const dataSets = useAppSelector(SelectDataSets);
     const dataSetStatus = useAppSelector(SelectDataSetsStatus);
@@ -49,9 +50,20 @@ const DataSetSettingsTab: React.FunctionComponent<IProps> = (props: IProps) => {
     }, [dataSetStatus]);
 
     function valid(field: keyof (TrenDAP.iDataSet)): boolean {
-        if (field == 'Name')
-            return props.DataSet.Name != null && props.DataSet.Name.trim().length > 0 &&
-                props.DataSet.Name.length <= 200 && dataSets.find(ws => ws.Name.toLowerCase() == props.DataSet.Name.toLowerCase() && ws.ID != props.DataSet.ID) == null
+        if (field == 'Name') {
+            if (props.DataSet.Name == null || props.DataSet.Name.trim().length == 0 || props.DataSet.Name.length > 200) {
+                setNameFeedback("Name less than 200 Characters is required.")
+                return false;
+            }
+            else if (dataSets.findIndex(ds => (ds.Public || ds.User === userName) && ds.ID !== props.DataSet.ID && ds.Name.toLowerCase() == props.DataSet.Name.toLowerCase()) > -1) {
+                setNameFeedback("A Data Set with this name already exists.")
+                return false;
+            }
+            else if (props.DataSet.Public && dataSets.findIndex(ds => ds.ID !== props.DataSet.ID && ds.Name.toLowerCase() == props.DataSet.Name.toLowerCase()) > -1) {
+                setNameFeedback("A Data Set with this name was already created by another user.");
+                return false;
+            } else return true;
+        }
         else
             return true;
     }
@@ -72,7 +84,7 @@ const DataSetSettingsTab: React.FunctionComponent<IProps> = (props: IProps) => {
 
     return (
         <>
-            <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="Name" Setter={(record) => props.SetDataSet(record)} Valid={valid} Feedback={"A Unique Name has to be specified"} />
+            <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="Name" Setter={(record) => props.SetDataSet(record)} Valid={valid} Feedback={nameFeedback} />
             <RelativeDateRangePicker Record={props.DataSet} Setter={(record) => props.SetDataSet(record)} />
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Hours" Label="Hour of Day" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
             <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Days" Label="Day of Week" Setter={(record) => props.SetDataSet(record)} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} IsDisabled={validDay} />
