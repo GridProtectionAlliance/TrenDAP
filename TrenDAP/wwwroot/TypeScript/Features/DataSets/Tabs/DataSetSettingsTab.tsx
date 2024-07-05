@@ -39,7 +39,7 @@ interface IProps {
 }
 
 const DataSetSettingsTab: React.FunctionComponent<IProps> = (props: IProps) => {
-    const [nameFeedback, setNameFeedback] = React.useState<string>("A DataSet with this name already exists.");
+    const [nameFeedback, setNameFeedback] = React.useState<string>("A Data Set with this name already exists.");
     const dispatch = useAppDispatch();
     const dataSets = useAppSelector(SelectDataSets);
     const dataSetStatus = useAppSelector(SelectDataSetsStatus);
