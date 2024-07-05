@@ -32,7 +32,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TrenDAP.Controllers;
@@ -46,6 +45,7 @@ namespace TrenDAP.Model
 
     public class DataSet
     {
+        #region [ Fields ]
         [PrimaryKey(true)]
         public int ID { get; set; }
         [UseEscapedName]
@@ -73,6 +73,28 @@ namespace TrenDAP.Model
         [UseEscapedName]
         public bool Public { get; set; }
         public DateTime UpdatedOn { get; set; }
+        #endregion
+
+        #region [ Methods ]
+        public Tuple<DateTime, DateTime> ComputeTimeEnds()
+        {
+            DateTime startTime = From;
+            DateTime endTime = To;
+            if (Context == "Relative")
+            {
+                endTime = DateTime.Now;
+                if (RelativeWindow == "Day")
+                    startTime = endTime.AddDays(-RelativeValue);
+                else if (RelativeWindow == "Week")
+                    startTime = endTime.AddDays(-RelativeValue * 7);
+                else if (RelativeWindow == "Month")
+                    startTime = endTime.AddMonths(-int.Parse(RelativeValue.ToString()));
+                else
+                    startTime = endTime.AddYears(-int.Parse(RelativeValue.ToString()));
+            }
+            return new Tuple<DateTime, DateTime>(startTime, endTime);
+        }
+        #endregion
     }
 
     public class DataSetController : ModelController<DataSet>
@@ -94,14 +116,80 @@ namespace TrenDAP.Model
                 dataSetRecord.User = Request.HttpContext.User.Identity.Name;
                 int result = new TableOperations<DataSet>(connection).AddNewRecord(dataSetRecord);
                 int dataSetId = connection.ExecuteScalar<int>("SELECT @@IDENTITY");
-                JArray connections = (JArray)record.GetValue("Connections");
-                foreach (JObject conn in connections)
+                JArray dataConnections = (JArray)record.GetValue("DataConnections");
+                foreach (JObject conn in dataConnections)
                 {
                     conn["SettingsString"] = record["Settings"].ToString();
                     conn["DataSetID"] = dataSetId;
                     DataSourceDataSet connRecord = conn.ToObject<DataSourceDataSet>();
                     result += new TableOperations<DataSourceDataSet>(connection).AddNewRecord(connRecord);
                 }
+                JArray eventConnections = (JArray)record.GetValue("EventConnections");
+                foreach (JObject conn in eventConnections)
+                {
+                    conn["SettingsString"] = record["Settings"].ToString();
+                    conn["DataSetID"] = dataSetId;
+                    EventSourceDataSet connRecord = conn.ToObject<EventSourceDataSet>();
+                    result += new TableOperations<EventSourceDataSet>(connection).AddNewRecord(connRecord);
+                }
+                return Ok(result);
+            }
+        }
+
+        [HttpPost, Route("UpdateWithConnections")]
+        public ActionResult PostByDataSet([FromBody] JObject postData)
+        {
+            DataSet dataSet = postData["DataSet"].ToObject<DataSet>();
+            JArray dataConenctions = (JArray)postData["DataConnections"];
+            IEnumerable<DataSourceDataSet> newDataRecords = dataConenctions.Select(recordToken =>
+            {
+                JObject record = (JObject)recordToken;
+                record["SettingsString"] = record["Settings"].ToString();
+                DataSourceDataSet recordObj = record.ToObject<DataSourceDataSet>();
+                return recordObj;
+            });
+            JArray eventConenctions = (JArray)postData["EventConnections"];
+            IEnumerable<EventSourceDataSet> newEventRecords = eventConenctions.Select(recordToken =>
+            {
+                JObject record = (JObject)recordToken;
+                record["SettingsString"] = record["Settings"].ToString();
+                EventSourceDataSet recordObj = record.ToObject<EventSourceDataSet>();
+                return recordObj;
+            });
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration[SettingCategory + ":ConnectionString"], Configuration[SettingCategory + ":DataProviderString"]))
+            {
+                // Handle Data Set Changes
+                int result = new TableOperations<DataSet>(connection).UpdateRecord(dataSet);
+                // Handle Data Records
+                TableOperations<DataSourceDataSet> dataTbl = new TableOperations<DataSourceDataSet>(connection);
+                IEnumerable<DataSourceDataSet> currentDataRecords = dataTbl.QueryRecordsWhere("DataSetID = {0}", dataSet.ID);
+                foreach (DataSourceDataSet newRecord in newDataRecords)
+                {
+                    if (newRecord.ID >= 0)
+                    {
+                        currentDataRecords = currentDataRecords.Where(rec => rec.ID != newRecord.ID);
+                        result += dataTbl.UpdateRecord(newRecord);
+                    }
+                    else
+                        result += dataTbl.AddNewRecord(newRecord);
+                }
+                foreach (DataSourceDataSet removedRecord in currentDataRecords)
+                    result += dataTbl.DeleteRecord(removedRecord);
+                // Handle Event Records
+                TableOperations<EventSourceDataSet> eventTbl = new TableOperations<EventSourceDataSet>(connection);
+                IEnumerable<EventSourceDataSet> currentEventRecords = eventTbl.QueryRecordsWhere("DataSetID = {0}", dataSet.ID);
+                foreach (EventSourceDataSet newRecord in newEventRecords)
+                {
+                    if (newRecord.ID >= 0)
+                    {
+                        currentEventRecords = currentEventRecords.Where(rec => rec.ID != newRecord.ID);
+                        result += eventTbl.UpdateRecord(newRecord);
+                    }
+                    else
+                        result += eventTbl.AddNewRecord(newRecord);
+                }
+                foreach (EventSourceDataSet removedRecord in currentEventRecords)
+                    result += eventTbl.DeleteRecord(removedRecord);
                 return Ok(result);
             }
         }

@@ -1,5 +1,5 @@
-//******************************************************************************************************
-//  DataSource.cs - Gbtc
+﻿//******************************************************************************************************
+//  EventSource.cs - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,40 +16,35 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/10/2020 - Billy Ernest
+//  04/23/2020 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using Gemstone.Data;
 using Gemstone.Data.Model;
-using InfluxDB.Client.Api.Domain;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
-using openXDA.APIAuthentication;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
+using System.Net;
 using TrenDAP.Controllers;
 using PrimaryKeyAttribute = Gemstone.Data.Model.PrimaryKeyAttribute;
-using UseEscapedNameAttribute = Gemstone.Data.Model.UseEscapedNameAttribute;
+using openXDA.APIAuthentication;
+using System.Threading.Tasks;
 
 namespace TrenDAP.Model
 {
-    public class DataSource
+    public class EventSource
     {
         [PrimaryKey(true)]
         public int ID { get; set; }
         public string Type { get; set; }
         public string Name { get; set; }
         public string URL { get; set; }
-        // Todo: maybe we want to break datasource from api auth? two tables where a source is linked to an auth row?
+        // Todo: maybe we want to break source from api auth? two tables where a source is linked to an auth row?
         public string RegistrationKey { get; set; }
         public string APIToken { get; set; }
         [UseEscapedName]
@@ -66,37 +61,37 @@ namespace TrenDAP.Model
                 catch { return new JObject(); }
             }
         }
-        public static DataSource GetDataSource(IConfiguration configuration, int id)
+        public static EventSource GetEventSource(IConfiguration configuration, int id)
         {
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
-                return new Gemstone.Data.Model.TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", id);
+                return new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", id);
             }
         }
     }
 
-    public class DataSourceHelper : XDAAPIHelper
+    public class EventSourceHelper : XDAAPIHelper
     {
-        private DataSource m_dataSource;
+        private EventSource m_eventSource;
 
-        public DataSourceHelper(IConfiguration config, int dataSourceId)
+        public EventSourceHelper(IConfiguration config, int dataSourceId)
         {
             using (AdoDataConnection connection = new AdoDataConnection(config["SystemSettings:ConnectionString"], config["SystemSettings:DataProviderString"]))
             {
-                m_dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceId);
+                m_eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", dataSourceId);
             }
         }
 
-        public DataSourceHelper(DataSource source)
+        public EventSourceHelper(EventSource source)
         {
-            m_dataSource = source;
+            m_eventSource = source;
         }
 
         protected override string Token
         {
             get
             {
-                return m_dataSource.APIToken;
+                return m_eventSource.APIToken;
             }
 
         }
@@ -104,7 +99,7 @@ namespace TrenDAP.Model
         {
             get
             {
-                return m_dataSource.RegistrationKey;
+                return m_eventSource.RegistrationKey;
             }
 
         }
@@ -112,7 +107,7 @@ namespace TrenDAP.Model
         {
             get
             {
-                return m_dataSource.URL;
+                return m_eventSource.URL;
             }
         }
 
@@ -123,9 +118,9 @@ namespace TrenDAP.Model
         }
     }
 
-    public class DataSourceController: ModelController<DataSource>
+    public class EventSourceController: ModelController<EventSource>
     {
-        public DataSourceController(IConfiguration configuration) : base(configuration){ }
+        public EventSourceController(IConfiguration configuration) : base(configuration){ }
 
         public override ActionResult Post([FromBody] JObject record)
         {
@@ -138,15 +133,15 @@ namespace TrenDAP.Model
             return base.Patch(record);
         }
 
-        [HttpGet, Route("TestAuth/{dataSourceID:int}")]
-        public ActionResult TestAuth(int dataSourceID)
+        [HttpGet, Route("TestAuth/{eventSourceID:int}")]
+        public ActionResult TestAuth(int eventSourceID)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
                 try
                 {
-                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", eventSourceID);
+                    EventSourceHelper helper = new EventSourceHelper(eventSource);
                     HttpResponseMessage rsp = helper.GetResponseTask($"api/TestAuth").Result;
                     switch (rsp.StatusCode)
                     {

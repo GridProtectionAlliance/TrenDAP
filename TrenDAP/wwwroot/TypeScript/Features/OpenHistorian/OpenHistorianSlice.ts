@@ -103,7 +103,7 @@ function GetOpenHistorian(dataSourceID: number): Promise<{ MetaData: any, Instan
     return new Promise(async (res, rej) => {
         let instances = await $.ajax({
             type: "GET",
-            url: `${homePath}api/TrenDAPDB/${dataSourceID}/GetInstances`,
+            url: `${homePath}api/OpenHistorian/${dataSourceID}/GetInstances`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,
@@ -112,7 +112,7 @@ function GetOpenHistorian(dataSourceID: number): Promise<{ MetaData: any, Instan
 
         let table = await $.ajax({
             type: "GET",
-            url: `${homePath}api/TrenDAPDB/${dataSourceID}/GetMetaData`,
+            url: `${homePath}api/OpenHistorian/${dataSourceID}/GetMetaData`,
             contentType: "application/json; charset=utf-8",
             dataType: 'json',
             cache: true,

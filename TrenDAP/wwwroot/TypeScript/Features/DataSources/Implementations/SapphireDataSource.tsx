@@ -26,8 +26,9 @@ import { DataSourceTypes, TrenDAP, Redux, DataSetTypes } from '../../../global';
 import { Select, ArrayCheckBoxes, ArrayMultiSelect, Input } from '@gpa-gemstone/react-forms';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectSapphire, FetchSapphire, SelectSapphireStatus } from '../../Sapphire/SapphireSlice';
+import { IDataSource } from '../Interface';
 
-const SapphireDataSource: DataSourceTypes.IDataSource<{}, TrenDAP.iSapphireDataSet> = {
+const SapphireDataSource: IDataSource<{}, TrenDAP.iSapphireDataSet> = {
     Name: 'Sapphire',
     DefaultSourceSettings: {},
     DefaultDataSetSettings: { IDs: [], Phases: [], Types: [], Aggregate: "", Harmonics: "" },

@@ -34,10 +34,10 @@ import { useAppSelector } from './hooks';
 import { SelectWorkSpacesForUser } from './Features/WorkSpaces/WorkSpacesSlice';
 
 const DataSources = React.lazy(() => import(/* webpackChunkName: "DataSources" */ './Features/DataSources/DataSources'));
+const ByEventSources = React.lazy(() => import(/* webpackChunkName: "EventSources" */ './Features/EventSources/ByEventSources'));
 const DataSets = React.lazy(() => import(/* webpackChunkName: "DataSets" */ './Features/DataSets/DataSets'));
 const WorkSpaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/WorkSpaces/WorkSpaces'));
 const EditDataSet = React.lazy(() => import(/* webpackChunkName: "EditDataSet" */ './Features/DataSets/EditDataSet'));
-const AddNewDataSet = React.lazy(() => import(/* webpackChunkName: "AddNewDataSet" */ './Features/DataSets/AddNewDataSet'));
 const WorkSpaceEditor = React.lazy(() => import(/* webpackChunkName: "WorkSpaceEditor" */ './Features/WorkSpaces/WorkSpaceEditor'));
 const ViewDataSet = React.lazy(() => import(/* webpackChunkName: "ViewDataSet" */ './Features/DataSets/ViewDataSet/ViewDataSet'));
 
@@ -63,14 +63,14 @@ const TrenDAP: React.FunctionComponent = (props: {}) => {
                 <Page Name={'DataSources'} Label={'Data Sources'} Icon={SVGIcons.DataContainer}>
                     <DataSources />
                 </Page>
+                <Page Name={'ByEventSources'} Label={'Event Sources'} Icon={SVGIcons.Alert}>
+                    <ByEventSources />
+                </Page>
                 <Page Name={'DataSets'} Label={'Data Sets'} Icon={SVGIcons.Cube}>
                     <DataSets />
                 </Page>
                 <Page Name={'WorkSpaces'} Label={'WorkSpaces'} Icon={SVGIcons.House}>
                     <WorkSpaces />
-                </Page>
-                <Page Name={'AddNewDataSet'}>
-                    <AddNewDataSet />
                 </Page>
                 <Page Name={'EditDataSet/:id'}>
                     <EditDataSet />

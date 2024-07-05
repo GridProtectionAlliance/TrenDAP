@@ -27,25 +27,21 @@ import { DataSourceTypes } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { FetchDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSources } from './DataSourcesSlice'
 import { ReactTable } from '@gpa-gemstone/react-table';
-import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
 import EditDataSource from './EditDataSource';
 import { TrashCan, HeavyCheckMark } from './../../Constants';
 import AddNewDataSource from './AddNewDataSource';
 import { Warning } from '@gpa-gemstone/react-interactive';
+import XDADataSource from './Implementations/XDADataSource';
+import SapphireDataSource from './Implementations/SapphireDataSource';
+import OpenHistorianDataSource from './Implementations/OpenHistorianDataSource';
+import { IDataSource } from './Interface';
 
+export const AllSources: IDataSource<any, any>[] = [XDADataSource, SapphireDataSource, OpenHistorianDataSource];
 
 const DataSources: React.FunctionComponent = () => {
-    const dispatch = useAppDispatch();
-    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
-
-    React.useEffect(() => {
-        if (dstStatus === 'unitiated' || dstStatus === 'changed')
-            dispatch(FetchDataSourceTypes());
-    }, [dstStatus]);
-
     return (
         <div className="row" style={{ margin: 10}}>
-            <div className="col-6" style={{ padding: '0 0 0 0' }}>
+            <div className="col-6">
                 <div className="card">
                     <div className="card-header">
                         <div className="row">
@@ -62,7 +58,7 @@ const DataSources: React.FunctionComponent = () => {
                     </div>
                 </div>
             </div>
-            <div className="col-6" style={{ padding: '0 0 0 0' }}>
+            <div className="col-6">
                 <div className="card">
                     <div className="card-header"><h4>Shared DataSources</h4></div>
                     <div className="card-body">
@@ -84,7 +80,6 @@ const DataSourceTable = React.memo((props: ITableProps) => {
     const [dataSources, setDataSources] = React.useState<DataSourceTypes.IDataSourceView[]>([]);
 
     const dispatch = useAppDispatch();
-    const dataSourceTypes = useAppSelector(SelectDataSourceTypes);
     const dsStatus = useAppSelector(SelectDataSourcesStatus);
     const allDataSources = useAppSelector(SelectDataSources);
     const [deleteItem, setDeleteItem] = React.useState<DataSourceTypes.IDataSourceView>(null);
@@ -118,8 +113,7 @@ const DataSourceTable = React.memo((props: ITableProps) => {
             KeySelector={source => source.ID}
             Ascending={ascending}>
             <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
-            <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'DataSourceTypeID'} Field={'DataSourceTypeID'}
-                Content={row => dataSourceTypes.find(dst => row.item.DataSourceTypeID === dst.ID)?.Name}>Type</ReactTable.Column>
+            <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'Type'} Field={'Type'}>Type</ReactTable.Column>
             {
                 props.OwnedByUser ?
                     <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}

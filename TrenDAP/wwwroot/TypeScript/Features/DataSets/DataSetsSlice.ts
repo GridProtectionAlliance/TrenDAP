@@ -54,6 +54,8 @@ export const RemoveDataSet = createAsyncThunk('DataSets/RemoveDataSet', async (D
     return await DeleteDataSet(DataSet);
 });
 
+export const DataSetsHaveChanged = createAsyncThunk('DataSets/DataSetsHaveChanged', async () => { return; });
+
 export const UpdateDataSet = createAsyncThunk('DataSets/UpdateDataSet', async (DataSet: TrenDAP.iDataSet, { dispatch }) => {
     return await PatchDataSet(DataSet);
 });
@@ -68,7 +70,7 @@ export const PatchDataSetData = createAsyncThunk('DataSets/PatchDataSetData', as
 
 // #region [ Consts ]
 const newDataSet: TrenDAP.iDataSet = {
-    ID: 0,
+    ID: -1,
     Name: '',
     User: '',
     Context: 'Fixed Dates',
@@ -95,7 +97,8 @@ export const DataSetsSlice = createSlice({
         SortField: 'UpdatedOn',
         Ascending: false,
         Record: {
-            ID: 0, Name: '', User: '', Context: 'Relative', RelativeValue: 30, RelativeWindow: 'Day', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1, Data: {Status: 'unitiated', Error: null} }
+            ID: 0, Name: '', User: '', Context: 'Relative', RelativeValue: 30, RelativeWindow: 'Day', From: moment().subtract(30, 'days').format('YYYY-MM-DD'), To: moment().format('YYYY-MM-DD'), Hours: Math.pow(2, 24) - 1, Days: Math.pow(2, 7) - 1, Weeks: Math.pow(2, 53) - 1, Months: Math.pow(2, 12) - 1, Data: { Status: 'unitiated', Error: null }
+        }
     } as Redux.State<TrenDAP.iDataSet>,
     reducers: {
         Sort: (state, action) => {
@@ -124,7 +127,7 @@ export const DataSetsSlice = createSlice({
         builder.addCase(FetchDataSets.fulfilled, (state, action) => {
             state.Status = 'idle';
             state.Error = null;
-            const results = action.payload.map(r => ({ ...r, From: moment(r.From).format('YYYY-MM-DD'), To: moment(r.To).format('YYYY-MM-DD'), Data: { Status: 'unitiated', Error: null}}));
+            const results = action.payload.map(r => ({ ...r, From: moment(r.From).format('YYYY-MM-DD'), To: moment(r.To).format('YYYY-MM-DD'), Data: { Status: 'unitiated', Error: null } }));
             const sorted = _.orderBy(results, [state.SortField], [state.Ascending ? "asc" : "desc"]) as TrenDAP.iDataSet[];
             state.Data = sorted;
         });
@@ -140,7 +143,7 @@ export const DataSetsSlice = createSlice({
         builder.addCase(FetchDataSetData.fulfilled, (state, action) => {
             //state.Status = 'idle';
             //state.Error = null;
-            state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'idle', Error: null } ;
+            state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'idle', Error: null };
 
         });
         builder.addCase(FetchDataSetData.pending, (state, action) => {
@@ -213,16 +216,16 @@ export const DataSetsSlice = createSlice({
                 state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'error', Error: action.error.message };
         });
         builder.addCase(UpdateDataSetDataFlag.fulfilled, (state, action) => {
-            if(action.payload.ID != null)
+            if (action.payload.ID != null)
                 state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'idle', Error: action.payload.Created };
             else
-                state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'unitiated', Error: null};
+                state.Data.find(d => d.ID === action.meta.arg.ID).Data = { Status: 'unitiated', Error: null };
 
         });
         builder.addCase(PatchDataSetData.pending, (state, action) => {
             state.Data.find(d => d.ID === action.meta.arg.DataSet.ID).Data = { Status: 'changed', Error: null };
         });
-
+        builder.addCase(DataSetsHaveChanged.pending, (state) => { state.Status = 'changed'; });
     }
 
 });

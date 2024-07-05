@@ -34,6 +34,9 @@ using static TrenDAP.Controllers.TrenDAPDBController;
 using System.Threading;
 using Gemstone.Data;
 using System.Linq;
+using TrenDAP.Attributes;
+using GSF.Data.Model;
+using System.Reflection;
 
 namespace TrenDAP.Model
 {
@@ -42,6 +45,7 @@ namespace TrenDAP.Model
         [PrimaryKey(true)]
         public int ID { get; set; }
         public int DataSourceID { get; set; }
+        [ParentKey(typeof(DataSet))]
         public int DataSetID { get; set; }
         public string SettingsString { get; set; }
         [NonRecordField]
@@ -55,27 +59,34 @@ namespace TrenDAP.Model
         }
     }
 
-    public class DataSourceDataSetController : ModelController<DataSourceDataSet>
+    [CustomView(@"
+        SELECT
+            DataSourceDataSet.ID,
+            DataSourceDataSet.DataSourceID,
+            DataSourceDataSet.DataSetID,
+            DataSourceDataSet.SettingsString,
+            DataSource.Name as DataSourceName,
+            DataSet.Name as DataSetName
+        From 
+            DataSourceDataSet LEFT JOIN
+            DataSource ON DataSourceDataSet.DataSourceID = DataSource.ID LEFT JOIN
+            DataSet ON DataSourceDataSet.DataSetID = DataSet.ID
+    ")]
+    public class DataSourceDataSetView : DataSourceDataSet
+    {
+        public string DataSourceName { get; set; }
+        public string DataSetName { get; set; }
+    }
+    
+    public class DataSourceDataSetController : ModelController<DataSourceDataSetView>
     {
         public DataSourceDataSetController(IConfiguration configuration) : base(configuration) { }
-
-        public override ActionResult Post([FromBody] JObject record)
-        {
-            record["SettingsString"] = record["Settings"].ToString();
-            return base.Post(record);
-        }
-        public override ActionResult Patch([FromBody] JObject record)
-        {
-            record["SettingsString"] = record["Settings"].ToString();
-            return base.Patch(record);
-        }
         
         [HttpGet, Route("Query/{dataSourceDataSetID:int}")]
         public IActionResult GetData(int dataSourceDataSetID, CancellationToken cancellationToken)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
-                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
                 DataSourceDataSet sourceSet = new TableOperations<DataSourceDataSet>(connection).QueryRecordWhere("ID = {0}", dataSourceDataSetID);
                 if (sourceSet == null) return BadRequest($"Could not find source set relationship with ID {dataSourceDataSetID}");
                 DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSetID);
@@ -89,11 +100,9 @@ namespace TrenDAP.Model
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
-                List<DataSourceType> dataSourceTypes = new TableOperations<DataSourceType>(connection).QueryRecords().ToList();
-                string type = dataSourceTypes.Find(dst => dst.ID == dataSource.DataSourceTypeID).Name;
                 DataSourceHelper helper = new DataSourceHelper(dataSource);
 
-                if (type == "TrenDAPDB")
+                if (dataSource.Type == "TrenDAPDB")
                 {
                     HIDSPost postData = TrenDAPDBController.CreatePost(dataset, json.ToObject<XDADataSetData>());
                     JObject jObj = (JObject)JToken.FromObject(postData);

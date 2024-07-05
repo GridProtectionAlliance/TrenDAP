@@ -55,8 +55,8 @@ const DataSets: React.FunctionComponent = (props: {}) => {
     }, [dispatch, dsStatus]);
 
     return (
-        <div className="row" style={{ margin: 10 }}>
-            <div className="col-8" style={{ padding: '0 0 0 0' }}>
+        <div className="row">
+            <div className="col-8">
                 <div className="card">
                     <div className="card-header">
                         <div className="row">
@@ -67,7 +67,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                 <button className="btn btn-primary pull-right"
                                     onClick={() => {
                                         dispatch(New({}));
-                                        navigate(`${homePath}AddNewDataSet`);
+                                        navigate(`${homePath}EditDataSet/-1`);
                                     }}
                                 >Add New</button>
                             </div>

@@ -173,16 +173,15 @@ namespace TrenDAP.Controllers
 
         #region [ Http Methods ]
         [HttpGet, Route("{dataSourceID:int}/{table?}")]
-        public virtual ActionResult Get(int dataSourceID, string table = "")
+        public virtual ActionResult GetTable(int dataSourceID, string table = "")
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    Task<string> rsp = helper.GetAsync($"api/trendap/{table}");
-                    return Ok(rsp.Result);
+                    if (dataSource.Type == "OpenHistorian") return GetOpenXDA(dataSource, table);
+                    else return StatusCode(StatusCodes.Status500InternalServerError, "Only TrenDAPDB datasources are supported by this endpoint.");
                 }
                 catch (Exception ex)
                 {
@@ -214,6 +213,22 @@ namespace TrenDAP.Controllers
         #endregion
 
         #region [ Static ]
+
+        private ActionResult GetOpenXDA(DataSource dataSource, string table, JObject filter = null)
+        {
+            try
+            {
+                DataSourceHelper helper = new DataSourceHelper(dataSource);
+                Task<string> rsp;
+                if (filter is null) rsp = helper.GetAsync($"api/{table}");
+                else rsp = helper.PostAsync($"api/{table}/SearchableList", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
+                return Ok(rsp.Result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex);
+            }
+        }
 
         public static Task<HttpResponseMessage> Query(int dataSourceID, Post post, IConfiguration configuration, CancellationToken cancellationToken)
         {

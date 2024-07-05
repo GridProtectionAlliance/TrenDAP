@@ -27,7 +27,7 @@ import { OpenXDA } from '@gpa-gemstone/application-typings';
 import { DataSourceTypes, TrenDAP, Redux, DataSetTypes } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../../OpenXDA/OpenXDASlice';
-import { TypeCorrectSettings } from '../DataSourceWrapper';
+import { IDataSource, EnsureTypeSafety } from '../Interface';
 import $ from 'jquery';
 import queryString from 'querystring';
 import moment from 'moment';
@@ -46,11 +46,11 @@ interface XDAChannel extends OpenXDA.Types.Channel {
     Latitude: number
 }
 
-const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = {
+const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = {
     Name: 'TrenDAPDB',
     DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/"},
     DefaultDataSetSettings: { By: 'Meter', IDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: ''},
-    ConfigUI: (props: DataSourceTypes.IConfigProps<TrenDAP.iXDADataSource>) => {
+    ConfigUI: (props: TrenDAP.ISourceConfig<TrenDAP.iXDADataSource>) => {
         React.useEffect(() => {
             const errors: string[] = [];
             if (props.Settings.PQBrowserUrl === null || props.Settings.PQBrowserUrl.length === 0)
@@ -163,7 +163,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
     },
     LoadDataSetMeta: function (_dataSource: DataSourceTypes.IDataSourceView, _dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetMetaData[]> {
         return new Promise<DataSetTypes.IDataSetMetaData[]>((resolve, reject) => {
-            const dataSetSettings = TypeCorrectSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
+            const dataSetSettings = EnsureTypeSafety(setConn.Settings, XDADataSource.DefaultDataSetSettings);
             const returnData: DataSetTypes.IDataSetMetaData[] = dataSetSettings.ChannelIDs.map(id => ({
                 ID: id.toString(),
                 Name: '',
@@ -208,7 +208,7 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
     },
     LoadDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): Promise<DataSetTypes.IDataSetData[]> {
         return new Promise<DataSetTypes.IDataSetData[]>((resolve, reject) => {
-            const dataSetSettings = TypeCorrectSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
+            const dataSetSettings = EnsureTypeSafety(setConn.Settings, XDADataSource.DefaultDataSetSettings);
             const returnData: DataSetTypes.IDataSetData[] = dataSetSettings.ChannelIDs.map(id => ({
                 ID: id.toString(),
                 Name: '',
@@ -272,8 +272,8 @@ const XDADataSource: DataSourceTypes.IDataSource<TrenDAP.iXDADataSource, TrenDAP
         });
     },
     QuickViewDataSet: function (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, setConn: DataSourceTypes.IDataSourceDataSet): string {
-        const dataSetSettings = TypeCorrectSettings(setConn.Settings, XDADataSource.DefaultDataSetSettings);
-        const sourceSettings = TypeCorrectSettings(dataSource.Settings, XDADataSource.DefaultSourceSettings);
+        const dataSetSettings = EnsureTypeSafety(setConn.Settings, XDADataSource.DefaultDataSetSettings);
+        const sourceSettings = EnsureTypeSafety(dataSource.Settings, XDADataSource.DefaultSourceSettings);
         const queryParams: any = {};
 
         // Time filter on the other side takes center time and a unit number

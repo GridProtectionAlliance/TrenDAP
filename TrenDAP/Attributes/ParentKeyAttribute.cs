@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  Store.ts - Gbtc
+//  ParentKeyAttribute.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,32 +16,37 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  05/01/2024 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-import { configureStore } from '@reduxjs/toolkit';
-import DataSourcesReducuer from '../Features/DataSources/DataSourcesSlice';
-import EventSourcesReducuer from '../Features/EventSources/Slices/EventSourcesSlice';
-import WorkSpaceReducer from '../Features/WorkSpaces/WorkSpacesSlice';
-import DataSetReducer from '../Features/DataSets/DataSetsSlice';
-import OpenXDAReducer from '../Features/OpenXDA/OpenXDASlice';
-import OpenHistorianReducer from '../Features/OpenHistorian/OpenHistorianSlice';
-import SapphireReducer from '../Features/Sapphire/SapphireSlice';
+using System;
 
-//Dispatch and Selector Typed
-export type AppDispatch = typeof store.dispatch;
-export type RootState = ReturnType<typeof store.getState>
-const reducer = {
-    DataSets: DataSetReducer,
-    WorkSpaces: WorkSpaceReducer,
-    DataSources: DataSourcesReducuer,
-    OpenXDA: OpenXDAReducer,
-    OpenHistorian: OpenHistorianReducer,
-    Sapphire: SapphireReducer,
-    EventSources: EventSourcesReducuer
+namespace TrenDAP.Attributes
+{
+    /// <summary>
+    /// Defines an attribute that will allow a foreign key in the model to point back to parent table 
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+    public sealed class ParentKeyAttribute : Attribute
+    {
+        /// <summary>
+        /// Gets field name to use for property.
+        /// </summary>
+        public Type Model
+        {
+            get;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="ParentKeyAttribute"/>.
+        /// </summary>
+        /// <param name="model">Type of modeled table that key points back to.</param>
+        public ParentKeyAttribute(Type model)
+        {
+            Model = model;
+        }
+    }
 }
-
-const store = configureStore({ reducer });
-export default store;

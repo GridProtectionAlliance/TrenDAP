@@ -24,6 +24,8 @@
 import { TrenDAP } from "../../global";
 import moment from "moment";
 
+const DateFormat = 'YYYY-MM-DD';
+
 const ComputeValidDays = (ds: TrenDAP.iDataSet) => {
     if (ds.Context == 'Relative')
         return 127;
@@ -82,4 +84,29 @@ const ComputeValidWeeks = (ds: TrenDAP.iDataSet) => {
 
 }
 
-export { ComputeValidDays, ComputeValidWeeks }
+const ComputeTimeEnds = (ds: TrenDAP.iDataSet) => {
+    let startTime = moment.utc(ds.From, DateFormat);
+    let endTime = moment.utc(ds.To, DateFormat);
+    if (ds.Context == "Relative") {
+        endTime = moment.utc(moment().format(DateFormat), DateFormat);
+        if (ds.RelativeWindow == "Day")
+            startTime = endTime.add(-ds.RelativeValue, "day");
+        else if (ds.RelativeWindow == "Week")
+            startTime = endTime.add(-ds.RelativeValue * 7, "day");
+        else if (ds.RelativeWindow == "Month")
+            startTime = endTime.add(-ds.RelativeValue, "month");
+        else
+            startTime = endTime.add(-ds.RelativeValue, "year");
+    }
+    return { Start: startTime, End: endTime };
+}
+
+// Computes center of window and size of window in hours
+const ComputeTimeCenterAndSize = (ds: TrenDAP.iDataSet, granularity: moment.unitOfTime.Diff = 'hours') => {
+    const timeEnds = ComputeTimeEnds(ds);
+    const windowSize = timeEnds.End.diff(timeEnds.Start, granularity, true) / 2;
+    const center = timeEnds.Start.add(windowSize, granularity);
+    return { Center: center, Size: windowSize, Unit: granularity }
+}
+
+export { DateFormat, ComputeTimeEnds, ComputeTimeCenterAndSize, ComputeValidDays, ComputeValidWeeks }

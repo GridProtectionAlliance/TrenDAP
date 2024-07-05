@@ -21,82 +21,47 @@
 //
 //******************************************************************************************************
 import * as React from 'react';
+import * as _ from 'lodash';
 import { ServerErrorIcon } from '@gpa-gemstone/react-interactive';
-import { cloneDeep } from 'lodash';
 import { DataSourceTypes, TrenDAP } from '../../global';
-import { useAppSelector, useAppDispatch } from '../../hooks';
-import { SelectDataSourceTypes, SelectDataSourceTypesStatus, FetchDataSourceTypes } from '../DataSourceTypes/DataSourceTypesSlice';
-import XDADataSource from './ReactDataSources/XDADataSource';
-import SapphireDataSource from './ReactDataSources/SapphireDataSource';
-import OpenHistorianDataSource from './ReactDataSources/OpenHistorianDataSource';
+import { IDataSource, EnsureTypeSafety } from './Interface';
+import { AllSources } from './DataSources';
 
-const AllSources: DataSourceTypes.IDataSource<any, any>[] = [XDADataSource, SapphireDataSource, OpenHistorianDataSource];
-
-interface IPropsCommon {
+interface IProps {
     DataSource: DataSourceTypes.IDataSourceView,
-    SetErrors: (e: string[]) => void
-}
-
-interface IPropsDataset extends IPropsCommon {
-    ComponentType: 'datasetConfig',
+    SetErrors: (e: string[]) => void,
     DataSet: TrenDAP.iDataSet,
-    DataSetConn: DataSourceTypes.IDataSourceDataSet,
-    SetDataSetConn: (arg: DataSourceTypes.IDataSourceDataSet) => void
+    Connection: DataSourceTypes.IDataSourceDataSet,
+    SetConnection: (arg: DataSourceTypes.IDataSourceDataSet) => void
 }
 
-interface IPropsSetting extends IPropsCommon {
-    ComponentType: 'sourceConfig',
-    SetDataSource: (newSource: DataSourceTypes.IDataSourceView) => void
-}
-
-const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IPropsDataset | IPropsSetting) => {
-    const dispatch = useAppDispatch();
-    const dstStatus = useAppSelector(SelectDataSourceTypesStatus);
-    const dataSourceTypes = useAppSelector(SelectDataSourceTypes);
-    const [dataSource, setDataSource] = React.useState<DataSourceTypes.IDataSource<any, any>>(undefined);
-
-    React.useEffect(() => {
-        // Need Cleanup for errors since outside changes may effect errors
-        return () => props.SetErrors([]);
-    }, [props.DataSource.DataSourceTypeID]);
-
-    React.useEffect(() => {
-        if (dstStatus === 'unitiated' || dstStatus === 'changed') dispatch(FetchDataSourceTypes());
-    }, [dstStatus]);
-
-    React.useEffect(() => {
-        if (props.DataSource == null) return;
-        setDataSource(GetReactDataSource(props.DataSource, dataSourceTypes));
-    }, [props.DataSource?.DataSourceTypeID, dstStatus]);
-
-    const SourceSettings = React.useMemo(() => {
-        if (props.DataSource?.Settings == null)
-            return dataSource?.DefaultSourceSettings ?? {};
-        return TypeCorrectSettings(props.DataSource.Settings, dataSource?.DefaultSourceSettings ?? {});
-    }, [dataSource, props.DataSource?.Settings]);
-
-    const SetSourceSettings = React.useCallback(newSetting => {
-        if (props.DataSource == null || props.ComponentType !== 'sourceConfig') return;
-        const newDataSource = { ...props.DataSource };
-        newDataSource.Settings = newSetting;
-        props.SetDataSource(newDataSource);
-    }, [props.DataSource, props['SetDataSource']]);
+const DataSourceWrapper: React.FC<IProps> = (props: IProps) => {
+    const implementation: IDataSource<any, any> | null =
+        React.useMemo(() => AllSources.find(t => t.Name == props.DataSource?.Type), [props.DataSource?.Type]);
 
     const DataSetSettings = React.useMemo(() => {
-        if (props.DataSource == null || props.ComponentType !== 'datasetConfig') return;
-        if (props.DataSetConn?.Settings == null)
-            return dataSource?.DefaultDataSetSettings ?? {};
-        return TypeCorrectSettings(props.DataSetConn.Settings, dataSource?.DefaultDataSetSettings ?? {});
-    }, [dataSource, props['DataSetConn']?.Settings]);
+        if (props.DataSource == null) return;
+        if (props.Connection?.Settings == null)
+            return implementation?.DefaultDataSetSettings ?? {};
+        return EnsureTypeSafety(props.Connection.Settings, implementation?.DefaultDataSetSettings ?? {});
+    }, [implementation, props.Connection?.Settings]);
 
-    const SetDataSetSettings = React.useCallback(newSetting => {
-        if (props.DataSource == null || props.ComponentType !== 'datasetConfig') return;
-        const newConn = { ...props.DataSetConn };
-        newConn.Settings = newSetting;
-        props.SetDataSetConn(newConn);
-    }, [props['DataSetConn'], props['SetDataSetConn']]);
+    // Ensure that source settings are valid
+    const dataSource = React.useMemo(() => {
+        if (implementation == null)
+            return props.DataSource;
+        const src = _.cloneDeep(props.DataSource);
+        const sourceSettings = _.cloneDeep(implementation.DefaultSourceSettings ?? {});
+        let custom = props.DataSource.Settings;
+        for (const [k] of Object.entries(sourceSettings)) {
+            if (custom.hasOwnProperty(k))
+                sourceSettings[k] = _.cloneDeep(custom[k]);
+        }
+        src.Settings = sourceSettings;
+        return src;
+    }, [props.DataSource]);
 
-    return <>{dataSource == null ? <div className="card">
+    return <>{implementation == null ? <div className="card">
         <div className="card-header">
             {props.DataSource?.Name} - Error
         </div>
@@ -107,42 +72,15 @@ const DataSourceWrapper: React.FC<IPropsDataset | IPropsSetting> = (props: IProp
         </div>
     </div>
         : <ErrorBoundary Name={props.DataSource.Name}>
-            {props.ComponentType === 'datasetConfig' ?
-                <dataSource.DataSetUI
-                    DataSet={props.DataSet}
-                    DataSource={props.DataSource}
-                    DataSourceSettings={SourceSettings}
-                    DataSetSettings={DataSetSettings}
-                    SetDataSetSettings={SetDataSetSettings}
-                    SetErrors={props.SetErrors}
-                /> :
-                <dataSource.ConfigUI
-                    Settings={SourceSettings}
-                    SetSettings={SetSourceSettings}
-                    SetErrors={props.SetErrors}
-                />
-            }
+            <implementation.DataSetUI
+                DataSet={props.DataSet}
+                DataSource={dataSource}
+                DataSetSettings={DataSetSettings}
+                SetDataSetSettings={(s) => props.SetConnection({ ...props.Connection, Settings: s })}
+                SetErrors={props.SetErrors}
+            />
         </ErrorBoundary>}
     </>
-}
-
-// Function finds react datasource definition given a list of dataSourceTypes
-function GetReactDataSource(dataSource: DataSourceTypes.IDataSourceView, dataSourceTypes: DataSourceTypes.IDataSourceType[]) {
-    // Find Type
-    const dataSourceType = dataSourceTypes.find(type => type.ID === dataSource.DataSourceTypeID);
-    if (dataSourceType === undefined) return undefined;
-
-    return AllSources.find(item => item.Name === dataSourceType.Name);
-}
-
-// Function to parse DataSourceDataSet Settings
-function TypeCorrectSettings<T>(settingsObj: any, defaultSettings: T): T {
-    const s = cloneDeep(defaultSettings);
-    for (const [k] of Object.entries(defaultSettings)) {
-        if (settingsObj.hasOwnProperty(k))
-            s[k] = cloneDeep(settingsObj[k]);
-    }
-    return s;
 }
 
 interface IError {
@@ -161,7 +99,7 @@ class ErrorBoundary extends React.Component<{ Name: string }, IError> {
             name: error.name,
             message: error.message
         });
-        console.log(error);
+        console.error(error);
     }
 
     render() {
@@ -184,5 +122,4 @@ class ErrorBoundary extends React.Component<{ Name: string }, IError> {
     }
 }
 
-export { AllSources, DataSourceWrapper, GetReactDataSource, TypeCorrectSettings }
 export default DataSourceWrapper;

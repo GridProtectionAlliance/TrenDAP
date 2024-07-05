@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  Store.ts - Gbtc
+//  ParentKeyAttribute.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,32 +16,36 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  05/01/2024 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-import { configureStore } from '@reduxjs/toolkit';
-import DataSourcesReducuer from '../Features/DataSources/DataSourcesSlice';
-import EventSourcesReducuer from '../Features/EventSources/Slices/EventSourcesSlice';
-import WorkSpaceReducer from '../Features/WorkSpaces/WorkSpacesSlice';
-import DataSetReducer from '../Features/DataSets/DataSetsSlice';
-import OpenXDAReducer from '../Features/OpenXDA/OpenXDASlice';
-import OpenHistorianReducer from '../Features/OpenHistorian/OpenHistorianSlice';
-import SapphireReducer from '../Features/Sapphire/SapphireSlice';
+using System;
 
-//Dispatch and Selector Typed
-export type AppDispatch = typeof store.dispatch;
-export type RootState = ReturnType<typeof store.getState>
-const reducer = {
-    DataSets: DataSetReducer,
-    WorkSpaces: WorkSpaceReducer,
-    DataSources: DataSourcesReducuer,
-    OpenXDA: OpenXDAReducer,
-    OpenHistorian: OpenHistorianReducer,
-    Sapphire: SapphireReducer,
-    EventSources: EventSourcesReducuer
+namespace GSF.Data.Model
+{
+    /// <summary>
+    /// Defines an attribute that will allow setting a custom view a modeled table.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public sealed class CustomViewAttribute : Attribute
+    {
+        /// <summary>
+        /// Gets field name to use for property.
+        /// </summary>
+        public string CustomView
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="CustomViewAttribute"/>.
+        /// </summary>
+        /// <param name="customView">SQL to generate custom view.</param>
+        public CustomViewAttribute(string customView)
+        {
+            CustomView = customView;
+        }
+    }
 }
-
-const store = configureStore({ reducer });
-export default store;
