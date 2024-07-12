@@ -237,7 +237,7 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                 cache: false,
                 async: true
             });
-            else if (events.length !== 0) dataHandle = ajax({
+            else if (events.length !== 0) dataHandle = $.ajax({
                 type: "Post",
                 url: `${homePath}api/DataSourceDataSet/Query/ByEvents/${setConn.ID}`,
                 contentType: "application/json; charset=utf-8",

@@ -23,6 +23,7 @@
 
 import * as React from 'react';
 import * as $ from 'jquery';
+import moment from 'moment';
 import queryString from 'querystring';
 import { TrenDAP, Redux } from '../../../global';
 import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../../OpenXDA/OpenXDASlice';
