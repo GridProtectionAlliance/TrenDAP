@@ -13,7 +13,7 @@
     "module": "ESNext",
     "moduleResolution": "Node",
     "skipLibCheck": true,
-    "strictNullChecks": true
+    //"strictNullChecks": true ** TEMP
   },
   "include": [ "wwwroot/**/*" ],
   "exclude": [
