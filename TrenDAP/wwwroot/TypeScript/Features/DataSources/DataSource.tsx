@@ -79,7 +79,7 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
             <Select<DataSourceTypes.IDataSourceView> Record={props.DataSource} Label="Type" Field="Type" Setter={props.SetDataSource}
                 Options={AllSources.map((type) => ({ Value: type.Name, Label: type.Name }))} />
             <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="URL" Setter={props.SetDataSource} Valid={() => true} />
-            <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="RegistrationKey" Label={'Registration Key'} Setter={props.SetDataSource} Valid={() => true} />
+            <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="RegistrationKey" Label={'API Key'} Setter={props.SetDataSource} Valid={() => true} />
             <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="APIToken" Label={'API Token'} Setter={props.SetDataSource} Valid={() => true} />
             <div className="row">
                 <div className='col'>
