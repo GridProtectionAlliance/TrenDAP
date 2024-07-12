@@ -5,7 +5,7 @@
   "repository": "https://github.com/GridProtectionAlliance/TrenDAP",
   "main": "index.js",
   "scripts": {
-    "build": "npm prune && npm install && webpack --mode=development",
+    "build": "npm prune && npm ci && webpack --mode=development",
     "watch": "webpack --watch --color --mode=development",
     "update": "npx npm-check-updates",
     "lint": "eslint . --ext .ts,.tsx"
