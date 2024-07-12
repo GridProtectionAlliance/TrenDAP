@@ -43,8 +43,8 @@ export const OpenHistorianSlice = createSlice({
             const instances:OpenHistorian.Types.iHistorian[] = typeof (action.payload.Instances) === 'string' ? JSON.parse(action.payload.Instances) : action.payload.Instances;
             const json: OpenHistorian.Types.iActiveMeasurement[] = typeof (action.payload.MetaData) === 'string' ? JSON.parse(action.payload.MetaData) : action.payload.MetaData;
 
-            let obj = state.find(s => s.ID === action.meta.arg.dataSourceID);
-            let s = {
+            const obj = state.find(s => s.ID === action.meta.arg.dataSourceID);
+            const s = {
                 Instances: instances,
                 Status: 'idle',
                 Measurements: json,
@@ -59,8 +59,8 @@ export const OpenHistorianSlice = createSlice({
 
         });
         builder.addCase(FetchOpenHistorian.pending, (state, action) => {
-            let obj = state.find(s => s.ID === action.meta.arg.dataSourceID);
-            let s = {
+            const obj = state.find(s => s.ID === action.meta.arg.dataSourceID);
+            const s = {
                 Instances: [],
                 Status: 'loading',
                 Measurements: [],
@@ -75,8 +75,8 @@ export const OpenHistorianSlice = createSlice({
 
         });
         builder.addCase(FetchOpenHistorian.rejected, (state, action) => {
-            let obj = state.find(s => s.ID === action.meta.arg.dataSourceID);
-            let s = {
+            const obj = state.find(s => s.ID === action.meta.arg.dataSourceID);
+            const s = {
                 Instances: [],
                 Status: 'error',
                 Measurements: [],
@@ -101,7 +101,7 @@ export const SelectNewOpenHistorianDataSet = () => ({Devices: [], Aggregate: '1d
 
 function GetOpenHistorian(dataSourceID: number): Promise<{ MetaData: any, Instances: any }> {
     return new Promise(async (res, rej) => {
-        let instances = await $.ajax({
+        const instances = await $.ajax({
             type: "GET",
             url: `${homePath}api/OpenHistorian/${dataSourceID}/GetInstances`,
             contentType: "application/json; charset=utf-8",
@@ -110,7 +110,7 @@ function GetOpenHistorian(dataSourceID: number): Promise<{ MetaData: any, Instan
             async: true
         })
 
-        let table = await $.ajax({
+        const table = await $.ajax({
             type: "GET",
             url: `${homePath}api/OpenHistorian/${dataSourceID}/GetMetaData`,
             contentType: "application/json; charset=utf-8",

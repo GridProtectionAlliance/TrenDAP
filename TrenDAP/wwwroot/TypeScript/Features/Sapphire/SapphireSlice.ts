@@ -26,7 +26,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { Redux, TrenDAP } from '../../global';
 import $ from 'jquery';
 
-export const FetchSapphire = createAsyncThunk<string | object, { dataSourceID: number, table: string }, {}>('Sapphire/FetchSapphire', async (ds ,{ dispatch }) => {
+export const FetchSapphire = createAsyncThunk<string | object, { dataSourceID: number, table: string }, {}>('Sapphire/FetchSapphire', async (ds) => {
     return await GetSapphire(ds.dataSourceID, ds.table)
 });
 

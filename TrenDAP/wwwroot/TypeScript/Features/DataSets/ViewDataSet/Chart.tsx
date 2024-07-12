@@ -26,6 +26,9 @@ import { TrenDAP } from '../../../global';
 import * as d3 from 'd3';
 import moment from 'moment';
 
+//Disabling ESLint as this needs to get reworked
+/* eslint-disable */
+
 export default function Chart(props: { Data: TrenDAP.iXDATrendDataPoint[], SetSelected: (record: TrenDAP.iXDATrendDataPoint) => void }) {
     const ref = React.useRef(null);
     const [chartAction, setChartAction] = React.useState<TrenDAP.ChartAction>('Pan');

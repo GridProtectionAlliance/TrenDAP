@@ -43,7 +43,7 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
         if (implementation == null)
             return {};
         const s = _.cloneDeep(implementation.DefaultSourceSettings ?? {});
-        let custom = props.DataSource.Settings;
+        const custom = props.DataSource.Settings;
 
         for (const [k] of Object.entries(implementation?.DefaultSourceSettings ?? {})) {
             if (custom.hasOwnProperty(k))

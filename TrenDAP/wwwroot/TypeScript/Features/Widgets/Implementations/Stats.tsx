@@ -25,7 +25,6 @@ import * as React from 'react';
 import { Input, Select } from '@gpa-gemstone/react-forms';
 import stats from 'stats-lite';
 import { ReactTable } from '@gpa-gemstone/react-table';
-import _ from 'lodash';
 import { WidgetTypes } from '../Interfaces'
 import { TrenDAP } from '../../../global';
 
@@ -40,7 +39,7 @@ interface IProps {
     Precision: number
 }
 
-export const StatsWidget: WidgetTypes.IWidget<IProps, any> = {
+export const StatsWidget: WidgetTypes.IWidget<IProps, null> = {
     DefaultSettings: { Field: 'Average', Precision: 3 },
     DefaultChannelSettings: null,
     Name: "Stats",
@@ -51,15 +50,15 @@ export const StatsWidget: WidgetTypes.IWidget<IProps, any> = {
             setData(getStats(props));
         }, [props.Data, props.Settings])
 
-        const getStats = (oldstats: WidgetTypes.IWidgetProps<IProps, any>): IStatData[] => {
+        const getStats = (oldstats: WidgetTypes.IWidgetProps<IProps, null>): IStatData[] => {
 
-            let newStats = { ...oldstats }
+            const newStats = { ...oldstats }
             let statData: number[] = []
 
             newStats.Data.forEach(data => {
-                let seriesData = data.SeriesData;
+                const seriesData = data.SeriesData;
                 if (seriesData != null && Object.keys(seriesData).length !== 0) {
-                    let filteredData = seriesData[props.Settings.Field]?.map(min => min[1])
+                    const filteredData = seriesData[props.Settings.Field]?.map(min => min[1])
 
                     if (filteredData != null)
                         statData.push(...filteredData);

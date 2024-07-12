@@ -37,14 +37,14 @@ interface ITableData {
     Chan1Minimum: number,
     Chan1Maximum: number,
     Chan1Average: number,
-    Chan2Minimum: number,
-    Chan2Maximum: number,
-    Chan2Average: number
+    Chan2Minimum: number | null,
+    Chan2Maximum: number | null,
+    Chan2Average: number | null
 }
 
 //lets make this a pagedTable as we can get up to 250+ results here as it slows down render times..
 
-export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
+export const TableWidget: WidgetTypes.IWidget<IProps, null> = {
     DefaultSettings: { Precision: 3 },
     DefaultChannelSettings: null,
     Name: "Table",
@@ -86,11 +86,11 @@ export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
                         const min = secondChannelData?.Minimum?.[index][1];
                         const max = secondChannelData?.Maximum?.[index][1];
 
-                        let existingEntry = results.find(r => r.Timestamp === timestamp);
-                        if (existingEntry) {
-                            existingEntry.Chan2Minimum = min ?? null;
-                            existingEntry.Chan2Maximum = max ?? null;
-                            existingEntry.Chan2Average = avg ?? null;
+                        const existingEntry = results.find(r => r.Timestamp === timestamp);
+                        if (existingEntry != null) {
+                            existingEntry.Chan2Minimum = min;
+                            existingEntry.Chan2Maximum = max;
+                            existingEntry.Chan2Average = avg;
                         }
                     });
                 }
@@ -118,7 +118,7 @@ export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
                         if (data.colField === sortField)
                             setAscending(!ascending)
                         else {
-                            setSortField(data.colField)
+                            setSortField(data.colField as keyof ITableData)
                             setAscending(true)
                         }
                     }}
@@ -165,7 +165,7 @@ export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
                         AllowSort={true}
                         Field={'Chan1Average'}
                         Content={row => {
-                            if(row.item?.Chan1Average)
+                            if(row.item?.Chan1Average != null)
                                 return row.item.Chan1Average.toFixed(props.Settings.Precision)
                             else
                                 return 'n/a'
@@ -178,7 +178,7 @@ export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
                         AllowSort={true}
                         Field={'Chan2Minimum'}
                         Content={row => {
-                            if(row.item?.Chan2Minimum)
+                            if(row.item?.Chan2Minimum != null)
                                 return row.item.Chan2Minimum.toFixed(props.Settings.Precision)
                             else 
                                 return 'n/a'
@@ -191,7 +191,7 @@ export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
                         AllowSort={true}
                         Field={'Chan2Maximum'}
                         Content={row => {
-                            if(row.item?.Chan2Maximum)
+                            if(row.item?.Chan2Maximum != null)
                                 return row.item.Chan2Maximum.toFixed(props.Settings.Precision)
                             else
                                 return 'n/a'
@@ -204,7 +204,7 @@ export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
                         AllowSort={true}
                         Field={'Chan2Average'}
                         Content={row => {
-                            if(row.item?.Chan2Average)
+                            if(row.item?.Chan2Average != null)
                                 return row.item.Chan2Average.toFixed(props.Settings.Precision)
                             else 
                                 return 'n/a'
@@ -236,17 +236,17 @@ export const TableWidget: WidgetTypes.IWidget<IProps, any> = {
                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                     SortKey={sortField}
                     OnClick={(item) => {
-                        const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID);
+                        const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID) != null;
                         if (isSelected)
                             props.RemoveChannel(item.row.ID);
                         else if (props.SelectedChannels.length < 2)
                             props.AddChannel(item.row.ID, null); //no channel specific settings here..
                     }}
-                    OnSort={data => sort(data.colField, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
+                    OnSort={data => sort(data.colField as keyof DataSetTypes.IDataSetMetaData, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
                     Data={allChannels}
                     Ascending={ascending}
                     KeySelector={(row) => row.ID}
-                    Selected={(row) => props.SelectedChannels?.find(c => c.MetaData.ID === row.ID) != null ? true : null}
+                    Selected={(row) => props.SelectedChannels?.find(c => c.MetaData.ID === row.ID) != null ? true : false}
                 >
                     <ReactTable.Column<DataSetTypes.IDataSetMetaData>
                         Key={'ParentName'}

@@ -27,7 +27,7 @@ import { TextArea } from '@gpa-gemstone/react-forms';
 
 interface IProps { Text: string }
 
-export const TextWidget: WidgetTypes.IWidget<IProps, any> = {
+export const TextWidget: WidgetTypes.IWidget<IProps, null> = {
     DefaultSettings: { Text: "" },
     DefaultChannelSettings: null,
     Name: "Text",
@@ -41,7 +41,7 @@ export const TextWidget: WidgetTypes.IWidget<IProps, any> = {
             <TextArea<IProps> Record={props.Settings} Field="Text" Rows={10} Setter={r => props.SetSettings(r)} Valid={() => true} />
         </>
     },
-    ChannelSelectionUI: (props) => {
+    ChannelSelectionUI: () => {
         return <></>
     }
 }

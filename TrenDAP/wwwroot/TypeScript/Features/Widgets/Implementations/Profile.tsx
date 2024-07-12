@@ -24,9 +24,8 @@
 import * as React from 'react';
 import { WidgetTypes } from '../Interfaces';
 
-interface IProps { }
 
-export const ProfileWidget: WidgetTypes.IWidget<IProps,any> = {
+export const ProfileWidget: WidgetTypes.IWidget<null, null> = {
     DefaultSettings: null,
     Name: "Profile",
     DefaultChannelSettings: null,
@@ -38,7 +37,7 @@ export const ProfileWidget: WidgetTypes.IWidget<IProps,any> = {
         return <>
         </>
     },
-    ChannelSelectionUI: (props) => {
+    ChannelSelectionUI: () => {
         return <></>
     }
 }

@@ -39,6 +39,7 @@ import { AllSources } from '../DataSources/DataSources';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import * as _ from 'lodash';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 type MatchStatus = ('Match' | 'MultipleMatches' | 'NoMatch')
 type ChannelHover = ('Match' | 'MultipleMatches' | 'NoMatch' | 'None')
@@ -47,7 +48,7 @@ interface IParentMatch {
     Key: number,
     Name: string
     Status: MatchStatus
-    ParentID: string
+    ParentID: string | null
 }
 
 interface IChannelHover {
@@ -57,7 +58,7 @@ interface IChannelHover {
 
 interface IChannelMatch {
     Key: TrenDAP.IChannelKey,
-    ChannelID: string,
+    ChannelID: string | null,
     Status: MatchStatus
 }
 
@@ -89,7 +90,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     const [selectedDataSet, setSelectedDataSet] = React.useState<TrenDAP.iDataSet | null>(null);
     const [channelHover, setChannelHover] = React.useState<IChannelHover>({ Hover: 'None', Index: -1 });
     const [datasources, setDatasources] = React.useState<DataSourceTypes.IDataSourceDataSet[]>([]);
-    const [selectedParentKey, setSelectedParentKey] = React.useState<number>(null);
+    const [selectedParentKey, setSelectedParentKey] = React.useState<number | null>(null);
     const [channelErrors, setChannelErrors] = React.useState<string[]>([]);
     const [allParents, setAllParents] = React.useState<{ ID: string, Name: string }[]>([]);
 
@@ -99,17 +100,17 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     const parentChannelMatches = React.useMemo(() => channelMatches.map((c, i) => ({ ...c, Index: i })).filter((c) => c.Key.Parent === selectedParentKey), [channelMatches, selectedParentKey])
 
     const channelOptions = React.useMemo(() => {
-        let selectedParent = parentMatches.find(p => p.Key === selectedParentKey)
+        const selectedParent = parentMatches.find(p => p.Key === selectedParentKey)
         if (selectedParent?.ParentID == null || selectedParentKey == null) return [{ Label: '', Value: '' }];
 
-        let availableChans = props.AllChannels.filter(chan => chan.ParentID === selectedParent.ParentID)
+        const availableChans = props.AllChannels.filter(chan => chan.ParentID === selectedParent.ParentID)
         return availableChans.map(p => ({ Value: p.ID, Label: p.Name }))
     }, [parentMatches, selectedParentKey])
 
     //Effect to setSelectedDataSet when dataSetID queryParam is set
     React.useEffect(() => {
         if (dataSetID == null) return;
-        let dataSet = dataSetsForUser.concat(publicDataSets).find(ds => ds.ID === parseInt(dataSetID))
+        const dataSet = dataSetsForUser.concat(publicDataSets).find(ds => ds.ID === parseInt(dataSetID))
         if (dataSet != null) {
             setSelectedDataSet(dataSet)
             if(channels != null) props.SetIsModalOpen(false);
@@ -120,16 +121,16 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     //Effect to set errors based on match status
     React.useEffect(() => {
         if (channels != null) return;
-        let errors = []
+        const errors: string[] = []
 
         channelMatches.forEach(channel => {
             if (channel.Status === 'NoMatch') {
-                let parent = parentMatches.find(parent => parent.Key === channel.Key.Parent)
-                errors.push(`${parent.Name} has no match for channel ${channel.Key.Type ?? ''} ${channel.Key.Phase ?? ''}`)
+                const parent = parentMatches.find(parent => parent.Key === channel.Key.Parent)
+                errors.push(`${parent?.Name} has no match for channel ${channel.Key.Type ?? ''} ${channel.Key.Phase ?? ''}`)
             }
             if (channel.Status === 'MultipleMatches') {
-                let parent = parentMatches.find(parent => parent.Key === channel.Key.Parent)
-                errors.push(`${parent.Name} has multiple matches for channel ${channel.Key.Type ?? ''} ${channel.Key.Phase ?? ''}`)
+                const parent = parentMatches.find(parent => parent.Key === channel.Key.Parent)
+                errors.push(`${parent?.Name} has multiple matches for channel ${channel.Key.Type ?? ''} ${channel.Key.Phase ?? ''}`)
             }
 
         })
@@ -165,10 +166,10 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
         const channelHandlers = datasources.map((ds) => {
             const dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
-            const implementation: IDataSource<any, any> | null = AllSources.find(t => t.Name == dataSourceView.Type);
-            if (implementation === null)
+            const implementation: IDataSource<any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
+            if (implementation == null)
                 return Promise.resolve([]);
-            return implementation.LoadDataSetMeta(dataSourceView, selectedDataSet, ds)
+            return implementation.LoadDataSetMeta(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds)
         })
 
         Promise.all(channelHandlers).then(d => {
@@ -178,15 +179,15 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
             //Generate mapping if channels query param is set..
             if (channels != null) {
-                let chanMap: [TrenDAP.IChannelKey, string][] = JSON.parse(window.atob(channels));
+                const chanMap: [TrenDAP.IChannelKey, string][] = JSON.parse(window.atob(channels));
 
-                let parentKeys = _.uniq(chanMap.map(chan => chan[0].Parent))
-                let parentMap: [string, number][] = parentKeys.map((key, index) => {
-                    let chanID = chanMap.find(chan => chan[0].Parent === key)[1]
+                const parentKeys = _.uniq(chanMap.map(chan => chan[0].Parent))
+                const parentMap: [string, number][] = parentKeys.map((key, index) => {
+                    const chanID = chanMap.find(chan => chan[0].Parent === key)[1]
                     return [allChannels.find(chan => chan.ID === chanID).ParentID, index]
                 })
 
-                props.GenerateMapping(chanMap, parentMap, selectedDataSet, loadData());
+                props.GenerateMapping(chanMap, parentMap, selectedDataSet as TrenDAP.iDataSet, loadData());
                 //Remove Channels param from queryParams, since we dont update this param 
                 navigate(`${homePath}Workspaces/${workspaceId}/DataSet/${dataSetID}`)
             }
@@ -239,10 +240,10 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         parentMatches.forEach(parentMatch => {
             if (parentMatch.ParentID == null) return;
 
-            let availableChans = props.AllChannels.filter(chan => chan.ParentID === parentMatch.ParentID)
+            const availableChans = props.AllChannels.filter(chan => chan.ParentID === parentMatch.ParentID)
 
             channelMatches.filter(chan => chan.Status === 'NoMatch' && chan.Key.Parent === parentMatch.Key).forEach(chan => {
-                let matchedChans = availableChans.filter(available => chan.Key.Phase === available.Phase && chan.Key.Type === available.Type && chan.Key.Harmonic === available.Harmonic)
+                const matchedChans = availableChans.filter(available => chan.Key.Phase === available.Phase && chan.Key.Type === available.Type && chan.Key.Harmonic === available.Harmonic)
                 if (matchedChans.length === 1)
                     setChannelMatches(prev => [...prev.map(match => _.isEqual(match.Key, chan.Key) ? ({ ...match, ChannelID: matchedChans[0].ID, Status: 'SingleMatch' as MatchStatus }) : match)])
                 else if (matchedChans.length > 1)
@@ -267,10 +268,10 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     const loadData = () => {
         const dataHandlers = datasources.map((ds) => {
             const dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
-            const implementation: IDataSource<any, any> | null = AllSources.find(t => t.Name == dataSourceView.Type);
-            if (implementation === null)
+            const implementation: IDataSource<any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
+            if (implementation == null)
                 return Promise.resolve([] as DataSetTypes.IDataSetData[]);
-            return implementation.LoadDataSet(dataSourceView, selectedDataSet, ds)
+            return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds)
         })
 
         const loaded = Promise.all(dataHandlers).then(d => {
@@ -291,7 +292,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 Title={'Select a Data Set'}
                 CallBack={conf => {
                     if (conf)
-                        props.GenerateMapping(channelMatches.map(match => [match.Key, match.ChannelID]), parentMatches.map(match => [match.ParentID, match.Key]), selectedDataSet, loadData());
+                        props.GenerateMapping(channelMatches.map(match => [match.Key, match.ChannelID]  as [TrenDAP.IChannelKey, string]), parentMatches.map(match => [match.ParentID, match.Key] as [string, number]), selectedDataSet as TrenDAP.iDataSet, loadData());
 
                     props.SetIsModalOpen(false);
                 }}
@@ -356,11 +357,11 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                             TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                             OnClick={({ row }) => setSelectedParentKey(row.Key)}
-                                            OnSort={data => { }}
+                                            OnSort={() => { }}
                                             SortKey={''}
                                             Data={parentMatches}
                                             Ascending={false}
-                                            KeySelector={(row, index) => index}
+                                            KeySelector={(row, index) => index as number}
                                             Selected={(row) => row.Key === selectedParentKey}
                                         >
                                             <ReactTable.Column<IParentMatch>
@@ -391,7 +392,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                 Key={'Status'}
                                                 Field={'Status'}
                                                 Content={({ item }) => {
-                                                    let allMatched = channelMatches.filter(chan => chan.Key.Parent === item.Key && (chan.Status === 'NoMatch' || chan.Status === 'MultipleMatches'))
+                                                    const allMatched = channelMatches.filter(chan => chan.Key.Parent === item.Key && (chan.Status === 'NoMatch' || chan.Status === 'MultipleMatches'))
                                                     if (allMatched.length === 0)
                                                         return <ReactIcons.CheckMark Color="green" />
                                                     else
@@ -412,8 +413,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                 TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
                                                 TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
                                                 RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                                OnClick={data => { }}
-                                                OnSort={data => { }}
+                                                OnClick={() => { }}
+                                                OnSort={() => { }}
                                                 SortKey={''}
                                                 Data={parentChannelMatches}
                                                 Ascending={dataSetAscending}

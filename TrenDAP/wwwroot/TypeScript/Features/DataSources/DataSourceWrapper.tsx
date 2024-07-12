@@ -27,6 +27,8 @@ import { DataSourceTypes, TrenDAP } from '../../global';
 import { IDataSource, EnsureTypeSafety } from './Interface';
 import { AllSources } from './DataSources';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 interface IProps {
     DataSource: DataSourceTypes.IDataSourceView,
     SetErrors: (e: string[]) => void,
@@ -52,7 +54,7 @@ const DataSourceWrapper: React.FC<IProps> = (props: IProps) => {
             return props.DataSource;
         const src = _.cloneDeep(props.DataSource);
         const sourceSettings = _.cloneDeep(implementation.DefaultSourceSettings ?? {});
-        let custom = props.DataSource.Settings;
+        const custom = props.DataSource.Settings;
         for (const [k] of Object.entries(sourceSettings)) {
             if (custom.hasOwnProperty(k))
                 sourceSettings[k] = _.cloneDeep(custom[k]);

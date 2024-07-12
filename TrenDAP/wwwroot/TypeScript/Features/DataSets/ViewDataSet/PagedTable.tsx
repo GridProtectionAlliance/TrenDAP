@@ -26,6 +26,8 @@ import { TrenDAP } from '../../../global';
 import Table from '@gpa-gemstone/react-table';
 import { Pencil, Flag } from '@gpa-gemstone/gpa-symbols';
 
+//Disabling ESLint as this file needs to be reworked/removed(use gemstone paged table)
+/* eslint-disable */
 
 export default function PagedTable(props: { Data: TrenDAP.iXDATrendDataPoint[], Selected: TrenDAP.iXDATrendDataPoint,SetFlag: (record: TrenDAP.iXDATrendDataPoint ) => void}) {
     const [sortField, setSortField] = React.useState<keyof TrenDAP.iXDATrendDataPoint>('Timestamp');
@@ -58,7 +60,7 @@ export default function PagedTable(props: { Data: TrenDAP.iXDATrendDataPoint[], 
     React.useEffect(() => {
         const index = props.Data.findIndex(d => d.Timestamp === props.Selected?.Timestamp);
         if (index >= 0) {
-            let newPage = Math.floor(index / maxRowCount);
+            const newPage = Math.floor(index / maxRowCount);
             setPage(newPage);
         }
     }, [props.Selected]);

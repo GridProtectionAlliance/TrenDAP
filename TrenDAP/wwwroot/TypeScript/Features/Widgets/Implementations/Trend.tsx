@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-import { axisBottom, axisLeft, axisRight, brushX, format, line, scaleLinear, scaleUtc, select, bisector, bisect } from 'd3';
+import { axisBottom, axisLeft, axisRight, brushX, format, line, scaleLinear, scaleUtc, select, bisector } from 'd3';
 import * as React from 'react';
 import { DataSetTypes, TrenDAP } from '../../../global';
 import { WidgetTypes } from '../Interfaces';
@@ -66,12 +66,12 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
     DefaultChannelSettings: { Field: 'Average', Color: 'Red', YAxisID: -1 },
     Name: "Trend",
     WidgetUI: (props) => {
-        const plotRef = React.useRef<HTMLDivElement>(null);
+        const plotRef = React.useRef<HTMLDivElement | null>(null);
         const svgs = React.useRef<d3.Selection<SVGSVGElement, unknown, null, undefined>[]>([]);
         const margin = React.useRef<{ bottom: number, left: number, top: number, right: number }>({ bottom: 50, left: 60, top: 40, right: 60 });
         const chartActionRef = React.useRef<TrenDAP.ChartAction>('Pan');
-        const xScaleRef = React.useRef<d3.ScaleTime<number, number, never>>(null);
-        const yScalesRef = React.useRef<IYScale[]>(null);
+        const xScaleRef = React.useRef<d3.ScaleTime<number, number, never> | null>(null);
+        const yScalesRef = React.useRef<IYScale[] | null>(null);
 
         const [svgCount, setSvgCount] = React.useState<number>(0);
         const [chartAction, setChartAction] = React.useState<TrenDAP.ChartAction>('Pan');
@@ -79,7 +79,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
 
         React.useLayoutEffect(() => {
             if (plotRef.current != null) {
-                let newSize = { Height: plotRef.current.offsetHeight, Width: plotRef.current.offsetWidth }
+                const newSize = { Height: plotRef.current.offsetHeight, Width: plotRef.current.offsetWidth }
                 if (!_.isEqual(newSize, plotSize))
                     setPlotSize(newSize)
             }
@@ -112,15 +112,11 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         }, [chartAction]);
 
         function GetChannelData(channel: WidgetTypes.IWidgetData<IChannelSettings>) {
-            return props.Data.find(data => data.ID === channel.ID).SeriesData[channel.ChannelSettings.Field]
-        }
-
-        function GetDataSeriesForD3(series: WidgetTypes.IWidgetData<IChannelSettings>) {
-            return (GetChannelData(series)).map(data => [data[0], data[1]]);
+            return props.Data.find(data => data.ID === channel.ID).SeriesData[channel.ChannelSettings.Field].map(data => [data[0], data[1]]);
         }
 
         function Initialize() {
-            if (props.Data.length === 0) return;
+            if (props.Data.length === 0 || plotRef.current == null) return;
             margin.current = {
                 bottom: 50,
                 left: (props.Settings.YAxis.filter(axis => axis.Position === 'left').length == 0 ? 60 : props.Settings.YAxis.filter(axis => axis.Position === 'left').length * 75),
@@ -128,7 +124,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 right: (props.Settings.YAxis.filter(axis => axis.Position === 'right').length == 0 ? 60 : props.Settings.YAxis.filter(axis => axis.Position === 'right').length * 75)
             }
 
-            let legendWidth = props.Settings.Legend ? 200 : 0;
+            const legendWidth = props.Settings.Legend ? 200 : 0;
             const svgHeight = plotRef.current.offsetHeight / svgCount;
             const svgWidth = plotRef.current.offsetWidth - margin.current.left - margin.current.right - legendWidth;
 
@@ -145,8 +141,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             if (props.Settings.Legend)
                 margin.current.right = margin.current.right + 200;
 
-            let currentSvgSize = select(plotRef.current).node().getBoundingClientRect()
-            const sizeChanged = currentSvgSize.width !== plotRef.current.offsetWidth || currentSvgSize.height !== plotRef.current.offsetHeight
+            const currentSvgSize = select(plotRef.current)?.node()?.getBoundingClientRect()
+            const sizeChanged = currentSvgSize?.width !== plotRef.current.offsetWidth || currentSvgSize?.height !== plotRef.current.offsetHeight
 
             if (svgs.current.length !== svgCount || sizeChanged) {
                 svgs.current = [];
@@ -183,17 +179,17 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             });
         }
 
-        function InitializeSplitOnChannel(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, xScale: d3.ScaleTime<number, number>, dataIndex: number) {
+        function InitializeSplitOnChannel(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, xScale: d3.ScaleTime<number, number> | null, dataIndex: number) {
             const series = props.Data[dataIndex];
             const axis = props.Settings.YAxis.find(axis => axis.ID === series.ChannelSettings.YAxisID);
-            const yScale = yScalesRef.current.find(scale => scale.ID === axis.ID)
+            const yScale = yScalesRef.current?.find(scale => scale.ID === axis?.ID)
             AddXAxis(svg);
 
             svg.selectAll('g.yaxis').remove();
             AddYAxisLeft(axis, svg);
 
-            let lineFunc = line<number[]>().x(dd => xScale(dd[0])).y(dd => yScale.Scale(dd[1]));
-            let data = GetDataSeriesForD3(series);
+            const lineFunc = line<number[]>().x(dd => xScale(dd[0])).y(dd => yScale.Scale(dd[1]));
+            const data = GetChannelData(series);
 
             svg.selectAll("g.line").remove();
             svg.selectAll('g.line')
@@ -206,11 +202,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .attr("fill", "none")
                 .attr("stroke-width", 1.5)
                 .attr("stroke", series.ChannelSettings.Color)
-                .attr("d", (d) => {
-                    return lineFunc(data);
-
-                })
-
+                .attr("d", lineFunc(data));
             /*
             if (series.ChannelSettings.YAxis.ShowEvents) {
                 //AddEventLine(series, svg, x);
@@ -229,7 +221,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         function InitializeSplitOnAxis(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, axisIndex: number, svgCount) {
             const axis = props.Settings.YAxis[axisIndex];
             const series = props.Data.filter(s => s.ChannelSettings.YAxisID === axis.ID).map(s => {
-                let datum = GetChannelData(s);
+                const datum = GetChannelData(s);
 
                 return { ...s, Data: datum }
             });
@@ -252,8 +244,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .attr("stroke-width", 1.5)
                 .attr("stroke", (s) => s.ChannelSettings.Color)
                 .attr("d", (s) => {
-                    let lineFunc = line<number[]>().x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
-                    let data = GetDataSeriesForD3(s);
+                    const lineFunc = line<number[]>().x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
+                    const data = GetChannelData(s);
                     return lineFunc(data);
 
                 })
@@ -277,11 +269,11 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             //Create yAxis
             props.Settings.YAxis.forEach(yAxis => {
                 if (yAxis.Position === 'left') {
-                    let ind = props.Settings.YAxis.filter(axis => axis.Position === 'left').findIndex(axis => axis.ID === yAxis.ID);
+                    const ind = props.Settings.YAxis.filter(axis => axis.Position === 'left').findIndex(axis => axis.ID === yAxis.ID);
                     AddYAxisLeft(yAxis, svg, ind);
                 }
                 else {
-                    let ind = props.Settings.YAxis.filter(axis => axis.Position === 'right').findIndex(axis => axis.ID === yAxis.ID);
+                    const ind = props.Settings.YAxis.filter(axis => axis.Position === 'right').findIndex(axis => axis.ID === yAxis.ID);
                     AddYAxisRight(yAxis, svg, ind);
                 }
             });
@@ -302,9 +294,9 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .attr("stroke-width", 1.5)
                 .attr("stroke", d => d.ChannelSettings.Color)
                 .attr("d", d => {
-                    let yScale = yScalesRef.current.find(scale => d.ChannelSettings.YAxisID === scale.ID)?.Scale;
-                    let lineFunc = line<number[]>().x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
-                    let data = GetDataSeriesForD3(d);
+                    const yScale = yScalesRef.current.find(scale => d.ChannelSettings.YAxisID === scale.ID)?.Scale;
+                    const lineFunc = line<number[]>().x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
+                    const data = GetChannelData(d);
                     return lineFunc(data);
                 })
 
@@ -333,7 +325,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             legendRows.append('rect').attr('height', 20).attr('width', 20).attr('fill', d => d.ChannelSettings.Color)
             legendRows.append('text').attr('x', 30).attr('y', 15)
                 .text(function (s) {
-                    let name = s.Name
+                    const name = s.Name
                     if (name.length > 15)
                         return name.slice(0, 15) + '...';
                     else
@@ -371,27 +363,29 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             const svgHeight = parseInt(svg.attr('height'));
 
             svg.selectAll('g.xaxis').remove();
-            const xAxis = svg.append("g").classed('xaxis', true)
+            //Create xAxis
+            svg.append("g").classed('xaxis', true)
                 .attr("transform", "translate(0," + (svgHeight - margin.current.bottom) + ")")
                 .call(axisBottom(xScaleRef.current))
-
+            
+                //Add label
             svg.append("g").classed('xaxis', true).append("text")
                 .style("text-anchor", "middle")
                 .attr("transform", "translate(" + (svgWidth / 2) + "," + (svgHeight - margin.current.bottom / 3) + ")")
                 .text("Time")
-
         }
 
         function AddYAxisLeft(axis: TrenDAP.IYAxis, svg, index: number = 0) {
-            const svgWidth = parseInt(svg.attr('width'));
             const svgHeight = parseInt(svg.attr('height'));
             const yScale = yScalesRef.current.find(a => a.ID === axis.ID).Scale
 
-            const yAxis = svg.append("g").classed('yaxis', true)
+            //Create yAxis
+            svg.append("g").classed('yaxis', true)
                 .attr("transform", "translate(" + (margin.current.left - index * 60) + ",0)")
                 .call(axisLeft(yScale).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => format("~s")(value)));
 
-            const text = svg.append("g")
+            //Add Label
+            svg.append("g")
                 .classed('yaxis', true)
                 .append("text")
                 .text(axis.Label)
@@ -404,11 +398,13 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             const svgHeight = parseInt(svg.attr('height'));
             const yScale = yScalesRef.current.find(a => a.ID === axis.ID).Scale
 
-            const yAxis = svg.append("g").classed('yaxis', true)
+            //Add yAxis
+            svg.append("g").classed('yaxis', true)
                 .attr('transform', `translate(${svgWidth - margin.current.right + index * 60}, 0)`)
                 .call(axisRight(yScale).ticks(Math.floor(svgHeight / 50) + 1).tickFormat((value: number) => format("~s")(value)));
 
-            const text = svg.append("g")
+            //Add Label
+            svg.append("g")
                 .classed('yaxis', true)
                 .append("text")
                 .text(axis.Label)
@@ -417,8 +413,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         }
 
         function GetXScale() {
-            let d = props.Data.map(channel => GetDataSeriesForD3(channel))
-            let dd = [].concat(...d)
+            const d = props.Data.map(channel => GetChannelData(channel))
+            const dd = [].concat(...d)
             let xMax = Math.max(...dd.map(dp => dp[0]));
             let xMin = Math.min(...dd.map(dp => dp[0]));
             if (!props.Settings.AutoXScale) {
@@ -434,8 +430,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         function GetYScale(axis: TrenDAP.IYAxis, svgCount) {
             const svgHeight = plotRef.current.offsetHeight / svgCount;
 
-            let d = props.Data.filter(s => s.ChannelSettings.YAxisID === axis.ID).map(s => GetDataSeriesForD3(s))
-            let dd = [].concat(...d)
+            const d = props.Data.filter(s => s.ChannelSettings.YAxisID === axis.ID).map(s => GetChannelData(s))
+            const dd = [].concat(...d)
             let yMax = Math.max(...dd.map(dp => dp[1]));
             let yMin = Math.min(...dd.map(dp => dp[1]));
             if (!axis.AutoMinScale)
@@ -481,7 +477,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             svg.append('g')
                 .classed('mouse-over2', true)
                 .append('path')
-                .attr("d", d => `M 0 0 V ${height - margin.current.bottom - margin.current.top}`)
+                .attr("d", `M 0 0 V ${height - margin.current.bottom - margin.current.top}`)
                 .attr("transform", `translate(${evt.offsetX},${margin.current.top})`)
                 .attr('stroke', 'grey')
 
@@ -509,7 +505,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     .attr('width', '1em')
                     .attr('fill', series.ChannelSettings.Color);
 
-                let ds = GetChannelData(series);
+                const ds = GetChannelData(series);
 
                 // Get the corresponding date for the clicked position
                 const clickedDate = xScaleRef.current.invert(evt.offsetX);
@@ -571,11 +567,11 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         return (
             <div className="d-flex h-100 flex-column" ref={plotRef} style={{ userSelect: 'none' }}>
                 <div className="d-flex align-items-center" style={{ position: 'absolute', zIndex: 1010 }}>
-                        <button className='btn btn-light' onClick={HandleReset}>
-                            Reset Limits
-                        </button>
-                        <RadioButtons Record={{ chartAction }} Field="chartAction" Label="" Setter={(record) => setChartAction(record.chartAction)} Options={[{ Label: 'Pan', Value: 'Pan'}, { Label: 'ZoomX', Value: 'ZoomX' }, { Label: 'Click', Value: 'Click' }]} />
-                    </div>
+                    <button className='btn btn-light' onClick={HandleReset}>
+                        Reset Limits
+                    </button>
+                    <RadioButtons Record={{ chartAction }} Field="chartAction" Label="" Setter={(record) => setChartAction(record.chartAction)} Options={[{ Label: 'Pan', Value: 'Pan' }, { Label: 'ZoomX', Value: 'ZoomX' }, { Label: 'Click', Value: 'Click' }]} />
+                </div>
             </div>
         );
     },
@@ -624,7 +620,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 </div>
                 <div className="col-6 d-flex align-items-center justify-content-end">
                     <button className='btn btn-primary' onClick={() => {
-                        let maxID = props.Settings.YAxis.reduce((max, current) => {
+                        const maxID = props.Settings.YAxis.reduce((max, current) => {
                             return current.ID > max ? current.ID : max
                         }, 0)
                         props.SetSettings({
@@ -657,7 +653,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                             AllowSort={true}
                             Field={'Label'}
                             Content={({ item }) =>
-                                <Input<TrenDAP.IYAxis> Label="" Field='Label' Record={item} Type='text' Valid={(field) => true}
+                                <Input<TrenDAP.IYAxis> Label="" Field='Label' Record={item} Type='text' Valid={() => true}
                                     Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
                             }
                         >
@@ -680,7 +676,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                             Field={'Min'}
                             Content={({ item }) =>
                                 <>
-                                    <Input<TrenDAP.IYAxis> Label="" Field='Min' Record={item} Type='number' Disabled={item.AutoMinScale} Valid={(field) => true}
+                                    <Input<TrenDAP.IYAxis> Label="" Field='Min' Record={item} Type='number' Disabled={item.AutoMinScale} Valid={() => true}
                                         Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
                                     <ToggleSwitch<TrenDAP.IYAxis> Field="AutoMinScale" Label="Use Data" Record={item}
                                         Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
@@ -695,7 +691,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                             Field={'Max'}
                             Content={({ item }) =>
                                 <>
-                                    <Input<TrenDAP.IYAxis> Label="" Field='Max' Record={item} Type='number' Disabled={item.AutoMaxScale} Valid={(field) => true}
+                                    <Input<TrenDAP.IYAxis> Label="" Field='Max' Record={item} Type='number' Disabled={item.AutoMaxScale} Valid={() => true}
                                         Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
                                     <ToggleSwitch<TrenDAP.IYAxis> Field="AutoMaxScale" Label="Use Data" Record={item}
                                         Setter={(record) => { props.SetSettings({ ...props.Settings, YAxis: props.Settings.YAxis.map(axis => axis.ID === record.ID ? record : axis) }) }} />
@@ -744,8 +740,9 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                     SortKey={sortField}
                     OnClick={(item) => {
-                        const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID);
-                        if (isSelected ?? false)
+                        const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID) != null;
+
+                        if (isSelected)
                             props.RemoveChannel(item.row.ID);
                         else {
                             const exisitingAxis = props.Settings.YAxis.find(axis => axis.Type === item.row.Type)
@@ -766,7 +763,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                             props.AddChannel(item.row.ID, { ...TrendWidget.DefaultChannelSettings, YAxisID: yAxisID });
                         }
                     }}
-                    OnSort={data => sort(data.colField, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
+                    OnSort={data => sort(data.colField as keyof DataSetTypes.IDataSetMetaData, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
                     Data={allChannels}
                     Ascending={ascending}
                     KeySelector={(row) => row.ID}
@@ -853,7 +850,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         Content={({ item }) =>
                             <>
                                 <Select<IChannelSettings> Label="" Record={item.ChannelSettings} Field="YAxisID" Options={props.Settings.YAxis.map(axis => { return { Label: `${axis.Label}`, Value: `${axis.ID}` } })}
-                                    Setter={(record) => props.SetChannelSettings(item.Key, { ...item.ChannelSettings, YAxisID: parseInt(record.YAxisID as any) })} />
+                                    Setter={(record) => props.SetChannelSettings(item.Key, { ...item.ChannelSettings, YAxisID: parseInt(record.YAxisID as unknown as string) })} />
                             </>
                         }
                     >

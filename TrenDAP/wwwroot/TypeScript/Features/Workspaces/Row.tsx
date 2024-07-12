@@ -26,7 +26,7 @@ import { TrenDAP, DataSetTypes } from './../../global';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ToolTip, Modal, Warning } from '@gpa-gemstone/react-interactive';
 import WidgetWrapper from '../Widgets/WidgetWrapper';
-import { Input, CheckBox, InputWithButton } from '@gpa-gemstone/react-forms';
+import { Input, CheckBox } from '@gpa-gemstone/react-forms';
 import { CreateGuid } from '@gpa-gemstone/helper-functions';
 import { SelectEditMode } from '../../Store/GeneralSettingsSlice';
 import { useAppSelector } from '../../hooks';
@@ -78,9 +78,9 @@ const Row: React.FunctionComponent<IProps> = (props) => {
     }, [props.ShowHeader, editMode])
 
     const HandleAddObject = (type) => {
-        let row: IProps = { ...props, UpdateRow: undefined, RemoveRow: undefined };
-        let totalWidth = row.Widgets.reduce((sum, widget) => sum + widget.Width, 0);
-        let remainingWidth = 100 - totalWidth;
+        let row: IProps = { ...props };
+        const totalWidth = row.Widgets.reduce((sum, widget) => sum + widget.Width, 0);
+        const remainingWidth = 100 - totalWidth;
 
         if (remainingWidth > 5)
             row.Widgets.push(CreateWidget(type, remainingWidth));
@@ -93,8 +93,8 @@ const Row: React.FunctionComponent<IProps> = (props) => {
     }
 
     const distributeWidgetWidth = (row: IProps, addedWidgetIndex: number): IProps => {
-        let updatedRow = { ...row }
-        let totalWidth = updatedRow.Widgets.reduce((sum, widget) => sum + widget.Width, 0);
+        const updatedRow = { ...row }
+        const totalWidth = updatedRow.Widgets.reduce((sum, widget) => sum + widget.Width, 0);
         if (totalWidth <= 100) return updatedRow;
 
         let excessWidth = totalWidth - 100;
@@ -106,7 +106,7 @@ const Row: React.FunctionComponent<IProps> = (props) => {
 
                 const currentWidget = updatedRow.Widgets[i];
                 if (currentWidget.Width > 5) {
-                    let reduction = Math.min(currentWidget.Width - 5, excessWidth);
+                    const reduction = Math.min(currentWidget.Width - 5, excessWidth);
                     currentWidget.Width -= reduction;
                     excessWidth -= reduction;
                 }
@@ -156,14 +156,14 @@ const Row: React.FunctionComponent<IProps> = (props) => {
                             ChannelMap={props.ChannelMap}
                             ParentMap={props.ParentMap}
                             UpdateWidget={(newRecord) => {
-                                let row = { ...props };
-                                let widget = { ...newRecord };
+                                const row = { ...props };
+                                const widget = { ...newRecord };
                                 row.Widgets[index] = widget;
                                 distributeWidgetWidth(row, index)
                                 props.UpdateRow({ Height: row.Height, Widgets: row.Widgets, Label: row.Label, ShowHeader: row.ShowHeader });
                             }}
                             RemoveWidget={() => {
-                                let row = { ...props };
+                                const row = { ...props };
                                 row.Widgets.splice(index, 1);
                                 props.UpdateRow({ Height: row.Height, Widgets: row.Widgets, Label: row.Label, ShowHeader: row.ShowHeader });
                             }}
@@ -210,11 +210,11 @@ const Row: React.FunctionComponent<IProps> = (props) => {
                         <li className='list-group-item' key={i}>
                             <div className="row">
                                 <div className='col-4 d-flex align-items-center'>
-                                    {widget?.Label == null || '' ? `Widget ${i + 1}` : widget.Label}
+                                    {widget?.Label == null || widget?.Label == '' ? `Widget ${i + 1}` : widget.Label}
                                 </div>
                                 <div className='col-4 d-flex align-items-center justify-content-center'>
                                     <Input<TrenDAP.IWidgetModel> Record={widget} Label="Width (%)" Field="Width" Type="integer" Valid={(field) => isPercent(widget[field])} Setter={(item) => {
-                                        let row = _.cloneDeep(settings);
+                                        const row = _.cloneDeep(settings);
                                         row.Widgets[i].Width = item.Width;
                                         setSettings({ ...settings, Widgets: row.Widgets })
                                     }} />
@@ -222,7 +222,7 @@ const Row: React.FunctionComponent<IProps> = (props) => {
                                 <div className='col-4 d-flex align-items-center justify-content-center'>
                                     <button className='btn btn-link' disabled={i <= 0} onClick={() => {
                                         //for arrow up and down I will need to think about how to visually show them moving but not make the changes they save..
-                                        let row = _.cloneDeep(settings);
+                                        const row = _.cloneDeep(settings);
                                         if (i <= 0) return;
                                         const newIndex = i - 1;
                                         const a = row.Widgets[newIndex];
@@ -232,7 +232,7 @@ const Row: React.FunctionComponent<IProps> = (props) => {
                                         setSettings({ ...settings, Widgets: row.Widgets })
                                     }}><ReactIcons.ArrowDropUp /></button>
                                     <button className='btn btn-link' disabled={i >= props.Widgets.length - 1} onClick={() => {
-                                        let row = _.cloneDeep(settings);
+                                        const row = _.cloneDeep(settings);
                                         if (i >= row.Widgets.length - 1) return;
                                         const newIndex = i + 1;
                                         const a = row.Widgets[newIndex];
@@ -242,7 +242,7 @@ const Row: React.FunctionComponent<IProps> = (props) => {
                                         setSettings({ ...settings, Widgets: row.Widgets })
                                     }}><ReactIcons.ArrowDropDown /></button>
                                     <button className='btn btn-link' onClick={() => {
-                                        let row = _.cloneDeep(settings);
+                                        const row = _.cloneDeep(settings);
                                         row.Widgets.splice(i, 1);
                                         setSettings({ ...settings, Widgets: row.Widgets })
                                     }}><ReactIcons.TrashCan Color='red' /></button>

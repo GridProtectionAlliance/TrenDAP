@@ -41,7 +41,7 @@ const EventSource: React.FunctionComponent<IProps> = (props: IProps) => {
         if (implementation == null)
             return {};
         const s = _.cloneDeep(implementation.DefaultSourceSettings ?? {});
-        let custom = props.EventSource.Settings;
+        const custom = props.EventSource.Settings;
 
         for (const [k] of Object.entries(implementation?.DefaultSourceSettings ?? {})) {
             if (custom.hasOwnProperty(k))

@@ -28,23 +28,23 @@ import moment from 'moment';
 import $ from 'jquery';
 
 // #region [ Thunks ]
-export const FetchWorkSpaces = createAsyncThunk('WorkSpaces/FetchWorkSpaces', async (_, { dispatch }) => {
+export const FetchWorkSpaces = createAsyncThunk('WorkSpaces/FetchWorkSpaces', async () => {
     return await GetWorkSpaces();
 });
 
-export const AddWorkSpace = createAsyncThunk('WorkSpaces/AddWorkSpace', async (workSpace: TrenDAP.iWorkSpace, { dispatch }) => {
+export const AddWorkSpace = createAsyncThunk('WorkSpaces/AddWorkSpace', async (workSpace: TrenDAP.iWorkSpace) => {
     return await PostWorkSpace(workSpace);
 });
 
-export const RemoveWorkSpace = createAsyncThunk('WorkSpaces/RemoveWorkSpace', async (workSpace: TrenDAP.iWorkSpace, { dispatch }) => {
+export const RemoveWorkSpace = createAsyncThunk('WorkSpaces/RemoveWorkSpace', async (workSpace: TrenDAP.iWorkSpace) => {
     return await DeleteWorkSpace(workSpace);
 });
 
-export const UpdateWorkSpace = createAsyncThunk('WorkSpaces/UpdateWorkSpace', async (workSpace: TrenDAP.iWorkSpace, { dispatch }) => {
+export const UpdateWorkSpace = createAsyncThunk('WorkSpaces/UpdateWorkSpace', async (workSpace: TrenDAP.iWorkSpace) => {
     return await PatchWorkSpace(workSpace);
 });
 
-export const OpenCloseWorkSpace = createAsyncThunk('WorkSpaces/OpenCloseWorkSpace', async (req: { workSpace: TrenDAP.iWorkSpace, open: boolean }, { dispatch }) => {
+export const OpenCloseWorkSpace = createAsyncThunk('WorkSpaces/OpenCloseWorkSpace', async (req: { workSpace: TrenDAP.iWorkSpace, open: boolean }) => {
     return await OCWorkSpace(req.workSpace, req.open);
 });
 
@@ -63,7 +63,7 @@ export const WorkSpacesSlice = createSlice({
     reducers: {
         Sort: (state, action) => {
             if (state.SortField === action.payload.SortField)
-                state.Ascending = !action.payload.Ascending;
+                state.Ascending = !(action.payload.Ascending as boolean);
             else
                 state.SortField = action.payload.SortField;
 
@@ -81,59 +81,59 @@ export const WorkSpacesSlice = createSlice({
             state.Data = sorted;
 
         });
-        builder.addCase(FetchWorkSpaces.pending, (state, action) => {
+        builder.addCase(FetchWorkSpaces.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(FetchWorkSpaces.rejected, (state, action) => {
             state.Status = 'error';
-            state.Error = action.error.message;
+            state.Error = (action.error.message == null ? '' : action.error.message);
 
         });
-        builder.addCase(AddWorkSpace.pending, (state, action) => {
+        builder.addCase(AddWorkSpace.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(AddWorkSpace.rejected, (state, action) => {
             state.Status = 'error';
-            state.Error = action.error.message;
+            state.Error = (action.error.message == null ? '' : action.error.message);
 
         });
-        builder.addCase(AddWorkSpace.fulfilled, (state, action) => {
+        builder.addCase(AddWorkSpace.fulfilled, (state) => {
             state.Status = 'changed';
             state.Error = null;
         });
-        builder.addCase(RemoveWorkSpace.pending, (state, action) => {
+        builder.addCase(RemoveWorkSpace.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(RemoveWorkSpace.rejected, (state, action) => {
             state.Status = 'error';
-            state.Error = action.error.message;
+            state.Error = (action.error.message == null ? '' : action.error.message);
 
         });
-        builder.addCase(RemoveWorkSpace.fulfilled, (state, action) => {
+        builder.addCase(RemoveWorkSpace.fulfilled, (state) => {
             state.Status = 'changed';
             state.Error = null;
         });
-        builder.addCase(UpdateWorkSpace.pending, (state, action) => {
+        builder.addCase(UpdateWorkSpace.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(UpdateWorkSpace.rejected, (state, action) => {
             state.Status = 'error';
-            state.Error = action.error.message;
+            state.Error = (action.error.message == null ? '' : action.error.message);
 
         });
-        builder.addCase(UpdateWorkSpace.fulfilled, (state, action) => {
+        builder.addCase(UpdateWorkSpace.fulfilled, (state) => {
             state.Status = 'changed';
             state.Error = null;
         });
-        builder.addCase(OpenCloseWorkSpace.pending, (state, action) => {
+        builder.addCase(OpenCloseWorkSpace.pending, (state) => {
             state.Status = 'loading';
         });
         builder.addCase(OpenCloseWorkSpace.rejected, (state, action) => {
             state.Status = 'error';
-            state.Error = action.error.message;
+            state.Error = (action.error.message == null ? '' : action.error.message);
 
         });
-        builder.addCase(OpenCloseWorkSpace.fulfilled, (state, action) => {
+        builder.addCase(OpenCloseWorkSpace.fulfilled, (state) => {
             state.Status = 'changed';
             state.Error = null;
         });
@@ -147,11 +147,11 @@ export const WorkSpacesSlice = createSlice({
 export const { Sort } = WorkSpacesSlice.actions;
 export default WorkSpacesSlice.reducer; 
 export const SelectWorkSpaces = (state: Redux.StoreState) => state.WorkSpaces.Data;
-export const SelectWorkSpaceByID = createSelector((state: Redux.StoreState) => state.WorkSpaces.Data, (_,id: number) => id, (ws, id) => ws.find(ds => ds.ID === id));
+export const SelectWorkSpaceByID = createSelector((state: Redux.StoreState) => state.WorkSpaces.Data, (_,id: number) => id, (workspaces: TrenDAP.iWorkSpace[], id) => workspaces.find(ds => ds.ID === id));
 export const SelectNewWorkSpace = (): TrenDAP.iWorkSpace => ({ ID: 0, Name: '',  User: '', JSON: '', JSONString: '', Public: false, UpdatedOn: '' });
 export const SelectWorkSpacesStatus = (state: Redux.StoreState) => state.WorkSpaces.Status;
-export const SelectWorkSpacesForUser = createSelector((state: Redux.StoreState) => state.WorkSpaces.Data, (_, user: string) => user, (ws, user) => ws.filter(w => w.User === user));
-export const SelectWorkSpacesAllPublicNotUser = createSelector((state: Redux.StoreState) => state.WorkSpaces.Data, (_, user: string) => user, (workspaces, user) => workspaces.filter(ws => ws.Public && ws.User !== user));
+export const SelectWorkSpacesForUser = createSelector((state: Redux.StoreState) => state.WorkSpaces.Data, (_, user: string) => user, (workspaces: TrenDAP.iWorkSpace[], user) => workspaces.filter(w => w.User === user));
+export const SelectWorkSpacesAllPublicNotUser = createSelector((state: Redux.StoreState) => state.WorkSpaces.Data, (_, user: string) => user, (workspaces: TrenDAP.iWorkSpace[], user) => workspaces.filter(ws => ws.Public && ws.User !== user));
 export const SelectWorkSpacesSortField = (state: Redux.StoreState) => state.WorkSpaces.SortField;
 export const SelectWorkSpacesAscending = (state: Redux.StoreState) => state.WorkSpaces.Ascending;
 

@@ -35,7 +35,7 @@ import { useNavigate } from "react-router-dom";
 
 type Hover = ('Pencil' | 'Clone' | 'Delete' | 'None')
 
-const DataSets: React.FunctionComponent = (props: {}) => {
+const DataSets: React.FC = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const DataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
