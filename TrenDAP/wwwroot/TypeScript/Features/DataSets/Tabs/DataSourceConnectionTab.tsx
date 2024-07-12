@@ -144,8 +144,7 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                                 RowStyle={{ width: 'auto' }}
                                 Content={row =>
                                     <span>
-                                        <button className="btn" onClick={(evt) => { setCurrentIndex(row.index); evt.preventDefault(); }}>{Pencil}</button>
-                                        <button className="btn" onClick={(evt) => {
+                                        <button className="btn pull-right" onClick={(evt) => {
                                             evt.preventDefault();
                                             evt.stopPropagation();
                                             const newConns = [...props.DataSourceConnections];
@@ -161,21 +160,15 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                     </div>
                 </div>
             </div>
-            <div className="col-8" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-                <div className="container-fluid d-flex h-100 flex-column" style={{ padding: 0 }}>
-                    <div className={'row'} style={{ flex: 1, overflow: 'hidden' }}>
-                        <div className={'col-12'} style={{ height: '100%', overflow: 'hidden' }}>
-                            {props.DataSourceConnections[currentIndex] != null ?
-                                <DataSourceWrapper DataSource={dataSource} Connection={props.DataSourceConnections[currentIndex]}
-                                    DataSet={props.DataSet} SetErrors={addWrapperErrors}
-                                    SetConnection={newConn => {
-                                        const newConns = [...props.DataSourceConnections];
-                                        newConns.splice(currentIndex, 1, newConn)
-                                        props.SetDataSourceConnections(newConns);
-                                    }} /> : <></>}
-                        </div>
-                    </div>
-                </div>
+            <div className="col-8 d-none d-xl-flex" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                {props.DataSourceConnections[currentIndex] != null ?
+                    <DataSourceWrapper DataSource={dataSource} Connection={props.DataSourceConnections[currentIndex]}
+                        DataSet={props.DataSet} SetErrors={addWrapperErrors}
+                        SetConnection={newConn => {
+                            const newConns = [...props.DataSourceConnections];
+                            newConns.splice(currentIndex, 1, newConn)
+                            props.SetDataSourceConnections(newConns);
+                        }} /> : <></>}
             </div>
         </div>
     );

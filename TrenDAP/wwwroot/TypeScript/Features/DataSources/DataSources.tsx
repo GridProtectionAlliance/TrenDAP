@@ -40,9 +40,9 @@ export const AllSources: IDataSource<any, any>[] = [XDADataSource, SapphireDataS
 
 const DataSources: React.FunctionComponent = () => {
     return (
-        <div className="row">
-            <div className="col-6">
-                <div className="card">
+        <div className="container-fluid d-flex h-100 flex-row" style={{ height: 'inherit', padding: '0 0 0 0' }}>
+            <div className="col-8" style={{ padding: '0 20px 0 0' }}>
+                <div className="card" style={{ width: '100%', height: '100%' }}>
                     <div className="card-header">
                         <div className="row">
                             <div className="d-flex col-6 justify-content-start">
@@ -58,8 +58,8 @@ const DataSources: React.FunctionComponent = () => {
                     </div>
                 </div>
             </div>
-            <div className="col-6">
-                <div className="card">
+            <div className="col-4" style={{ padding: '0 0 0 0' }}>
+                <div className="card" style={{ width: '100%', height: '100%' }}>
                     <div className="card-header"><h4>Shared Datasources</h4></div>
                     <div className="card-body">
                         <DataSourceTable OwnedByUser={false} />
@@ -97,40 +97,44 @@ const DataSourceTable = React.memo((props: ITableProps) => {
 
     return (
         <>
-        <ReactTable.Table<DataSourceTypes.IDataSourceView>
-            TableClass="table table-hover"
-            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
-            TbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: window.innerHeight - 215, height: window.innerHeight - 215, width: '100%' }}
-            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-            // Small note: ReactTable gives the key as sort, but here we wanna use field. This is not an issue if they match.
-            SortKey={sortField}
-            OnClick={() => { }}
-            OnSort={data => {
-                if (data.colKey === sortField) setAscending(s => !s);
-                else setSortField(data.colKey);
-            }}
-            Data={dataSources}
-            KeySelector={source => source.ID}
-            Ascending={ascending}>
-            <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
-            <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'Type'} Field={'Type'}>Type</ReactTable.Column>
-            {
-                props.OwnedByUser ?
-                    <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}
-                        Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</ReactTable.Column>
-                    : <></>
-            }
-            {
-                props.OwnedByUser ?
-                    <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Delete'} Field={'Public'}
-                        Content={row =>
-                            <span>
-                                <EditDataSource DataSource={row.item}/>
-                                <button className="btn" onClick={() => setDeleteItem(row.item)}>{TrashCan}</button>
-                            </span>}
-                    ><></></ReactTable.Column>
-                    : <></>
-            }
+            <ReactTable.Table<DataSourceTypes.IDataSourceView>
+                TableClass="table table-hover"
+                TableStyle={{
+                    padding: 0, width: 'calc(100%)', height: '100%',
+                    tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
+                }}
+                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                // Small note: ReactTable gives the key as sort, but here we wanna use field. This is not an issue if they match.
+                SortKey={sortField}
+                OnClick={() => { }}
+                OnSort={data => {
+                    if (data.colKey === sortField) setAscending(s => !s);
+                    else setSortField(data.colKey);
+                }}
+                Data={dataSources}
+                KeySelector={source => source.ID}
+                Ascending={ascending}>
+                <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
+                <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'Type'} Field={'Type'}>Type</ReactTable.Column>
+                {
+                    props.OwnedByUser ?
+                        <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}
+                            Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</ReactTable.Column>
+                        : <></>
+                }
+                {
+                    props.OwnedByUser ?
+                        <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Delete'} Field={'Public'}
+                            Content={row =>
+                                <span>
+                                    <EditDataSource DataSource={row.item}/>
+                                    <button className="btn" onClick={() => setDeleteItem(row.item)}>{TrashCan}</button>
+                                </span>}
+                        ><></></ReactTable.Column>
+                        : <></>
+                }
             </ReactTable.Table>
             <Warning Title={'Delete ' + deleteItem?.Name} Show={deleteItem != null} Message={"This will remove the DataSource and can not be undone."}
                 CallBack={(c) => {

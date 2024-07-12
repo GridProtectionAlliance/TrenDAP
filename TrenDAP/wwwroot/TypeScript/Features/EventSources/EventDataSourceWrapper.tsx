@@ -66,16 +66,14 @@ const EventDataSourceWrapper: React.FunctionComponent<IProps> = (props: IProps) 
         return src;
     }, [props.EventDataSource]);
 
-    return (
-        <div className={"tab-pane container active"}>
-            {implementation != null ? <implementation.DataSetUI
-                EventSource={eventSource}
-                DataSet={props.DataSet}
-                SetErrors={props.SetErrors}
-                Settings={settings}
-                SetSettings={(s) => props.SetConnection({ ...props.Connection, Settings: s })} /> : <></>}
-        </div>
-    );
+    if (implementation == null) return <></>;
+
+    return <implementation.DataSetUI
+        EventSource={eventSource}
+        DataSet={props.DataSet}
+        SetErrors={props.SetErrors}
+        Settings={settings}
+        SetSettings={(s) => props.SetConnection({ ...props.Connection, Settings: s })} />
 }
 
 export default EventDataSourceWrapper;

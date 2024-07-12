@@ -42,9 +42,9 @@ const ByEventSources: React.FunctionComponent = () => {
     const [showEdit, setShowEdit] = React.useState<boolean>(false);
 
     return (
-        <div className="row">
-            <div className="col-6">
-                <div className="card">
+        <div className="container-fluid d-flex h-100 flex-row" style={{ height: 'inherit', padding: '0 0 0 0' }}>
+            <div className="col-8" style={{ padding: '0 20px 0 0' }}>
+                <div className="card" style={{ width: '100%', height: '100%' }}>
                     <div className="card-header">
                         <div className="row">
                             <div className="d-flex col-6 justify-content-start">
@@ -73,8 +73,8 @@ const ByEventSources: React.FunctionComponent = () => {
                     </div>
                 </div>
             </div>
-            <div className="col-6">
-                <div className="card">
+            <div className="col-4" style={{ padding: '0 0 0 0' }}>
+                <div className="card" style={{ width: '100%', height: '100%' }}>
                     <div className="card-header"><h4>Shared Event Data Sources</h4></div>
                     <div className="card-body" style={{ overflow: "hidden" }}>
                         <EventSourceTable OwnedByUser={false} SetEventSource={setEditEvt} SetShowEdit={setShowEdit} SetShowDelete={setShowDelete} />
@@ -122,46 +122,44 @@ const EventSourceTable = React.memo((props: ITableProps) => {
     }, [sortField, ascending, allEventSources, props.OwnedByUser]);
 
     return (
-        <div className="container-fluid d-flex h-100 flex-column">
-            <ReactTable.Table<EventSourceTypes.IEventSourceView>
-                TableClass="table table-hover"
-                TableStyle={{
-                    padding: 0, width: 'calc(100%)', height: '100%',
-                    tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
-                }}
-                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
-                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                SortKey={sortField}
-                OnClick={() => { }}
-                OnSort={data => {
-                    if (data.colKey === sortField) setAscending(s => !s);
-                    else setSortField(data.colKey);
-                }}
-                Data={eventSources}
-                KeySelector={source => source.ID}
-                Ascending={ascending}>
-                <ReactTable.Column<EventSourceTypes.IEventSourceView> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
-                <ReactTable.Column<EventSourceTypes.IEventSourceView> Key={'Type'} Field={'Type'}>Type</ReactTable.Column>
-                {
-                    props.OwnedByUser ?
-                        <ReactTable.Column<EventSourceTypes.IEventSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}
-                            Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</ReactTable.Column>
-                        : <></>
-                }
-                {
-                    props.OwnedByUser ?
-                        <ReactTable.Column<EventSourceTypes.IEventSourceView> AllowSort={false} Key={'Delete'} Field={'Public'}
-                            Content={row =>
-                                <span>
-                                    <button className="btn" onClick={() => { props.SetEventSource(row.item); props.SetShowEdit(true); }}>{Pencil}</button>
-                                    <button className="btn" onClick={() => { props.SetEventSource(row.item); props.SetShowDelete(true); }}>{TrashCan}</button>
-                                </span>}
-                        ><></></ReactTable.Column>
-                        : <></>
-                }
-            </ReactTable.Table>
-        </div>
+        <ReactTable.Table<EventSourceTypes.IEventSourceView>
+            TableClass="table table-hover"
+            TableStyle={{
+                padding: 0, width: 'calc(100%)', height: '100%',
+                tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
+            }}
+            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+            SortKey={sortField}
+            OnClick={() => { }}
+            OnSort={data => {
+                if (data.colKey === sortField) setAscending(s => !s);
+                else setSortField(data.colKey);
+            }}
+            Data={eventSources}
+            KeySelector={source => source.ID}
+            Ascending={ascending}>
+            <ReactTable.Column<EventSourceTypes.IEventSourceView> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
+            <ReactTable.Column<EventSourceTypes.IEventSourceView> Key={'Type'} Field={'Type'}>Type</ReactTable.Column>
+            {
+                props.OwnedByUser ?
+                    <ReactTable.Column<EventSourceTypes.IEventSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}
+                        Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</ReactTable.Column>
+                    : <></>
+            }
+            {
+                props.OwnedByUser ?
+                    <ReactTable.Column<EventSourceTypes.IEventSourceView> AllowSort={false} Key={'Delete'} Field={'Public'}
+                        Content={row =>
+                            <span>
+                                <button className="btn" onClick={() => { props.SetEventSource(row.item); props.SetShowEdit(true); }}>{Pencil}</button>
+                                <button className="btn" onClick={() => { props.SetEventSource(row.item); props.SetShowDelete(true); }}>{TrashCan}</button>
+                            </span>}
+                    ><></></ReactTable.Column>
+                    : <></>
+            }
+        </ReactTable.Table>
     );
 });
 
