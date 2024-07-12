@@ -2,13 +2,10 @@
 // Please do not change this file!
 interface CssExports {
   'main-window': string;
-  'navbarbuttons': string;
-  'row-controls': string;
   'sidebar': string;
   'sidebar-heading': string;
   'sidebar-sticky': string;
   'tab-content': string;
-  'triangle': string;
   'widgit-controls': string;
   'widgit-label': string;
   'workspacetab': string;

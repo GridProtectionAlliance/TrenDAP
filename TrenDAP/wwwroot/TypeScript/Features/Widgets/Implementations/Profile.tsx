@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Store.ts - Gbtc
+//  Text.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,34 +16,29 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/09/2020 - Billy Ernest
+//  11/16/2020 - Billy Ernest
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-import { configureStore } from '@reduxjs/toolkit';
-import DataSourcesReducuer from '../Features/DataSources/DataSourcesSlice';
-import EventSourcesReducuer from '../Features/EventSources/Slices/EventSourcesSlice';
-import WorkSpaceReducer from '../Features/Workspaces/WorkspacesSlice';
-import DataSetReducer from '../Features/DataSets/DataSetsSlice';
-import OpenXDAReducer from '../Features/OpenXDA/OpenXDASlice';
-import OpenHistorianReducer from '../Features/OpenHistorian/OpenHistorianSlice';
-import SapphireReducer from '../Features/Sapphire/SapphireSlice';
-import GeneralSettingsReducer from './GeneralSettingsSlice';
+import * as React from 'react';
+import { WidgetTypes } from '../Interfaces';
 
-//Dispatch and Selector Typed
-export type AppDispatch = typeof store.dispatch;
-export type RootState = ReturnType<typeof store.getState>
-const reducer = {
-    DataSets: DataSetReducer,
-    WorkSpaces: WorkSpaceReducer,
-    DataSources: DataSourcesReducuer,
-    OpenXDA: OpenXDAReducer,
-    OpenHistorian: OpenHistorianReducer,
-    Sapphire: SapphireReducer,
-    EventSources: EventSourcesReducuer,
-    GeneralSettings: GeneralSettingsReducer
+interface IProps { }
+
+export const ProfileWidget: WidgetTypes.IWidget<IProps,any> = {
+    DefaultSettings: null,
+    Name: "Profile",
+    DefaultChannelSettings: null,
+    WidgetUI: () => {
+        return <>
+        </>
+    },
+    SettingsUI: () => {
+        return <>
+        </>
+    },
+    ChannelSelectionUI: (props) => {
+        return <></>
+    }
 }
-
-const store = configureStore({ reducer });
-export default store;

@@ -67,7 +67,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                 <button className="btn btn-primary pull-right"
                                     onClick={() => {
                                         dispatch(New({}));
-                                        navigate(`${homePath}EditDataSet/-1`);
+                                        navigate(`${homePath}DataSets/EditDataSet/-1`);
                                     }}
                                 >Add New</button>
                             </div>
@@ -116,12 +116,12 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                 Content={(d) =>
                                     <span>
                                         {d.item.Data?.Status === 'idle' ?
-                                            <button className="btn" title='View/Edit DataSet Data.' onClick={() => navigate(`${homePath}ViewDataSet/${d.item.ID}`)}>
+                                            <button className="btn" title='View/Edit DataSet Data.' onClick={() => navigate(`${homePath}DataSets/ViewDataSet/${d.item.ID}`)}>
                                                 {Wrench}
                                             </button>
                                             : null}
                                         <button data-toggle="tooltip" data-tooltip="pencil-btn" data-placement="bottom" className="btn" onMouseEnter={() => setHover('Pencil')}
-                                            onMouseLeave={() => setHover('None')} onClick={() => navigate(`${homePath}EditDataSet/${d.item.ID}`)}>
+                                            onMouseLeave={() => setHover('None')} onClick={() => navigate(`${homePath}DataSets/EditDataSet/${d.item.ID}`)}>
                                             {Pencil}
                                         </button>
                                         <ToolTip Show={hover === 'Pencil'} Position={'top'} Target={'pencil-btn'}><p>Edit DataSet Parameters</p></ToolTip>
@@ -138,6 +138,7 @@ const DataSets: React.FunctionComponent = (props: {}) => {
                                     </span>
                                 }
                             >
+                                {'\u200B'}
                             </ReactTable.Column>
                         </ReactTable.Table>
                     </div>

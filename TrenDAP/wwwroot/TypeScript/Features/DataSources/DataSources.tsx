@@ -1,4 +1,4 @@
-﻿//******************************************************************************************************
+//******************************************************************************************************
 //  DataSources.tsx - Gbtc
 //
 //  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
@@ -40,13 +40,13 @@ export const AllSources: IDataSource<any, any>[] = [XDADataSource, SapphireDataS
 
 const DataSources: React.FunctionComponent = () => {
     return (
-        <div className="row" style={{ margin: 10}}>
+        <div className="row">
             <div className="col-6">
                 <div className="card">
                     <div className="card-header">
                         <div className="row">
                             <div className="d-flex col-6 justify-content-start">
-                                <h4>My DataSources</h4>
+                                <h4>My Datasources</h4>
                             </div>
                             <div className="d-flex col-6 justify-content-end">
                                 <AddNewDataSource/>
@@ -60,7 +60,7 @@ const DataSources: React.FunctionComponent = () => {
             </div>
             <div className="col-6">
                 <div className="card">
-                    <div className="card-header"><h4>Shared DataSources</h4></div>
+                    <div className="card-header"><h4>Shared Datasources</h4></div>
                     <div className="card-body">
                         <DataSourceTable OwnedByUser={false} />
                     </div>

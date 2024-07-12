@@ -31,59 +31,49 @@ import { Application, Page, Section } from '@gpa-gemstone/react-interactive';
 import { SVGIcons } from '@gpa-gemstone/gpa-symbols';
 import { Redux } from './global';
 import { useAppSelector } from './hooks';
-import { SelectWorkSpacesForUser } from './Features/WorkSpaces/WorkSpacesSlice';
+import { SelectWorkSpacesForUser } from './Features/Workspaces/WorkspacesSlice';
 
 const DataSources = React.lazy(() => import(/* webpackChunkName: "DataSources" */ './Features/DataSources/DataSources'));
 const ByEventSources = React.lazy(() => import(/* webpackChunkName: "EventSources" */ './Features/EventSources/ByEventSources'));
 const DataSets = React.lazy(() => import(/* webpackChunkName: "DataSets" */ './Features/DataSets/DataSets'));
-const WorkSpaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/WorkSpaces/WorkSpaces'));
+const Workspaces = React.lazy(() => import(/* webpackChunkName: "WorkSpaces" */ './Features/Workspaces/Workspaces'));
 const EditDataSet = React.lazy(() => import(/* webpackChunkName: "EditDataSet" */ './Features/DataSets/EditDataSet'));
-const WorkSpaceEditor = React.lazy(() => import(/* webpackChunkName: "WorkSpaceEditor" */ './Features/WorkSpaces/WorkSpaceEditor'));
+const WorkspaceWrapper = React.lazy(() => import(/* webpackChunkName: "Workspace" */ './Features/Workspaces/Workspace'));
 const ViewDataSet = React.lazy(() => import(/* webpackChunkName: "ViewDataSet" */ './Features/DataSets/ViewDataSet/ViewDataSet'));
 
-const TrenDAP: React.FunctionComponent = (props: {}) => {
+const TrenDAP: React.FunctionComponent = () => {
     const workSpaces = useAppSelector((state: Redux.StoreState) => SelectWorkSpacesForUser(state, userName));
-
-    const [ignored, forceUpdate] = React.useReducer(x => x + 1, 0); // integer state for resize renders
-
-    React.useEffect(() => {
-        window.addEventListener('resize', (evt) => forceUpdate());
-
-        return () => {
-            window.removeEventListener('resize', (evt) => { });
-        }
-    }, []);
 
     return (
         <>
             <Application
-                HomePath={homePath} DefaultPath={"WorkSpaces"}
+                HomePath={homePath} DefaultPath={"Workspaces"}
                 Logo={homePath + "Images/trendaplogo.png"}
                 OnSignOut={() => { window.location.href = `/@GSF/Web/Security/Views/Login.cshtml?logout=yes`; }}> { /*need to make sure this page exists on the backend..*/}
                 <Page Name={'DataSources'} Label={'Data Sources'} Icon={SVGIcons.DataContainer}>
                     <DataSources />
                 </Page>
-                <Page Name={'ByEventSources'} Label={'Event Sources'} Icon={SVGIcons.Alert}>
+                <Page Name={'EventSources'} Label={'Event Sources'} Icon={SVGIcons.Alert}>
                     <ByEventSources />
                 </Page>
                 <Page Name={'DataSets'} Label={'Data Sets'} Icon={SVGIcons.Cube}>
                     <DataSets />
                 </Page>
-                <Page Name={'WorkSpaces'} Label={'WorkSpaces'} Icon={SVGIcons.House}>
-                    <WorkSpaces />
-                </Page>
-                <Page Name={'EditDataSet/:id'}>
+                <Page Name={'DataSets/EditDataSet/:id'}>
                     <EditDataSet />
                 </Page>
-                <Page Name={'WorkSpaceEditor/:id'}>
-                    <WorkSpaceEditor />
-                </Page>
-                <Page Name={'ViewDataSet/:id'}>
+                <Page Name={'DataSets/ViewDataSet/:id'}>
                     <ViewDataSet />
+                </Page>
+                <Page Name={'Workspaces'} Label={'Workspaces'} Icon={SVGIcons.House}>
+                    <Workspaces />
+                </Page>
+                <Page Name={'Workspaces/:workspaceId'} Paths={['/DataSet/:dataSetID', '/DataSet/:dataSetID/Channels/:channels']}>
+                    <WorkspaceWrapper />
                 </Page>
                 <Section Label={"Recent Workspaces"}>
                     {workSpaces.map((item, i) =>
-                        <Page key={i} Name={`WorkSpaceEditor/${item.ID}`} Icon={SVGIcons.Document} Label={item.Name} />
+                        <Page key={i} Name={`Workspaces/${item.ID}`} Icon={SVGIcons.Document} Label={item.Name} />
                     )}
                 </Section>
             </Application>

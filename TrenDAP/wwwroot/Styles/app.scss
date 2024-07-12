@@ -65,52 +65,6 @@ $sideMargin: 200;
 	}
 }
 
-.navbarbuttons {
-	position: absolute;
-	right: 10px;	
-}
-
-.row-controls {
-	visibility: hidden;
-	position: absolute;
-	top: 0px;
-	right: 0px;
-	z-index: 1010;
-}
-
-.triangle:hover .row-controls{
-	visibility: visible;
-}
-
-.triangle {
-	width: 150px;
-	height: 40px;
-	position: absolute;
-	right: 0px;
-	top: 0px;
-	z-index: 1010;
-}
-
-.triangle::before,
-.triangle::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	right: 0;
-	border-color: transparent;
-	border-style: solid;
-}
-
-.triangle::before {
-	border-width: 20px;
-	border-right-color: #ccc;
-	border-top-color: #ccc;
-}
-
-.triangle::after {
-	border-right-color: #ccc;
-	border-top-color: #ccc;
-}
 
 $tabHeight: 42;
 .tab-content {
@@ -124,8 +78,6 @@ $tabHeight: 42;
 
 
 .widgit-label {
-	position: absolute;
-	text-align: center;
 	width: 100%;
 	z-index: 1000;
 	user-select: none;

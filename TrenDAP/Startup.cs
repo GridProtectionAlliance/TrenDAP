@@ -1,7 +1,7 @@
 //******************************************************************************************************
 //  Startup.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright ï¿½ 2020, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -105,22 +105,60 @@ namespace TrenDAP
                 return next.Invoke();
             });
 
-
             app.UseEndpoints(endpoints =>
             {
-                //endpoints.MapRazorPages();
-                //endpoints.MapControllers();
+                endpoints.MapControllerRoute(
+                    name: "Workspaces Root",
+                    pattern: "Workspaces/{*all}",
+                    defaults: new
+                    {
+                        controller = "Home",
+                        action = "Index"
+                    }
+                );
 
                 endpoints.MapControllerRoute(
-                name: "default",
-                pattern: "{newaction?}/{id?}",
-                defaults: new
-                {
-                    controller = "Home",
-                    action = "Index"
-                });
+                    name: "Datasources Root",
+                    pattern: "Datasources/{*all}",
+                    defaults: new
+                    {
+                        controller = "Home",
+                        action = "Index"
+                    }
+                );
+
+                endpoints.MapControllerRoute(
+                    name: "EventSources",
+                    pattern: "EventSources/{*all}",
+                    defaults: new
+                    {
+                        controller = "Home",
+                        action = "Index"
+                    }
+                );
+
+                endpoints.MapControllerRoute(
+                    name: "DataSets Root",
+                    pattern: "DataSets/{*all}",
+                    defaults: new
+                    {
+                        controller = "Home",
+                        action = "Index"
+                    }
+                );
+
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "",
+                    defaults: new 
+                    {
+                        controller = "Home",
+                        action = "Index" 
+                    }
+                );
 
             });
+
         }
     }
 }
