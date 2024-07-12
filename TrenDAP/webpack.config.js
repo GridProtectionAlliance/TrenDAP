@@ -29,6 +29,7 @@ module.exports = env => {
             // Add '.ts' and '.tsx' as resolvable extensions.
             extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js", ".css"],
             alias: {
+                leaflet_css: __dirname + "/node_modules/leaflet/dist/leaflet.css"
             }
         },
         module: {
@@ -41,7 +42,7 @@ module.exports = env => {
                         { loader: "sass-loader" },  // to convert SASS to CSS
                         // NOTE: The first build after adding/removing/renaming CSS classes fails, since the newly generated .d.ts typescript module is picked up only later
                     ]
-                }, 
+                },
 
                 // All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
                 {
@@ -54,7 +55,7 @@ module.exports = env => {
                     include: /\./,
                     use: ['style-loader', 'css-loader'],
                 },
-                { test: /\.(woff|woff2|ttf|eot|svg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader", options: {limit: 100000} },
+                { test: /\.(woff|woff2|ttf|eot|svg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader", options: { limit: 100000 } },
 
             ]
         },
