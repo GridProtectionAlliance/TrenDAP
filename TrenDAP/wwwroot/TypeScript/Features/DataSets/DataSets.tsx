@@ -66,7 +66,7 @@ const DataSets: React.FC = () => {
                             <div className="col">
                                 <button className="btn btn-primary pull-right"
                                     onClick={() => {
-                                        dispatch(New({}));
+                                        dispatch(New());
                                         navigate(`${homePath}DataSets/EditDataSet/-1`);
                                     }}
                                 >Add New</button>

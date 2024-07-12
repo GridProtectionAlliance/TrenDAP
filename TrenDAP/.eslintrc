@@ -16,9 +16,9 @@
     "no-async-promise-executor": "warn", //This needs to be removed after all warnings are clear..
     "no-fallthrough": "warn", //This needs to be removed after all warnings are clear..
     "no-prototype-builtins": "warn", //This needs to be removed after all warnings are clear..
-    "no-useless-escape": "warn", //This needs to be removed after all warnings are clear..
+    "no-useless-escape": "warn" //This needs to be removed after all warnings are clear..
 
-    "@typescript-eslint/strict-boolean-expressions": [
+   /* "@typescript-eslint/strict-boolean-expressions": [
       "warn", //This needs to switch back to error after warnings have been cleaned up..
       {
         "allowString": false,
@@ -31,7 +31,7 @@
         "allowAny": false,
         "allowRuleToRunWithoutStrictNullChecksIKnowWhatIAmDoing": false
       }
-    ]
+    ]*/
   },
   "ignorePatterns": [ "package/**/*", "__tests__", "lib", "**/*.d.ts" ],
   "parserOptions": {
