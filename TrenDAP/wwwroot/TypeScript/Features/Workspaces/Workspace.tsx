@@ -129,13 +129,41 @@ const Workspace: React.FunctionComponent = () => {
             dispatch(FetchWorkSpaces());
     }, [dispatch, workspaceStatus]);
 
-    function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], eventMap: [number, number][], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
+    function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], eventMap: [number, number][],
+        allParents: { ID: string, Name: string }[], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
         setLoading(true);
         loadHandle.then(() => setLoading(false));
 
         setDataset(dataset);
         channelMapping.current = new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, channelMap);
-        parentMapping.current = new Map<string, number>(parentMap);
+
+        // Added all parents to map, not just matches
+        let currentKey = 0;
+        const orderedKeys = [...parentMap].sort((a,b) => b[1] - a[1]);
+        const newParentMap: [string, number][] = allParents.map(parent => {
+            const existingMatch = parentMap.find(match => match[0] === parent.ID);
+            if (existingMatch == null) {
+                while(orderedKeys.length > 0 && currentKey === orderedKeys[orderedKeys.length-1][1]) {
+                    currentKey++;
+                    orderedKeys.pop();
+                }
+                currentKey++;
+                return [parent.ID, currentKey-1];
+            }
+            return existingMatch;
+        });
+        parentMapping.current = new Map<string, number>(newParentMap);
+        
+        setLoadedVirtuals(
+            workSpaceJSON.VirtualChannels.map(chan => {
+                const parent = allParents.find(currentParent => chan.ParentKey === parentMapping.current.get(currentParent.ID));
+                return {
+                    ...chan,
+                    ParentID: parent?.ID,
+                    ParentName: parent?.Name
+                };
+            })
+        );
         eventMapping.current = new Map<number, number>(eventMap);
         setEventMapVersion(version => version + 1);
         setMapVersion(version => version + 1);

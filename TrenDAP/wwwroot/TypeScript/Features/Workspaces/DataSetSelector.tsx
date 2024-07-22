@@ -99,6 +99,7 @@ interface IProps {
         channelMap: [TrenDAP.IChannelKey, string][],
         parentMap: [string, number][],
         eventMap: [number, number][],
+        parents: { ID: string, Name: string }[],
         dataSet: TrenDAP.iDataSet,
         loadHandle: Promise<void>) => void
 }
@@ -160,8 +161,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     //Effect to set errors based on match status
     React.useEffect(() => {
-        if (channels != null) return;
-        const errors: string[] = []
+        if (channels != null || parentMatches.length === 0) return;
+        const errors: string[] = [];
 
         channelMatches.forEach(channel => {
             if (channel.Status === 'NoMatch') {
@@ -172,8 +173,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 const parent = parentMatches.find(parent => parent.Key === channel.Key.Parent)
                 errors.push(`${parent?.Name} has multiple matches for channel ${channel.Key.Type ?? ''} ${channel.Key.Phase ?? ''}`)
             }
-
-        })
+        });
 
         if (!_.isEqual(channelErrors, errors))
             setChannelErrors(errors)
@@ -259,21 +259,22 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
         Promise.all(channelHandlers).then(d => {
             const allChannels: DataSetTypes.IDataSetMetaData[] = d.flat()
-            props.SetAllChannels(allChannels)
-            setAllParents(_.uniqBy(allChannels.map(c => ({ ID: c.ParentID, Name: c.ParentName })), (m) => m.ID))
+            props.SetAllChannels(allChannels);
+            const allParents = _.uniqBy(allChannels.map(c => ({ ID: c.ParentID, Name: c.ParentName })), (m) => m.ID);
+            setAllParents(allParents);
 
             //Generate mapping if channels query param is set..
             if (channels != null) {
                 const chanMap: [TrenDAP.IChannelKey, string][] = JSON.parse(window.atob(channels));
 
                 const parentKeys = _.uniq(chanMap.map(chan => chan[0].Parent))
-                const parentMap: [string, number][] = parentKeys.map((key, index) => {
+                const parentMap: [string, number][] = parentKeys.map((key) => {
                     const chanID = chanMap.find(chan => chan[0].Parent === key)[1]
-                    return [allChannels.find(chan => chan.ID === chanID).ParentID, index]
+                    return [allChannels.find(chan => chan.ID === chanID).ParentID, key]
                 });
 
                 // ToDo: Add event source to url params
-                props.GenerateMapping(chanMap, parentMap, [], selectedDataSet as TrenDAP.iDataSet, loadData());
+                props.GenerateMapping(chanMap, parentMap, [], allParents, selectedDataSet as TrenDAP.iDataSet, loadData());
                 //Remove Channels param from queryParams, since we dont update this param 
                 navigate(`${homePath}Workspaces/${workspaceId}/DataSet/${dataSetID}`)
             }
@@ -440,6 +441,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 channelMatches.map(match => [match.Key, match.ChannelID] as [TrenDAP.IChannelKey, string]),
                                 parentMatches.map(match => [match.ParentID, match.Key] as [string, number]),
                                 eventMatches.map(match => [match.Key, match.ID] as [number, number]),
+                                allParents,
                                 selectedDataSet as TrenDAP.iDataSet,
                                 loadData()
                             );
