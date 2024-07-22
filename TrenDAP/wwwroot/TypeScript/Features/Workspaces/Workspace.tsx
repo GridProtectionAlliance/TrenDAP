@@ -308,7 +308,23 @@ const Workspace: React.FunctionComponent = () => {
     );
 }
 
-const WorkspaceWrapper = (props: {}) => {
+export const AddChannelToMap = (chanKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData, parentMap: Map<string, number>, channelMap: HashTable<TrenDAP.IChannelKey, string>) => {
+    let maxValue = -1;
+
+    for (let value of parentMap.values()) {
+        if (value > maxValue)
+            maxValue = value;
+    }
+
+    if (!parentMap.has(channel.ParentID))
+        parentMap.set(channel.ParentID, maxValue + 1);
+
+    let parent = parentMap.get(channel.ParentID);
+    channelMap.set({ ...chanKey, Parent: parent }, channel.ID);
+    return parent;
+}
+
+export const WorkspaceWrapper = (props: {}) => {
     const { workspaceId } = props['useParams'];
 
     return (
