@@ -58,7 +58,7 @@ const Workspace: React.FunctionComponent = () => {
     const [mapVersion, setMapVersion] = React.useState<number>(0);
     const [eventMapVersion, setEventMapVersion] = React.useState<number>(0);
 
-    const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [] });
+    const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [], VirtualChannels: [] });
     const [workspaceLink, setWorkspaceLink] = React.useState<string | null>(null);
     const [showWorkspaceLink, setShowWorkspaceLink] = React.useState<boolean>(false);
 
@@ -67,10 +67,13 @@ const Workspace: React.FunctionComponent = () => {
     const [showSettingsModal, setShowSettingsModal] = React.useState<boolean>(false);
     const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([]);
     const [allEvents, setAllEvents] = React.useState<TrenDAP.IEventSourceMetaData[]>([]);
-    const [showShowDataSetModal, setShowDataSetModal] = React.useState<boolean>(true)
+    const [showShowDataSetModal, setShowDataSetModal] = React.useState<boolean>(true);
     const [loading, setLoading] = React.useState<boolean>(false);
     const [dataSet, setDataset] = React.useState<TrenDAP.iDataSet | null>(null)
     const [isLinkShareable, setIsLinkShareable] = React.useState<{ DisabledMessage: string, Shareable: boolean }>({ Shareable: false, DisabledMessage: '' });
+
+    const [showVirtual, setShowVirtual] = React.useState<boolean>(false);
+    const [loadedVirtuals, setLoadedVirtuals] = React.useState<TrenDAP.IVirtualChannelLoaded[]>([]);
 
     //Effect to update isLinkShareable
     React.useEffect(() => {
@@ -136,6 +139,20 @@ const Workspace: React.FunctionComponent = () => {
         setMapVersion(version => version + 1);
     }
 
+    const HandleChangeVirtuals = React.useCallback((newVirtuals: TrenDAP.IVirtualChannelLoaded[]) => {
+        setLoadedVirtuals(newVirtuals);
+        setWorkSpaceJSON(wsJSON => ({
+            Rows: [...wsJSON.Rows],
+            VirtualChannels: newVirtuals.map(item => ({
+                ID: item.ID,
+                Name: item.Name,
+                ParentKey: item?.ParentKey,
+                ComponentChannels: item.ComponentChannels,
+                Calculation: item.Calculation
+            }))
+        }));
+    }, []);
+
     function HandleAddObject(type: string | 'Row') {
         if (type === 'Row')
             setWorkSpaceJSON({ Rows: [...workSpaceJSON.Rows, { Height: 50, Widgets: [], Label: "", ShowHeader: true }], VirtualChannels: [...workSpaceJSON.VirtualChannels] })
@@ -166,7 +183,10 @@ const Workspace: React.FunctionComponent = () => {
                             </ul>
                         </div>
                         <div className="col-6 d-flex flex-row align-items-center justify-content-end pr-1" style={{ zIndex: 9986 }}>
-                            <BtnDropdown Label={'Row'} Options={AllWidgets.map(widget => ({ Label: widget.Name, Callback: () => HandleAddObject(widget.Name), Group: 0 })).concat({ Label: 'Row', Callback: () => HandleAddObject('Row'), Group: 1 })}
+                            <BtnDropdown Label={'Row'}
+                                Options={
+                                    AllWidgets.map(widget => ({ Label: widget.Name, Callback: () => HandleAddObject(widget.Name), Group: 0 }))
+                                        .concat([{ Label: 'Row', Callback: () => HandleAddObject('Row'), Group: 1 }, { Label: 'Virtual Channel', Callback: () => setShowVirtual(true), Group: 2 }])}
                                 Callback={() => HandleAddObject('Row')} ShowToolTip={true} TooltipContent={<p>Add Row or Widget</p>} TooltipLocation={'bottom'} />
 
                             <div className="btn-group align-items-center pl-1">
@@ -239,6 +259,7 @@ const Workspace: React.FunctionComponent = () => {
                                     EventMapVersion={eventMapVersion}
                                     SetEventMapVersion={setEventMapVersion}
                                     AllChannels={allChannels}
+                                    AllVirtualChannels={loadedVirtuals}
                                     AllEventSources={allEvents}
                                     Label={row?.Label}
                                     Widgets={row.Widgets}
