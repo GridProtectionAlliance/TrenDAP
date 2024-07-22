@@ -41,6 +41,7 @@ import WorkspaceSettings from './WorkspaceSettings';
 import { CreateWidget, isVirtual } from '../Widgets/HelperFunctions';
 import { useParams } from 'react-router-dom';
 import VirtualChannels from './VirtualChannels';
+import TrenDAPDB from '../DataSets/TrenDAPDB';
 
 type Hover = ('Share' | 'Save' | 'Settings' | 'Add' | 'SaveIcon' | 'None' | 'ShareDisabled')
 
@@ -164,6 +165,10 @@ const Workspace: React.FunctionComponent = () => {
                 };
             })
         );
+        // Reset virtual table
+        const db = new TrenDAPDB();
+        db.ClearTable('Virtual');
+        
         eventMapping.current = new Map<number, number>(eventMap);
         setEventMapVersion(version => version + 1);
         setMapVersion(version => version + 1);

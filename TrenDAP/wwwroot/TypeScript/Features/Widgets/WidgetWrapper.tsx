@@ -194,7 +194,27 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
             })));
         });
 
-    }, [props.Widget.Channels, props.ChannelMap.Version]);
+        const virtualChannels = props.Widget.Channels
+            .filter(channel => isVirtual(channel.Key)).map(channel => {
+                const virtualChannel = props.AllVirtualChannels.find(chan => chan.ID === channel.Key);
+                const virtualChannelMeta = allSelectableChannels.find(chan => chan.ID === channel.Key);
+                return {
+                    Info: virtualChannelMeta as DataSetTypes.IDataSetMetaData,
+                    ComponentChannels: virtualChannel?.ComponentChannels ?? [],
+                    EvalExpression: virtualChannel?.Calculation ?? '',
+                    ChannelKey: channel.Key as string,
+                    ChannelSettings: channel.ChannelSettings
+                };
+            }
+        );
+        const readVirtualPromise: Promise<WidgetTypes.IWidgetData<any>[]> = db.ReadManyVirtual(virtualChannels, props.ChannelMap.Map.current).then(data => {
+            console.log(data);
+            return Promise.resolve(data.map(item => ({
+                ...item.Data,
+                ChannelSettings: item.ChannelSettings,
+                ChannelKey: item.ChannelKey
+            })));
+        });
 
         Promise.all([readRealPromise, readVirtualPromise]).then((allData) => setData(allData.flat()));
 
@@ -263,7 +283,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                     key.Parent = parentKey;
                 }
                 return { ChannelSettings: channel.ChannelSettings, Key: key }
-                });
+            });
 
             if (mapChanged) props.SetChannelMapVersion(props.ChannelMap.Version + 1);
 
