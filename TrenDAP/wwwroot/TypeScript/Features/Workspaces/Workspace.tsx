@@ -40,6 +40,7 @@ import DataSetSelector from './DataSetSelector';
 import WorkspaceSettings from './WorkspaceSettings';
 import { CreateWidget, isVirtual } from '../Widgets/HelperFunctions';
 import { useParams } from 'react-router-dom';
+import VirtualChannels from './VirtualChannels';
 
 type Hover = ('Share' | 'Save' | 'Settings' | 'Add' | 'SaveIcon' | 'None' | 'ShareDisabled')
 
@@ -122,6 +123,7 @@ const Workspace: React.FunctionComponent = () => {
         setWorkSpaceJSON(json);
     }, [workSpace]);
 
+    // Effect to set workSpace
     React.useEffect(() => {
         if (workspaceStatus == 'unitiated' || workspaceStatus == 'changed')
             dispatch(FetchWorkSpaces());
@@ -304,6 +306,9 @@ const Workspace: React.FunctionComponent = () => {
                 SetIsModalOpen={setShowDataSetModal} WorkSpaceJSON={workSpaceJSON}
                 GenerateMapping={GenerateMapping}
                 AllChannels={allChannels} SetAllChannels={setAllChannels} SetAllEventSources={setAllEvents} />
+            <VirtualChannels VirtualChannels={loadedVirtuals} SetVirtualChannels={HandleChangeVirtuals} AllChannels={allChannels}
+                ShowModal={showVirtual} SetShowModal={setShowVirtual}
+                ParentMap={parentMapping} ChannelMap={channelMapping} ChannelMapVersion={mapVersion} SetChannelMapVersion={setMapVersion} />
         </div>
     );
 }
