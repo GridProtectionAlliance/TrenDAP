@@ -38,7 +38,7 @@ import HashTable from './HashTable';
 import * as _ from 'lodash';
 import DataSetSelector from './DataSetSelector';
 import WorkspaceSettings from './WorkspaceSettings';
-import { CreateWidget } from '../Widgets/HelperFunctions';
+import { CreateWidget, isVirtual } from '../Widgets/HelperFunctions';
 import { useParams } from 'react-router-dom';
 
 type Hover = ('Share' | 'Save' | 'Settings' | 'Add' | 'SaveIcon' | 'None' | 'ShareDisabled')
@@ -104,7 +104,7 @@ const Workspace: React.FunctionComponent = () => {
         }
 
         const channelMap = workSpaceJSON.Rows
-            .flatMap(row => row.Widgets.flatMap(widget => widget.Channels.map(channel => [channel.Key, channelMapping.current.get(channel.Key)])));
+            .flatMap(row => row.Widgets.flatMap(widget => widget.Channels.filter(channel => !isVirtual(channel.Key)).map(channel => [channel.Key, channelMapping.current.get(channel.Key as TrenDAP.IChannelKey)])));
         const chans = new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, channelMap as [TrenDAP.IChannelKey, string][]).serialize();
 
         let pathName = _.cloneDeep(window.location.pathname)
@@ -138,9 +138,9 @@ const Workspace: React.FunctionComponent = () => {
 
     function HandleAddObject(type: string | 'Row') {
         if (type === 'Row')
-            setWorkSpaceJSON({ Rows: [...workSpaceJSON.Rows, { Height: 50, Widgets: [], Label: "", ShowHeader: true }] })
+            setWorkSpaceJSON({ Rows: [...workSpaceJSON.Rows, { Height: 50, Widgets: [], Label: "", ShowHeader: true }], VirtualChannels: [...workSpaceJSON.VirtualChannels] })
         else
-            setWorkSpaceJSON({ Rows: [...workSpaceJSON.Rows, { Height: 50, Widgets: [CreateWidget(type, 100)], Label: "", ShowHeader: true }] })
+            setWorkSpaceJSON({ Rows: [...workSpaceJSON.Rows, { Height: 50, Widgets: [CreateWidget(type, 100)], Label: "", ShowHeader: true }], VirtualChannels: [...workSpaceJSON.VirtualChannels] })
     }
 
     if (workSpace == undefined) return null;

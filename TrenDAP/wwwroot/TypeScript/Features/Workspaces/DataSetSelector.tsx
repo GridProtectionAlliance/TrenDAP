@@ -44,6 +44,7 @@ import { EventSourceTypes } from '../EventSources/Interface';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import * as _ from 'lodash';
+import { isVirtual } from '../Widgets/HelperFunctions';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 type MatchStatus = ('Match' | 'MultipleMatches' | 'NoMatch')
@@ -305,8 +306,9 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     // Effect to initialize parent matches
     React.useEffect(() => {
-        const parentID = _.uniq(props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels.map(c => c.Key.Parent)).flat()).flat()).sort((a, b) => a - b);
-
+        const rowIDs = props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels.filter(c => !isVirtual(c.Key)).map(c => c.Key['Parent'])).flat()).flat();
+        const virtualIDs = props.WorkSpaceJSON.VirtualChannels.flatMap(channel => channel.ComponentChannels.map(key => key.Parent));
+        const parentID = _.uniq(rowIDs.concat(virtualIDs)).sort((a, b) => a - b);
         if (allParents.length === 0)
             setParentMatches(parentID.map(p => ({
                 Key: p,
@@ -328,7 +330,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
             setParentMatches(newParentMatches);
         }
-    }, [allParents, props.WorkSpaceJSON.Rows, props.IsModalOpen]);
+    }, [allParents, props.WorkSpaceJSON, props.IsModalOpen]);
 
     //Effect to intialize event matches
     React.useEffect(() => {
@@ -349,13 +351,15 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     //Effect to intialize channel matches
     React.useEffect(() => {
-        const channelKeys = _.uniqWith(props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels).flat()).flat().map(chan => chan.Key), _.isEqual);
+        const rowKeys = props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels).flat()).flat().map(chan => chan.Key).filter(key => !isVirtual(key));
+        const virtualKeys = props.WorkSpaceJSON.VirtualChannels.flatMap(channel => channel.ComponentChannels);
+        const channelKeys = _.uniqWith(rowKeys.concat(virtualKeys), _.isEqual);
         setChannelMatches(channelKeys.map(c => ({
             Key: c,
             Status: 'NoMatch',
             ChannelID: null,
         })));
-    }, [props.AllChannels, props.WorkSpaceJSON.Rows]);
+    }, [props.AllChannels, props.WorkSpaceJSON]);
 
     //Effect to auto match channels
     React.useEffect(() => {
