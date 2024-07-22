@@ -172,45 +172,6 @@ export default class TrenDAPDB {
         });
     }
 
-    public ReadAll() {
-        return new Promise<(ChannelTableRow)[]>(async (resolve, reject) => {
-
-            const db = await this.OpenDB();
-            const tx = db.transaction('Channel', 'readonly');
-            const store = tx.objectStore('Channel');
-            const result = store.getAll();
-
-            result.onsuccess = (evt: any) => {
-                resolve(evt.target.result);
-            };
-
-            result.onerror = (evt: any) => {
-                reject(evt.target.error);
-            };
-            tx.oncomplete = () => db.close();
-        });
-    }
-
-    public AddEvent(record: EventTableRow) {
-        return new Promise(async (resolve, reject) => {
-            let db = await this.OpenDB();
-
-            let tx = db.transaction('Event', 'readwrite');
-            let store = tx.objectStore('Event');
-            let result = store.put({ ID: record.ID, Created: moment().format(TimeFormat), Data: record.Data });
-
-            result.onsuccess = (evt: any) => {
-                resolve(evt.target.result);
-            };
-
-            result.onerror = (evt: any) => {
-                reject(evt.target.error);
-            };
-
-            tx.oncomplete = () => db.close();
-        })
-    }
-
     public AddMultipleEvents(records: EventTableRow[]) {
         return new Promise(async (resolve, reject) => {
             let db = await this.OpenDB();
@@ -228,26 +189,6 @@ export default class TrenDAPDB {
                     rej(evt.target.error);
                 };
             }))).then(d => resolve(d)).catch(err => reject(err));
-
-            tx.oncomplete = () => db.close();
-        })
-    }
-
-    public Add(record: ChannelTableRow) {
-        return new Promise(async (resolve, reject) => {
-            const db = await this.OpenDB();
-
-            const tx = db.transaction('Channel', 'readwrite');
-            const store = tx.objectStore('Channel');
-            const result = store.put({ ID: record.ID, Created: moment().format(TimeFormat), Data: record });
-
-            result.onsuccess = (evt: any) => {
-                resolve(evt.target.result);
-            };
-
-            result.onerror = (evt: any) => {
-                reject(evt.target.error);
-            };
 
             tx.oncomplete = () => db.close();
         })
@@ -271,32 +212,7 @@ export default class TrenDAPDB {
                 };
             }))).then(d => resolve(d)).catch(err => reject(err));
 
-            tx.oncomplete = () => db.close();
-        })
-    }
-
-
-    public Delete(id: number, table: TrenDAPTable = 'Channel') {
-        return new Promise(async (resolve, reject) => {
-
-        const db = await this.OpenDB();
-
-        const tx = db.transaction(table, 'readwrite');
-        const store = tx.objectStore(table);
-        const result = store.delete(id);
-        result.onsuccess = (evt: any) => {
-            resolve(evt.target.result);
-        };
-
-        result.onerror = (evt: any) => {
-            reject(evt.target.error);
-        };
         tx.oncomplete = () => db.close();
-
-
         })
-
     }
-
-
 }
