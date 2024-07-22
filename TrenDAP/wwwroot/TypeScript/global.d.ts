@@ -217,6 +217,7 @@ export namespace TrenDAP {
     // Widget JSON interfaces
     interface WorkSpaceJSON {
         Rows: IRowModel[]
+        VirtualChannels: IVirtualChannelModel[]
     }
 
     interface IYAxis {
@@ -237,6 +238,19 @@ export namespace TrenDAP {
         ShowHeader: boolean,
     }
 
+    interface IVirtualChannelModel {
+        ID: string,
+        Name: string,
+        ParentKey?: number,
+        ComponentChannels: TrenDAP.IChannelKey[],
+        Calculation: string
+    }
+
+    interface IVirtualChannelLoaded extends IVirtualChannelModel {
+        ParentID?: string;
+        ParentName?: string
+    }
+
     //Model for Workspace logic
     interface IWidgetModel {
         Width: number, //percentage 
@@ -250,7 +264,7 @@ export namespace TrenDAP {
 
     //might be better in widgettypes namespace..
     interface IWidgetChannels<T> {
-        Key: TrenDAP.IChannelKey,
+        Key: TrenDAP.IChannelKey | string,
         ChannelSettings: T
     }
 
@@ -271,7 +285,7 @@ export namespace TrenDAP {
         Parent: number,
         Phase: string,
         Type: string,
-        Harmonic?: number,
+        Harmonic?: number
     }
 
     interface IChannelMap {
