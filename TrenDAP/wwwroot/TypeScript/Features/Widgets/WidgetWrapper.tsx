@@ -48,6 +48,7 @@ import _ from 'lodash';
 import ChannelSelector from './ChannelSelector';
 import EventSelector from './EventSelector';
 import { isPercent, isVirtual } from './HelperFunctions';
+import { AddChannelToMap } from '../Workspaces/Workspace';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const AllWidgets: WidgetTypes.IWidget<any, any, any>[] = [TextWidget, TableWidget, StatsWidget, HistogramWidget, XvsYWidget, ProfileWidget, TrendWidget, Map];
@@ -67,7 +68,7 @@ interface IProps {
     EventMap: React.MutableRefObject<Map<number, number>>,
 }
 
-const WidgetWrapper: React.FC<IProps> = (props) => {
+export const WidgetWrapper: React.FC<IProps> = (props) => {
     const Implementation: WidgetTypes.IWidget<any, any, any> | undefined = React.useMemo(() => AllWidgets.find(item => item.Name === props.Widget.Type), [props.Widget.Type]);
     const guid = React.useRef<string>(CreateGuid());
 
@@ -281,22 +282,6 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             setShowWarning(true);
         else if (!confBtn && !deleteBtn)
             setShowSettingsModal(false);
-    }
-
-    const AddChannelToMap = (chanKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData) => {
-        let maxValue = -1
-
-        for (const value of props.ParentMap.current.values()) {
-            if (value > maxValue)
-                maxValue = value
-        }
-
-        if (!props.ParentMap.current.has(channel.ParentID))
-            props.ParentMap.current.set(channel.ParentID, maxValue + 1)
-
-        const parent = props.ParentMap.current.get(channel.ParentID)
-        props.ChannelMap.Map.current.set({ ...chanKey, Parent: parent }, channel.ID)
-        props.SetChannelMapVersion(props.ChannelMap.Version + 1)
     }
 
     return <>
