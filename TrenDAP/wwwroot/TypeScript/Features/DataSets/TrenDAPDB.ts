@@ -24,6 +24,9 @@
 import { TrenDAP, DataSetTypes } from "../../global";
 import { WidgetTypes } from "../Widgets/Interfaces";
 import moment from "moment";
+import { keyReadableName } from "../Widgets/HelperFunctions";
+import HashTable from "../Workspaces/HashTable";
+import _ from "lodash";
 
 export interface ChannelTableRow {
     ID: string,
@@ -37,7 +40,8 @@ export interface EventTableRow {
 }
 
 const TimeFormat = 'MM/DD/YYYY HH:mm:ss';
-type TrenDAPTable = 'Channel' | 'Event';
+const AllowableVirtualTimeDelta = 60000;
+type TrenDAPTable = 'Channel' | 'Event' | 'Virtual';
 //To DO Add Documentation on what each function does...
 export default class TrenDAPDB {
 
@@ -54,8 +58,12 @@ export default class TrenDAPDB {
                 database.close();
                 let secondReq = indexedDB.open('TrenDAP', version + 1);
                 secondReq.onupgradeneeded = secondEvt => this.AddTable(secondEvt, 'Event');
-                secondReq.onsuccess = (secondEvt: any) => {
-                    resolve(secondEvt.target.result as IDBDatabase);
+                secondReq.onsuccess = () => {
+                    let thirdReq = indexedDB.open('TrenDAP', version + 2);
+                    thirdReq.onupgradeneeded = thirdEvt => this.AddTable(thirdEvt, 'Virtual');
+                    thirdReq.onsuccess = (thirdEvt: any) => {
+                        resolve(thirdEvt.target.result as IDBDatabase);
+                    };
                 };
             }
 
@@ -71,33 +79,33 @@ export default class TrenDAPDB {
 
     }
 
+    public ClearTable(table: TrenDAPTable) {
+        return new Promise(async (resolve, reject) => {
+    
+            const db = await this.OpenDB();
+            const tx = db.transaction(table, 'readwrite');
+            const store = tx.objectStore(table);
+            
+            const request = store.clear();
+            request.onsuccess = (evt: any) => {
+                resolve(evt.target.result);
+            };
+            request.onerror = (evt: any) => {
+                reject(evt.target.error);
+            };
+    
+            tx.onerror = (evt: any) => {
+                reject(evt.target.error);
+            };
+        });
+    }
+
     private AddTable(evt: any, table: string) {
         const upgradeDB = evt.target.result as IDBDatabase;
         if (!upgradeDB.objectStoreNames.contains(table)) {
             const ds = upgradeDB.createObjectStore(table, { keyPath: 'ID', autoIncrement: false });
             ds.createIndex("ID", "ID", { unique: true });
         }
-
-    }
-
-    public Read(key: string, tableName: TrenDAPTable = 'Channel') {
-        return new Promise<(ChannelTableRow)>(async (resolve, reject) => {
-            const db = await this.OpenDB();
-            const tx = db.transaction(tableName, 'readonly');
-            const store = tx.objectStore(tableName);
-            const result = store.get(key);
-
-            result.onsuccess = (evt: any) => {
-                resolve(evt.target.result);
-            };
-
-            result.onerror = (evt: any) => {
-                reject(evt.target.error);
-            };
-
-            tx.oncomplete = () => db.close();
-
-        });
     }
 
     public ReadMany(channels: { ID: string, ChannelSettings: any, ChannelKey: TrenDAP.IChannelKey }[]) {
@@ -134,6 +142,159 @@ export default class TrenDAPDB {
                 reject(evt.target.error);
             };
         });
+    }
+
+    public async ReadManyVirtual(channels: { 
+        Info: DataSetTypes.IDataSetMetaData, 
+        ComponentChannels: TrenDAP.IChannelKey[], 
+        EvalExpression: string, 
+        ChannelSettings: any, 
+        ChannelKey: string
+    }[], channelMapping: HashTable<TrenDAP.IChannelKey, string>) {
+        if (channels == null || channels.length === 0) {
+            return Promise.resolve([]);
+        }
+    
+        const db = await this.OpenDB();
+        const tx = db.transaction(['Channel', 'Virtual'], 'readwrite');
+        const channelStore = tx.objectStore('Channel');
+        const virtualStore = tx.objectStore('Virtual');
+    
+        tx.onerror = (evt: any) => {
+            return Promise.reject(evt.target.error);
+        };
+
+        const promiseArray = channels.map(virtualChannel => 
+            new Promise<{ Data: DataSetTypes.IDataSetData, ChannelKey: string, ChannelSettings: any }>(async (resolve, reject) => {
+                if (virtualChannel.ComponentChannels == null || virtualChannel.ComponentChannels.length === 0) {
+                    resolve({Data: {SeriesData: {}, ...virtualChannel.Info}, ChannelKey: virtualChannel.ChannelKey, ChannelSettings: virtualChannel.ChannelSettings});
+                    return;
+                }
+                const virtualRequest = virtualStore.get(virtualChannel.Info.ID);
+                virtualRequest.onsuccess = (evt: any) => {
+                    if (evt.target.result != null) {
+                        console.log(evt.target.result);
+                        if (_.isEqual(evt.target.result.Data.ComponentChannels, virtualChannel.ComponentChannels) && 
+                            _.isEqual(evt.target.result.Data.EvalExpression, virtualChannel.EvalExpression)) 
+                            resolve({
+                                Data: {...virtualChannel.Info, SeriesData: evt.target.result.Data.SeriesData}, 
+                                ChannelKey: virtualChannel.ChannelKey, 
+                                ChannelSettings: virtualChannel.ChannelSettings
+                        });
+                        else reject();
+                    }
+                    else reject();
+                };
+                virtualRequest.onerror = (evt: any) => {
+                    reject();
+                };
+            }).then(foundResults => Promise.resolve(foundResults), () => 
+                new Promise<{ Data: DataSetTypes.IDataSetData, ChannelKey: TrenDAP.IChannelKey }[]>((resolve, reject) => {
+                    let completedComponents = 0;
+                    const componentResults: { Data: DataSetTypes.IDataSetData, ChannelKey: TrenDAP.IChannelKey }[] = [];
+                    virtualChannel.ComponentChannels.forEach(componentKey => {
+                        const id = channelMapping.get(componentKey);
+                        if (id == null) return;
+            
+                        const request = channelStore.get(id);
+                        request.onsuccess = (evt: any) => {
+                            console.log(evt.target.result)
+                            componentResults.push({ Data: evt.target.result.Data, ChannelKey: componentKey });
+                            completedComponents++;
+                            if (completedComponents >= virtualChannel.ComponentChannels.length) {
+                                return resolve(componentResults);
+                            }
+                        };
+                        request.onerror = (evt: any) => {
+                            return reject(evt.target.error);
+                        };
+                    });
+            })).then((results) => 
+                new Promise<{ Data: DataSetTypes.IDataSetData, ChannelKey: string, ChannelSettings: any }>((resolve, reject) => {
+                    if (!results.hasOwnProperty('length')) return resolve(results as { Data: DataSetTypes.IDataSetData, ChannelKey: string, ChannelSettings: any });
+                    
+                    // Note: map preserves order, see specification from ECMAScript for more details
+                    const realResults = results as { Data: DataSetTypes.IDataSetData, ChannelKey: TrenDAP.IChannelKey }[];
+                    const sortedKeys = realResults.map(result => result.ChannelKey);
+                    // Filter series to only common ones
+                    const allSeries = realResults.map(result => Object.keys(result.Data.SeriesData));
+                    const series = allSeries[0].filter(objectKey => 
+                        !allSeries.some(objectKeyArray => objectKeyArray.findIndex(arrKey => arrKey === objectKey) === -1)
+                    );
+
+                    const virtualResult: DataSetTypes.IDataSetData = {...virtualChannel.Info, SeriesData: {}}
+
+                    series.forEach(objectKey => {
+                        virtualResult.SeriesData[objectKey] = [];
+                        const indexArray: number[] = Array(realResults.length).fill(0);
+                        const valueArray: number[] = Array(realResults.length).fill(0);
+                        let primaryTimeValue: undefined|number;
+                        
+                        evalLoop: while (true) {
+                            let dataLoopContinue = true;
+                            while (dataLoopContinue) {
+                                // Considered the time stamp for our current value
+                                primaryTimeValue = undefined;
+                                dataLoopContinue = false;
+    
+                                // Finding values for each component
+                                componentLoop : for(let compIndex = 0; compIndex < indexArray.length; compIndex++) {
+                                    let currentValue: undefined|number[] = undefined;
+                                    // Seek value that lies within range of primary time value
+                                    while (currentValue == null || primaryTimeValue == null || currentValue[0] < (primaryTimeValue - AllowableVirtualTimeDelta)) {
+                                        if (indexArray[compIndex] >= 0 && indexArray[compIndex] < realResults[compIndex].Data.SeriesData[objectKey].length) {
+                                            // Grab this current value and check it
+                                            currentValue = realResults[compIndex].Data.SeriesData[objectKey][indexArray[compIndex]];
+                                            if (primaryTimeValue == null) primaryTimeValue = currentValue[0];
+                                            // Restart component loop
+                                            else if (currentValue[0] > primaryTimeValue + AllowableVirtualTimeDelta) {
+                                                dataLoopContinue = true;
+                                                break componentLoop;
+                                            }
+                                            indexArray[compIndex] += 1;
+                                        } else {
+                                            // We're out of data, no more valid points so just break the loop
+                                            break evalLoop;
+                                        }
+                                    }
+                                    valueArray[compIndex] = currentValue[1];
+                                }
+                            }
+                            // Evaluating value array using indirect eval
+                            virtualResult.SeriesData[objectKey].push([
+                                primaryTimeValue as number, 
+                                eval?.(`"use strict";
+                                    ${sortedKeys.map((key, valueIndex) => `const ${keyReadableName(key)} = ${valueArray[valueIndex]};`).join(' ')}
+                                    ${virtualChannel.EvalExpression}`)
+                            ]);
+
+                        }
+                    });
+                    
+                    const result = virtualStore.put({ 
+                        ID: virtualChannel.Info.ID, 
+                        Created: moment().format(TimeFormat), 
+                        Data: { 
+                            EvalExpression: virtualChannel.EvalExpression,
+                            ComponentChannels: virtualChannel.ComponentChannels, 
+                            SeriesData: virtualResult.SeriesData 
+                        }});
+
+                    result.onsuccess = (evt: any) => {
+                        resolve({
+                            Data: virtualResult,
+                            ChannelKey: virtualChannel.ChannelKey, 
+                            ChannelSettings: virtualChannel.ChannelSettings
+                        });
+                    };
+    
+                    result.onerror = (evt: any) => {
+                        reject(evt.target.error);
+                    };
+            }))
+        );
+
+        return Promise.all(promiseArray);
     }
 
     public ReadManyEvents(eventSources: WidgetTypes.ISelectedEvents<any>[]) {
@@ -212,7 +373,7 @@ export default class TrenDAPDB {
                 };
             }))).then(d => resolve(d)).catch(err => reject(err));
 
-        tx.oncomplete = () => db.close();
+            tx.oncomplete = () => db.close();
         })
     }
 }
