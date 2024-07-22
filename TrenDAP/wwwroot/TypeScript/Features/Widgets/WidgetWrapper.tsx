@@ -57,6 +57,7 @@ interface IProps {
     RemoveWidget: () => void,
     UpdateWidget: (widget: TrenDAP.IWidgetModel) => void,
     AllChannels: DataSetTypes.IDataSetMetaData[],
+    AllVirtualChannels: TrenDAP.IVirtualChannelLoaded[],
     AllEventSources: TrenDAP.IEventSourceMetaData[],
     ChannelMap: TrenDAP.IChannelMap,
     SetChannelMapVersion: (version: number) => void,
@@ -234,8 +235,6 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             key = { Phase: channel.Phase, Type: channel.Type, Harmonic: channel.Harmonic, Parent: -1 }
         } else key = channel.ID;
 
-        uniqParent = localChannels.length === 0 ? 0 : uniqParent + 1;
-        const key = { Phase: channel.Phase, Type: channel.Type, Harmonic: channel.Harmonic, Parent: uniqParent }
         const newChannel = {
             MetaData: channel,
             ChannelSettings: defaultSetting,
