@@ -137,7 +137,9 @@ export namespace DataSetTypes {
     }
     interface IDataSetData extends IDataSetMetaData {
         SeriesData: {
-            [key: string]: [...number[]][]
+            Minimum: [...number[]][],
+            Average: [...number[]][],
+            Maximum: [...number[]][],
         }
     }
 }

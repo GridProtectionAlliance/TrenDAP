@@ -167,7 +167,7 @@ export default class TrenDAPDB {
         const promiseArray = channels.map(virtualChannel => 
             new Promise<{ Data: DataSetTypes.IDataSetData, ChannelKey: string, ChannelSettings: any }>(async (resolve, reject) => {
                 if (virtualChannel.ComponentChannels == null || virtualChannel.ComponentChannels.length === 0) {
-                    resolve({Data: {SeriesData: {}, ...virtualChannel.Info}, ChannelKey: virtualChannel.ChannelKey, ChannelSettings: virtualChannel.ChannelSettings});
+                    resolve({Data: {SeriesData: { Minimum: [], Maximum: [], Average: []}, ...virtualChannel.Info}, ChannelKey: virtualChannel.ChannelKey, ChannelSettings: virtualChannel.ChannelSettings});
                     return;
                 }
                 const virtualRequest = virtualStore.get(virtualChannel.Info.ID);
@@ -222,10 +222,9 @@ export default class TrenDAPDB {
                         !allSeries.some(objectKeyArray => objectKeyArray.findIndex(arrKey => arrKey === objectKey) === -1)
                     );
 
-                    const virtualResult: DataSetTypes.IDataSetData = {...virtualChannel.Info, SeriesData: {}}
+                    const virtualResult: DataSetTypes.IDataSetData = { ...virtualChannel.Info, SeriesData: { Minimum: [], Maximum: [], Average: [] }}
 
                     series.forEach(objectKey => {
-                        virtualResult.SeriesData[objectKey] = [];
                         const indexArray: number[] = Array(realResults.length).fill(0);
                         const valueArray: number[] = Array(realResults.length).fill(0);
                         let primaryTimeValue: undefined|number;
