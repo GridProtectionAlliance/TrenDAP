@@ -29,7 +29,6 @@ import { Input, TextArea } from '@gpa-gemstone/react-forms';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import * as _ from 'lodash';
 import { AddChannelToMap } from './Workspace';
-import { keyReadableName } from '../Widgets/HelperFunctions';
 
 interface IProps {
     VirtualChannels: TrenDAP.IVirtualChannelLoaded[],
@@ -43,15 +42,36 @@ interface IProps {
     ParentMap: React.MutableRefObject<Map<string, number>>
 }
 
-interface IVirtualChannelEditable extends TrenDAP.IVirtualChannelLoaded {
-    Channels: DataSetTypes.IDataSetMetaData[]
+interface IMetaDataReferenceName extends DataSetTypes.IDataSetMetaData {
+    ReferenceName: string
 }
+
+interface IVirtualChannelEditable extends TrenDAP.IVirtualChannelLoaded {
+    Channels: IMetaDataReferenceName[]
+}
+
+const generateQuickName = (existingChannels: IMetaDataReferenceName[]) => {
+    let currentName: string;
+    let currentAttemptIndex = existingChannels.length;
+    while(true) {
+        currentName = findQuickName(currentAttemptIndex);
+        if (!existingChannels.some(chan => chan.ReferenceName === currentName)) return currentName;
+        currentAttemptIndex ++;
+    }
+};
+
+const findQuickName = (index: number) => {
+    const quotient = Math.floor(index / 26);
+    let digit = String.fromCharCode(65 + (index % 26));
+    if (quotient > 0) digit = findQuickName(quotient - 1) + digit;
+    return digit;
+};
 
 const VirtualChannels: React.FC<IProps> = (props) => {
     const [allVirtualChannels, setAllVirtualChannels] = React.useState<IVirtualChannelEditable[]>([]);
     const [virtualAscending, setVirtualAscending] = React.useState<boolean>(true);
     const [virtualSortField, setVirtualSortField] = React.useState<keyof IVirtualChannelEditable>('Name');
-    const [selectedVirtual, setSelectedVirtual] = React.useState<string>(undefined);
+    const [selectedVirtual, setSelectedVirtual] = React.useState<string|undefined>(undefined);
 
     const selectedVirtualChannel = React.useMemo(() => allVirtualChannels.find(channel => channel.ID === selectedVirtual), [selectedVirtual, allVirtualChannels]);
     const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([]);
@@ -66,17 +86,20 @@ const VirtualChannels: React.FC<IProps> = (props) => {
     React.useEffect(() => {
         if (props.VirtualChannels == null) return;
         const ediableVirtuals: IVirtualChannelEditable[] = props.VirtualChannels.map(chan => {
-            const channels = chan.ComponentChannels.map(key => {
-                const id = props.ChannelMap.current.get(key);
+            const channels = chan.ComponentChannels.map(existingChan => {
+                const id = props.ChannelMap.current.get(existingChan.Key);
                 if (id == null) {
-                    console.error(`Key expected not found in channel map: ${key}`);
-                    return;
+                    console.error(`Key expected not found in channel map: ${existingChan.Key}`);
+                    return undefined;
                 }
                 const channel = props.AllChannels.find(chan => chan.ID === id);
-                if (channel == null) console.error(`Channel expected not found in all channels with ID: ${id}`);
-                return channel;
+                if (channel == null) {
+                    console.error(`Channel expected not found in all channels with ID: ${id}`);
+                    return undefined;
+                }
+                return {...channel, ReferenceName: existingChan.Name};
 
-            });
+            }).filter(chan => chan != null);
             return { ...chan, Channels: channels }
         });
 
@@ -115,7 +138,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                         const channelKeys = virtualChannel.Channels.map((realChannel) => {
                             const parentKey = props.ParentMap.current.get(realChannel.ParentID);
                             const channelKey = {
-                                Parent: parentKey,
+                                Parent: parentKey as number,
                                 Phase: realChannel.Phase,
                                 Type: realChannel.Type,
                                 Harmonic: realChannel.Harmonic
@@ -128,7 +151,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                 console.warn(`Unexpected mismatch between mapped channel ID (${channelID}) and actual channel ID ${realChannel.ID}`);
                                 console.warn(channelKey)
                             }
-                            return channelKey;
+                            return { Key: channelKey, Name: realChannel.ReferenceName};
                         });
 
                         // If a parent ID exists, it shoulld be in the map since we added channels to the channel map
@@ -217,7 +240,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                         <div className="col-8 h-100">
                             <div className="row h-50 p-0">
                                 {
-                                    selectedVirtual == null ? <></> :
+                                    selectedVirtualChannel == null ? <></> :
                                         <div className="col">
                                             <Input<IVirtualChannelEditable> Record={selectedVirtualChannel} Field='Name' Valid={() => true} Setter={handleChange} />
                                             <TextArea<IVirtualChannelEditable> Rows={8} Record={selectedVirtualChannel} Field='Calculation' Valid={() => true} Setter={handleChange} />
@@ -241,13 +264,13 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                                 const newSelected = { ...selectedVirtualChannel };
                                                 const splicedChannelId = newSelected.Channels.findIndex(chan => chan.ID === item.row.ID);
 
-                                                // Edit channel ID array
-                                                if (splicedChannelId === -1) newSelected.Channels.push(item.row);
+                                                // Edit channel array
+                                                if (splicedChannelId === -1) newSelected.Channels.push({...item.row, ReferenceName: generateQuickName(newSelected.Channels)});
                                                 else newSelected.Channels.splice(splicedChannelId, 1);
 
                                                 // Figure out what the parent id and Name is
                                                 let parentID = newSelected.Channels.length > 0 ? newSelected.Channels[0].ParentID : undefined;
-                                                let parentName = undefined;
+                                                let parentName: string|undefined = undefined;
 
                                                 if (parentID != null) {
                                                     if (newSelected.Channels.some(chan => chan.ParentID !== parentID)) parentID = undefined;
@@ -273,7 +296,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                             Data={allChannels}
                                             Ascending={channelAscending}
                                             KeySelector={(row) => row.ID}
-                                            Selected={(row) => selectedVirtualChannel.Channels.find(c => c.ID === row.ID) != null}
+                                            Selected={(row) => selectedVirtualChannel?.Channels.find(c => c.ID === row.ID) != null}
                                         >
                                             <ReactTable.Column<DataSetTypes.IDataSetMetaData>
                                                 Key={'ParentName'}
@@ -303,17 +326,36 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                             >
                                                 Phase
                                             </ReactTable.Column>
-                                            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
-                                                Key={'Key'}
+                                            <ReactTable.Column<IMetaDataReferenceName>
+                                                Key={'ReferenceName'}
                                                 AllowSort={true}
-                                                Field={'ID'}
-                                                Content={row => keyReadableName({
-                                                        Parent: props.ParentMap.current.get(row.item.ParentID) as number,
-                                                        Phase: row.item.Phase,
-                                                        Type: row.item.Type,
-                                                        Harmonic: row.item.Harmonic
-                                                    })
-                                                }
+                                                Field={'ReferenceName'}
+                                                Content={row => {
+                                                    const recordIndex = selectedVirtualChannel?.Channels?.findIndex(item => row.item.ID === item.ID) ?? -1;
+                                                    const record = selectedVirtualChannel?.Channels[recordIndex] ?? {...row.item, ReferenceName: 'N/A'};
+                                                    return (
+                                                        <div onClick={e => e.stopPropagation()}>
+                                                            <Input<IMetaDataReferenceName> Record={record} Field='ReferenceName' Disabled={recordIndex === -1}
+                                                                Setter={newRecord => {
+                                                                    if (recordIndex === -1) return;
+
+                                                                    const newSelected = { ...selectedVirtualChannel } as IVirtualChannelEditable;
+                                                                    newSelected.Channels.splice(recordIndex, 1, newRecord);
+
+                                                                    // Save Change into virtual array
+                                                                    const newAllVirtual = [...allVirtualChannels];
+                                                                    const index = newAllVirtual.findIndex(chan => chan.ID === selectedVirtual);
+                                                                    newAllVirtual[index] = newSelected;
+                                                                    setAllVirtualChannels(newAllVirtual);
+                    
+                                                                    // Edit channel array
+                                                                }} Feedback="Reference name must be unique"
+                                                                Valid={() => recordIndex === -1 || selectedVirtualChannel == null || 
+                                                                    !selectedVirtualChannel.Channels.some(chan => chan.ReferenceName === record.ReferenceName && record.ID !== chan.ID)} 
+                                                            />
+                                                        </div>);
+
+                                                }}
                                             >
                                                 Reference Name
                                             </ReactTable.Column>

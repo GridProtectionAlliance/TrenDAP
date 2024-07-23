@@ -24,7 +24,6 @@
 import { TrenDAP, DataSetTypes } from "../../global";
 import { WidgetTypes } from "../Widgets/Interfaces";
 import moment from "moment";
-import { keyReadableName } from "../Widgets/HelperFunctions";
 import HashTable from "../Workspaces/HashTable";
 import _ from "lodash";
 
@@ -146,7 +145,7 @@ export default class TrenDAPDB {
 
     public async ReadManyVirtual(channels: { 
         Info: DataSetTypes.IDataSetMetaData, 
-        ComponentChannels: TrenDAP.IChannelKey[], 
+        ComponentChannels: { Key: TrenDAP.IChannelKey, Name: string}[], 
         EvalExpression: string, 
         ChannelSettings: any, 
         ChannelKey: string
@@ -191,18 +190,21 @@ export default class TrenDAPDB {
             }).then(foundResults => Promise.resolve(foundResults), () => 
                 new Promise<{ Data: DataSetTypes.IDataSetData, ChannelKey: TrenDAP.IChannelKey }[]>((resolve, reject) => {
                     let completedComponents = 0;
-                    const componentResults: { Data: DataSetTypes.IDataSetData, ChannelKey: TrenDAP.IChannelKey }[] = [];
+                    // Note: map preserves order, see specification from ECMAScript for more details
+                    const componentResults: { Data: DataSetTypes.IDataSetData | undefined, ChannelKey: TrenDAP.IChannelKey }[] =
+                        virtualChannel.ComponentChannels.map(component => ({ ChannelKey: component.Key, Data: undefined}));
                     virtualChannel.ComponentChannels.forEach(componentKey => {
-                        const id = channelMapping.get(componentKey);
+                        const id = channelMapping.get(componentKey.Key);
                         if (id == null) return;
             
                         const request = channelStore.get(id);
                         request.onsuccess = (evt: any) => {
                             console.log(evt.target.result)
-                            componentResults.push({ Data: evt.target.result.Data, ChannelKey: componentKey });
+                            const resultIndex = componentResults.findIndex(compResult => _.isEqual(compResult.ChannelKey, componentKey.Key));
+                            componentResults[resultIndex].Data = evt.target.result.Data;
                             completedComponents++;
                             if (completedComponents >= virtualChannel.ComponentChannels.length) {
-                                return resolve(componentResults);
+                                return resolve(componentResults as { Data: DataSetTypes.IDataSetData, ChannelKey: TrenDAP.IChannelKey }[]);
                             }
                         };
                         request.onerror = (evt: any) => {
@@ -213,7 +215,7 @@ export default class TrenDAPDB {
                 new Promise<{ Data: DataSetTypes.IDataSetData, ChannelKey: string, ChannelSettings: any }>((resolve, reject) => {
                     if (!results.hasOwnProperty('length')) return resolve(results as { Data: DataSetTypes.IDataSetData, ChannelKey: string, ChannelSettings: any });
                     
-                    // Note: map preserves order, see specification from ECMAScript for more details
+                    // We've ensured this typing earlier
                     const realResults = results as { Data: DataSetTypes.IDataSetData, ChannelKey: TrenDAP.IChannelKey }[];
                     const sortedKeys = realResults.map(result => result.ChannelKey);
                     // Filter series to only common ones
@@ -244,9 +246,9 @@ export default class TrenDAPDB {
                                         if (indexArray[compIndex] >= 0 && indexArray[compIndex] < realResults[compIndex].Data.SeriesData[objectKey].length) {
                                             // Grab this current value and check it
                                             currentValue = realResults[compIndex].Data.SeriesData[objectKey][indexArray[compIndex]];
-                                            if (primaryTimeValue == null) primaryTimeValue = currentValue[0];
+                                            if (primaryTimeValue == null) primaryTimeValue = currentValue![0];
                                             // Restart component loop
-                                            else if (currentValue[0] > primaryTimeValue + AllowableVirtualTimeDelta) {
+                                            else if (currentValue![0] > primaryTimeValue + AllowableVirtualTimeDelta) {
                                                 dataLoopContinue = true;
                                                 break componentLoop;
                                             }
