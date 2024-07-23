@@ -181,7 +181,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     //Effect to set event errors based on match status
     React.useEffect(() => {
-        const errors = [];
+        const errors: string[] = [];
         eventMatches.forEach(match => {
             if (match.Match === 'NoMatch') errors.push(`Event Source ${match.Key + 1} has no match.`);
         });
@@ -290,8 +290,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
         const eventSrcHandlers = eventSources.map(ds => {
             const eventSourceView = eventSourceViews.find(d => d.ID === ds.EventSourceID);
-            const implementation: IEventSource<any, any> | null = EventDataSources.find(t => t.Name == eventSourceView.Type);
-            if (implementation === null)
+            const implementation: IEventSource<any, any> | undefined = EventDataSources.find(t => t.Name == eventSourceView.Type);
+            if (implementation == null)
                 return Promise.resolve([]);
             const logoString = implementation?.GetLogo != null ? implementation.GetLogo(eventSourceView) : undefined;
             return implementation.Load(eventSourceView, selectedDataSet, ds).then(d => {
@@ -308,7 +308,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     // Effect to initialize parent matches
     React.useEffect(() => {
         const rowIDs = props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels.filter(c => !isVirtual(c.Key)).map(c => c.Key['Parent'])).flat()).flat();
-        const virtualIDs = props.WorkSpaceJSON.VirtualChannels.flatMap(channel => channel.ComponentChannels.map(key => key.Parent));
+        const virtualIDs = props.WorkSpaceJSON.VirtualChannels.flatMap(channel => channel.ComponentChannels.map(key => key.Key.Parent));
         const parentID = _.uniq(rowIDs.concat(virtualIDs)).sort((a, b) => a - b);
         if (allParents.length === 0)
             setParentMatches(parentID.map(p => ({
@@ -343,7 +343,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             const newMatch: IEventMatch = {
                 Key: c,
                 Match: autoMatched ? 'Match' : 'NoMatch',
-                ID: autoMatched ? loadedEvents[loadedEventSourceIndex].ID : null
+                ID: autoMatched ? loadedEvents[loadedEventSourceIndex].ID : undefined
             }
             loadedEventSourceIndex++;
             return newMatch;
@@ -353,10 +353,10 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     //Effect to intialize channel matches
     React.useEffect(() => {
         const rowKeys = props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels).flat()).flat().map(chan => chan.Key).filter(key => !isVirtual(key));
-        const virtualKeys = props.WorkSpaceJSON.VirtualChannels.flatMap(channel => channel.ComponentChannels);
+        const virtualKeys = props.WorkSpaceJSON.VirtualChannels.flatMap(channel => channel.ComponentChannels.map(component => component.Key));
         const channelKeys = _.uniqWith(rowKeys.concat(virtualKeys), _.isEqual);
         setChannelMatches(channelKeys.map(c => ({
-            Key: c,
+            Key: c as TrenDAP.IChannelKey,
             Status: 'NoMatch',
             ChannelID: null,
         })));

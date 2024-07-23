@@ -244,7 +244,7 @@ export namespace TrenDAP {
         ID: string,
         Name: string,
         ParentKey?: number,
-        ComponentChannels: TrenDAP.IChannelKey[],
+        ComponentChannels: { Key: TrenDAP.IChannelKey, Name: string }[],
         Calculation: string
     }
 

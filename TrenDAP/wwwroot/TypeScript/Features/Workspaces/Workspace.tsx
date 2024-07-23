@@ -357,7 +357,7 @@ export const AddChannelToMap = (chanKey: TrenDAP.IChannelKey, channel: DataSetTy
     if (!parentMap.has(channel.ParentID))
         parentMap.set(channel.ParentID, maxValue + 1);
 
-    let parent = parentMap.get(channel.ParentID);
+    let parent = parentMap.get(channel.ParentID) as number;
     channelMap.set({ ...chanKey, Parent: parent }, channel.ID);
     return parent;
 }
