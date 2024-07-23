@@ -217,16 +217,15 @@ export default class TrenDAPDB {
                     
                     // We've ensured this typing earlier
                     const realResults = results as { Data: DataSetTypes.IDataSetData, ChannelKey: TrenDAP.IChannelKey }[];
-                    const sortedKeys = realResults.map(result => result.ChannelKey);
-                    // Filter series to only common ones
-                    const allSeries = realResults.map(result => Object.keys(result.Data.SeriesData));
-                    const series = allSeries[0].filter(objectKey => 
-                        !allSeries.some(objectKeyArray => objectKeyArray.findIndex(arrKey => arrKey === objectKey) === -1)
-                    );
-
                     const virtualResult: DataSetTypes.IDataSetData = { ...virtualChannel.Info, SeriesData: { Minimum: [], Maximum: [], Average: [] }}
 
-                    series.forEach(objectKey => {
+                    const userFunc = eval?.(
+                        `"use strict";
+                        (${virtualChannel.ComponentChannels.map(compChannel => compChannel.Name).join(', ')}) => ${virtualChannel.EvalExpression}`
+                    );
+                   
+
+                    Object.keys(virtualResult.SeriesData).forEach(objectKey => {
                         const indexArray: number[] = Array(realResults.length).fill(0);
                         const valueArray: number[] = Array(realResults.length).fill(0);
                         let primaryTimeValue: undefined|number;
@@ -264,9 +263,7 @@ export default class TrenDAPDB {
                             // Evaluating value array using indirect eval
                             virtualResult.SeriesData[objectKey].push([
                                 primaryTimeValue as number, 
-                                eval?.(`"use strict";
-                                    ${sortedKeys.map((key, valueIndex) => `const ${keyReadableName(key)} = ${valueArray[valueIndex]};`).join(' ')}
-                                    ${virtualChannel.EvalExpression}`)
+                                userFunc(...valueArray)
                             ]);
 
                         }
