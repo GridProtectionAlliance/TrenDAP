@@ -208,7 +208,6 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
             }
         );
         const readVirtualPromise: Promise<WidgetTypes.IWidgetData<any>[]> = db.ReadManyVirtual(virtualChannels, props.ChannelMap.Map.current).then(data => {
-            console.log(data);
             return Promise.resolve(data.map(item => ({
                 ...item.Data,
                 ChannelSettings: item.ChannelSettings,
