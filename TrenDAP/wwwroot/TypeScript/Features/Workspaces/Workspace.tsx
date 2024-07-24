@@ -133,7 +133,12 @@ const Workspace: React.FunctionComponent = () => {
     function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], eventMap: [number, number][],
         allParents: { ID: string, Name: string }[], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
         setLoading(true);
-        loadHandle.then(() => setLoading(false));
+        loadHandle.then(() => {
+            // Reset virtual table
+            const db = new TrenDAPDB();
+            db.ClearTable('Virtual');
+        }
+        ).then(() => setLoading(false));
 
         setDataset(dataset);
         channelMapping.current = new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, channelMap);
@@ -165,10 +170,6 @@ const Workspace: React.FunctionComponent = () => {
                 };
             })
         );
-        // Reset virtual table
-        const db = new TrenDAPDB();
-        db.ClearTable('Virtual');
-        
         eventMapping.current = new Map<number, number>(eventMap);
         setEventMapVersion(version => version + 1);
         setMapVersion(version => version + 1);
