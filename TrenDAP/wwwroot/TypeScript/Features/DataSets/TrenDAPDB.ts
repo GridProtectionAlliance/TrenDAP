@@ -41,32 +41,35 @@ export interface EventTableRow {
 const TimeFormat = 'MM/DD/YYYY HH:mm:ss';
 const AllowableVirtualTimeDelta = 60000;
 type TrenDAPTable = 'Channel' | 'Event' | 'Virtual';
+
+function getUpgradeTable(version: number): TrenDAPTable{
+    switch(version){
+        case 1: return 'Channel';
+        case 2: return 'Event';
+        case 3: return 'Virtual';
+        default: throw new RangeError("Valid versions are 1-3 for trenDAP IndexedDB");
+    }
+}
+const FullyUpgradedVersion = 3;
+
 //To DO Add Documentation on what each function does...
 export default class TrenDAPDB {
 
-    private OpenDB() {
-
-        return new Promise<IDBDatabase>((resolve, reject) => {
-            const req = indexedDB.open('TrenDAP');
-
-            req.onupgradeneeded = evt => this.AddTable(evt, 'Channel');
+    private OpenDB(): Promise<IDBDatabase> {
+        return indexedDB.databases().then(dbInfo =>
+            new Promise<IDBDatabase>((resolve, reject) => {
+                let version = dbInfo.find(db => db.name === 'TrenDAP')?.version ?? 0;
+                if (version < FullyUpgradedVersion) version++;
+                const req = indexedDB.open('TrenDAP', version);
+                req.onupgradeneeded = evt => this.AddTable(evt, getUpgradeTable(version));
 
             req.onsuccess = (evt: any) => {
-                let database = evt.target.result;
-                const version = parseInt(database.version);
-                database.close();
-                let secondReq = indexedDB.open('TrenDAP', version + 1);
-                secondReq.onupgradeneeded = secondEvt => this.AddTable(secondEvt, 'Event');
-                secondReq.onsuccess = () => {
-                    let thirdReq = indexedDB.open('TrenDAP', version + 2);
-                    thirdReq.onupgradeneeded = thirdEvt => this.AddTable(thirdEvt, 'Virtual');
-                    thirdReq.onsuccess = (thirdEvt: any) => {
-                        resolve(thirdEvt.target.result as IDBDatabase);
-                    };
-                };
+                    resolve(evt.target.result);
             }
 
             req.onerror = (evt: any) => {
+                    // Due to an error with earlier versions, we must do this so that old bad versions that are way beyond v3 are removed...
+                    indexedDB.deleteDatabase('TrenDAP');
                 reject(evt.target.error);
             };
 
@@ -75,7 +78,14 @@ export default class TrenDAPDB {
             }
 
         })
-
+        ).then((connection) => {
+            if (connection.version === FullyUpgradedVersion) return Promise.resolve(connection);
+            else {
+                // Recursively upgrade until we have all upgrades needed
+                connection.close();
+                return Promise.resolve(this.OpenDB());
+            }
+        });
     }
 
     public ClearTable(table: TrenDAPTable) {
@@ -279,6 +289,7 @@ export default class TrenDAPDB {
                         }});
 
                     result.onsuccess = (evt: any) => {
+                        db.close();
                         resolve({
                             Data: virtualResult,
                             ChannelKey: virtualChannel.ChannelKey, 
