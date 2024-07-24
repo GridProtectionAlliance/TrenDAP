@@ -87,7 +87,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
     }, [virtualSortField, virtualAscending]);
 
     React.useEffect(() => {
-        if (props.VirtualChannels == null) return;
+        if (props.VirtualChannels == null || !props.ShowModal) return;
         const ediableVirtuals: IVirtualChannelEditable[] = props.VirtualChannels.map(chan => {
             const channels = chan.ComponentChannels.map(existingChan => {
                 const id = props.ChannelMap.current.get(existingChan.Key);
@@ -107,7 +107,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
         });
 
         setAllVirtualChannels(_.orderBy(ediableVirtuals, [virtualSortField], [virtualAscending ? 'asc' : 'desc']));
-    }, [props.VirtualChannels]);
+    }, [props.VirtualChannels, props.ShowModal]);
 
     React.useEffect(() => {
         if (allChannels.length === 0) return;
