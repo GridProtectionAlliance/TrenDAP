@@ -24,11 +24,12 @@
 import * as React from 'react';
 import { TrenDAP, DataSetTypes } from '../../global';
 import HashTable from './HashTable';
-import { Modal } from '@gpa-gemstone/react-interactive';
+import { Modal, Warning } from '@gpa-gemstone/react-interactive';
 import { Input, TextArea } from '@gpa-gemstone/react-forms';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import * as _ from 'lodash';
 import { AddChannelToMap } from './Workspace';
+import { createVirtualFunc } from '../Widgets/HelperFunctions';
 
 interface IProps {
     VirtualChannels: TrenDAP.IVirtualChannelLoaded[],
@@ -78,6 +79,8 @@ const VirtualChannels: React.FC<IProps> = (props) => {
     const [channelAscending, setChannelAscending] = React.useState<boolean>(true);
     const [channelSortField, setChannelSortField] = React.useState<keyof DataSetTypes.IDataSetMetaData>('Name');
 
+    const [warningIndex, setWarningIndex] = React.useState<number>(-1);
+
     React.useEffect(() => {
         if (allVirtualChannels.length === 0) return;
         setAllVirtualChannels(_.orderBy(allVirtualChannels, [virtualSortField], [virtualAscending ? 'asc' : 'desc']));
@@ -124,17 +127,32 @@ const VirtualChannels: React.FC<IProps> = (props) => {
         setAllVirtualChannels(newAllVirtual);
     }, [selectedVirtualChannel]);
 
+    const findBadVirtualIndex = React.useCallback((virtuals: TrenDAP.IVirtualChannelLoaded[]) => {
+        for(let index = 0; index < virtuals.length; index++) {
+            try {
+                const userFunc = createVirtualFunc(virtuals[index].ComponentChannels, virtuals[index].Calculation);
+                userFunc(...virtuals[index].ComponentChannels.map(_ => Math.random()));
+            } catch {
+                return index;
+            }
+        }
+        return -1;
+    }, []);
+
     return (
         <>
+            <Warning Title={'Failure to Parse User Function'} CallBack={() => setWarningIndex(-1)} ShowCancel={false} 
+                Show={props.ShowModal && (warningIndex >= 0)} Message={`Could not Parse User Function on Virtual Channel ${warningIndex >= 0 ? allVirtualChannels[warningIndex].Name : ''}`} />
             <Modal
                 ConfirmBtnClass={"btn btn-success mr-auto"}
-                Show={props.ShowModal}
+                Show={props.ShowModal && (warningIndex < 0)}
                 ShowX={true}
                 ConfirmText={'Apply'}
                 CancelText={'Exit'}
                 Title={'Add/Edit Virtual Channels'}
                 CallBack={conf => {
-                    const newVirtualChannels: TrenDAP.IVirtualChannelLoaded[] = _.orderBy(allVirtualChannels, ['Name'], ['desc']).map(virtualChannel => {
+                    if (conf) {
+                        let newVirtualChannels: TrenDAP.IVirtualChannelLoaded[] = allVirtualChannels.map(virtualChannel => {
                         const channelKeys = virtualChannel.Channels.map((realChannel) => {
                             const parentKey = props.ParentMap.current.get(realChannel.ParentID);
                             const channelKey = {
@@ -166,7 +184,15 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                             Calculation: virtualChannel.Calculation
                         }
                     });
-                    if (conf && !_.isEqual(props.VirtualChannels, newVirtualChannels)) props.SetVirtualChannels(newVirtualChannels);
+                        const badVirtualIndex = findBadVirtualIndex(newVirtualChannels);
+                        console.log(badVirtualIndex)
+                        if (badVirtualIndex >= 0) {
+                            setWarningIndex(badVirtualIndex);
+                            return;
+                        }
+                        newVirtualChannels = _.orderBy(newVirtualChannels, ['Name'], ['desc']);
+                        if (!_.isEqual(props.VirtualChannels, newVirtualChannels)) props.SetVirtualChannels(newVirtualChannels);
+                    }
                     props.SetShowModal(false);
                 }}
                 Size="xlg"

@@ -26,6 +26,7 @@ import { WidgetTypes } from "../Widgets/Interfaces";
 import moment from "moment";
 import HashTable from "../Workspaces/HashTable";
 import _ from "lodash";
+import { createVirtualFunc } from "../Widgets/HelperFunctions";
 
 export interface ChannelTableRow {
     ID: string,
@@ -63,21 +64,21 @@ export default class TrenDAPDB {
                 const req = indexedDB.open('TrenDAP', version);
                 req.onupgradeneeded = evt => this.AddTable(evt, getUpgradeTable(version));
 
-            req.onsuccess = (evt: any) => {
+                req.onsuccess = (evt: any) => {
                     resolve(evt.target.result);
-            }
+                }
 
-            req.onerror = (evt: any) => {
+                req.onerror = (evt: any) => {
                     // Due to an error with earlier versions, we must do this so that old bad versions that are way beyond v3 are removed...
                     indexedDB.deleteDatabase('TrenDAP');
-                reject(evt.target.error);
-            };
+                    reject(evt.target.error);
+                };
 
-            if (!('indexedDB' in window)) {
-                reject('This browser doesn\'t support IndexedDB');
-            }
+                if (!('indexedDB' in window)) {
+                    reject('This browser doesn\'t support IndexedDB');
+                }
 
-        })
+            })
         ).then((connection) => {
             if (connection.version === FullyUpgradedVersion) return Promise.resolve(connection);
             else {
@@ -123,7 +124,6 @@ export default class TrenDAPDB {
                 resolve([]);
                 return;
             }
-    
             const db = await this.OpenDB();
             const tx = db.transaction('Channel', 'readonly');
             const store = tx.objectStore('Channel');
@@ -163,7 +163,6 @@ export default class TrenDAPDB {
         if (channels == null || channels.length === 0) {
             return Promise.resolve([]);
         }
-    
         const db = await this.OpenDB();
         const tx = db.transaction(['Channel', 'Virtual'], 'readwrite');
         const channelStore = tx.objectStore('Channel');
@@ -182,7 +181,6 @@ export default class TrenDAPDB {
                 const virtualRequest = virtualStore.get(virtualChannel.Info.ID);
                 virtualRequest.onsuccess = (evt: any) => {
                     if (evt.target.result != null) {
-                        console.log(evt.target.result);
                         if (_.isEqual(evt.target.result.Data.ComponentChannels, virtualChannel.ComponentChannels) && 
                             _.isEqual(evt.target.result.Data.EvalExpression, virtualChannel.EvalExpression)) 
                             resolve({
@@ -209,7 +207,6 @@ export default class TrenDAPDB {
             
                         const request = channelStore.get(id);
                         request.onsuccess = (evt: any) => {
-                            console.log(evt.target.result)
                             const resultIndex = componentResults.findIndex(compResult => _.isEqual(compResult.ChannelKey, componentKey.Key));
                             componentResults[resultIndex].Data = evt.target.result.Data;
                             completedComponents++;
@@ -229,11 +226,7 @@ export default class TrenDAPDB {
                     const realResults = results as { Data: DataSetTypes.IDataSetData, ChannelKey: TrenDAP.IChannelKey }[];
                     const virtualResult: DataSetTypes.IDataSetData = { ...virtualChannel.Info, SeriesData: { Minimum: [], Maximum: [], Average: [] }}
 
-                    const userFunc = eval?.(
-                        `"use strict";
-                        (${virtualChannel.ComponentChannels.map(compChannel => compChannel.Name).join(', ')}) => ${virtualChannel.EvalExpression}`
-                    );
-                   
+                    const userFunc = createVirtualFunc(virtualChannel.ComponentChannels, virtualChannel.EvalExpression);
 
                     Object.keys(virtualResult.SeriesData).forEach(objectKey => {
                         const indexArray: number[] = Array(realResults.length).fill(0);
