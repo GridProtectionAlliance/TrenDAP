@@ -134,7 +134,10 @@ export const Map: WidgetTypes.IWidget<IProps, IChannelSettings, null> = {
                 };
 
                 const heatmapLayer = new HeatMap(cfg);
-                heatmapLayer.setData({ data: props.Data.map(d => ({ Name: d.Name, Frequency: d.SeriesData[d.ChannelSettings.Field]?.[0]?.[1], Lat: d?.Latitude, Long: d?.Longitude })) })
+                heatmapLayer.setData({ data: props.Data
+                    .map(d => ({ Name: d.Name, Frequency: d.SeriesData[d.ChannelSettings.Field]?.[0]?.[1], Lat: d?.Latitude, Long: d?.Longitude }))
+                    .filter(d => d.Lat != null && d.Long != null) 
+                });
                 heatmapLayer.addTo(map.current);
 
                 return () => { map.current.removeLayer(heatmapLayer); }
