@@ -56,7 +56,7 @@ const generateQuickName = (existingChannels: IMetaDataReferenceName[]) => {
     let currentAttemptIndex = existingChannels.length;
     while(true) {
         currentName = findQuickName(currentAttemptIndex);
-        if (!existingChannels.some(chan => chan.ReferenceName === currentName)) return currentName;
+        if (currentName !== 'T' &&  !existingChannels.some(chan => chan.ReferenceName === currentName)) return currentName;
         currentAttemptIndex ++;
     }
 };
@@ -131,7 +131,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
         for(let index = 0; index < virtuals.length; index++) {
             try {
                 const userFunc = createVirtualFunc(virtuals[index].ComponentChannels, virtuals[index].Calculation);
-                userFunc(...virtuals[index].ComponentChannels.map(_ => Math.random()));
+                userFunc(Math.random(), ...virtuals[index].ComponentChannels.map(_ => Math.random()));
             } catch {
                 return index;
             }
@@ -279,7 +279,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                                 </div>
                                             </div>
                                             <TextArea<IVirtualChannelEditable> Rows={8} Record={selectedVirtualChannel} 
-                                            Help="This field represents a formula by which the virtual channel is calculated. Refer to data from component channels by their reference name."
+                                                Help="This field represents a formula by which the virtual channel is calculated. Refer to data from component channels by their variable name. Timestamp arguement is allowed as T (ms since UNIX epoch)"
                                              Field='Calculation' Valid={() => true} Setter={handleChange} />
                                              <div className='alert alert-primary' role='alert'>
                                                 Min, Avg, and Max calculated is based on the Min, Avg, and Max of the calculated channels and may not reflect the full range of possible computed values
@@ -390,8 +390,10 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                     
                                                                     // Edit channel array
                                                                 }} Feedback="Reference name must be unique"
-                                                                Valid={() => recordIndex === -1 || selectedVirtualChannel == null || 
-                                                                    !selectedVirtualChannel.Channels.some(chan => chan.ReferenceName === record.ReferenceName && record.ID !== chan.ID)} 
+                                                                Valid={() => recordIndex === -1 || selectedVirtualChannel == null || (
+                                                                    record.ReferenceName !== 'T' &&
+                                                                    !selectedVirtualChannel.Channels.some(chan => chan.VariableName === record.VariableName && record.ID !== chan.ID)
+                                                                )} 
                                                             />
                                                         </div>);
 

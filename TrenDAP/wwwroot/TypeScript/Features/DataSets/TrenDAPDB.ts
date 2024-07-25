@@ -268,7 +268,7 @@ export default class TrenDAPDB {
                             
                             // Set previous values, now that they are previous
                             previousValueArray = _.cloneDeep(valueArray);
-                            const calculatedValue = [currentTimeStamp, userFunc(...valueArray.map(val => val[1]))];
+                            const calculatedValue = [currentTimeStamp, userFunc(currentTimeStamp, ...valueArray.map(val => val[1]))];
                             if (!isNaN(calculatedValue[1])) virtualResult.SeriesData[objectKey].push(calculatedValue);
                         }
                     });
