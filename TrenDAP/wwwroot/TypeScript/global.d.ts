@@ -245,7 +245,8 @@ export namespace TrenDAP {
         Name: string,
         ParentKey?: number,
         ComponentChannels: { Key: TrenDAP.IChannelKey, Name: string }[],
-        Calculation: string
+        Calculation: string,
+        Threshold: number
     }
 
     interface IVirtualChannelLoaded extends IVirtualChannelModel {

@@ -200,8 +200,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                 const virtualChannelMeta = allSelectableChannels.find(chan => chan.ID === channel.Key);
                 return {
                     Info: virtualChannelMeta as DataSetTypes.IDataSetMetaData,
-                    ComponentChannels: virtualChannel?.ComponentChannels ?? [],
-                    EvalExpression: virtualChannel?.Calculation ?? '',
+                    VirtualInfo: virtualChannel as TrenDAP.IVirtualChannelLoaded,
                     ChannelKey: channel.Key as string,
                     ChannelSettings: channel.ChannelSettings
                 };

@@ -155,8 +155,7 @@ export default class TrenDAPDB {
 
     public async ReadManyVirtual(channels: { 
         Info: DataSetTypes.IDataSetMetaData, 
-        ComponentChannels: { Key: TrenDAP.IChannelKey, Name: string}[], 
-        EvalExpression: string, 
+        VirtualInfo: TrenDAP.IVirtualChannelLoaded, 
         ChannelSettings: any, 
         ChannelKey: string
     }[], channelMapping: HashTable<TrenDAP.IChannelKey, string>) {
@@ -174,15 +173,15 @@ export default class TrenDAPDB {
 
         const promiseArray = channels.map(virtualChannel => 
             new Promise<{ Data: DataSetTypes.IDataSetData, ChannelKey: string, ChannelSettings: any }>(async (resolve, reject) => {
-                if (virtualChannel.ComponentChannels == null || virtualChannel.ComponentChannels.length === 0) {
+                if (virtualChannel.VirtualInfo.ComponentChannels == null || virtualChannel.VirtualInfo.ComponentChannels.length === 0) {
                     resolve({Data: {SeriesData: { Minimum: [], Maximum: [], Average: []}, ...virtualChannel.Info}, ChannelKey: virtualChannel.ChannelKey, ChannelSettings: virtualChannel.ChannelSettings});
                     return;
                 }
                 const virtualRequest = virtualStore.get(virtualChannel.Info.ID);
                 virtualRequest.onsuccess = (evt: any) => {
                     if (evt.target.result != null) {
-                        if (_.isEqual(evt.target.result.Data.ComponentChannels, virtualChannel.ComponentChannels) && 
-                            _.isEqual(evt.target.result.Data.EvalExpression, virtualChannel.EvalExpression)) 
+                        if (_.isEqual(evt.target.result.Data.ComponentChannels, virtualChannel.VirtualInfo.ComponentChannels) && 
+                            _.isEqual(evt.target.result.Data.EvalExpression, virtualChannel.VirtualInfo.Calculation)) 
                             resolve({
                                 Data: {...virtualChannel.Info, SeriesData: evt.target.result.Data.SeriesData}, 
                                 ChannelKey: virtualChannel.ChannelKey, 
@@ -200,8 +199,8 @@ export default class TrenDAPDB {
                     let completedComponents = 0;
                     // Note: map preserves order, see specification from ECMAScript for more details
                     const componentResults: { Data: DataSetTypes.IDataSetData | undefined, ChannelKey: TrenDAP.IChannelKey }[] =
-                        virtualChannel.ComponentChannels.map(component => ({ ChannelKey: component.Key, Data: undefined}));
-                    virtualChannel.ComponentChannels.forEach(componentKey => {
+                        virtualChannel.VirtualInfo.ComponentChannels.map(component => ({ ChannelKey: component.Key, Data: undefined}));
+                    virtualChannel.VirtualInfo.ComponentChannels.forEach(componentKey => {
                         const id = channelMapping.get(componentKey.Key);
                         if (id == null) return;
             
@@ -210,7 +209,7 @@ export default class TrenDAPDB {
                             const resultIndex = componentResults.findIndex(compResult => _.isEqual(compResult.ChannelKey, componentKey.Key));
                             componentResults[resultIndex].Data = evt.target.result.Data;
                             completedComponents++;
-                            if (completedComponents >= virtualChannel.ComponentChannels.length) {
+                            if (completedComponents >= virtualChannel.VirtualInfo.ComponentChannels.length) {
                                 return resolve(componentResults as { Data: DataSetTypes.IDataSetData, ChannelKey: TrenDAP.IChannelKey }[]);
                             }
                         };
@@ -226,49 +225,51 @@ export default class TrenDAPDB {
                     const realResults = results as { Data: DataSetTypes.IDataSetData, ChannelKey: TrenDAP.IChannelKey }[];
                     const virtualResult: DataSetTypes.IDataSetData = { ...virtualChannel.Info, SeriesData: { Minimum: [], Maximum: [], Average: [] }}
 
-                    const userFunc = createVirtualFunc(virtualChannel.ComponentChannels, virtualChannel.EvalExpression);
+                    const userFunc = createVirtualFunc(virtualChannel.VirtualInfo.ComponentChannels, virtualChannel.VirtualInfo.Calculation);
 
                     Object.keys(virtualResult.SeriesData).forEach(objectKey => {
                         const indexArray: number[] = Array(realResults.length).fill(0);
-                        const valueArray: number[] = Array(realResults.length).fill(0);
-                        let primaryTimeValue: undefined|number;
-                        
-                        evalLoop: while (true) {
-                            let dataLoopContinue = true;
-                            while (dataLoopContinue) {
-                                // Considered the time stamp for our current value
-                                primaryTimeValue = undefined;
-                                dataLoopContinue = false;
-    
-                                // Finding values for each component
-                                componentLoop : for(let compIndex = 0; compIndex < indexArray.length; compIndex++) {
-                                    let currentValue: undefined|number[] = undefined;
-                                    // Seek value that lies within range of primary time value
-                                    while (currentValue == null || primaryTimeValue == null || currentValue[0] < (primaryTimeValue - AllowableVirtualTimeDelta)) {
-                                        if (indexArray[compIndex] >= 0 && indexArray[compIndex] < realResults[compIndex].Data.SeriesData[objectKey].length) {
-                                            // Grab this current value and check it
-                                            currentValue = realResults[compIndex].Data.SeriesData[objectKey][indexArray[compIndex]];
-                                            if (primaryTimeValue == null) primaryTimeValue = currentValue![0];
-                                            // Restart component loop
-                                            else if (currentValue![0] > primaryTimeValue + AllowableVirtualTimeDelta) {
-                                                dataLoopContinue = true;
-                                                break componentLoop;
-                                            }
-                                            indexArray[compIndex] += 1;
-                                        } else {
-                                            // We're out of data, no more valid points so just break the loop
-                                            break evalLoop;
-                                        }
-                                    }
-                                    valueArray[compIndex] = currentValue[1];
-                                }
+                        let previousValueArray: number[][] = Array(realResults.length).fill([NaN, NaN]);
+                        const valueArray: number[][] = Array(realResults.length).fill([NaN, NaN]);
+                        const estimatedTimeGap: number[] = realResults.map(result => {
+                            let count = 0;
+                            let timeSum = 0;
+                            while (count < 5 && count < result.Data.SeriesData[objectKey].length - 2) {
+                                count++;
+                                timeSum += result.Data.SeriesData[objectKey][count + 1][0] - result.Data.SeriesData[objectKey][count][0];
                             }
-                            // Evaluating value array using indirect eval
-                            virtualResult.SeriesData[objectKey].push([
-                                primaryTimeValue as number, 
-                                userFunc(...valueArray)
-                            ]);
+                            return (timeSum / count) * 1.05;
+                        });
 
+                        let currentTimeStamp: undefined|number;
+                        while (indexArray.some((dataIndex, resultIndex) => dataIndex < realResults[resultIndex].Data.SeriesData[objectKey].length)) {
+                            // Grab next potential values
+                            for (let index = 0; index < valueArray.length; index++){
+                                if (indexArray[index] < realResults[index].Data.SeriesData[objectKey].length) {
+                                    valueArray[index] = realResults[index].Data.SeriesData[objectKey][indexArray[index]];
+                                }
+                                else valueArray[index] = [NaN, NaN];
+                            }
+                            // Find timestamp for this point
+                            currentTimeStamp = Math.min(...valueArray.map(val => val[0]).filter(val => !isNaN(val)));
+                            // Find if each value meets the threshold, use previous or NaN if not
+                            for (let index = 0; index < valueArray.length; index++){
+                                // Accepted value, increment index array index
+                                if (valueArray[index][0] - currentTimeStamp <= virtualChannel.VirtualInfo.Threshold) {
+                                    indexArray[index]++;
+                                }
+                                // Rejected value, check if previous or NaN should be used based on est. sampling
+                                else if (valueArray[index][0] - previousValueArray[index][0] <= estimatedTimeGap[index]) {
+                                    valueArray[index] = previousValueArray[index];
+                                }
+                                else valueArray[index] = [currentTimeStamp, NaN];
+
+                            }
+                            
+                            // Set previous values, now that they are previous
+                            previousValueArray = _.cloneDeep(valueArray);
+                            const calculatedValue = [currentTimeStamp, userFunc(...valueArray.map(val => val[1]))];
+                            if (!isNaN(calculatedValue[1])) virtualResult.SeriesData[objectKey].push(calculatedValue);
                         }
                     });
                     
@@ -276,8 +277,8 @@ export default class TrenDAPDB {
                         ID: virtualChannel.Info.ID, 
                         Created: moment().format(TimeFormat), 
                         Data: { 
-                            EvalExpression: virtualChannel.EvalExpression,
-                            ComponentChannels: virtualChannel.ComponentChannels, 
+                            EvalExpression: virtualChannel.VirtualInfo.Calculation,
+                            ComponentChannels: virtualChannel.VirtualInfo.ComponentChannels, 
                             SeriesData: virtualResult.SeriesData 
                         }});
 
