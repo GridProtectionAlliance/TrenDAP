@@ -184,7 +184,8 @@ const Workspace: React.FunctionComponent = () => {
                 Name: item.Name,
                 ParentKey: item?.ParentKey,
                 ComponentChannels: item.ComponentChannels,
-                Calculation: item.Calculation
+                Calculation: item.Calculation,
+                Threshold: item.Threshold
             }))
         }));
     }, []);

@@ -153,39 +153,39 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                 CallBack={conf => {
                     if (conf) {
                         let newVirtualChannels: TrenDAP.IVirtualChannelLoaded[] = allVirtualChannels.map(virtualChannel => {
-                        const channelKeys = virtualChannel.Channels.map((realChannel) => {
-                            const parentKey = props.ParentMap.current.get(realChannel.ParentID);
-                            const channelKey = {
-                                Parent: parentKey as number,
-                                Phase: realChannel.Phase,
-                                Type: realChannel.Type,
-                                Harmonic: realChannel.Harmonic
+                            const channelKeys = virtualChannel.Channels.map((realChannel) => {
+                                const parentKey = props.ParentMap.current.get(realChannel.ParentID);
+                                const channelKey = {
+                                    Parent: parentKey as number,
+                                    Phase: realChannel.Phase,
+                                    Type: realChannel.Type,
+                                    Harmonic: realChannel.Harmonic
+                                }
+                                const channelID = props.ChannelMap.current.get(channelKey);
+                                if (channelID == null) {
+                                    const newParent = AddChannelToMap(channelKey, realChannel, props.ParentMap.current, props.ChannelMap.current);
+                                    channelKey.Parent = newParent;
+                                } else if (channelID !== realChannel.ID) {
+                                    console.warn(`Unexpected mismatch between mapped channel ID (${channelID}) and actual channel ID ${realChannel.ID}`);
+                                    console.warn(channelKey)
+                                }
+                                return { Key: channelKey, Name: realChannel.ReferenceName};
+                            });
+    
+                            // If a parent ID exists, it shoulld be in the map since we added channels to the channel map
+                            const parentKey = props.ParentMap.current.get(virtualChannel?.ParentID);
+                            return {
+                                ID: virtualChannel.ID,
+                                Name: virtualChannel.Name,
+                                ParentName: virtualChannel?.ParentName,
+                                ParentID: virtualChannel?.ParentID,
+                                ParentKey: parentKey,
+                                ComponentChannels: channelKeys,
+                                Calculation: virtualChannel.Calculation,
+                                Threshold: virtualChannel.Threshold
                             }
-                            const channelID = props.ChannelMap.current.get(channelKey);
-                            if (channelID == null) {
-                                const newParent = AddChannelToMap(channelKey, realChannel, props.ParentMap.current, props.ChannelMap.current);
-                                channelKey.Parent = newParent;
-                            } else if (channelID !== realChannel.ID) {
-                                console.warn(`Unexpected mismatch between mapped channel ID (${channelID}) and actual channel ID ${realChannel.ID}`);
-                                console.warn(channelKey)
-                            }
-                            return { Key: channelKey, Name: realChannel.ReferenceName};
                         });
-
-                        // If a parent ID exists, it shoulld be in the map since we added channels to the channel map
-                        const parentKey = props.ParentMap.current.get(virtualChannel?.ParentID);
-                        return {
-                            ID: virtualChannel.ID,
-                            Name: virtualChannel.Name,
-                            ParentName: virtualChannel?.ParentName,
-                            ParentID: virtualChannel?.ParentID,
-                            ParentKey: parentKey,
-                            ComponentChannels: channelKeys,
-                            Calculation: virtualChannel.Calculation
-                        }
-                    });
                         const badVirtualIndex = findBadVirtualIndex(newVirtualChannels);
-                        console.log(badVirtualIndex)
                         if (badVirtualIndex >= 0) {
                             setWarningIndex(badVirtualIndex);
                             return;
@@ -212,7 +212,8 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                     Name: `Virtual-${allVirtualChannels.length}`,
                                     ComponentChannels: [],
                                     Calculation: '',
-                                    Channels: []
+                                    Channels: [],
+                                    Threshold: 0
                                 })
                                 setAllVirtualChannels(_.orderBy(newVirtualChannels, [channelSortField], [channelAscending ? 'asc' : 'desc']));;
                             }}>
@@ -264,16 +265,29 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                             </ReactTable.Table>
                         </div>
                         <div className="col-8 h-100">
-                            <div className="row h-50 p-0">
+                            <div className="row">
                                 {
                                     selectedVirtualChannel == null ? <></> :
                                         <div className="col">
-                                            <Input<IVirtualChannelEditable> Record={selectedVirtualChannel} Field='Name' Valid={() => true} Setter={handleChange} />
-                                            <TextArea<IVirtualChannelEditable> Rows={8} Record={selectedVirtualChannel} Field='Calculation' Valid={() => true} Setter={handleChange} />
+                                            <div className='row'>
+                                                <div className="col">
+                                                    <Input<IVirtualChannelEditable> Record={selectedVirtualChannel} Field='Name' Valid={() => true} Setter={handleChange} />
+                                                </div>
+                                                <div className="col">
+                                                    <Input<IVirtualChannelEditable> Record={selectedVirtualChannel} Field='Threshold' Label='Threshold (ms)' 
+                                                        Help='Time threshold for matching real datapoints together for calculation' Valid={() => true} Setter={handleChange} />
+                                                </div>
+                                            </div>
+                                            <TextArea<IVirtualChannelEditable> Rows={8} Record={selectedVirtualChannel} 
+                                            Help="This field represents a formula by which the virtual channel is calculated. Refer to data from component channels by their reference name."
+                                             Field='Calculation' Valid={() => true} Setter={handleChange} />
+                                             <div className='alert alert-primary' role='alert'>
+                                                Min, Avg, and Max calculated is based on the Min, Avg, and Max of the calculated channels and may not reflect the full range of possible computed values
+                                            </div>
                                         </div>
                                 }
                             </div>
-                            <div className="row h-50 p-0">
+                            <div className="row" style={{flex: 1, overflow: 'hidden'}}>
                                 {
                                     selectedVirtual == null ? <></> :
                                         <ReactTable.Table<DataSetTypes.IDataSetMetaData>
