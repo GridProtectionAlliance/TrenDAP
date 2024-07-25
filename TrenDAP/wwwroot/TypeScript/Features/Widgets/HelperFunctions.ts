@@ -49,7 +49,7 @@ export const isVirtual = (channelKey: TrenDAP.IChannelKey | string) => {
 export const createVirtualFunc = (componentChannels: {Key: TrenDAP.IChannelKey, Name: string}[], evalExpression: string) => {
     return eval?.(
         `"use strict";
-        (${componentChannels.map(compChannel => compChannel.Name).join(', ')}) => ${evalExpression}`
+        (T, ${componentChannels.map(compChannel => compChannel.Name).join(', ')}) => ${evalExpression}`
     );
 } 
 
