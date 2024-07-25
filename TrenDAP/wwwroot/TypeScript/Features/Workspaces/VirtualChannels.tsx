@@ -43,20 +43,20 @@ interface IProps {
     ParentMap: React.MutableRefObject<Map<string, number>>
 }
 
-interface IMetaDataReferenceName extends DataSetTypes.IDataSetMetaData {
-    ReferenceName: string
+interface IMetaDataVariableName extends DataSetTypes.IDataSetMetaData {
+    VariableName: string
 }
 
 interface IVirtualChannelEditable extends TrenDAP.IVirtualChannelLoaded {
-    Channels: IMetaDataReferenceName[]
+    Channels: IMetaDataVariableName[]
 }
 
-const generateQuickName = (existingChannels: IMetaDataReferenceName[]) => {
+const generateQuickName = (existingChannels: IMetaDataVariableName[]) => {
     let currentName: string;
     let currentAttemptIndex = existingChannels.length;
     while(true) {
         currentName = findQuickName(currentAttemptIndex);
-        if (currentName !== 'T' &&  !existingChannels.some(chan => chan.ReferenceName === currentName)) return currentName;
+        if (currentName !== 'T' &&  !existingChannels.some(chan => chan.VariableName === currentName)) return currentName;
         currentAttemptIndex ++;
     }
 };
@@ -100,7 +100,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                     console.error(`Channel expected not found in all channels with ID: ${id}`);
                     return undefined;
                 }
-                return {...channel, ReferenceName: existingChan.Name};
+                return {...channel, VariableName: existingChan.Name};
 
             }).filter(chan => chan != null);
             return { ...chan, Channels: channels }
@@ -148,7 +148,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                 Show={props.ShowModal && (warningIndex < 0)}
                 ShowX={true}
                 ConfirmText={'Apply'}
-                CancelText={'Exit'}
+                ShowCancel={false}
                 Title={'Add/Edit Virtual Channels'}
                 CallBack={conf => {
                     if (conf) {
@@ -169,7 +169,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                     console.warn(`Unexpected mismatch between mapped channel ID (${channelID}) and actual channel ID ${realChannel.ID}`);
                                     console.warn(channelKey)
                                 }
-                                return { Key: channelKey, Name: realChannel.ReferenceName};
+                                return { Key: channelKey, Name: realChannel.VariableName};
                             });
     
                             // If a parent ID exists, it shoulld be in the map since we added channels to the channel map
@@ -200,7 +200,6 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                 BodyStyle={{ height: 'calc(-210px + 100vh)' }}
                 ConfirmShowToolTip={true}
                 ConfirmToolTipContent="Save Changes"
-                ShowCancel={true}
             >
                 <div className="container-fluid d-flex flex-column p-0 h-100">
                     <div className="row h-100">
@@ -280,8 +279,8 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                             </div>
                                             <TextArea<IVirtualChannelEditable> Rows={8} Record={selectedVirtualChannel} 
                                                 Help="This field represents a formula by which the virtual channel is calculated. Refer to data from component channels by their variable name. Timestamp arguement is allowed as T (ms since UNIX epoch)"
-                                             Field='Calculation' Valid={() => true} Setter={handleChange} />
-                                             <div className='alert alert-primary' role='alert'>
+                                                Field='Calculation' Valid={() => true} Setter={handleChange} />
+                                            <div className='alert alert-primary' role='alert'>
                                                 Min, Avg, and Max calculated is based on the Min, Avg, and Max of the calculated channels and may not reflect the full range of possible computed values
                                             </div>
                                         </div>
@@ -305,7 +304,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                                 const splicedChannelId = newSelected.Channels.findIndex(chan => chan.ID === item.row.ID);
 
                                                 // Edit channel array
-                                                if (splicedChannelId === -1) newSelected.Channels.push({...item.row, ReferenceName: generateQuickName(newSelected.Channels)});
+                                                if (splicedChannelId === -1) newSelected.Channels.push({...item.row, VariableName: generateQuickName(newSelected.Channels)});
                                                 else newSelected.Channels.splice(splicedChannelId, 1);
 
                                                 // Figure out what the parent id and Name is
@@ -366,16 +365,16 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                             >
                                                 Phase
                                             </ReactTable.Column>
-                                            <ReactTable.Column<IMetaDataReferenceName>
-                                                Key={'ReferenceName'}
+                                            <ReactTable.Column<IMetaDataVariableName>
+                                                Key={'VariableName'}
                                                 AllowSort={true}
-                                                Field={'ReferenceName'}
+                                                Field={'VariableName'}
                                                 Content={row => {
                                                     const recordIndex = selectedVirtualChannel?.Channels?.findIndex(item => row.item.ID === item.ID) ?? -1;
-                                                    const record = selectedVirtualChannel?.Channels[recordIndex] ?? {...row.item, ReferenceName: 'N/A'};
+                                                    const record = selectedVirtualChannel?.Channels[recordIndex] ?? {...row.item, VariableName: 'N/A'};
                                                     return (
                                                         <div onClick={e => e.stopPropagation()}>
-                                                            <Input<IMetaDataReferenceName> Record={record} Field='ReferenceName' Disabled={recordIndex === -1}
+                                                            <Input<IMetaDataVariableName> Record={record} Field='VariableName' Disabled={recordIndex === -1}
                                                                 Setter={newRecord => {
                                                                     if (recordIndex === -1) return;
 
@@ -389,9 +388,9 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                                                     setAllVirtualChannels(newAllVirtual);
                     
                                                                     // Edit channel array
-                                                                }} Feedback="Reference name must be unique"
+                                                                }} Feedback="Variable name must be unique" Label=""
                                                                 Valid={() => recordIndex === -1 || selectedVirtualChannel == null || (
-                                                                    record.ReferenceName !== 'T' &&
+                                                                    record.VariableName !== 'T' &&
                                                                     !selectedVirtualChannel.Channels.some(chan => chan.VariableName === record.VariableName && record.ID !== chan.ID)
                                                                 )} 
                                                             />
@@ -399,7 +398,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
 
                                                 }}
                                             >
-                                                Reference Name
+                                                Variable Name
                                             </ReactTable.Column>
                                         </ReactTable.Table>
                                 }
