@@ -63,8 +63,9 @@ interface IxdaEvent {
     ID: number,
     StartTime: string,
     EndTime: string,
-    Name: string,
-    Description: string
+    Type: string,
+    MeterName: string,
+    AssetName: string
 }
 
 const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
@@ -441,8 +442,8 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
                     return {
                         Time: startTime.valueOf(),
                         Duration: moment.utc(evt.EndTime, xdaServerFormat).valueOf() - startTime.valueOf(),
-                        Title: evt.Name,
-                        Description: evt.Description,
+                        Title: evt.Type,
+                        Description: `${evt.MeterName} - ${evt.AssetName}`,
                         Link: `${sourceSettings.PQBrowserUrl.replace(/[\/]$/, '')}/eventsearch?${queryUrl}`
                     }
                 });
