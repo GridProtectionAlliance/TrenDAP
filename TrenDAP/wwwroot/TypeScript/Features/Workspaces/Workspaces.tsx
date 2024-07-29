@@ -112,7 +112,7 @@ const Workspaces: React.FunctionComponent = () => {
                                     Key={'Public'}
                                     AllowSort={true}
                                     Field={'Public'}
-                                    Content={(row) => <span>{row.item[row.key] != null ? <ReactIcons.CheckMark Color="green" /> : null}</span>}
+                                    Content={(row) => <span>{row.item.Public ? <ReactIcons.CheckMark Color="green" /> : <></>}</span>}
                                 >
                                     Shared
                                 </ReactTable.Column>
