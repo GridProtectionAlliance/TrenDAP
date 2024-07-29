@@ -507,7 +507,7 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
     },
     GetLogo: function (eventSource: EventSourceTypes.IEventSourceView) {
         const sourceSettings = EnsureTypeSafety(eventSource.Settings, OpenXDAEvents.DefaultSourceSettings);
-        return `${sourceSettings.PQBrowserUrl.replace(/[\/]$/, '')}/Images/icon.png`;
+        return `${sourceSettings.PQBrowserUrl.replace(/[\/]$/, '')}/Images/PQBrowserLight.png`;
     },
     TestAuth: function (eventSource: EventSourceTypes.IEventSourceView): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
