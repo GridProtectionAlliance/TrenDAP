@@ -379,19 +379,21 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         const db = new TrenDAPDB();
         props.SetAllEventSources(eventSourceMetas.map(d => ({ ID: d.ID, Name: d.Name, SourceType: d.SourceType, Logo: d?.Logo })));
 
-        return Promise.all(eventSources.map(conn => 
-            new Promise<{Events: TrenDAP.IEvent[], EventMeta: TrenDAP.IEventSourceMetaData}>((resolve, reject) => {
-                const view = eventSourceViews.find(eventView => eventView.ID === conn.EventSourceID);
-                const implementation: IEventSource<any, any> | undefined = EventDataSources.find(evtSrc => evtSrc.Name === view?.Type);
-                const meta = eventSourceMetas.find(evtMeta => evtMeta.ID === conn.ID);
-                if (view == null || meta == null || implementation == null)
-                    resolve({Events: [], EventMeta: meta as TrenDAP.IEventSourceMetaData});
-                else
-                    implementation.Load(view, selectedDataSet as TrenDAP.iDataSet, conn).then(d =>
-                        resolve({ EventMeta: meta as  TrenDAP.IEventSourceMetaData, Events: d}),
-                    (arg) => reject(arg));
-            })
-        )).then((metasWithEvents) => 
+        return db.ClearTables(['Channel', 'Event', 'Virtual']).then(() =>
+            Promise.all(eventSources.map(conn => 
+                new Promise<{Events: TrenDAP.IEvent[], EventMeta: TrenDAP.IEventSourceMetaData}>((resolve, reject) => {
+                    const view = eventSourceViews.find(eventView => eventView.ID === conn.EventSourceID);
+                    const implementation: IEventSource<any, any> | undefined = EventDataSources.find(evtSrc => evtSrc.Name === view?.Type);
+                    const meta = eventSourceMetas.find(evtMeta => evtMeta.ID === conn.ID);
+                    if (view == null || meta == null || implementation == null)
+                        resolve({Events: [], EventMeta: meta as TrenDAP.IEventSourceMetaData});
+                    else
+                        implementation.Load(view, selectedDataSet as TrenDAP.iDataSet, conn).then(d =>
+                            resolve({ EventMeta: meta as  TrenDAP.IEventSourceMetaData, Events: d}),
+                        (arg) => reject(arg));
+                })
+            ))
+        ).then((metasWithEvents) => 
             new Promise<TrenDAP.IEvent[] | undefined>((resolve, reject) => {
                 if (metasWithEvents.length === 0) {
                     resolve(undefined);

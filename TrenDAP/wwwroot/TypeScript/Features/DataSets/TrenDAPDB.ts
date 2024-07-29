@@ -89,24 +89,26 @@ export default class TrenDAPDB {
         });
     }
 
-    public ClearTable(table: TrenDAPTable) {
-        return new Promise(async (resolve, reject) => {
-    
-            const db = await this.OpenDB();
-            const tx = db.transaction(table, 'readwrite');
-            const store = tx.objectStore(table);
+    public ClearTables(tables: TrenDAPTable[]) {
+        return this.OpenDB().then(db => {
+            const tx = db.transaction(tables, 'readwrite');
             
-            const request = store.clear();
-            request.onsuccess = (evt: any) => {
-                resolve(evt.target.result);
-            };
-            request.onerror = (evt: any) => {
-                reject(evt.target.error);
-            };
-    
             tx.onerror = (evt: any) => {
-                reject(evt.target.error);
+                return Promise.reject(evt.target.error);
             };
+
+            return Promise.all(tables.map(table =>
+                new Promise((res, rej) => {
+                    const store = tx.objectStore(table);
+                    const request = store.clear();
+                    request.onsuccess = (evt: any) => {
+                        res(evt.target.result);
+                    };
+                    request.onerror = (evt: any) => {
+                        rej(evt.target.error);
+                    };
+                })
+            ));
         });
     }
 
