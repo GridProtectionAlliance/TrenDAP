@@ -136,7 +136,7 @@ namespace TrenDAP.Model
                 JArray dataConnections = (JArray)record.GetValue("DataConnections");
                 foreach (JObject conn in dataConnections)
                 {
-                    conn["SettingsString"] = record["Settings"].ToString();
+                    conn["SettingsString"] = conn["Settings"].ToString();
                     conn["DataSetID"] = dataSetId;
                     DataSourceDataSet connRecord = conn.ToObject<DataSourceDataSet>();
                     result += new TableOperations<DataSourceDataSet>(connection).AddNewRecord(connRecord);
@@ -144,7 +144,7 @@ namespace TrenDAP.Model
                 JArray eventConnections = (JArray)record.GetValue("EventConnections");
                 foreach (JObject conn in eventConnections)
                 {
-                    conn["SettingsString"] = record["Settings"].ToString();
+                    conn["SettingsString"] = conn["Settings"].ToString();
                     conn["DataSetID"] = dataSetId;
                     EventSourceDataSet connRecord = conn.ToObject<EventSourceDataSet>();
                     result += new TableOperations<EventSourceDataSet>(connection).AddNewRecord(connRecord);
