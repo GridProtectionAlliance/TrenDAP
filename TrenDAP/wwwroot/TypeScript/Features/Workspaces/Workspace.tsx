@@ -133,12 +133,8 @@ const Workspace: React.FunctionComponent = () => {
     function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], eventMap: [number, number][],
         allParents: { ID: string, Name: string }[], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
         setLoading(true);
-        loadHandle.then(() => {
-            // Reset virtual table
-            const db = new TrenDAPDB();
-            db.ClearTable('Virtual');
-        }
-        ).then(() => setLoading(false));
+        // ToDo: We want to allow data load to fail, but perhaps we should set a state to display an error?
+        loadHandle.then(() => setLoading(false), () => setLoading(false));
 
         setDataset(dataset);
         channelMapping.current = new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, channelMap);
