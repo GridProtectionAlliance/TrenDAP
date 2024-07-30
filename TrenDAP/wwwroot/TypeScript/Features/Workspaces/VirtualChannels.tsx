@@ -203,21 +203,25 @@ const VirtualChannels: React.FC<IProps> = (props) => {
             >
                 <div className="container-fluid d-flex flex-column p-0 h-100">
                     <div className="row h-100">
-                        <div className="col-4 h-100">
-                            <button className="btn btn-primary pull-right" onClick={() => {
-                                const newVirtualChannels = [...allVirtualChannels];
-                                newVirtualChannels.push({
-                                    ID: `Virtual-${allVirtualChannels.length}`,
-                                    Name: `Virtual-${allVirtualChannels.length}`,
-                                    ComponentChannels: [],
-                                    Calculation: '',
-                                    Channels: [],
-                                    Threshold: 0
-                                })
-                                setAllVirtualChannels(_.orderBy(newVirtualChannels, [channelSortField], [channelAscending ? 'asc' : 'desc']));;
-                            }}>
-                                Add New
-                            </button>
+                        <div className="col-4 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                            <div className="row">
+                                <div className="col">
+                                    <button className="btn btn-primary pull-right" onClick={() => {
+                                        const newVirtualChannels = [...allVirtualChannels];
+                                        newVirtualChannels.push({
+                                            ID: `Virtual-${allVirtualChannels.length}`,
+                                            Name: `Virtual-${allVirtualChannels.length}`,
+                                            ComponentChannels: [],
+                                            Calculation: '',
+                                            Channels: [],
+                                            Threshold: 0
+                                        })
+                                        setAllVirtualChannels(_.orderBy(newVirtualChannels, [channelSortField], [channelAscending ? 'asc' : 'desc']));;
+                                    }}>
+                                        Add New
+                                    </button>
+                                </div>
+                            </div>
                             <ReactTable.Table<IVirtualChannelEditable>
                                 TableClass="table table-hover"
                                 TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
@@ -263,7 +267,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                 </ReactTable.Column>
                             </ReactTable.Table>
                         </div>
-                        <div className="col-8 h-100">
+                        <div className="col-8 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                             <div className="row">
                                 {
                                     selectedVirtualChannel == null ? <></> :
@@ -287,12 +291,12 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                         </div>
                                 }
                             </div>
-                            <div className="row" style={{flex: 1, overflow: 'hidden'}}>
+                            <div className="row" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                                 {
                                     selectedVirtual == null ? <></> :
                                         <ReactTable.Table<DataSetTypes.IDataSetMetaData>
                                             TableClass="table table-hover"
-                                            TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                                            TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
                                             TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
