@@ -200,7 +200,9 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                         console.warn(`Unable to find information associated with channel ID ${returnDatum.ID}`);
                         return;
                     }
-                    returnData[index].ParentID = (dataSetSettings.By === 'Meter' ? channelDatum.MeterID : channelDatum.AssetID).toString();
+                    // Setting it to this to avoid collisons between multiple sources
+                    returnData[index].ID = `${setConn.ID}-${returnData[index].ID}`;
+                    returnData[index].ParentID = `${setConn.ID}-${(dataSetSettings.By === 'Meter' ? channelDatum.MeterID : channelDatum.AssetID).toString()}`;
                     returnData[index].ParentName = dataSetSettings.By === 'Meter' ? channelDatum.Meter : channelDatum.Asset;
                     returnData[index].Name = channelDatum.Name;
                     returnData[index].Phase = channelDatum.Phase;
@@ -280,6 +282,8 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
             // Handle to query channel information
             Promise.all([dataHandle, infoHandle]).then(() => {
                 for (let index = 0; index < returnData.length; index++) {
+                    // Setting it to this to avoid collisons between multiple sources
+                    returnData[index].ID = `${setConn.ID}-${returnData[index].ID}`;
                     const metaDatum = metaData.find(chan => chan.ID === returnData[index].ID);
                     if (metaDatum == null) {
                         console.warn(`Unable to retrieve meta data for channel with ID ${returnData[index].ID}.`);
