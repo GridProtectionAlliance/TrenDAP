@@ -84,6 +84,8 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
 
     const [tab, setTab] = React.useState<string>('channel');
 
+    const [settingsErrors, setSettingsErrors] = React.useState<string[]>([]);
+
     const [allSelectableChannels, setAllSelectableChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([]);
     const [localChannels, setLocalChannels] = React.useState<WidgetTypes.ISelectedChannels<any>[]>([]);
     const [localEventSources, setLocalEventSources] = React.useState<WidgetTypes.ISelectedEvents<any>[]>([]);
@@ -110,15 +112,14 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
     React.useEffect(() => {
         // Todo: Should we load in a phase similar to how we do for parent name?
         setAllSelectableChannels(props.AllChannels.concat(props.AllVirtualChannels.map(virtualChannel => ({
-                ID: virtualChannel.ID,
-                Name: virtualChannel.Name,
-                ParentID: virtualChannel.ParentID ?? 'N/A',
-                ParentName: virtualChannel.ParentName ?? 'N/A',
-                Phase: 'virtual',
-                Type: 'virtual'
+            ID: virtualChannel.ID,
+            Name: virtualChannel.Name,
+            ParentID: virtualChannel.ParentID ?? 'N/A',
+            ParentName: virtualChannel.ParentName ?? 'N/A',
+            Phase: 'virtual',
+            Type: 'virtual'
         }))));
     }, [props.AllChannels, props.AllVirtualChannels]);
-
 
     React.useEffect(() => {
         if (props.Widget.Channels == null || props.Widget.Channels.length === 0 || allSelectableChannels.length === 0) {
@@ -224,6 +225,12 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
             setHeaderOpacity(0.5)
         else setHeaderOpacity(1)
     }, [props.Widget.ShowHeader, editMode]);
+
+    const allErrors: string[] = React.useMemo(() => {
+        const e = [ ...settingsErrors ];
+        if (!isPercent(localCommonSettings.Width)) e.push("Enter a valid width");
+        return e;
+    }, [settingsErrors, localCommonSettings]);
 
     const addOrChangeEventSource = React.useCallback((newSource: WidgetTypes.ISelectedEvents<any>) => {
         setLocalEventSources(currentLocal => {
@@ -365,9 +372,9 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                     Title={`${props.Widget.Label} Settings`}
                     CallBack={(conf, deleteBtn) => handleUpdateWidget(conf, deleteBtn)}
                     CancelText={"Delete Widget"}
-                    DisableConfirm={!isPercent(localCommonSettings.Width)}
-                    ConfirmShowToolTip={!isPercent(localCommonSettings.Width)}
-                    ConfirmToolTipContent={<span>Enter a valid width</span>}
+                    DisableConfirm={allErrors.length > 0}
+                    ConfirmShowToolTip={allErrors.length > 0}
+                    ConfirmToolTipContent={allErrors.map(e => <span>{e}</span>)}
                     Size="xlg"
                     BodyStyle={{ height: 'calc(-210px + 100vh)' }}
                 >
@@ -394,6 +401,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                                     Settings={localSetting ?? Settings}
                                     SetSettings={setLocalSetting}
                                     ChannelSettings={localChannels.map(chan => chan.ChannelSettings)}
+                                    SetErrors={setSettingsErrors}
                                 />}
                             </div>
                             <div className="col-8 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
