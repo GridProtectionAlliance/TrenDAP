@@ -677,6 +677,12 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
     SettingsUI: (props) => {
         const [deleteHover, setDeleteHover] = React.useState<{ ID: number, Hover: boolean }>({ ID: -1, Hover: false });
 
+        React.useEffect(() => {
+            const e: string[] = [];
+            if (props.Settings.YAxis.some(axis => axis.Label === '')) e.push("Every y axis must have a label.");
+            props.SetErrors(e);
+        }, [props.Settings.YAxis]);
+
         return <>
             <div className="row">
                 <div className="col-6">
