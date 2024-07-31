@@ -718,7 +718,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                     <h6>Y Axises</h6>
                 </div>
                 <div className="col-6 d-flex align-items-center justify-content-end">
-                    <button className='btn btn-primary' onClick={() => {
+                    <button className='btn btn-info' onClick={() => {
                         const maxID = props.Settings.YAxis.reduce((max, current) => {
                             return current.ID > max ? current.ID : max
                         }, 0)
