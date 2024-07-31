@@ -47,7 +47,7 @@ const AddNewDataSource: React.FunctionComponent = () => {
                 ConfirmText={'Save'}
                 ConfirmShowToolTip={errors.length > 0}
                 ConfirmToolTipContent={errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
-                Title={'Add New DataSource'}
+                Title={'Add New Data Source'}
                 CallBack={conf => {
                     if (conf)
                         dispatch(AddDataSource(dataSource));

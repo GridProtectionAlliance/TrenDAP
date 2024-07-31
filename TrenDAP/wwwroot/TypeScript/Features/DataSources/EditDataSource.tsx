@@ -48,7 +48,7 @@ const EditDataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDat
                 ConfirmText={'Save'}
                 ConfirmShowToolTip={errors.length > 0}
                 ConfirmToolTipContent={errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
-                Title={'Edit DataSource'}
+                Title={'Edit Data Source'}
                 CallBack={conf => {
                     if (conf)
                         dispatch(UpdateDataSource(dataSource));
