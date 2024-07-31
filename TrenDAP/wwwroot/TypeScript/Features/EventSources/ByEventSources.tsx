@@ -51,7 +51,7 @@ const ByEventSources: React.FunctionComponent = () => {
                                 <h4>My Event Data Sources</h4>
                             </div>
                             <div className="d-flex col-6 justify-content-end">
-                                <button className="btn btn-primary" onClick={() => {
+                                <button className="btn btn-info" onClick={() => {
                                     setShowEdit(true);
                                     setEditEvt({
                                         ID: -1,
