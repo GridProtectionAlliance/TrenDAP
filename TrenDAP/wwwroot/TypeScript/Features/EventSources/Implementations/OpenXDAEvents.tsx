@@ -68,7 +68,7 @@ interface IxdaEvent {
 }
 
 const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
-    Name: 'OpenXDA',
+    Name: 'openXDA',
     DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/" },
     DefaultDataSetSettings: {
         By: 'Meter',

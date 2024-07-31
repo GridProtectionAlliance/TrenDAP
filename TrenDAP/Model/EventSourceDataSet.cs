@@ -99,7 +99,7 @@ namespace TrenDAP.Model
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
                 EventSourceHelper helper = new EventSourceHelper(eventSource);
-                if (eventSource.Type == "OpenXDA")
+                if (eventSource.Type == "openXDA")
                 {
                     Tuple<DateTime, DateTime> timeEnds = dataset.ComputeTimeEnds();
                     json.Add("StartTime", timeEnds.Item1);
