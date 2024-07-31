@@ -272,60 +272,57 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
         const [ascending, setAscending] = React.useState<boolean>(false);
         const [sortField, setSortField] = React.useState<keyof DataSetTypes.IDataSetMetaData>('Phase');
 
-        return <>
-            <div className="h-100">
-                <ReactTable.Table<DataSetTypes.IDataSetMetaData>
-                    TableClass="table table-hover"
-                    TableStyle={{ padding: 0, width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0 }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                    SortKey={sortField}
-                    OnClick={(item) => {
-                        const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID) != null;
-                        if (isSelected)
-                            props.RemoveChannel(item.row.ID);
-                        else if (props.SelectedChannels.length < 2)
-                            props.AddChannel(item.row.ID, null); //no channel specific settings here..
-                    }}
-                    OnSort={data => sort(data.colField as keyof DataSetTypes.IDataSetMetaData, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
-                    Data={allChannels}
-                    Ascending={ascending}
-                    KeySelector={(row) => row.ID}
-                    Selected={(row) => props.SelectedChannels?.find(c => c.MetaData.ID === row.ID) != null ? true : false}
+        return (
+            <ReactTable.Table<DataSetTypes.IDataSetMetaData>
+                TableClass="table table-hover"
+                TableStyle={{ padding: 0, width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0 }}
+                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                SortKey={sortField}
+                OnClick={(item) => {
+                    const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID) != null;
+                    if (isSelected)
+                        props.RemoveChannel(item.row.ID);
+                    else if (props.SelectedChannels.length < 2)
+                        props.AddChannel(item.row.ID, null); //no channel specific settings here..
+                }}
+                OnSort={data => sort(data.colField as keyof DataSetTypes.IDataSetMetaData, sortField, setSortField, data.ascending, setAscending, ascending, allChannels, setAllChannels)}
+                Data={allChannels}
+                Ascending={ascending}
+                KeySelector={(row) => row.ID}
+                Selected={(row) => props.SelectedChannels?.find(c => c.MetaData.ID === row.ID) != null ? true : false}
+            >
+                <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    Key={'ParentName'}
+                    AllowSort={true}
+                    Field={'ParentName'}
                 >
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
-                        Key={'ParentName'}
-                        AllowSort={true}
-                        Field={'ParentName'}
-                    >
-                        Parent
-                    </ReactTable.Column>
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
-                        Key={'Name'}
-                        AllowSort={true}
-                        Field={'Name'}
-                    >
-                        Name
-                    </ReactTable.Column>
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
-                        Key={'Type'}
-                        AllowSort={true}
-                        Field={'Type'}
-                    >
-                        Type
-                    </ReactTable.Column>
+                    Parent
+                </ReactTable.Column>
+                <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    Key={'Name'}
+                    AllowSort={true}
+                    Field={'Name'}
+                >
+                    Name
+                </ReactTable.Column>
+                <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    Key={'Type'}
+                    AllowSort={true}
+                    Field={'Type'}
+                >
+                    Type
+                </ReactTable.Column>
 
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
-                        Key={'Phase'}
-                        AllowSort={true}
-                        Field={'Phase'}
-                    >
-                        Phase
-                    </ReactTable.Column>
+                <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    Key={'Phase'}
+                    AllowSort={true}
+                    Field={'Phase'}
+                >
+                    Phase
+                </ReactTable.Column>
 
-                </ReactTable.Table>
-            </div>
-        </>
+            </ReactTable.Table>);
     }
 }

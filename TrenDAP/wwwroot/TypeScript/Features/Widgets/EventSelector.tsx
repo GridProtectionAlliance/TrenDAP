@@ -41,7 +41,7 @@ const EventSelector: React.FC<WidgetTypes.IEventSourceSelectionProps<any>> = (pr
             TableClass="table table-hover"
             TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
             SortKey={sortField}
             OnClick={(item) => {
