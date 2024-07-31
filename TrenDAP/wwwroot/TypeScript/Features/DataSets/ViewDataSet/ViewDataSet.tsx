@@ -100,7 +100,7 @@ export default function ViewDataSet(props) {
             })
         }
 
-        else if (dataSource.DataSource.Type === 'OpenHistorian') {
+        else if (dataSource.DataSource.Type === 'openHistorian') {
             (dataSource.Data as TrenDAP.iOpenHistorianReturn[]).sort((a, b) => {
                 if (a.Device + ' - ' + a.Description > b.Device + ' - ' + b.Description) return 1;
                 else if (a.Device + ' - ' + a.Description == b.Device + ' - ' + b.Description) return 0;
@@ -256,7 +256,7 @@ const Options = (dataSource: TrenDAP.iDataSetReturn) => {
         return dataSource.Data.map(channel => <SapphireChannel key={channel.ID} channel={channel as TrenDAP.iXDAReturnData} />);
     }
 
-    else if (dataSource.DataSource.Type === 'OpenHistorian') {
+    else if (dataSource.DataSource.Type === 'openHistorian') {
         (dataSource.Data as TrenDAP.iOpenHistorianReturn[]).sort((a, b) => {
             if (a.Device + ' - ' + a.Description > b.Device + ' - ' + b.Description) return 1;
             else if (a.Device + ' - ' + a.Description == b.Device + ' - ' + b.Description) return 0;
