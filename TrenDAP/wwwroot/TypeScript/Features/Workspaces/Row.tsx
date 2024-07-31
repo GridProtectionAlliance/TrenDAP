@@ -139,7 +139,7 @@ const Row: React.FunctionComponent<IProps> = (props) => {
                                 <div style={{ visibility: rowHeaderHover && editMode ? 'visible' : 'hidden' }}>
                                     <div className="btn-group">
                                         <BtnDropdown Disabled={props.Widgets.length >= 15} Label={AllWidgets[0].Name} Options={AllWidgets.map(widget => ({ Label: widget.Name, Callback: () => HandleAddObject(widget.Name), Disabled: props.Widgets.length >= 15 }))}
-                                            Callback={() => HandleAddObject(AllWidgets[0].Name)} ShowToolTip={true} TooltipContent={<p>Add Widget</p>} TooltipLocation="bottom" />
+                                            Callback={() => HandleAddObject(AllWidgets[0].Name)} ShowToolTip={true} TooltipContent={<p>Add Widget</p>} TooltipLocation="bottom" BtnClass='btn btn-info' />
                                         <button className="btn" data-tooltip={"rm-row-btn" + guid.current} onMouseEnter={() => setHover('Remove')} onMouseLeave={() => setHover('None')} onClick={() => props.RemoveRow()}>
                                             <ReactIcons.Minus />
                                         </button>

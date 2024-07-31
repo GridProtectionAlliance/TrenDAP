@@ -340,7 +340,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                     </div>
                 </div>
                 <Modal
-                    ConfirmBtnClass="btn btn-success mr-auto"
+                    ConfirmBtnClass="btn btn-primary mr-auto"
                     Show={showSettingsModal}
                     ShowX={true}
                     ConfirmText='Save'

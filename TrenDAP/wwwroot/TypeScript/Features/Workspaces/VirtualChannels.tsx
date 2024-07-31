@@ -144,7 +144,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
             <Warning Title={'Failure to Parse User Function'} CallBack={() => setWarningIndex(-1)} ShowCancel={false} 
                 Show={props.ShowModal && (warningIndex >= 0)} Message={`Could not Parse User Function on Virtual Channel ${warningIndex >= 0 ? allVirtualChannels[warningIndex].Name : ''}`} />
             <Modal
-                ConfirmBtnClass={"btn btn-success mr-auto"}
+                ConfirmBtnClass={"btn btn-primary mr-auto"}
                 Show={props.ShowModal && (warningIndex < 0)}
                 ShowX={true}
                 ConfirmText={'Apply'}
@@ -206,7 +206,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                         <div className="col-4 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                             <div className="row">
                                 <div className="col">
-                                    <button className="btn btn-primary pull-right" onClick={() => {
+                                    <button className="btn btn-info pull-right" onClick={() => {
                                         const newVirtualChannels = [...allVirtualChannels];
                                         newVirtualChannels.push({
                                             ID: `Virtual-${allVirtualChannels.length}`,
