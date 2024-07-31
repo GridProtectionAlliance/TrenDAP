@@ -715,7 +715,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
             </div>
             <div className="row">
                 <div className="col-6 d-flex align-items-center justify-content-start">
-                    <h6>Y Axises</h6>
+                    <h6>Y Axes</h6>
                 </div>
                 <div className="col-6 d-flex align-items-center justify-content-end">
                     <button className='btn btn-info' onClick={() => {
