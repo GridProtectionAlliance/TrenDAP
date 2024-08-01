@@ -98,7 +98,7 @@ const DataSetSettingsTab: React.FunctionComponent<IProps> = (props: IProps) => {
             <div className='row'>
                 <div className='col'>
                     <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="EventWindowSize" Label='Event Time Window Size (+/-)' Setter={props.SetDataSet} Disabled={props.EventConnections.length === 0} Valid={valid}
-                        Type='integer' AllowNull={true} Help={"Filters data to window around events." +
+                            Type='integer' AllowNull={true} Help={"Filters data to window around events. Enter 0 or nothing to disable." +
                             (props.EventConnections.length === 0 ? " Setup an event source connection to set these fields." : "")} />
                 </div>
                 <div className='col'>

@@ -94,13 +94,13 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                     </div>
                     <div className="col-5">
                         <div className="dropdown">
-                            <button className="btn btn-secondary pull-right dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button className="btn btn-info pull-right dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 {Plus} Add New
                             </button>
                             <div className="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-                                <div className="dropdown-header">Your DataSources</div>
+                                <div className="dropdown-header">Your Data Sources</div>
                                 {dataSources.filter(src => src.User === userName).map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddDS(ds)}>{ds.Name} ({ds.Type})</a>)}
-                                <div className="dropdown-header">Shared DataSources</div>
+                                <div className="dropdown-header">Shared Data Sources</div>
                                 {dataSources.filter(src => src.Public && src.User !== userName).map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddDS(ds)}>{ds.Name} ({ds.Type})</a>)}
                             </div>
                         </div>

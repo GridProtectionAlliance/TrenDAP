@@ -133,71 +133,69 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
         if (dataSet.Weeks == 0)
             e.push("At least 1 Week has to be selected.")
         if (dataConnections.length == 0)
-            e.push("At least 1 Trend DataSource needs to be added.");
+            e.push("At least 1 Trend Data Source needs to be added.");
         setErrors(e.concat(dataErrors).concat(eventErrors));
     }, [dataSet, dataConnections, dataErrors, eventErrors]);
 
     if (dataSet === undefined) return null;
     return (
         <div className="container-fluid d-flex h-100 flex-column">
-            <div className="row" style={{ flex: 1, overflow: 'hidden' }}>
-                <div className="card">
-                    <div className="card-header">
-                        Edit Data Set
+            <div className="card" style={{ flex: 1, overflow: 'hidden', flexDirection: 'column' }}>
+                <div className="card-header">
+                    Edit Data Set
+                </div>
+                <div className="card-body" style={{ flex: 1, overflow: 'hidden' }}>
+                    <div className="d-flex flex-column h-100">
+                        <TabSelector Tabs={[
+                            { Label: 'Settings', Id: 'settings' },
+                            { Label: 'Trend Data Sources', Id: 'trend' },
+                            { Label: 'Event Data Sources', Id: 'event' },
+                        ]} SetTab={setTab} CurrentTab={tab} />
+                        <br />
+                        {tab === 'trend' ?
+                            <DataSourceConnectionTab DataSourceConnections={dataConnections} SetDataSourceConnections={setDataConnections}
+                                DataSet={dataSet} SetErrors={setDataErrors} /> : <></>}
+                        {tab === 'event' ?
+                            <EventSourceConnectionTab EventSourceConnections={eventConnections} SetEventSourceConnections={setEventConnections}
+                                DataSet={dataSet} SetErrors={setEventErrors} /> : <></>}
+                        {tab === 'settings' ?
+                            <DataSetSettingsTab DataSet={dataSet} SetDataSet={setDataSet} EventConnections={eventConnections} /> : <></>}
                     </div>
-                    <div className="card-body">
-                        <div className="d-flex flex-column h-100">
-                            <TabSelector Tabs={[
-                                { Label: 'Settings', Id: 'settings' },
-                                { Label: 'Trend Data Sources', Id: 'trend' },
-                                { Label: 'Event Data Sources', Id: 'event' },
-                            ]} SetTab={setTab} CurrentTab={tab} />
-                            <br />
-                            {tab === 'trend' ?
-                                <DataSourceConnectionTab DataSourceConnections={dataConnections} SetDataSourceConnections={setDataConnections}
-                                    DataSet={dataSet} SetErrors={setDataErrors} /> : <></>}
-                            {tab === 'event' ?
-                                <EventSourceConnectionTab EventSourceConnections={eventConnections} SetEventSourceConnections={setEventConnections}
-                                    DataSet={dataSet} SetErrors={setEventErrors} /> : <></>}
-                            {tab === 'settings' ?
-                                <DataSetSettingsTab DataSet={dataSet} SetDataSet={setDataSet} EventConnections={eventConnections} /> : <></>}
+                </div>
+                <div className="card-footer">
+                    <div className="row">
+                        <div className="d-flex col-6 justify-content-start">
+                            <button data-tooltip="newBtn"
+                                className={"btn btn-primary" + (errors.length > 0 ? ' disabled' : '')}
+                                onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+                                onClick={() => {
+                                    if (errors.length > 0)
+                                        return;
+                                    $.ajax({
+                                        type: "POST",
+                                        url: `${homePath}api/DataSet/${dataSet.ID >= 0 ? 'UpdateWithConnections' : 'NewWithConnections'}`,
+                                        contentType: "application/json; charset=utf-8",
+                                        dataType: 'json',
+                                        data: JSON.stringify({
+                                            DataSet: {
+                                                ...dataSet, UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss')
+                                            },
+                                            DataConnections: dataConnections,
+                                            EventConnections: eventConnections
+                                        }),
+                                        cache: false,
+                                        async: true
+                                    }).done(() => {
+                                        dispatch(DataSetsHaveChanged());
+                                        navigate(`${homePath}DataSets`);
+                                    });
+                                }}
+                            >Save</button>
                         </div>
-                    </div>
-                    <div className="card-footer">
-                        <div className="row">
-                            <div className="d-flex col-6 justify-content-start">
-                                <button data-tooltip="newBtn"
-                                    className={"btn btn-success" + (errors.length > 0 ? ' disabled' : '')}
-                                    onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-                                    onClick={() => {
-                                        if (errors.length > 0)
-                                            return;
-                                        $.ajax({
-                                            type: "POST",
-                                            url: `${homePath}api/DataSet/${dataSet.ID >= 0 ? 'UpdateWithConnections' : 'NewWithConnections'}`,
-                                            contentType: "application/json; charset=utf-8",
-                                            dataType: 'json',
-                                            data: JSON.stringify({
-                                                DataSet: {
-                                                    ...dataSet, UpdatedOn: moment.utc().format('MM/DD/YYYY HH:mm:ss')
-                                                },
-                                                DataConnections: dataConnections,
-                                                EventConnections: eventConnections
-                                            }),
-                                            cache: false,
-                                            async: true
-                                        }).done(() => {
-                                            dispatch(DataSetsHaveChanged());
-                                            navigate(`${homePath}DataSets`);
-                                        });
-                                    }}
-                                >Save</button>
-                            </div>
-                            <ToolTip Target="newBtn" Show={hover && (warnings.length > 0 || errors.length > 0)} Position={'top'}>
-                                {warnings.map((w, i) => <p key={2 * i}>{Warning} {w} </p>)}
-                                {errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
-                            </ToolTip>
-                        </div>
+                        <ToolTip Target="newBtn" Show={hover && (warnings.length > 0 || errors.length > 0)} Position={'top'}>
+                            {warnings.map((w, i) => <p key={2 * i}>{Warning} {w} </p>)}
+                            {errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
+                        </ToolTip>
                     </div>
                 </div>
             </div>

@@ -95,14 +95,14 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                     </div>
                     <div className="col-5">
                         <div className="dropdown">
-                            <button className="btn btn-secondary pull-right dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button className="btn btn-info pull-right dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 {Plus} Add New
                             </button>
                             <div className="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-                                <div className="dropdown-header">Your EventSources</div>
+                                <div className="dropdown-header">Your Event Sources</div>
                                 {eventSources.filter(src => src.User === userName).map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }}
                                     onClick={() => AddDS(ds)}>{ds.Name} ({ds.Type})</a>)}
-                                <div className="dropdown-header">Shared EventSources</div>
+                                <div className="dropdown-header">Shared Event Sources</div>
                                 {eventSources.filter(src => src.Public && src.User !== userName).map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }}
                                     onClick={() => AddDS(ds)}>{ds.Name} ({ds.Type})</a>)}
                             </div>

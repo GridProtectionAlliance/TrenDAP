@@ -155,12 +155,12 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                 </div>
                 <div className={'row'} style={{ flex: 1, overflow: 'hidden' }}>
                     <div className="col" style={{height: '100%', overflow: 'hidden'}}>
-                        <ArrayMultiSelect<TrenDAP.iXDADataSet> GroupStyle={{ height: '100%', display: 'flex', flexDirection: 'column' }} Style={{ overflowY: 'scroll', flex: 1 }} Record={props.DataSetSettings} Label={props.DataSetSettings.By + "(s)"}
+                        <ArrayMultiSelect<TrenDAP.iXDADataSet> GroupStyle={{ height: '100%', display: 'flex', flexDirection: 'column' }} Style={{ overflowY: 'auto', flex: 1 }} Record={props.DataSetSettings} Label={props.DataSetSettings.By + "(s)"}
                             Options={(props.DataSetSettings.By == 'Meter' ? meters?.map(m => ({ Value: m.ID.toString(), Label: m.Name })) : assets?.map(m => ({ Value: m.ID.toString(), Label: m.AssetName }))) ?? []}
                             Field="IDs" Setter={props.SetDataSetSettings} />
                     </div>
                     <div className="col" style={{height: '100%', overflow: 'hidden'}}>
-                        <ArrayMultiSelect<TrenDAP.iXDADataSet> GroupStyle={{ height: '100%', display: 'flex', flexDirection: 'column' }} Style={{ overflowY: 'scroll', flex: 1 }} Record={props.DataSetSettings}
+                        <ArrayMultiSelect<TrenDAP.iXDADataSet> GroupStyle={{ height: '100%', display: 'flex', flexDirection: 'column' }} Style={{ overflowY: 'auto', flex: 1 }} Record={props.DataSetSettings}
                             Options={channels?.map(m => ({ Value: m.ID.toString(), Label: `${props.DataSetSettings.By === 'Meter' ? m.Meter : m.Asset} - ${m.Name}` })) ?? []}
                             Field="ChannelIDs" Label="Channel(s)" Setter={props.SetDataSetSettings} />
                     </div>
