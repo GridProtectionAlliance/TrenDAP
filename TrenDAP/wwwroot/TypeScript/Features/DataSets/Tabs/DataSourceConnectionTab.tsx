@@ -82,12 +82,7 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
 
     return (
         <div className="row" style={{ flex: 1, overflow: 'hidden' }}>
-            <div className="col-4 d-none d-xl-flex" style={{
-                height: '100%',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column'
-            }}>
+            <div className="col-4 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <div className="row">
                     <div className="col-7">
                         <h4>Trend Connections</h4>
@@ -106,61 +101,51 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                         </div>
                     </div>
                 </div>
-                <div className="row" style={{ flex: 1, overflow: 'hidden' }}>
-                    <div className="col" style={{
-                        height: '100%', overflow: 'hidden',
-                        display: 'flex', flexDirection: 'column'
-                    }}>
-                        <ReactTable.Table<DataSourceTypes.IDataSourceDataSet>
-                            TableClass="table table-hover"
-                            Data={props.DataSourceConnections}
-                            SortKey={null}
-                            Ascending={null}
-                            OnSort={() => { }}
-                            TableStyle={{
-                                padding: 0, width: '100%', height: '100%',
-                                tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column'
-                            }}
-                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
-                            RowStyle={{ display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            Selected={(_item, index) => currentIndex === index}
-                            KeySelector={(_item, index) => index}
-                            OnClick={(item) => { setCurrentIndex(item.index); }}
-                        >
-                            <ReactTable.Column<DataSourceTypes.IDataSourceDataSet>
-                                Key={'DataSourceName'}
-                                AllowSort={true}
-                                Field={'DataSourceName'}
-                                HeaderStyle={{ width: 'auto' }}
-                                RowStyle={{ width: 'auto' }}
-                            > DataSource
-                            </ReactTable.Column>
-                            <ReactTable.Column<DataSourceTypes.IDataSourceDataSet>
-                                Key={'ID'}
-                                AllowSort={false}
-                                Field={'ID'}
-                                HeaderStyle={{ width: 'auto' }}
-                                RowStyle={{ width: 'auto' }}
-                                Content={row =>
-                                    <span>
-                                        <button className="btn pull-right" onClick={(evt) => {
-                                            evt.preventDefault();
-                                            evt.stopPropagation();
-                                            const newConns = [...props.DataSourceConnections];
-                                            newConns.splice(row.index, 1);
-                                            errors.current.splice(row.index, 1);
-                                            props.SetDataSourceConnections(newConns);
-                                            pushErrors();
-                                            if (currentIndex === row.index) setCurrentIndex(0);
-                                        }}>{TrashCan}</button>
-                                    </span>}
-                            ><></></ReactTable.Column>
-                        </ReactTable.Table>
-                    </div>
-                </div>
+                <ReactTable.Table<DataSourceTypes.IDataSourceDataSet>
+                    Data={props.DataSourceConnections}
+                    SortKey={null}
+                    Ascending={null}
+                    OnSort={() => { }}
+                    TableClass="table table-hover"
+                    TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                    Selected={(_item, index) => currentIndex === index}
+                    KeySelector={(_item, index) => index}
+                    OnClick={(item) => { setCurrentIndex(item.index); }}
+                >
+                    <ReactTable.Column<DataSourceTypes.IDataSourceDataSet>
+                        Key={'DataSourceName'}
+                        AllowSort={true}
+                        Field={'DataSourceName'}
+                        HeaderStyle={{ width: 'auto' }}
+                        RowStyle={{ width: 'auto' }}
+                    > DataSource
+                    </ReactTable.Column>
+                    <ReactTable.Column<DataSourceTypes.IDataSourceDataSet>
+                        Key={'ID'}
+                        AllowSort={false}
+                        Field={'ID'}
+                        HeaderStyle={{ width: 'auto' }}
+                        RowStyle={{ width: 'auto' }}
+                        Content={row =>
+                            <span>
+                                <button className="btn pull-right" onClick={(evt) => {
+                                    evt.preventDefault();
+                                    evt.stopPropagation();
+                                    const newConns = [...props.DataSourceConnections];
+                                    newConns.splice(row.index, 1);
+                                    errors.current.splice(row.index, 1);
+                                    props.SetDataSourceConnections(newConns);
+                                    pushErrors();
+                                    if (currentIndex === row.index) setCurrentIndex(0);
+                                }}>{TrashCan}</button>
+                            </span>}
+                    ><></></ReactTable.Column>
+                </ReactTable.Table>
             </div>
-            <div className="col-8 d-none d-xl-flex" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+            <div className="col-8 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 {props.DataSourceConnections[currentIndex] != null ?
                     <DataSourceWrapper DataSource={dataSource} Connection={props.DataSourceConnections[currentIndex]}
                         DataSet={props.DataSet} SetErrors={addWrapperErrors}

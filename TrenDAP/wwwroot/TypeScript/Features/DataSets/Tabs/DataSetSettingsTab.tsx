@@ -88,25 +88,27 @@ const DataSetSettingsTab: React.FunctionComponent<IProps> = (props: IProps) => {
     }
 
     return (
-        <>
-            <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="Name" Setter={props.SetDataSet} Valid={valid} Feedback={nameFeedback} />
-            <RelativeDateRangePicker Record={props.DataSet} Setter={props.SetDataSet} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Hours" Label="Hour of Day" Setter={props.SetDataSet} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Days" Label="Day of Week" Setter={props.SetDataSet} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} IsDisabled={validDay} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Weeks" Label="Week of Year" Setter={props.SetDataSet} Enum={Array.from({ length: 53 }, (_, i) => i.toString())} IsDisabled={validWeek} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Months" Label="Month of Year" Setter={props.SetDataSet} Enum={['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']} />
-            <div className='row'>
-                <div className='col'>
-                    <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="EventWindowSize" Label='Event Time Window Size (+/-)' Setter={props.SetDataSet} Disabled={props.EventConnections.length === 0} Valid={valid}
+        <div className="row" style={{ flex: 1, overflow: 'hidden', flexDirection: 'column' }}>
+            <div className="col" style={{ overflow: 'auto' }}>
+                <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="Name" Setter={props.SetDataSet} Valid={valid} Feedback={nameFeedback} />
+                <RelativeDateRangePicker Record={props.DataSet} Setter={props.SetDataSet} />
+                <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Hours" Label="Hour of Day" Setter={props.SetDataSet} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
+                <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Days" Label="Day of Week" Setter={props.SetDataSet} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} IsDisabled={validDay} />
+                <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Weeks" Label="Week of Year" Setter={props.SetDataSet} Enum={Array.from({ length: 53 }, (_, i) => i.toString())} IsDisabled={validWeek} />
+                <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Months" Label="Month of Year" Setter={props.SetDataSet} Enum={['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']} />
+                <div className='row'>
+                    <div className='col'>
+                        <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="EventWindowSize" Label='Event Time Window Size (+/-)' Setter={props.SetDataSet} Disabled={props.EventConnections.length === 0} Valid={valid}
                             Type='integer' AllowNull={true} Help={"Filters data to window around events. Enter 0 or nothing to disable." +
-                            (props.EventConnections.length === 0 ? " Setup an event source connection to set these fields." : "")} />
+                                (props.EventConnections.length === 0 ? " Setup an event source connection to set these fields." : "")} />
+                    </div>
+                    <div className='col'>
+                        <Select<TrenDAP.iDataSet> Record={props.DataSet} Field="EventWindowUnit" Label='Event Time Window Units' Setter={props.SetDataSet} Disabled={props.EventConnections.length === 0} Options={TimeWindowSizes} />
+                    </div>
                 </div>
-                <div className='col'>
-                    <Select<TrenDAP.iDataSet> Record={props.DataSet} Field="EventWindowUnit" Label='Event Time Window Units' Setter={props.SetDataSet} Disabled={props.EventConnections.length === 0} Options={TimeWindowSizes} />
-                </div>
+                <CheckBox<TrenDAP.iDataSet> Record={props.DataSet} Field="Public" Label='Shared' Setter={props.SetDataSet} />
             </div>
-            <CheckBox<TrenDAP.iDataSet> Record={props.DataSet} Field="Public" Label='Shared' Setter={props.SetDataSet} />
-        </>
+        </div>
     );
 
 }

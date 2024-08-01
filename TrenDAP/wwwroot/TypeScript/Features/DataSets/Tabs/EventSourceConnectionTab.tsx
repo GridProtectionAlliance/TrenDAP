@@ -83,12 +83,7 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
 
     return (
         <div className="row" style={{ flex: 1, overflow: 'hidden' }}>
-            <div className="col-4 d-none d-xl-flex" style={{
-                height: '100%',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column'
-            }}>
+            <div className="col-4 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <div className="row">
                     <div className="col-7">
                         <h4>Event Connections</h4>
@@ -109,61 +104,51 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                         </div>
                     </div>
                 </div>
-                <div className="row" style={{ flex: 1, overflow: 'hidden' }}>
-                    <div className="col" style={{
-                        height: '100%', overflow: 'hidden',
-                        display: 'flex', flexDirection: 'column'
-                    }}>
-                        <ReactTable.Table<EventSourceTypes.IEventSourceDataSet>
-                            TableClass="table table-hover"
-                            Data={props.EventSourceConnections}
-                            SortKey={null}
-                            Ascending={null}
-                            OnSort={() => { }}
-                            TableStyle={{
-                                padding: 0, width: '100%', height: '100%',
-                                tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column'
-                            }}
-                            TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
-                            RowStyle={{ display: 'table', tableLayout: 'fixed', width: '100%' }}
-                            Selected={(_item, index) => currentIndex === index}
-                            KeySelector={(_item, index) => index}
-                            OnClick={(item) => { setCurrentIndex(item.index); }}
-                        >
-                            <ReactTable.Column<EventSourceTypes.IEventSourceDataSet>
-                                Key={'EventSourceName'}
-                                AllowSort={true}
-                                Field={'EventSourceName'}
-                                HeaderStyle={{ width: 'auto' }}
-                                RowStyle={{ width: 'auto' }}
-                            > EventSource
-                            </ReactTable.Column>
-                            <ReactTable.Column<EventSourceTypes.IEventSourceDataSet>
-                                Key={'ID'}
-                                AllowSort={false}
-                                Field={'ID'}
-                                HeaderStyle={{ width: 'auto' }}
-                                RowStyle={{ width: 'auto' }}
-                                Content={row =>
-                                    <span>
-                                        <button className="btn pull-right" onClick={(evt) => {
-                                            evt.preventDefault();
-                                            evt.stopPropagation();
-                                            const newConns = [...props.EventSourceConnections];
-                                            newConns.splice(row.index, 1);
-                                            errors.current.splice(row.index, 1);
-                                            props.SetEventSourceConnections(newConns);
-                                            pushErrors();
-                                            if (currentIndex === row.index) setCurrentIndex(0);
-                                        }}>{TrashCan}</button>
-                                    </span>}
-                            ><></></ReactTable.Column>
-                        </ReactTable.Table>
-                    </div>
-                </div>
+                <ReactTable.Table<EventSourceTypes.IEventSourceDataSet>
+                    Data={props.EventSourceConnections}
+                    SortKey={null}
+                    Ascending={null}
+                    OnSort={() => { }}
+                    TableClass="table table-hover"
+                    TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                    Selected={(_item, index) => currentIndex === index}
+                    KeySelector={(_item, index) => index}
+                    OnClick={(item) => { setCurrentIndex(item.index); }}
+                >
+                    <ReactTable.Column<EventSourceTypes.IEventSourceDataSet>
+                        Key={'EventSourceName'}
+                        AllowSort={true}
+                        Field={'EventSourceName'}
+                        HeaderStyle={{ width: 'auto' }}
+                        RowStyle={{ width: 'auto' }}
+                    > EventSource
+                    </ReactTable.Column>
+                    <ReactTable.Column<EventSourceTypes.IEventSourceDataSet>
+                        Key={'ID'}
+                        AllowSort={false}
+                        Field={'ID'}
+                        HeaderStyle={{ width: 'auto' }}
+                        RowStyle={{ width: 'auto' }}
+                        Content={row =>
+                            <span>
+                                <button className="btn pull-right" onClick={(evt) => {
+                                    evt.preventDefault();
+                                    evt.stopPropagation();
+                                    const newConns = [...props.EventSourceConnections];
+                                    newConns.splice(row.index, 1);
+                                    errors.current.splice(row.index, 1);
+                                    props.SetEventSourceConnections(newConns);
+                                    pushErrors();
+                                    if (currentIndex === row.index) setCurrentIndex(0);
+                                }}>{TrashCan}</button>
+                            </span>}
+                    ><></></ReactTable.Column>
+                </ReactTable.Table>
             </div>
-            <div className="col-8 d-none d-xl-flex" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+            <div className="col-8 h-100" style={{ overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
                 {props.EventSourceConnections[currentIndex] != null ?
                     <EventDataSourceWrapper EventDataSource={eventSource} Connection={props.EventSourceConnections[currentIndex]}
                         DataSet={props.DataSet} SetErrors={addWrapperErrors}
