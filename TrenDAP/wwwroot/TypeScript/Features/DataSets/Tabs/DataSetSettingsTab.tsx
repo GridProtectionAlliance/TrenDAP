@@ -1,4 +1,4 @@
-﻿//******************************************************************************************************
+//******************************************************************************************************
 //  DataSetGlobalSettings.tsx - Gbtc
 //
 //  Copyright © 2021, Grid Protection Alliance.  All Rights Reserved.
@@ -23,7 +23,7 @@
 
 import * as React from 'react';
 import { TrenDAP, DataSourceTypes } from '../../../global';
-import { Input, CheckBox, EnumCheckBoxes } from '@gpa-gemstone/react-forms';
+import { Input, CheckBox, EnumCheckBoxes, Select } from '@gpa-gemstone/react-forms';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectDataSets, SelectDataSetsStatus, FetchDataSets } from './../DataSetsSlice';
 import { ComputeValidDays, ComputeValidWeeks } from '../HelperFunctions';
@@ -32,11 +32,14 @@ import { EventSourceTypes } from '../../EventSources/Interface';
 interface IProps {
     DataSet: TrenDAP.iDataSet,
     SetDataSet: (ws: TrenDAP.iDataSet) => void,
-    DataConnections: DataSourceTypes.IDataSourceDataSet[],
-    SetDataConnections: (arg: DataSourceTypes.IDataSourceDataSet[]) => void,
-    EventConnections: EventSourceTypes.IEventSourceDataSet[],
-    SetEventConnections: (arg: EventSourceTypes.IEventSourceDataSet[]) => void
+    EventConnections: EventSourceTypes.IEventSourceDataSet[]
 }
+
+const TimeWindowSizes = [
+    { Label: 'Hour', Value: 'Hour' },
+    { Label: 'Day', Value: 'Day' },
+    { Label: 'Week', Value: 'Week' },
+]
 
 const DataSetSettingsTab: React.FunctionComponent<IProps> = (props: IProps) => {
     const [nameFeedback, setNameFeedback] = React.useState<string>("A Data Set with this name already exists.");
@@ -64,6 +67,8 @@ const DataSetSettingsTab: React.FunctionComponent<IProps> = (props: IProps) => {
                 return false;
             } else return true;
         }
+        if (field === 'EventWindowSize')
+            return props.DataSet.EventWindowSize == null || props.DataSet.EventWindowSize >= 0;
         else
             return true;
     }
@@ -84,13 +89,23 @@ const DataSetSettingsTab: React.FunctionComponent<IProps> = (props: IProps) => {
 
     return (
         <>
-            <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="Name" Setter={(record) => props.SetDataSet(record)} Valid={valid} Feedback={nameFeedback} />
-            <RelativeDateRangePicker Record={props.DataSet} Setter={(record) => props.SetDataSet(record)} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Hours" Label="Hour of Day" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Days" Label="Day of Week" Setter={(record) => props.SetDataSet(record)} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} IsDisabled={validDay} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Weeks" Label="Week of Year" Setter={(record) => props.SetDataSet(record)} Enum={Array.from({ length: 53 }, (_, i) => i.toString())} IsDisabled={validWeek} />
-            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Months" Label="Month of Year" Setter={(record) => props.SetDataSet(record)} Enum={['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']} />
-            <CheckBox<TrenDAP.iDataSet> Record={props.DataSet} Field="Public" Label='Shared' Setter={(record) => props.SetDataSet(record)} />
+            <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="Name" Setter={props.SetDataSet} Valid={valid} Feedback={nameFeedback} />
+            <RelativeDateRangePicker Record={props.DataSet} Setter={props.SetDataSet} />
+            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Hours" Label="Hour of Day" Setter={props.SetDataSet} Enum={Array.from({ length: 24 }, (_, i) => i.toString())} />
+            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Days" Label="Day of Week" Setter={props.SetDataSet} Enum={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']} IsDisabled={validDay} />
+            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Weeks" Label="Week of Year" Setter={props.SetDataSet} Enum={Array.from({ length: 53 }, (_, i) => i.toString())} IsDisabled={validWeek} />
+            <EnumCheckBoxes<TrenDAP.iDataSet> Record={props.DataSet} Field="Months" Label="Month of Year" Setter={props.SetDataSet} Enum={['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']} />
+            <div className='row'>
+                <div className='col'>
+                    <Input<TrenDAP.iDataSet> Record={props.DataSet} Field="EventWindowSize" Label='Event Time Window Size (+/-)' Setter={props.SetDataSet} Disabled={props.EventConnections.length === 0} Valid={valid}
+                        Type='integer' AllowNull={true} Help={"Filters data to window around events." +
+                            (props.EventConnections.length === 0 ? " Setup an event source connection to set these fields." : "")} />
+                </div>
+                <div className='col'>
+                    <Select<TrenDAP.iDataSet> Record={props.DataSet} Field="EventWindowUnit" Label='Event Time Window Units' Setter={props.SetDataSet} Disabled={props.EventConnections.length === 0} Options={TimeWindowSizes} />
+                </div>
+            </div>
+            <CheckBox<TrenDAP.iDataSet> Record={props.DataSet} Field="Public" Label='Shared' Setter={props.SetDataSet} />
         </>
     );
 

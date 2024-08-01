@@ -23,6 +23,7 @@
 
 import * as React from 'react';
 import * as $ from 'jquery';
+import moment from 'moment';
 import queryString from 'querystring';
 import { TrenDAP, Redux } from '../../../global';
 import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../../OpenXDA/OpenXDASlice';
@@ -34,6 +35,7 @@ import { OpenXDA } from '@gpa-gemstone/application-typings';
 
 const encodedDateFormat = 'MM/DD/YYYY';
 const encodedTimeFormat = 'HH:mm:ss.SSS';
+const xdaServerFormat = "YYYY-MM-DD[T]HH:mm:ss.SSSSSSS";
 
 interface ISetting { PQBrowserUrl: string }
 interface IDatasetSetting {
@@ -55,6 +57,14 @@ interface IDatasetSetting {
     SwellMin: number | null,
     SwellMax: number | null,
     SwellType: 'LL' | 'LN' | 'both'
+}
+
+interface IxdaEvent {
+    ID: number,
+    StartTime: string,
+    EndTime: string,
+    Name: string,
+    Description: string
 }
 
 const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
@@ -396,7 +406,7 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
         );
 
     },
-    Load: function (_dataSource: EventSourceTypes.IEventSourceView, _dataSet: TrenDAP.iDataSet, setConn: EventSourceTypes.IEventSourceDataSet): Promise<TrenDAP.IEvent[]> {
+    Load: function (eventSource: EventSourceTypes.IEventSourceView, _dataSet: TrenDAP.iDataSet, setConn: EventSourceTypes.IEventSourceDataSet): Promise<TrenDAP.IEvent[]> {
         return new Promise<TrenDAP.IEvent[]>((resolve, reject) => {
             $.ajax({
                 type: "Get",
@@ -406,7 +416,37 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
                 cache: true,
                 async: true
             }).done((data: string) => {
-                resolve(JSON.parse(data));
+                const dataSetSettings = EnsureTypeSafety(setConn.Settings, OpenXDAEvents.DefaultDataSetSettings);
+                const sourceSettings = EnsureTypeSafety(eventSource.Settings, OpenXDAEvents.DefaultSourceSettings);
+
+                // Settings query params common to all events
+                const queryParams: any = {};
+                if (dataSetSettings.IDs.length > 0 && dataSetSettings.IDs.length < 100)
+                    dataSetSettings.IDs.forEach((arg, index) => queryParams[dataSetSettings.By === 'Meter' ? 'meters' : 'assets' + index] = arg);
+                queryParams['windowSize'] = 3;
+                queryParams['timeWindowUnits'] = 3; // hours
+
+                // Parse events from response data
+                const xdaEvents: IxdaEvent[] = JSON.parse(data);
+
+                // Map XDA event to trenDAP event
+                const tdapEvents: TrenDAP.IEvent[] = xdaEvents.map(evt => {
+                    const startTime = moment.utc(evt.StartTime, xdaServerFormat);
+                    queryParams['time'] = startTime.format(encodedTimeFormat);
+                    queryParams['date'] = startTime.format(encodedDateFormat);
+                    queryParams['eventid'] = evt.ID;
+
+                    const queryUrl = queryString.stringify(queryParams, "&", "=", { encodeURIComponent: queryString.escape });
+                    // Regex removes trailing /
+                    return {
+                        Time: startTime.valueOf(),
+                        Duration: moment.utc(evt.EndTime, xdaServerFormat).valueOf() - startTime.valueOf(),
+                        Title: evt.Name,
+                        Description: evt.Description,
+                        Link: `${sourceSettings.PQBrowserUrl.replace(/[\/]$/, '')}/eventsearch?${queryUrl}`
+                    }
+                });
+                resolve(tdapEvents);
             }).fail(err => reject(err));
         });
     },
@@ -463,6 +503,10 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
         const queryUrl = queryString.stringify(queryParams, "&", "=", { encodeURIComponent: queryString.escape });
         // Regex removes trailing /
         return `${sourceSettings.PQBrowserUrl.replace(/[\/]$/, '')}/eventsearch?${queryUrl}`;
+    },
+    GetLogo: function (eventSource: EventSourceTypes.IEventSourceView) {
+        const sourceSettings = EnsureTypeSafety(eventSource.Settings, OpenXDAEvents.DefaultSourceSettings);
+        return `${sourceSettings.PQBrowserUrl.replace(/[\/]$/, '')}/Images/icon.png`;
     },
     TestAuth: function (eventSource: EventSourceTypes.IEventSourceView): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {

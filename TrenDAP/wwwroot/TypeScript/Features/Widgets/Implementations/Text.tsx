@@ -27,9 +27,10 @@ import { TextArea } from '@gpa-gemstone/react-forms';
 
 interface IProps { Text: string }
 
-export const TextWidget: WidgetTypes.IWidget<IProps, null> = {
+export const TextWidget: WidgetTypes.IWidget<IProps, null, null> = {
     DefaultSettings: { Text: "" },
     DefaultChannelSettings: null,
+    DefaultEventSourceSettings: null,
     Name: "Text",
     WidgetUI: (props) => {
         return (

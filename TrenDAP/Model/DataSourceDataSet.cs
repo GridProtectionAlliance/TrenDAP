@@ -85,6 +85,7 @@ namespace TrenDAP.Model
         [HttpGet, Route("Query/{dataSourceDataSetID:int}")]
         public IActionResult GetData(int dataSourceDataSetID, CancellationToken cancellationToken)
         {
+            if (!string.IsNullOrEmpty(GetRoles) && !User.IsInRole(GetRoles)) return Unauthorized();
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
                 DataSourceDataSet sourceSet = new TableOperations<DataSourceDataSet>(connection).QueryRecordWhere("ID = {0}", dataSourceDataSetID);
@@ -93,6 +94,21 @@ namespace TrenDAP.Model
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSourceID);
                 if (dataSet is null || dataSource is null) return BadRequest("Failure loading data source or data set.");
                 return Query(dataSet, dataSource, sourceSet.Settings, cancellationToken);
+            }
+        }
+
+        [HttpPost, Route("Query/ByEvents/{dataSourceDataSetID:int}")]
+        public IActionResult GetDataByEvents(int dataSourceDataSetID, [FromBody] JArray events, CancellationToken cancellationToken)
+        {
+            if (!string.IsNullOrEmpty(PostRoles) && !User.IsInRole(PostRoles)) return Unauthorized();
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                DataSourceDataSet sourceSet = new TableOperations<DataSourceDataSet>(connection).QueryRecordWhere("ID = {0}", dataSourceDataSetID);
+                if (sourceSet == null) return BadRequest($"Could not find source set relationship with ID {dataSourceDataSetID}");
+                DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSetID);
+                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSourceID);
+                if (dataSet is null || dataSource is null) return BadRequest("Failure loading data source or data set.");
+                return Query(dataSet, dataSource, sourceSet.Settings, events.ToObject<List<Event>>(), cancellationToken);
             }
         }
 
@@ -118,6 +134,31 @@ namespace TrenDAP.Model
                 } */
                 else
                     throw new ArgumentException("Only datasources type of TrenDAPDB supported by this method.");
+            }
+        }
+
+        private IActionResult Query(DataSet dataset, DataSource dataSource, JObject json, List<Event> events, CancellationToken cancellationToken)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                DataSourceHelper helper = new DataSourceHelper(dataSource);
+
+                if (dataSource.Type == "TrenDAPDB")
+                {
+                    HIDSPostTimeSpans postData = TrenDAPDBController.CreatePostTimeSpans(dataset, json.ToObject<XDADataSetData>(), events);
+                    JObject jObj = (JObject)JToken.FromObject(postData);
+                    return helper.GetActionResult("api/HIDS/QueryPointsByTimeSpans", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
+                }
+                // ToDo: Add other types, see funcs in dataset.cs
+                /* else if (type == "OpenHistorian")
+                    return QueryOpenHistorian(jObject, dataset, dataSource, json, cancellationToken);
+                else if (type == "Sapphire")
+                {
+                    jObject["DataSource"]["OpenSEE"] = TrenDAPDBController.GetOpenSEEURL(dataSource.ID, Configuration).Result;
+                    return QuerySapphire(jObject, dataset, dataSource, json, cancellationToken);
+                } */
+                else
+                    throw new ArgumentException("Only datasources of type TrenDAPDB are supported by this endpoint.");
             }
         }
     }

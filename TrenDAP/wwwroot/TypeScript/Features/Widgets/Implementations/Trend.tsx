@@ -25,7 +25,7 @@ import { axisBottom, axisLeft, axisRight, brushX, format, line, scaleLinear, sca
 import * as React from 'react';
 import { DataSetTypes, TrenDAP } from '../../../global';
 import { WidgetTypes } from '../Interfaces';
-import { Input, Select, ToggleSwitch, DatePicker, ColorPicker, RadioButtons } from '@gpa-gemstone/react-forms';
+import { Input, Select, ToggleSwitch, DatePicker, ColorPicker, RadioButtons, StylableSelect } from '@gpa-gemstone/react-forms';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { ToolTip } from '@gpa-gemstone/react-interactive';
@@ -46,6 +46,14 @@ interface IChannelSettings {
     Field: TrenDAP.SeriesField,
     Color: string,
     YAxisID: number,
+    Continuous: boolean
+}
+
+type allowedSymbols = 'ArrowDropUp' | 'ArrowDropDown' | 'Exclamation' | 'Square' | 'Circle';
+
+interface IEventSourceSettings {
+    Color: string,
+    Symbol: allowedSymbols
 }
 
 interface IYScale {
@@ -53,7 +61,46 @@ interface IYScale {
     Scale: d3.ScaleLinear<number, number, never>
 }
 
-export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
+function GetPath(type: allowedSymbols, widthOffset: number, heightOffset: number) {
+    switch (type) {
+        case 'ArrowDropUp':
+            return `M${widthOffset},${heightOffset} l-10,10 l20,0 l-10,-10`;
+        case 'ArrowDropDown':
+            return `M${widthOffset},${heightOffset} l-10,-10 l20,0 l-10,10`;
+        case 'Circle':
+            return `M${widthOffset},${heightOffset}a5 5 0 1 1 0 10 a5 5 0 1 1 0 -10`;
+        case 'Square':
+            return `M${widthOffset -5},${heightOffset} l0,10 l10,0 l0,-10 l-10,0`;
+        case 'Exclamation':
+            return `M${widthOffset},${heightOffset-2}, l 0,-2 m 0,-3 l 0,-9`
+    }
+}
+
+const PreviewEventIcon = React.memo((props: { Symbol: allowedSymbols }) => {
+    const verticalOffSet = React.useMemo(() => {
+        switch (props.Symbol) {
+            case 'ArrowDropUp':
+                return 2;
+            case 'ArrowDropDown':
+                return 22;
+            case 'Circle':
+                return 7;
+            case 'Square':
+                return 7;
+            case 'Exclamation':
+                return 23;
+        }
+    }, [props.Symbol])
+
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" style={{ width: 40, height: 24 }} viewBox="0 0 40 24" fill="currentColor"
+            stroke={"currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-check-circle">
+            <path d={GetPath(props.Symbol, 20, verticalOffSet)} />
+        </svg>
+    );
+});
+
+export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSourceSettings> = {
     DefaultSettings: {
         Min: new Date().toISOString(),
         Max: new Date().toISOString(),
@@ -63,7 +110,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         SplitType: 'Axis',
         AutoXScale: true
     },
-    DefaultChannelSettings: { Field: 'Average', Color: 'Red', YAxisID: -1 },
+    DefaultChannelSettings: { Field: 'Average', Color: 'Red', YAxisID: -1, Continuous: false },
+    DefaultEventSourceSettings: { Color: 'Green', Symbol: 'ArrowDropUp' },
     Name: "Trend",
     WidgetUI: (props) => {
         const plotRef = React.useRef<HTMLDivElement | null>(null);
@@ -76,6 +124,9 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         const [svgCount, setSvgCount] = React.useState<number>(0);
         const [chartAction, setChartAction] = React.useState<TrenDAP.ChartAction>('Pan');
         const [plotSize, setPlotSize] = React.useState<{ Height: number, Width: number }>()
+
+        const [evtHover, setEvtHover] = React.useState<{ Event: TrenDAP.IEvent, Target: string }>(null);
+        const [showTooltip, setShowTooltip] = React.useState<boolean>(false);
 
         React.useLayoutEffect(() => {
             if (plotRef.current != null) {
@@ -110,6 +161,10 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         React.useEffect(() => {
             chartActionRef.current = chartAction;
         }, [chartAction]);
+
+        React.useEffect(() => {
+            svgs.current.forEach((svg, i) => AddEventLine(svg, i));
+        }, [props.Events]);
 
         function GetChannelData(channel: WidgetTypes.IWidgetData<IChannelSettings>) {
             return props.Data.find(data => data.ID === channel.ID).SeriesData[channel.ChannelSettings.Field].map(data => [data[0], data[1]]);
@@ -188,8 +243,21 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
             svg.selectAll('g.yaxis').remove();
             AddYAxisLeft(axis, svg);
 
-            const lineFunc = line<number[]>().x(dd => xScale(dd[0])).y(dd => yScale.Scale(dd[1]));
             const data = GetChannelData(series);
+
+            // Any data gap above 2x the average of the first 5 points should be considered a gap
+            let count = 0;
+            let gapValue = 0;
+            while (count < 5 && count < data.length - 2) {
+                count++;
+                gapValue += data[count + 1][0] - data[count][0];
+            }
+            gapValue /= (count / 2);
+            const lineFunc = line<number[]>()
+                .defined((dd, ind, data) => {
+                    if (series.ChannelSettings.Continuous || ind === 0) return true;
+                    return dd[0] - data[ind - 1][0] <= gapValue;
+                }).x(dd => xScale(dd[0])).y(dd => yScale.Scale(dd[1]));
 
             svg.selectAll("g.line").remove();
             svg.selectAll('g.line')
@@ -203,10 +271,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .attr("stroke-width", 1.5)
                 .attr("stroke", series.ChannelSettings.Color)
                 .attr("d", lineFunc(data));
-            /*
-            if (series.ChannelSettings.YAxis.ShowEvents) {
-                //AddEventLine(series, svg, x);
-            }*/
+
+            AddEventLine(svg, dataIndex);
 
             svg.selectAll("g.legend").remove();
             if (props.Settings.Legend) {
@@ -244,13 +310,25 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .attr("stroke-width", 1.5)
                 .attr("stroke", (s) => s.ChannelSettings.Color)
                 .attr("d", (s) => {
-                    const lineFunc = line<number[]>().x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
                     const data = GetChannelData(s);
+                    // Any data gap above 2x the average of the first 5 points should be considered a gap
+                    let count = 0;
+                    let gapValue = 0;
+                    while (count < 5 && count < data.length - 2) {
+                        count++;
+                        gapValue += data[count + 1][0] - data[count][0];
+                    }
+                    gapValue /= (count / 2);
+                    const lineFunc = line<number[]>()
+                        .defined((dd, ind, data) => {
+                            if (s.ChannelSettings.Continuous || ind === 0) return true;
+                            return dd[0] - data[ind - 1][0] <= gapValue;
+                        }).x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
                     return lineFunc(data);
 
                 })
 
-            //series.forEach(s => AddEventLine(s, svg, x))
+            AddEventLine(svg, axisIndex);
 
             svg.selectAll("g.legend").remove();
             if (props.Settings.Legend) {
@@ -295,15 +373,26 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 .attr("stroke", d => d.ChannelSettings.Color)
                 .attr("d", d => {
                     const yScale = yScalesRef.current.find(scale => d.ChannelSettings.YAxisID === scale.ID)?.Scale;
-                    const lineFunc = line<number[]>().x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
                     const data = GetChannelData(d);
+                    // Any data gap above 2x the average of the first 5 points should be considered a gap
+                    let count = 0;
+                    let gapValue = 0;
+                    while (count < 5 && count < data.length - 2) {
+                        count++;
+                        gapValue += data[count + 1][0] - data[count][0];
+                    }
+                    gapValue /= (count / 2);
+                    const lineFunc = line<number[]>()
+                        .defined((dd, ind, data) => {
+                            if (d.ChannelSettings.Continuous || ind === 0) return true;
+                            return dd[0] - data[ind - 1][0] <= gapValue;
+                    }).x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
                     return lineFunc(data);
                 })
 
             svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg))
 
-            //props.Data.filter(channel => channel.ChannelSettings.ShowEvents).forEach(series => AddEventLine(channel, svg, x));
-
+            AddEventLine(svg, clipIndex);
         }
 
         function AddLegend(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, data: WidgetTypes.IWidgetData<IChannelSettings>[]) {
@@ -333,30 +422,37 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 });
         }
 
-        /*
-        function AddEventLine(series: WidgetTypes.IWidgetData, svg, x) {
-            const svgHeight = parseInt(svg.attr('height'))
-
-            let datum = GetChannelData(series);
-            let d = datum?.Events ?? [];
+        function AddEventLine(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, axisIndex: number) {
+            const svgHeight = parseInt(svg.attr('height'));
+            const identifiedEvents = props.Events.flatMap((evtSrc, srcInd) =>
+                evtSrc.Events.map((evt, evtInd) => ({ Event: evt, Target: `event-${axisIndex}-${srcInd}-${evtInd}`, Settings: evtSrc.EventSettings }))
+            );
 
             svg.selectAll('g.event-line').remove();
             const g = svg.selectAll('g.event-line')
-                .data(d)
+                .data(identifiedEvents)
                 .enter()
                 .append('g')
                 .classed('event-line', true)
             g.append('path')
                 .attr('stroke-width', '2px')
-                .attr("d", d => `M0,${svgHeight - margin.current.bottom - margin.current.top}L-10,${svgHeight - margin.current.bottom - margin.current.top + 10},L10,${svgHeight - margin.current.bottom - margin.current.top + 10}L0,${svgHeight - margin.current.bottom - margin.current.top}Z`)
-                .attr("transform", d => `translate(${x(moment(d.StartTime, 'YYYY-MM-DDTHH:mm:ss.fff'))},${margin.current.top})`)
-                .attr('stroke', 'red')
-                .attr('fill', 'red')
-                .style('cursor', 'pointer')
+                .attr("d", d => GetPath(d.Settings.Symbol, 0, svgHeight - margin.current.bottom - margin.current.top))
+                .attr("transform", d => `translate(${xScaleRef.current(d.Event.Time)},${margin.current.top})`)
+                .attr('stroke', d => d.Settings.Color)
+                .attr('fill', d => d.Settings.Color)
+                .attr('data-tooltip', d => d.Target)
+                .on('mouseenter', (_, d) => { setEvtHover(d); setShowTooltip(true); })
+                .on('mouseleave', _ => setShowTooltip(false))
+                .style('cursor', d => d.Event?.Link != null ? 'pointer' : undefined)
                 .on('click', (e, d) => {
-                    window.open(record.Data.find(ds => ds.DataSource.ID === series.DataSourceID).DataSource.OpenSEE + '?eventID=' + d.ID)
-                })
-        }*/
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (d.Event?.Link != null) {
+                        const handle = setTimeout(() => window.open(d.Event.Link, '_blank'), 500);
+                        return (() => { clearTimeout(handle); })
+                    }
+                });
+        }
 
         function AddXAxis(svg) {
             const svgWidth = parseInt(svg.attr('width'));
@@ -570,8 +666,11 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                     <button className='btn btn-light' onClick={HandleReset}>
                         Reset Limits
                     </button>
-                    <RadioButtons Record={{ chartAction }} Field="chartAction" Label="" Setter={(record) => setChartAction(record.chartAction)} Options={[{ Label: 'Pan', Value: 'Pan' }, { Label: 'ZoomX', Value: 'ZoomX' }, { Label: 'Click', Value: 'Click' }]} />
+                    <RadioButtons Record={{ chartAction }} Field="chartAction" Label="" Setter={(record) => setChartAction(record.chartAction)} Options={[{ Label: 'Pan', Value: 'Pan'}, { Label: 'ZoomX', Value: 'ZoomX' }, { Label: 'Click', Value: 'Click' }]} />
                 </div>
+                <ToolTip Show={showTooltip && evtHover?.Event?.Title != null && evtHover?.Event?.Title != ''} Position='top' Target={evtHover?.Target}>
+                    {`${evtHover?.Event?.Title}${(evtHover?.Event?.Description != null && evtHover.Event.Description != '') ? (" - " + evtHover.Event.Description) : ''}`}
+                </ToolTip>
             </div>
         );
     },
@@ -626,7 +725,6 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         props.SetSettings({
                             ...props.Settings, YAxis: [...props.Settings.YAxis, {
                                 Max: 10, Min: 0, Position: 'left', Type: `None`, AutoMaxScale: true, AutoMinScale: true, Label: '',
-                                ShowEvents: false,
                                 ID: props.Settings.YAxis.length !== 0 ? maxID + 1 : 0
                             }]
                         });
@@ -752,7 +850,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                                     yAxisID = props.Settings.YAxis.reduce((max, current) => {
                                         return current.ID > max ? current.ID : max
                                     }, 0) + 1
-                                const newAxis: TrenDAP.IYAxis = { ID: yAxisID, Min: 0, Max: 10, AutoMaxScale: true, AutoMinScale: true, Label: '', Type: item.row.Type, Position: 'left', ShowEvents: false }
+                                const newAxis: TrenDAP.IYAxis = { ID: yAxisID, Min: 0, Max: 10, AutoMaxScale: true, AutoMinScale: true, Label: '', Type: item.row.Type, Position: 'left' }
 
                                 props.SetSettings({
                                     ...props.Settings,
@@ -833,6 +931,16 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                         Color
                     </ReactTable.Column>
                     <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                        Key={'Continuous'}
+                        AllowSort={true}
+                        Field={'ChannelSettings'}
+                        Content={({ item }) =>
+                            <ToggleSwitch<IChannelSettings> Record={item?.ChannelSettings} Label="" Field="Continuous" Setter={(record) => props.SetChannelSettings(item.Key, record)}/>
+                        }
+                    >
+                        Continuous
+                    </ReactTable.Column>
+                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'SeriesField'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
@@ -859,6 +967,96 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings> = {
                 </ReactTable.Table>
             </div>
         </>
+    },
+    EventSourceSelectionUI: (props) => {
+        const [allEventSources, setAllEventSources] = React.useState<WidgetTypes.ISelectedEvents<IEventSourceSettings>[]>([]);
+        const [ascending, setAscending] = React.useState<boolean>(false);
+        const [sortField, setSortField] = React.useState<keyof WidgetTypes.ISelectedEvents<IEventSourceSettings>>('Name');
+
+        React.useEffect(() => {
+            if (props.SelectedSources.length === 0) return;
+            setAllEventSources(_.orderBy(props.SelectedSources, [sortField], [ascending ? 'asc' : 'desc']));
+        }, [ascending, sortField, props.SelectedSources]);
+
+        const symbolOptions: { Value: allowedSymbols, Element: any }[] = React.useMemo(() => [
+            { Value: 'ArrowDropUp', Element: <PreviewEventIcon Symbol='ArrowDropUp' /> },
+            { Value: 'ArrowDropDown', Element: <PreviewEventIcon Symbol='ArrowDropDown' /> },
+            { Value: 'Circle', Element: <PreviewEventIcon Symbol='Circle' /> },
+            { Value: 'Square', Element: <PreviewEventIcon Symbol='Square' /> },
+            { Value: 'Exclamation', Element: <PreviewEventIcon Symbol='Exclamation' /> },
+        ], []);
+
+        return (
+            <ReactTable.Table<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                TableClass="table table-hover"
+                TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                SortKey={sortField}
+                OnClick={() => { }}
+                OnSort={data => {
+                    if (sortField === data.colField) setAscending(a => !a);
+                    else {
+                        setSortField(data.colField);
+                        setAscending(true);
+                    }
+                }}
+                Data={allEventSources}
+                Ascending={ascending}
+                KeySelector={(row) => row.Key}
+                Selected={() => false}
+            >
+                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                    Key={'Name'}
+                    AllowSort={true}
+                    Field={'Name'}
+                >
+                    Name
+                </ReactTable.Column>
+                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                    Key={'Type'}
+                    AllowSort={true}
+                    Field={'SourceType'}
+                >
+                    Type
+                </ReactTable.Column>
+                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                    Key={'Display'}
+                    AllowSort={false}
+                    Content={({ item }) =>
+                        <ToggleSwitch Record={item} Label="" Field="Enabled" Setter={props.SetSource} />
+                    }
+                >
+                    Display
+                </ReactTable.Column>
+                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                    Key={'Symbol'}
+                    AllowSort={false}
+                    Content={({ item }) =>
+                        <StylableSelect<IEventSourceSettings> Record={item.EventSettings} Label="" Field="Symbol" Options={symbolOptions}
+                            Setter={(newSettings) => props.SetSource({ ...item, EventSettings: newSettings })} />
+                    }
+                >
+                    Symbol
+                </ReactTable.Column>
+                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                    Key={'Color'}
+                    AllowSort={false}
+                    Content={({ item }) => 
+                        <ColorPicker<IEventSourceSettings> Record={item.EventSettings} Label="Color" Field="Color"
+                            Setter={(newSettings) => {
+                                const newSrc = { ...item };
+                                newSrc.EventSettings = newSettings;
+                                props.SetSource(newSrc);
+                            }}
+                            Style={{ backgroundColor: item.EventSettings?.Color, borderColor: item.EventSettings?.Color}} />
+                    }
+                >
+                    Color
+                </ReactTable.Column>
+            </ReactTable.Table>
+        );
     }
 }
 

@@ -24,7 +24,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { Redux } from '../../../global';
 import { EventSourceTypes } from '../Interface';
 import _ from 'lodash';
-import { ajax } from 'jquery';
+import $  from 'jquery';
 
 // #region [ Thunks ]
 export const FetchEventSources = createAsyncThunk('EventSources/FetchEventSources', async (_, { dispatch }) => {
@@ -139,7 +139,7 @@ export const SelectEventSourcesAscending = (state: Redux.StoreState) => state.Ev
 // #region [ Async Functions ]
 
 function GetEventSources(): JQuery.jqXHR<EventSourceTypes.IEventSourceView[]> {
-    return ajax({
+    return $.ajax({
         type: "GET",
         url: `${homePath}api/EventSource`,
         contentType: "application/json; charset=utf-8",
@@ -150,7 +150,7 @@ function GetEventSources(): JQuery.jqXHR<EventSourceTypes.IEventSourceView[]> {
 }
 
 function PostEventSource(EventSource: EventSourceTypes.IEventSourceView): JQuery.jqXHR<EventSourceTypes.IEventSourceView> {
-    return ajax({
+    return $.ajax({
         type: "POST",
         url: `${homePath}api/EventSource`,
         contentType: "application/json; charset=utf-8",
@@ -162,7 +162,7 @@ function PostEventSource(EventSource: EventSourceTypes.IEventSourceView): JQuery
 }
 
 function DeleteEventSource(EventSource: EventSourceTypes.IEventSourceView): JQuery.jqXHR<EventSourceTypes.IEventSourceView> {
-    return ajax({
+    return $.ajax({
         type: "DELETE",
         url: `${homePath}api/EventSource`,
         contentType: "application/json; charset=utf-8",
@@ -174,7 +174,7 @@ function DeleteEventSource(EventSource: EventSourceTypes.IEventSourceView): JQue
 }
 
 function PatchEventSource(EventSource: EventSourceTypes.IEventSourceView): JQuery.jqXHR<EventSourceTypes.IEventSourceView> {
-    return ajax({
+    return $.ajax({
         type: "PATCH",
         url: `${homePath}api/EventSource`,
         contentType: "application/json; charset=utf-8",

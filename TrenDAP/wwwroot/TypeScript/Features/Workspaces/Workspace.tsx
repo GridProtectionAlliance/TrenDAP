@@ -54,7 +54,9 @@ const Workspace: React.FunctionComponent = () => {
     /* Maps */
     const channelMapping = React.useRef<HashTable<TrenDAP.IChannelKey, string>>(new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`));
     const parentMapping = React.useRef<Map<string, number>>(new Map<string, number>());
+    const eventMapping = React.useRef<Map<number, number>>(new Map<number, number>());
     const [mapVersion, setMapVersion] = React.useState<number>(0);
+    const [eventMapVersion, setEventMapVersion] = React.useState<number>(0);
 
     const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [] });
     const [workspaceLink, setWorkspaceLink] = React.useState<string | null>(null);
@@ -63,7 +65,8 @@ const Workspace: React.FunctionComponent = () => {
     const [showCopiedTooltip, setShowCopiedTooltip] = React.useState<boolean>(false);
     const [hover, setHover] = React.useState<Hover>('None');
     const [showSettingsModal, setShowSettingsModal] = React.useState<boolean>(false);
-    const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([])
+    const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([]);
+    const [allEvents, setAllEvents] = React.useState<TrenDAP.IEventSourceMetaData[]>([]);
     const [showShowDataSetModal, setShowDataSetModal] = React.useState<boolean>(true)
     const [loading, setLoading] = React.useState<boolean>(false);
     const [dataSet, setDataset] = React.useState<TrenDAP.iDataSet | null>(null)
@@ -121,13 +124,15 @@ const Workspace: React.FunctionComponent = () => {
             dispatch(FetchWorkSpaces());
     }, [dispatch, workspaceStatus]);
 
-    function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
+    function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], eventMap: [number, number][], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
         setLoading(true);
         loadHandle.then(() => setLoading(false));
 
         setDataset(dataset);
         channelMapping.current = new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, channelMap);
         parentMapping.current = new Map<string, number>(parentMap);
+        eventMapping.current = new Map<number, number>(eventMap);
+        setEventMapVersion(version => version + 1);
         setMapVersion(version => version + 1);
     }
 
@@ -230,7 +235,11 @@ const Workspace: React.FunctionComponent = () => {
                                     ChannelMap={{ Map: channelMapping, Version: mapVersion }}
                                     SetChannelMapVersion={setMapVersion}
                                     ParentMap={parentMapping}
+                                    EventMap={eventMapping}
+                                    EventMapVersion={eventMapVersion}
+                                    SetEventMapVersion={setEventMapVersion}
                                     AllChannels={allChannels}
+                                    AllEventSources={allEvents}
                                     Label={row?.Label}
                                     Widgets={row.Widgets}
                                     Height={row.Height}
@@ -270,7 +279,10 @@ const Workspace: React.FunctionComponent = () => {
                         </div>
                     }
                 </>}
-            <DataSetSelector key={workspaceId} IsModalOpen={showShowDataSetModal} SetIsModalOpen={setShowDataSetModal} WorkSpaceJSON={workSpaceJSON} GenerateMapping={GenerateMapping} AllChannels={allChannels} SetAllChannels={setAllChannels} />
+            <DataSetSelector key={workspaceId} IsModalOpen={showShowDataSetModal}
+                SetIsModalOpen={setShowDataSetModal} WorkSpaceJSON={workSpaceJSON}
+                GenerateMapping={GenerateMapping}
+                AllChannels={allChannels} SetAllChannels={setAllChannels} SetAllEventSources={setAllEvents} />
         </div>
     );
 }

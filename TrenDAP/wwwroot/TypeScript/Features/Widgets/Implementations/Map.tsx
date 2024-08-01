@@ -23,7 +23,7 @@
 
 import * as React from 'react';
 import { TrenDAP, DataSetTypes } from '../../../global';
-import { Input, Select, ColorPicker, CheckBox, RadioButtons, ToggleSwitch } from '@gpa-gemstone/react-forms';
+import { Input, Select, ColorPicker, RadioButtons, ToggleSwitch } from '@gpa-gemstone/react-forms';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { WidgetTypes } from '../Interfaces';
 import { sort } from '../HelperFunctions';
@@ -55,7 +55,7 @@ const mapServer = {
     subdomains: 'abcd'
 }
 
-export const Map: WidgetTypes.IWidget<IProps, IChannelSettings> = {
+export const Map: WidgetTypes.IWidget<IProps, IChannelSettings, null> = {
     Name: "Map",
     DefaultSettings: {
         CenterLat: 35.045631,
@@ -69,6 +69,7 @@ export const Map: WidgetTypes.IWidget<IProps, IChannelSettings> = {
         Color: 'red',
         Field: 'Average'
     },
+    DefaultEventSourceSettings: null,
     WidgetUI: (props) => {
         const divRef = React.useRef<HTMLDivElement>(null);
         const map = React.useRef<leaflet.Map>(null);

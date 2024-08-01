@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { ServerErrorIcon, Modal, ToolTip, Warning } from '@gpa-gemstone/react-interactive';
+import { ServerErrorIcon, Modal, ToolTip, Warning, TabSelector } from '@gpa-gemstone/react-interactive';
 import { CreateGuid } from '@gpa-gemstone/helper-functions';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ErrorBoundary } from '@gpa-gemstone/common-pages';
@@ -46,25 +46,28 @@ import TrenDAPDB from '../DataSets/TrenDAPDB';
 import { WidgetTypes } from './Interfaces'
 import _ from 'lodash';
 import ChannelSelector from './ChannelSelector';
+import EventSelector from './EventSelector';
 import { isPercent } from './HelperFunctions';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-
-export const AllWidgets: WidgetTypes.IWidget<any, any>[] = [TextWidget, TableWidget, StatsWidget, HistogramWidget, XvsYWidget, ProfileWidget, TrendWidget, Map];
+export const AllWidgets: WidgetTypes.IWidget<any, any, any>[] = [TextWidget, TableWidget, StatsWidget, HistogramWidget, XvsYWidget, ProfileWidget, TrendWidget, Map];
 
 interface IProps {
     Widget: TrenDAP.IWidgetModel,
     RemoveWidget: () => void,
     UpdateWidget: (widget: TrenDAP.IWidgetModel) => void,
     AllChannels: DataSetTypes.IDataSetMetaData[],
+    AllEventSources: TrenDAP.IEventSourceMetaData[],
     ChannelMap: TrenDAP.IChannelMap,
     SetChannelMapVersion: (version: number) => void,
+    EventMapVersion: number,
+    SetEventMapVersion: (version: number) => void
     ParentMap: React.MutableRefObject<Map<string, number>>,
+    EventMap: React.MutableRefObject<Map<number, number>>,
 }
 
 const WidgetWrapper: React.FC<IProps> = (props) => {
-    const Implementation: WidgetTypes.IWidget<any, any> | undefined = React.useMemo(() => AllWidgets.find(item => item.Name === props.Widget.Type), [props.Widget.Type]);
+    const Implementation: WidgetTypes.IWidget<any, any, any> | undefined = React.useMemo(() => AllWidgets.find(item => item.Name === props.Widget.Type), [props.Widget.Type]);
     const guid = React.useRef<string>(CreateGuid());
 
     const editMode = useAppSelector(SelectEditMode);
@@ -75,8 +78,12 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     const [settingHover, setSettingHover] = React.useState<boolean>(false);
 
     const [data, setData] = React.useState<WidgetTypes.IWidgetData<any>[]>([]);
+    const [events, setEvents] = React.useState<WidgetTypes.IWidgetEvents<any>[]>([]);
+
+    const [tab, setTab] = React.useState<string>('channel');
 
     const [localChannels, setLocalChannels] = React.useState<WidgetTypes.ISelectedChannels<any>[]>([]);
+    const [localEventSources, setLocalEventSources] = React.useState<WidgetTypes.ISelectedEvents<any>[]>([]);
     const [localSetting, setLocalSetting] = React.useState<any | null>(null);
     const [localCommonSettings, setCommonLocalSettings] = React.useState<WidgetTypes.ICommonSettings>({ Width: props.Widget.Width, Label: props.Widget.Label, ShowHeader: props.Widget.ShowHeader });
     const [showWarning, setShowWarning] = React.useState<boolean>(false);
@@ -102,10 +109,35 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             setLocalChannels([])
             return
         }
-
-        const channels: WidgetTypes.ISelectedChannels<any>[] = props.Widget.Channels.map(chan => ({ ...chan, MetaData: [...props.AllChannels].find(c => c.ID === props.ChannelMap.Map.current.get(chan.Key)) as DataSetTypes.IDataSetMetaData }))
+        const channels: WidgetTypes.ISelectedChannels<any>[] = props.Widget.Channels.map(chan => ({ ...chan, MetaData: props.AllChannels.find(c => c.ID === props.ChannelMap.Map.current.get(chan.Key)) as DataSetTypes.IDataSetMetaData }))
         setLocalChannels(channels)
     }, [props.Widget.Channels, props.AllChannels, props.ChannelMap.Version, showSettingsModal])
+
+    React.useEffect(() => {
+        if (Implementation == null || props.Widget.EventSources == null || props.AllEventSources == null || props.AllEventSources.length == 0) {
+            setLocalEventSources([]);
+            return;
+        }
+
+        const mappedIds = _.uniq([...props.EventMap.current.values()]);
+        const newIds = _.uniq(props.AllEventSources.map(src => src.ID)).filter(id => mappedIds.find(mapId => mapId === id) == null);
+
+        // Update Map, if we have new things
+        newIds.forEach(id => props.EventMap.current.set(props.EventMap.current.size, id));
+        if (newIds.length > 0) {
+            props.SetEventMapVersion(props.EventMapVersion + 1);
+        }
+
+        const eventSources: WidgetTypes.ISelectedEvents<any>[] = [...props.EventMap.current.keys()].map(key => {
+            const id = props.EventMap.current.get(key);
+            const sourceMetaData: TrenDAP.IEventSourceMetaData = props.AllEventSources.find(source => source.ID === id);
+            let widgetEventSource: TrenDAP.IWidgetEventSources<any> = props.Widget.EventSources.find(source => source.Key === key);
+            if (widgetEventSource == null) widgetEventSource = { Key: key, Enabled: false, EventSettings: Implementation.DefaultEventSourceSettings };
+            return { ...widgetEventSource, ...sourceMetaData };
+        });
+
+        setLocalEventSources(eventSources);
+    }, [props.Widget?.EventSources, props.AllEventSources, showSettingsModal, Implementation])
 
     React.useEffect(() => {
         setCommonLocalSettings({ Width: props.Widget.Width, Label: props.Widget.Label, ShowHeader: props.Widget.ShowHeader })
@@ -135,12 +167,32 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
 
     }, [props.Widget.Channels, props.ChannelMap.Version]);
 
+    React.useEffect(() => {
+        if (props.Widget.EventSources == null || props.Widget.EventSources.length === 0) {
+            setEvents([]);
+            return;
+        }
+
+        const eventSources: WidgetTypes.ISelectedEvents<any>[] = props.Widget.EventSources
+            .filter(evtSrc => evtSrc.Enabled)
+            .map(evtSrc => ({ ...evtSrc, ...props.AllEventSources.find(src => props.EventMap.current.get(evtSrc.Key) === src.ID) }));
+
+        const db = new TrenDAPDB();
+        db.ReadManyEvents(eventSources).then(eventData => setEvents(eventData));
+    }, [props.Widget.EventSources, props.EventMapVersion]);
 
     React.useEffect(() => {
         if (!props.Widget.ShowHeader && editMode)
             setHeaderOpacity(0.5)
         else setHeaderOpacity(1)
-    }, [props.Widget.ShowHeader, editMode])
+    }, [props.Widget.ShowHeader, editMode]);
+
+    function handleChangeEventSource(newSource: WidgetTypes.IWidgetEvents<any>) {
+        const evtSrcs = [...localEventSources];
+        const ind = localEventSources.findIndex(src => src.Key === newSource.Key);
+        evtSrcs[ind] = newSource;
+        setLocalEventSources(evtSrcs);
+    }
 
     function handleAddChannel(channelID: string, defaultSetting: any) {
         const channel = props.AllChannels.find(channel => channel.ID === channelID) as DataSetTypes.IDataSetMetaData;
@@ -170,7 +222,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     AddChannelToMap(channel.Key, channel.MetaData)
                     const updatedKey = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) } as TrenDAP.IChannelKey
                     channel.Key = updatedKey
-                })
+                });
 
             props.UpdateWidget({
                 ...props.Widget,
@@ -178,7 +230,8 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                 Width: localCommonSettings.Width,
                 Label: localCommonSettings.Label,
                 ShowHeader: localCommonSettings.ShowHeader,
-                Channels: hasChannelsChanged ? updatedChannels.map(chan => ({ ChannelSettings: chan.ChannelSettings, Key: chan.Key })) : props.Widget.Channels
+                Channels: hasChannelsChanged ? updatedChannels.map(chan => ({ ChannelSettings: chan.ChannelSettings, Key: chan.Key })) : props.Widget.Channels,
+                EventSources: localEventSources.map(src => ({Key: src.Key, EventSettings: src.EventSettings, Enabled: src.Enabled}))
             })
             setShowSettingsModal(false)
         }
@@ -235,6 +288,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                         </div> : null}
                     <div className="card-body">
                         <Implementation.WidgetUI
+                            Events={events}
                             Data={data}
                             Settings={Settings}
                         />
@@ -253,9 +307,9 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                     ConfirmToolTipContent={<span>Enter a valid width</span>}
                     Size="xlg"
                 >
-                    <div className="container-fluid d-flex flex-column p-0" style={{ height: '80vh' }}>
-                        <div className="row h-100">
-                            <div className="col-4 d-flex flex-column h-100">
+                    <div className="container-fluid d-flex h-100 flex-column">
+                        <div className="row h-100" style={{ overflow: 'hidden' }}>
+                            <div className="col-4">
                                 <div className="row">
                                     <div className="col-12">
                                         <Input<WidgetTypes.ICommonSettings> Field='Label' Record={localCommonSettings} Type='text' Setter={(r) => setCommonLocalSettings(r)} Valid={() => true} />
@@ -278,51 +332,61 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                     ChannelSettings={localChannels.map(chan => chan.ChannelSettings)}
                                 />}
                             </div>
-                            <div className="col-8 h-100">
-                                {Implementation?.ChannelSelectionUI != null ?
-                                    <Implementation.ChannelSelectionUI
-                                        AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
-                                        SetChannelSettings={(channelKey, settings) => {
-                                            setLocalChannels(prevChannels => {
-                                                const updatedChans = prevChannels.map(chan =>
-                                                    _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
-                                                );
+                            <div className="col-8">
+                                <TabSelector CurrentTab={tab} SetTab={setTab} Tabs={
+                                    [{ Id: 'channel', Label: 'Channels' },
+                                        { Id: 'evtSrc', Label: 'Event Sources' }]} />
+                                {tab === 'channel' ?
+                                    Implementation?.ChannelSelectionUI != null ?
+                                        <Implementation.ChannelSelectionUI
+                                            AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
+                                            SetChannelSettings={(channelKey, settings) => {
+                                                setLocalChannels(prevChannels => {
+                                                    const updatedChans = prevChannels.map(chan =>
+                                                        _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
+                                                    );
 
-                                                return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
-                                            });
-                                        }}
-                                        RemoveChannel={channel => setLocalChannels(channels => {
-                                            const updatedChannels = [...channels];
-                                            const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
-                                            index !== -1 ? updatedChannels.splice(index, 1) : null;
-                                            return updatedChannels;
-                                        })}
-                                        AllChannels={props.AllChannels}
-                                        SelectedChannels={localChannels}
-                                        SetSettings={setLocalSetting}
-                                        Settings={localSetting}
-                                    /> : <ChannelSelector
-                                        AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
-                                        SetChannelSettings={(channelKey, settings) => {
-                                            setLocalChannels(prevChannels => {
-                                                const updatedChans = prevChannels.map(chan =>
-                                                    _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
-                                                );
+                                                    return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
+                                                });
+                                            }}
+                                            RemoveChannel={channel => setLocalChannels(channels => {
+                                                const updatedChannels = [...channels];
+                                                const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
+                                                index !== -1 ? updatedChannels.splice(index, 1) : null;
+                                                return updatedChannels;
+                                            })}
+                                            AllChannels={props.AllChannels}
+                                            SelectedChannels={localChannels}
+                                            SetSettings={setLocalSetting}
+                                            Settings={localSetting}
+                                        /> : <ChannelSelector
+                                            AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
+                                            SetChannelSettings={(channelKey, settings) => {
+                                                setLocalChannels(prevChannels => {
+                                                    const updatedChans = prevChannels.map(chan =>
+                                                        _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
+                                                    );
 
-                                                return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
-                                            });
-                                        }}
-                                        RemoveChannel={channel => setLocalChannels(channels => {
-                                            const updatedChannels = [...channels];
-                                            const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
-                                            index !== -1 ? updatedChannels.splice(index, 1) : null;
-                                            return updatedChannels;
-                                        })}
-                                        AllChannels={props.AllChannels}
-                                        SelectedChannels={localChannels}
-                                        SetSettings={setLocalSetting}
-                                        Settings={localSetting}
-                                    />}
+                                                    return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
+                                                });
+                                            }}
+                                            RemoveChannel={channel => setLocalChannels(channels => {
+                                                const updatedChannels = [...channels];
+                                                const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
+                                                index !== -1 ? updatedChannels.splice(index, 1) : null;
+                                                return updatedChannels;
+                                            })}
+                                            AllChannels={props.AllChannels}
+                                            SelectedChannels={localChannels}
+                                            SetSettings={setLocalSetting}
+                                            Settings={localSetting}
+                                        />
+                                : <></>}
+                                {tab === 'evtSrc' ?
+                                    Implementation?.EventSourceSelectionUI !== undefined ?
+                                        <Implementation.EventSourceSelectionUI SetSource={handleChangeEventSource} SelectedSources={localEventSources} /> :
+                                        <EventSelector SetSource={handleChangeEventSource} SelectedSources={localEventSources} />
+                                : <></>}
                             </div>
                         </div>
                     </div>

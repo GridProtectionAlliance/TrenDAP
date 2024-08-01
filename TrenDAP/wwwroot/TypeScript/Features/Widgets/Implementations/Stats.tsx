@@ -39,9 +39,10 @@ interface IProps {
     Precision: number
 }
 
-export const StatsWidget: WidgetTypes.IWidget<IProps, null> = {
+export const StatsWidget: WidgetTypes.IWidget<IProps, null, null> = {
     DefaultSettings: { Field: 'Average', Precision: 3 },
     DefaultChannelSettings: null,
+    DefaultEventSourceSettings: null,
     Name: "Stats",
     WidgetUI: (props) => {
         const [data, setData] = React.useState<IStatData[]>([])
@@ -50,7 +51,7 @@ export const StatsWidget: WidgetTypes.IWidget<IProps, null> = {
             setData(getStats(props));
         }, [props.Data, props.Settings])
 
-        const getStats = (oldstats: WidgetTypes.IWidgetProps<IProps, null>): IStatData[] => {
+        const getStats = (oldstats: WidgetTypes.IWidgetProps<IProps, null, null>): IStatData[] => {
 
             const newStats = { ...oldstats }
             let statData: number[] = []

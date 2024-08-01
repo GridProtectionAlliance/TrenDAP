@@ -150,7 +150,25 @@ export namespace TrenDAP {
 
     // TrenDAP
     interface iWorkSpace { ID: number, Name: string, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string }
-    interface iDataSet { ID: number, Name: string, Context: 'Relative' | 'Fixed Dates', RelativeValue: number, RelativeWindow: 'Day' | 'Week' | 'Month' | 'Year', From: string, To: string, Hours: number, Days: number, Weeks: number, Months: number, User: string, Public: boolean, UpdatedOn: string, Data?: { Status: Status, Error?: string } }
+    interface iDataSet {
+        ID: number,
+        Name: string,
+        Context: 'Relative' | 'Fixed Dates',
+        RelativeValue?: number,
+        RelativeWindow: 'Day' | 'Week' | 'Month' | 'Year',
+        From: string,
+        To: string,
+        Hours: number,
+        Days: number,
+        Weeks: number,
+        Months: number,
+        User: string,
+        Public: boolean,
+        UpdatedOn: string,
+        EventWindowSize?: number,
+        EventWindowUnit: 'Hour' | 'Day' | 'Week',
+        Data?: { Status: Status, Error?: string }
+    }
     interface iDataSetSource { ID: number, Name: string, DataSourceTypeID: number, JSON: object }
     interface iDataSetReturn<T extends iDataSetReturnType = iDataSetReturnType> { Data: T[], DataSource: { ID: number, Name: string, Type: DataSourceType, OpenSEE?: string }, From: string, To: string }
 
@@ -166,7 +184,8 @@ export namespace TrenDAP {
         Title: string,
         Time: number,
         Duration: number,
-        Description: string
+        Description: string,
+        Link?: string
     }
 
     // XDA
@@ -207,7 +226,6 @@ export namespace TrenDAP {
         Type: string,
         Label: string,
         Position: 'left' | 'right',
-        ShowEvents: boolean,
         AutoMinScale: boolean,
         AutoMaxScale: boolean
     }
@@ -226,13 +244,27 @@ export namespace TrenDAP {
         Type: string,
         ShowHeader: boolean,
         Settings: any,
-        Channels: IWidgetChannels<any>[]
+        Channels: IWidgetChannels<any>[],
+        EventSources: IWidgetEventSources<any>[]
     }
 
     //might be better in widgettypes namespace..
     interface IWidgetChannels<T> {
         Key: TrenDAP.IChannelKey,
         ChannelSettings: T
+    }
+
+    interface IEventSourceMetaData {
+        ID: number,
+        Name: string,
+        SourceType: string,
+        Logo?: string
+    }
+
+    interface IWidgetEventSources<T> {
+        Key: number,
+        Enabled: boolean,
+        EventSettings: T
     }
 
     interface IChannelKey {
@@ -244,6 +276,11 @@ export namespace TrenDAP {
 
     interface IChannelMap {
         Map: React.MutableRefObject<HashTable<TrenDAP.IChannelKey, string>>,
+        Version: number
+    }
+
+    interface IEventMap {
+        Map: React.MutableRefObject<Map<number, number>>,
         Version: number
     }
 

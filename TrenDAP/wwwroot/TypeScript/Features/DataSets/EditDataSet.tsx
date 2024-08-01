@@ -120,6 +120,8 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
             e.push("A Data Set with this name already exists.");
         else if (dataSet.Public && dataSets.findIndex(ds => ds.ID !== dataSet.ID && ds.Name.toLowerCase() == dataSet.Name.toLowerCase()) > -1)
             e.push("A Data Set with this name was already created by another user.");
+        if (dataSet.EventWindowSize != null && dataSet.EventWindowSize < 0)
+            e.push("Event window size must be greater than 0.")
         if (dataSet.Context == 'Fixed Dates' && moment(dataSet.From).isAfter(moment(dataSet.To)))
             e.push("A valid Timeframe has to be selected.")
         if (dataSet.Hours == 0)
@@ -158,8 +160,7 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
                                 <EventSourceConnectionTab EventSourceConnections={eventConnections} SetEventSourceConnections={setEventConnections}
                                     DataSet={dataSet} SetErrors={setEventErrors} /> : <></>}
                             {tab === 'settings' ?
-                                <DataSetSettingsTab DataSet={dataSet} SetDataSet={setDataSet}
-                                    DataConnections={dataConnections} SetDataConnections={setDataConnections} EventConnections={eventConnections} SetEventConnections={setEventConnections}/> : <></>}
+                                <DataSetSettingsTab DataSet={dataSet} SetDataSet={setDataSet} EventConnections={eventConnections} /> : <></>}
                         </div>
                     </div>
                     <div className="card-footer">

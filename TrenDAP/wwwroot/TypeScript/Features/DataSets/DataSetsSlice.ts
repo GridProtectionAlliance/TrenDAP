@@ -70,6 +70,8 @@ const newDataSet: TrenDAP.iDataSet = {
     Months: Math.pow(2, 12) - 1,
     RelativeValue: 7,
     RelativeWindow: 'Day',
+    EventWindowUnit: 'Hour',
+    EventWindowSize: null,
     Public: false,
     UpdatedOn: ''
 }

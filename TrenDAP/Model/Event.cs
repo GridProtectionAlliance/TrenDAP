@@ -1,7 +1,7 @@
-﻿//******************************************************************************************************
-//  Text.tsx - Gbtc
+//******************************************************************************************************
+//  Event.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2024, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,29 +16,22 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  11/16/2020 - Billy Ernest
+//  05/28/2024 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-import * as React from 'react';
-import { WidgetTypes } from '../Interfaces';
+using System;
 
-
-export const ProfileWidget: WidgetTypes.IWidget<null, null, null> = {
-    DefaultSettings: null,
-    Name: "Profile",
-    DefaultChannelSettings: null,
-    DefaultEventSourceSettings: null,
-    WidgetUI: () => {
-        return <>
-        </>
-    },
-    SettingsUI: () => {
-        return <>
-        </>
-    },
-    ChannelSelectionUI: () => {
-        return <></>
+namespace TrenDAP.Model
+{
+    public class Event
+    {
+        public string Title { get; set; }
+        // mS since epoch
+        public ulong Time { get; set; }
+        // in mS
+        public ulong Duration { get; set; }
+        public string Description { get; set; }
     }
 }
