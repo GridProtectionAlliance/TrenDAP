@@ -47,7 +47,8 @@ import { WidgetTypes } from './Interfaces'
 import _ from 'lodash';
 import ChannelSelector from './ChannelSelector';
 import EventSelector from './EventSelector';
-import { isPercent } from './HelperFunctions';
+import { isPercent, isVirtual } from './HelperFunctions';
+import { AddChannelToMap } from '../Workspaces/Workspace';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const AllWidgets: WidgetTypes.IWidget<any, any, any>[] = [TextWidget, TableWidget, StatsWidget, HistogramWidget, XvsYWidget, ProfileWidget, TrendWidget, Map];
@@ -57,6 +58,7 @@ interface IProps {
     RemoveWidget: () => void,
     UpdateWidget: (widget: TrenDAP.IWidgetModel) => void,
     AllChannels: DataSetTypes.IDataSetMetaData[],
+    AllVirtualChannels: TrenDAP.IVirtualChannelLoaded[],
     AllEventSources: TrenDAP.IEventSourceMetaData[],
     ChannelMap: TrenDAP.IChannelMap,
     SetChannelMapVersion: (version: number) => void,
@@ -66,7 +68,7 @@ interface IProps {
     EventMap: React.MutableRefObject<Map<number, number>>,
 }
 
-const WidgetWrapper: React.FC<IProps> = (props) => {
+export const WidgetWrapper: React.FC<IProps> = (props) => {
     const Implementation: WidgetTypes.IWidget<any, any, any> | undefined = React.useMemo(() => AllWidgets.find(item => item.Name === props.Widget.Type), [props.Widget.Type]);
     const guid = React.useRef<string>(CreateGuid());
 
@@ -82,6 +84,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
 
     const [tab, setTab] = React.useState<string>('channel');
 
+    const [allSelectableChannels, setAllSelectableChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([]);
     const [localChannels, setLocalChannels] = React.useState<WidgetTypes.ISelectedChannels<any>[]>([]);
     const [localEventSources, setLocalEventSources] = React.useState<WidgetTypes.ISelectedEvents<any>[]>([]);
     const [localSetting, setLocalSetting] = React.useState<any | null>(null);
@@ -105,13 +108,33 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     }, [Implementation, props.Widget.Settings, showSettingsModal]);
 
     React.useEffect(() => {
-        if (props.Widget.Channels.length === 0 || props.Widget.Channels == null || props.AllChannels.length == 0) {
+        // Todo: Should we load in a phase similar to how we do for parent name?
+        setAllSelectableChannels(props.AllChannels.concat(props.AllVirtualChannels.map(virtualChannel => ({
+                ID: virtualChannel.ID,
+                Name: virtualChannel.Name,
+                ParentID: virtualChannel.ParentID ?? 'N/A',
+                ParentName: virtualChannel.ParentName ?? 'N/A',
+                Phase: 'virtual',
+                Type: 'virtual'
+        }))));
+    }, [props.AllChannels, props.AllVirtualChannels]);
+
+
+    React.useEffect(() => {
+        if (props.Widget.Channels == null || props.Widget.Channels.length === 0 || allSelectableChannels.length === 0) {
             setLocalChannels([])
             return
         }
-        const channels: WidgetTypes.ISelectedChannels<any>[] = props.Widget.Channels.map(chan => ({ ...chan, MetaData: props.AllChannels.find(c => c.ID === props.ChannelMap.Map.current.get(chan.Key)) as DataSetTypes.IDataSetMetaData }))
+        const channels: WidgetTypes.ISelectedChannels<any>[] = props.Widget.Channels.map(chan => {
+            let channelId: string;
+            if (isVirtual(chan.Key)) channelId = chan.Key as string;
+            else channelId = props.ChannelMap.Map.current.get(chan.Key);
+
+            const metaData = allSelectableChannels.find(channel => channel.ID === channelId);
+            return { ...chan, MetaData: metaData };
+        });
         setLocalChannels(channels)
-    }, [props.Widget.Channels, props.AllChannels, props.ChannelMap.Version, showSettingsModal])
+    }, [props.Widget.Channels, allSelectableChannels, props.ChannelMap.Version, showSettingsModal])
 
     React.useEffect(() => {
         if (Implementation == null || props.Widget.EventSources == null || props.AllEventSources == null || props.AllEventSources.length == 0) {
@@ -148,24 +171,52 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     }, [Settings, showSettingsModal])
 
     React.useEffect(() => {
-        if (props.Widget.Channels.length === 0 || props.Widget.Channels == null) {
+        if (props.Widget.Channels.length === 0 || props.Widget.Channels == null || allSelectableChannels.length === 0) {
             setData([]);
             return;
         }
 
-        const channels = props.Widget.Channels.map(channel => ({ ChannelSettings: channel.ChannelSettings, ID: props.ChannelMap.Map.current.get(channel.Key), ChannelKey: channel.Key }));
         const db = new TrenDAPDB();
 
-        db.ReadMany(channels).then(data => {
-            const allData = data.map(item => ({
+        const channels = props.Widget.Channels
+            .filter(channel => !isVirtual(channel.Key)).map(channel =>
+            ({
+                ChannelSettings: channel.ChannelSettings,
+                ID: props.ChannelMap.Map.current.get(channel.Key),
+                ChannelKey: channel.Key as TrenDAP.IChannelKey
+            })
+        );
+        const readRealPromise: Promise<WidgetTypes.IWidgetData<any>[]> = db.ReadMany(channels).then(data => {
+            return Promise.resolve(data.map(item => ({
                 ...item.Data.Data,
                 ChannelSettings: item.ChannelSettings,
                 ChannelKey: item.ChannelKey
-            }));
-            setData(allData);
+            })));
         });
 
-    }, [props.Widget.Channels, props.ChannelMap.Version]);
+        const virtualChannels = props.Widget.Channels
+            .filter(channel => isVirtual(channel.Key)).map(channel => {
+                const virtualChannel = props.AllVirtualChannels.find(chan => chan.ID === channel.Key);
+                const virtualChannelMeta = allSelectableChannels.find(chan => chan.ID === channel.Key);
+                return {
+                    Info: virtualChannelMeta as DataSetTypes.IDataSetMetaData,
+                    VirtualInfo: virtualChannel as TrenDAP.IVirtualChannelLoaded,
+                    ChannelKey: channel.Key as string,
+                    ChannelSettings: channel.ChannelSettings
+                };
+            }
+        );
+        const readVirtualPromise: Promise<WidgetTypes.IWidgetData<any>[]> = db.ReadManyVirtual(virtualChannels, props.ChannelMap.Map.current).then(data => {
+            return Promise.resolve(data.map(item => ({
+                ...item.Data,
+                ChannelSettings: item.ChannelSettings,
+                ChannelKey: item.ChannelKey
+            })));
+        });
+
+        Promise.all([readRealPromise, readVirtualPromise]).then((allData) => setData(allData.flat()));
+
+    }, [props.Widget.Channels, props.ChannelMap.Version, allSelectableChannels]);
 
     React.useEffect(() => {
         if (props.Widget.EventSources == null || props.Widget.EventSources.length === 0) {
@@ -195,13 +246,14 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
     }
 
     function handleAddChannel(channelID: string, defaultSetting: any) {
-        const channel = props.AllChannels.find(channel => channel.ID === channelID) as DataSetTypes.IDataSetMetaData;
-        let uniqParent = localChannels.reduce((max, chan) => {
-            return chan.Key.Parent > max ? chan.Key.Parent : max;
-        }, 0);
+        const channel = allSelectableChannels.find(channel => channel.ID === channelID) as DataSetTypes.IDataSetMetaData;
+        const isReal = props.AllChannels.findIndex(channel => channel.ID === channelID) !== -1;
+        let key: TrenDAP.IChannelKey | string;
+        if (isReal) {
+            // Parent of key becomes overwritten when saved, parent is just temp for now
+            key = { Phase: channel.Phase, Type: channel.Type, Harmonic: channel.Harmonic, Parent: -1 }
+        } else key = channel.ID;
 
-        uniqParent = localChannels.length === 0 ? 0 : uniqParent + 1;
-        const key = { Phase: channel.Phase, Type: channel.Type, Harmonic: channel.Harmonic, Parent: uniqParent }
         const newChannel = {
             MetaData: channel,
             ChannelSettings: defaultSetting,
@@ -215,14 +267,23 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
 
     const handleUpdateWidget = (confBtn: boolean, deleteBtn: boolean) => {
         if (confBtn) {
-            const updatedChannels = [...localChannels];
-            const hasChannelsChanged = !_.isEqual(localChannels.map(chan => ({ Key: chan.Key, ChannelSettings: chan.ChannelSettings })), props.Widget.Channels)
-            if (hasChannelsChanged)
-                updatedChannels.forEach(channel => {
-                    AddChannelToMap(channel.Key, channel.MetaData)
-                    const updatedKey = { ...channel.Key, Parent: props.ParentMap.current.get(channel.MetaData.ParentID) } as TrenDAP.IChannelKey
-                    channel.Key = updatedKey
-                });
+            let mapChanged = false;
+            const updatedChannels = localChannels.map(channel => {
+                // Channels in virtual should already be a part of the map
+                if (isVirtual(channel.Key)) return { ChannelSettings: channel.ChannelSettings, Key: channel.Key };
+
+                // Checking if channel exists in map
+                const key = { ...(channel.Key as TrenDAP.IChannelKey) };
+                if (!props.ChannelMap.Map.current.has(key)) {
+                    // Need to add channel to map, and update key
+                    mapChanged = true;
+                    const parentKey = AddChannelToMap(key, channel.MetaData, props.ParentMap.current, props.ChannelMap.Map.current);
+                    key.Parent = parentKey;
+                }
+                return { ChannelSettings: channel.ChannelSettings, Key: key }
+            });
+
+            if (mapChanged) props.SetChannelMapVersion(props.ChannelMap.Version + 1);
 
             props.UpdateWidget({
                 ...props.Widget,
@@ -230,7 +291,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                 Width: localCommonSettings.Width,
                 Label: localCommonSettings.Label,
                 ShowHeader: localCommonSettings.ShowHeader,
-                Channels: hasChannelsChanged ? updatedChannels.map(chan => ({ ChannelSettings: chan.ChannelSettings, Key: chan.Key })) : props.Widget.Channels,
+                Channels: updatedChannels,
                 EventSources: localEventSources.map(src => ({Key: src.Key, EventSettings: src.EventSettings, Enabled: src.Enabled}))
             })
             setShowSettingsModal(false)
@@ -239,22 +300,6 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
             setShowWarning(true);
         else if (!confBtn && !deleteBtn)
             setShowSettingsModal(false);
-    }
-
-    const AddChannelToMap = (chanKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData) => {
-        let maxValue = -1
-
-        for (const value of props.ParentMap.current.values()) {
-            if (value > maxValue)
-                maxValue = value
-        }
-
-        if (!props.ParentMap.current.has(channel.ParentID))
-            props.ParentMap.current.set(channel.ParentID, maxValue + 1)
-
-        const parent = props.ParentMap.current.get(channel.ParentID)
-        props.ChannelMap.Map.current.set({ ...chanKey, Parent: parent }, channel.ID)
-        props.SetChannelMapVersion(props.ChannelMap.Version + 1)
     }
 
     return <>
@@ -339,7 +384,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                 {tab === 'channel' ?
                                     Implementation?.ChannelSelectionUI != null ?
                                         <Implementation.ChannelSelectionUI
-                                            AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
+                                            AddChannel={handleAddChannel}
                                             SetChannelSettings={(channelKey, settings) => {
                                                 setLocalChannels(prevChannels => {
                                                     const updatedChans = prevChannels.map(chan =>
@@ -355,12 +400,12 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                                 index !== -1 ? updatedChannels.splice(index, 1) : null;
                                                 return updatedChannels;
                                             })}
-                                            AllChannels={props.AllChannels}
+                                            AllChannels={allSelectableChannels}
                                             SelectedChannels={localChannels}
                                             SetSettings={setLocalSetting}
                                             Settings={localSetting}
                                         /> : <ChannelSelector
-                                            AddChannel={(channelID, defaultSetting) => handleAddChannel(channelID, defaultSetting)}
+                                            AddChannel={handleAddChannel}
                                             SetChannelSettings={(channelKey, settings) => {
                                                 setLocalChannels(prevChannels => {
                                                     const updatedChans = prevChannels.map(chan =>
@@ -376,7 +421,7 @@ const WidgetWrapper: React.FC<IProps> = (props) => {
                                                 index !== -1 ? updatedChannels.splice(index, 1) : null;
                                                 return updatedChannels;
                                             })}
-                                            AllChannels={props.AllChannels}
+                                            AllChannels={allSelectableChannels}
                                             SelectedChannels={localChannels}
                                             SetSettings={setLocalSetting}
                                             Settings={localSetting}

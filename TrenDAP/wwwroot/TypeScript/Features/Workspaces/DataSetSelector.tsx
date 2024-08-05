@@ -44,6 +44,7 @@ import { EventSourceTypes } from '../EventSources/Interface';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import * as _ from 'lodash';
+import { isVirtual } from '../Widgets/HelperFunctions';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 type MatchStatus = ('Match' | 'MultipleMatches' | 'NoMatch')
@@ -98,6 +99,7 @@ interface IProps {
         channelMap: [TrenDAP.IChannelKey, string][],
         parentMap: [string, number][],
         eventMap: [number, number][],
+        parents: { ID: string, Name: string }[],
         dataSet: TrenDAP.iDataSet,
         loadHandle: Promise<void>) => void
 }
@@ -159,8 +161,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     //Effect to set errors based on match status
     React.useEffect(() => {
-        if (channels != null) return;
-        const errors: string[] = []
+        if (channels != null || parentMatches.length === 0) return;
+        const errors: string[] = [];
 
         channelMatches.forEach(channel => {
             if (channel.Status === 'NoMatch') {
@@ -171,8 +173,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 const parent = parentMatches.find(parent => parent.Key === channel.Key.Parent)
                 errors.push(`${parent?.Name} has multiple matches for channel ${channel.Key.Type ?? ''} ${channel.Key.Phase ?? ''}`)
             }
-
-        })
+        });
 
         if (!_.isEqual(channelErrors, errors))
             setChannelErrors(errors)
@@ -180,7 +181,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     //Effect to set event errors based on match status
     React.useEffect(() => {
-        const errors = [];
+        const errors: string[] = [];
         eventMatches.forEach(match => {
             if (match.Match === 'NoMatch') errors.push(`Event Source ${match.Key + 1} has no match.`);
         });
@@ -258,21 +259,22 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
         Promise.all(channelHandlers).then(d => {
             const allChannels: DataSetTypes.IDataSetMetaData[] = d.flat()
-            props.SetAllChannels(allChannels)
-            setAllParents(_.uniqBy(allChannels.map(c => ({ ID: c.ParentID, Name: c.ParentName })), (m) => m.ID))
+            props.SetAllChannels(allChannels);
+            const allParents = _.uniqBy(allChannels.map(c => ({ ID: c.ParentID, Name: c.ParentName })), (m) => m.ID);
+            setAllParents(allParents);
 
             //Generate mapping if channels query param is set..
             if (channels != null) {
                 const chanMap: [TrenDAP.IChannelKey, string][] = JSON.parse(window.atob(channels));
 
                 const parentKeys = _.uniq(chanMap.map(chan => chan[0].Parent))
-                const parentMap: [string, number][] = parentKeys.map((key, index) => {
+                const parentMap: [string, number][] = parentKeys.map((key) => {
                     const chanID = chanMap.find(chan => chan[0].Parent === key)[1]
-                    return [allChannels.find(chan => chan.ID === chanID).ParentID, index]
+                    return [allChannels.find(chan => chan.ID === chanID).ParentID, key]
                 });
 
                 // ToDo: Add event source to url params
-                props.GenerateMapping(chanMap, parentMap, [], selectedDataSet as TrenDAP.iDataSet, loadData());
+                props.GenerateMapping(chanMap, parentMap, [], allParents, selectedDataSet as TrenDAP.iDataSet, loadData());
                 //Remove Channels param from queryParams, since we dont update this param 
                 navigate(`${homePath}Workspaces/${workspaceId}/DataSet/${dataSetID}`)
             }
@@ -288,8 +290,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
         const eventSrcHandlers = eventSources.map(ds => {
             const eventSourceView = eventSourceViews.find(d => d.ID === ds.EventSourceID);
-            const implementation: IEventSource<any, any> | null = EventDataSources.find(t => t.Name == eventSourceView.Type);
-            if (implementation === null)
+            const implementation: IEventSource<any, any> | undefined = EventDataSources.find(t => t.Name == eventSourceView.Type);
+            if (implementation == null)
                 return Promise.resolve([]);
             const logoString = implementation?.GetLogo != null ? implementation.GetLogo(eventSourceView) : undefined;
             return implementation.Load(eventSourceView, selectedDataSet, ds).then(d => {
@@ -305,8 +307,9 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     // Effect to initialize parent matches
     React.useEffect(() => {
-        const parentID = _.uniq(props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels.map(c => c.Key.Parent)).flat()).flat()).sort((a, b) => a - b);
-
+        const rowIDs = props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels.filter(c => !isVirtual(c.Key)).map(c => c.Key['Parent'])).flat()).flat();
+        const virtualIDs = props.WorkSpaceJSON.VirtualChannels.flatMap(channel => channel.ComponentChannels.map(key => key.Key.Parent));
+        const parentID = _.uniq(rowIDs.concat(virtualIDs)).sort((a, b) => a - b);
         if (allParents.length === 0)
             setParentMatches(parentID.map(p => ({
                 Key: p,
@@ -328,7 +331,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
             setParentMatches(newParentMatches);
         }
-    }, [allParents, props.WorkSpaceJSON.Rows, props.IsModalOpen]);
+    }, [allParents, props.WorkSpaceJSON, props.IsModalOpen]);
 
     //Effect to intialize event matches
     React.useEffect(() => {
@@ -340,7 +343,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             const newMatch: IEventMatch = {
                 Key: c,
                 Match: autoMatched ? 'Match' : 'NoMatch',
-                ID: autoMatched ? loadedEvents[loadedEventSourceIndex].ID : null
+                ID: autoMatched ? loadedEvents[loadedEventSourceIndex].ID : undefined
             }
             loadedEventSourceIndex++;
             return newMatch;
@@ -349,13 +352,15 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     //Effect to intialize channel matches
     React.useEffect(() => {
-        const channelKeys = _.uniqWith(props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels).flat()).flat().map(chan => chan.Key), _.isEqual);
+        const rowKeys = props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels).flat()).flat().map(chan => chan.Key).filter(key => !isVirtual(key));
+        const virtualKeys = props.WorkSpaceJSON.VirtualChannels.flatMap(channel => channel.ComponentChannels.map(component => component.Key));
+        const channelKeys = _.uniqWith(rowKeys.concat(virtualKeys), _.isEqual);
         setChannelMatches(channelKeys.map(c => ({
-            Key: c,
+            Key: c as TrenDAP.IChannelKey,
             Status: 'NoMatch',
             ChannelID: null,
         })));
-    }, [props.AllChannels, props.WorkSpaceJSON.Rows]);
+    }, [props.AllChannels, props.WorkSpaceJSON]);
 
     //Effect to auto match channels
     React.useEffect(() => {
@@ -436,6 +441,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 channelMatches.map(match => [match.Key, match.ChannelID] as [TrenDAP.IChannelKey, string]),
                                 parentMatches.map(match => [match.ParentID, match.Key] as [string, number]),
                                 eventMatches.map(match => [match.Key, match.ID] as [number, number]),
+                                allParents,
                                 selectedDataSet as TrenDAP.iDataSet,
                                 loadData()
                             );

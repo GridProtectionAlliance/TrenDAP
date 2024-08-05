@@ -60,7 +60,7 @@ interface IPairChannel extends WidgetTypes.ISelectedChannels<IChannelSettings> {
 interface SelectValue {
     Field: TrenDAP.SeriesField,
     Axis: ('X' | 'Y'),
-    Key: TrenDAP.IChannelKey
+    Key: TrenDAP.IChannelKey | string
 }
 
 interface IPairData {
