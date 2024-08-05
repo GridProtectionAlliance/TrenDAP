@@ -856,7 +856,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                                     yAxisID = props.Settings.YAxis.reduce((max, current) => {
                                         return current.ID > max ? current.ID : max
                                     }, 0) + 1
-                                const newAxis: TrenDAP.IYAxis = { ID: yAxisID, Min: 0, Max: 10, AutoMaxScale: true, AutoMinScale: true, Label: '', Type: item.row.Type, Position: 'left' }
+                                const newAxis: TrenDAP.IYAxis = { ID: yAxisID, Min: 0, Max: 10, AutoMaxScale: true, AutoMinScale: true, Label: item.row.Type, Type: item.row.Type, Position: 'left' }
 
                                 props.SetSettings({
                                     ...props.Settings,
