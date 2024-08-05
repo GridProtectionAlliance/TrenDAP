@@ -46,9 +46,10 @@ const AddEditEventSource: React.FunctionComponent<IProps> = (props: IProps) => {
     if (eventSource == null) return <></>;
     return (
         <Modal
-            ConfirmBtnClass={"btn btn-success mr-auto"}
+            ConfirmBtnClass={"btn btn-primary pull-right"}
             DisableConfirm={errors.length > 0}
             Show={props.Show}
+            ShowCancel={false}
             ShowX={true}
             ConfirmText={'Save'}
             ConfirmShowToolTip={errors.length > 0}

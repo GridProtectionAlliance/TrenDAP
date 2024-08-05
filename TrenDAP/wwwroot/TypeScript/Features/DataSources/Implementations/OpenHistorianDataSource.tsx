@@ -30,7 +30,7 @@ import { IDataSource } from '../Interface';
 
 
 const OpenHistorianDataSource: IDataSource<{}, TrenDAP.iOpenHistorianDataSet> = {
-    Name: 'OpenHistorian',
+    Name: 'openHistorian',
     DefaultSourceSettings: {},
     DefaultDataSetSettings: { Devices: [], Phases: [], Types: [], Instance: "", Aggregate: '1w'},
     ConfigUI: () => { return <></>; },

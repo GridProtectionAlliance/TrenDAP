@@ -41,14 +41,15 @@ const EditDataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDat
         <>
             <button className="btn" onClick={() => setShow(true)}>{Pencil}</button>
             <Modal
-                ConfirmBtnClass={"btn btn-success mr-auto"}
+                ConfirmBtnClass={"btn btn-primary pull-right"}
                 DisableConfirm={errors.length > 0}
                 Show={show}
                 ShowX={true}
+                ShowCancel={false}
                 ConfirmText={'Save'}
                 ConfirmShowToolTip={errors.length > 0}
                 ConfirmToolTipContent={errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
-                Title={'Edit DataSource'}
+                Title={'Edit Data Source'}
                 CallBack={conf => {
                     if (conf)
                         dispatch(UpdateDataSource(dataSource));

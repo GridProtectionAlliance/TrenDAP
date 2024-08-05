@@ -59,8 +59,8 @@ namespace TrenDAP.Controllers
                 try
                 {
                     EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
-                    if (eventSource.Type == "OpenXDA") return GetOpenXDA(eventSource, table);
-                    else return StatusCode(StatusCodes.Status500InternalServerError, "Only OpenXDA eventsources are supported by this endpoint.");
+                    if (eventSource.Type == "openXDA") return GetOpenXDA(eventSource, table);
+                    else return StatusCode(StatusCodes.Status500InternalServerError, "Only openXDA eventsources are supported by this endpoint.");
                 }
                 catch (Exception ex)
                 {

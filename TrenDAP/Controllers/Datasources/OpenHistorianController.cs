@@ -180,7 +180,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    if (dataSource.Type == "OpenHistorian") return GetOpenXDA(dataSource, table);
+                    if (dataSource.Type == "openHistorian") return GetOpenXDA(dataSource, table);
                     else return StatusCode(StatusCodes.Status500InternalServerError, "Only TrenDAPDB datasources are supported by this endpoint.");
                 }
                 catch (Exception ex)

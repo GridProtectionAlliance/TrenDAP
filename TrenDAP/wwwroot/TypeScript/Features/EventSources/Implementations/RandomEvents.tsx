@@ -31,7 +31,7 @@ interface ISetting { Title: string }
 interface IDatasetSetting { Number: number }
 
 const RandomEvents: IEventSource<ISetting, IDatasetSetting> = {
-    DataSetUI: (props) => <Input<IDatasetSetting> Record={props.Settings} Field="Number" Setter={props.SetSettings} Valid={() => true} />,
+    DataSetUI: (props) => <Input<IDatasetSetting> Record={props.Settings} Field="Number" Label="Number of Randomly Generated Events" Setter={props.SetSettings} Valid={() => true} />,
     ConfigUI: (props) => <Input<ISetting> Record={props.Settings} Field="Title" Setter={props.SetSettings} Valid={() => true} />,
     Load: (eventSource: EventSourceTypes.IEventSourceView, dataSet: TrenDAP.iDataSet, dataConn: EventSourceTypes.IEventSourceDataSet) => {
         const time = ComputeTimeEnds(dataSet);
