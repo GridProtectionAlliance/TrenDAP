@@ -30,8 +30,11 @@ import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../../OpenXDA/
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { EventSourceTypes, IEventSource, EnsureTypeSafety } from '../Interface';
 import { ComputeTimeCenterAndSize } from '../../DataSets/HelperFunctions';
-import { ArrayCheckBoxes, ArrayMultiSelect, Input, Select } from '@gpa-gemstone/react-forms';
-import { OpenXDA } from '@gpa-gemstone/application-typings';
+import { Input } from '@gpa-gemstone/react-forms';
+import { EventCharacteristicFilter, EventTypeFilter, NavBarFilterButton } from '@gpa-gemstone/common-pages';
+import { OpenXDA, SystemCenter } from '@gpa-gemstone/application-typings';
+import { TimeUnit } from '@gpa-gemstone/common-pages/lib/TimeWindowUtils';
+import TrenDAPSelectPopup from '../../OpenXDA/TrenDAPSelectPopup';
 
 const encodedDateFormat = 'MM/DD/YYYY';
 const encodedTimeFormat = 'HH:mm:ss.SSS';
@@ -39,24 +42,21 @@ const xdaServerFormat = "YYYY-MM-DD[T]HH:mm:ss.SSSSSSS";
 
 interface ISetting { PQBrowserUrl: string }
 interface IDatasetSetting {
-    // Todo: Replace this with 4 arrays that match eventsearch on sebrowser after we get access to generic slices
-    By: 'Asset' | 'Meter', IDs: number[],
-    Phases: number[],
-    LegacyPhases: { AN: boolean, BN: boolean, CN: boolean, AB: boolean, BC: boolean, CA: boolean, ABG: boolean, BCG: boolean, ABC: boolean, ABCG: boolean },
-    Types: number[],
-    CurveID: number | null,
-    CurveInside: boolean,
-    DurationMin: number | null,
-    DurationMax: number | null,
-    TransientMin: number | null,
-    TransientMax: number | null,
-    TransientType: 'LL' | 'LN' | 'both',
-    SagMin: number | null,
-    SagMax: number | null,
-    SagType: 'LL' | 'LN' | 'both',
-    SwellMin: number | null,
-    SwellMax: number | null,
-    SwellType: 'LL' | 'LN' | 'both'
+    AssetIDs: number[],
+    MeterIDs: number[],
+    AssetGroupIDs: number[],
+    SubstationIDs: number[],
+    EventCharacteristicFilter: IEventCharacteristicFilter,
+    Types: number[]
+}
+
+interface IEventCharacteristicFilter {
+    durationMin?: number, durationMax?: number,
+    phases: { AN: boolean, BN: boolean, CN: boolean, AB: boolean, BC: boolean, CA: boolean, ABG: boolean, BCG: boolean, ABC: boolean, ABCG: boolean },
+    transientMin?: number, transientMax?: number, transientType: ('LL'|'LN'|'both'),
+    sagMin?: number, sagMax?: number, sagType: ('LL' | 'LN' | 'both'),
+    swellMin?: number, swellMax?: number, swellType: ('LL' | 'LN' | 'both'),
+    curveID: number, curveInside: boolean, curveOutside: boolean
 }
 
 interface IxdaEvent {
@@ -72,29 +72,34 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
     Name: 'openXDA',
     DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/" },
     DefaultDataSetSettings: {
-        By: 'Meter',
-        IDs: [],
-        Phases: [],
-        LegacyPhases: { AN: false, BN: false, CN: false, AB: false, BC: false, CA: false, ABG: false, BCG: false, ABC: false, ABCG: false },
-        Types: [],
-        DurationMin: null,
-        DurationMax: null,
-        SwellMin: null,
-        SwellMax: null,
-        SagMin: null,
-        SagMax: null,
-        TransientMin: null,
-        TransientMax: null,
-        CurveID: null,
-        CurveInside: true,
-        TransientType: 'both',
-        SagType: 'both',
-        SwellType: 'both'
+        AssetIDs: [],
+        MeterIDs: [],
+        AssetGroupIDs: [],
+        SubstationIDs: [],
+        EventCharacteristicFilter: {
+            phases: { AN: false, BN: false, CN: false, AB: false, BC: false, CA: false, ABG: false, BCG: false, ABC: false, ABCG: false },
+            durationMin: undefined,
+            durationMax: undefined,
+            swellMin: undefined,
+            swellMax: undefined,
+            sagMin: undefined,
+            sagMax: undefined,
+            transientMin: undefined,
+            transientMax: undefined,
+            curveID: -1,
+            curveInside: true,
+            curveOutside: true,
+            transientType: 'both',
+            sagType: 'both',
+            swellType: 'both'
+
+        },
+        Types: []
     },
     ConfigUI: (props: TrenDAP.ISourceConfig<ISetting>) => {
         React.useEffect(() => {
             const errors: string[] = [];
-            if (props.Settings.PQBrowserUrl === null || props.Settings.PQBrowserUrl.length === 0)
+            if (props.Settings.PQBrowserUrl == null || props.Settings.PQBrowserUrl.length === 0)
                 errors.push("PQ Browser URL is required by datasource.");
             props.SetErrors(errors);
         }, [props.Settings]);
@@ -108,44 +113,73 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
     },
     DataSetUI: (props: EventSourceTypes.IEventSourceDataSetProps<ISetting, IDatasetSetting>) => {
         const dispatch = useAppDispatch();
-        const phases: OpenXDA.Types.Phase[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.EventSource.ID, 'Phase', 'event'));
-        const phaseStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.EventSource.ID, 'Phase', 'event'));
-        const meters: OpenXDA.Types.Meter[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.EventSource.ID, 'Meter', 'event'));
-        const meterStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.EventSource.ID, 'Meter', 'event'));
-        const assets: OpenXDA.Types.Asset[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.EventSource.ID, 'Asset', 'event'));
-        const assetStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.EventSource.ID, 'Asset', 'event'));
+        const meters: SystemCenter.Types.DetailedMeter[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.EventSource.ID, 'DetailedMeter', 'event'));
+        const meterStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.EventSource.ID, 'DetailedMeter', 'event'));
+        const assets: SystemCenter.Types.DetailedAsset[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.EventSource.ID, 'DetailedAsset', 'event'));
+        const assetStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.EventSource.ID, 'DetailedAsset', 'event'));
+        const groups: OpenXDA.Types.AssetGroup[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.EventSource.ID, 'AssetGroup', 'event'));
+        const groupStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.EventSource.ID, 'AssetGroup', 'event'));
+        const locations: SystemCenter.Types.DetailedLocation[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.EventSource.ID, 'DetailedLocation', 'event'));
+        const locationStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.EventSource.ID, 'DetailedLocation', 'event'));
         const types: OpenXDA.Types.EventType[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.EventSource.ID, 'EventType', 'event'));
         const typeStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.EventSource.ID, 'EventType', 'event'));
         const curves: any[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.EventSource.ID, 'StandardMagDurCurve', 'event'));
         const curveStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.EventSource.ID, 'StandardMagDurCurve', 'event'));
 
+        const [filter, setFilter] = React.useState<string>('None');
+
+        const meterList: SystemCenter.Types.DetailedMeter[] = React.useMemo(() => {
+            if (meterStatus != 'idle') return [];
+            return meters.filter(item => props.Settings.MeterIDs.findIndex(id => id === item.ID) !== -1);
+        }, [props.Settings.MeterIDs, meterStatus]);
+
+        const assetList: SystemCenter.Types.DetailedAsset[] = React.useMemo(() => {
+            if (assetStatus != 'idle') return [];
+            return assets.filter(item => props.Settings.AssetIDs.findIndex(id => id === item.ID) !== -1);
+        }, [props.Settings.AssetIDs, assetStatus]);
+
+        const groupList: OpenXDA.Types.AssetGroup[] = React.useMemo(() => {
+            if (groupStatus != 'idle') return [];
+            return groups.filter(item => props.Settings.AssetGroupIDs.findIndex(id => id === item.ID) !== -1);
+        }, [props.Settings.AssetGroupIDs, groupStatus]);
+
+        const locationList: SystemCenter.Types.DetailedLocation[] = React.useMemo(() => {
+            if (locationStatus != 'idle') return [];
+            return locations.filter(item => props.Settings.SubstationIDs.findIndex(id => id === item.ID) !== -1);
+        }, [props.Settings.SubstationIDs, locationStatus]);
+
         React.useEffect(() => {
             const errors: string[] = [];
-            if (!valid('DurationMin') || !valid('DurationMax'))
+            if (!valid('durationMin') || !valid('durationMax'))
                 errors.push('Duration range is not valid.');
-            if (!valid('SagMin') || !valid('SagMax'))
+            if (!valid('sagMin') || !valid('sagMax'))
                 errors.push('Sag range is not valid.');
-            if (!valid('SwellMin') || !valid('SwellMax'))
+            if (!valid('swellMin') || !valid('swellMax'))
                 errors.push('Swell range is not valid.');
-            if (!valid('TransientMin') || !valid('TransientMax'))
+            if (!valid('transientMin') || !valid('transientMax'))
                 errors.push('Transient range is not valid.');
             props.SetErrors(errors);
         }, [props.Settings]);
 
         React.useEffect(() => {
-            if (phaseStatus === 'unitiated' || phaseStatus === 'changed')
-                dispatch(FetchOpenXDA({ dataSourceID: props.EventSource.ID, sourceType: 'event', table: 'Phase' }));
-        }, [phaseStatus]);
-
-        React.useEffect(() => {
             if (meterStatus === 'unitiated' || meterStatus === 'changed')
-                dispatch(FetchOpenXDA({ dataSourceID: props.EventSource.ID, sourceType: 'event', table: 'Meter' }));
+                dispatch(FetchOpenXDA({ dataSourceID: props.EventSource.ID, sourceType: 'event', table: 'DetailedMeter' }));
         }, [meterStatus]);
 
         React.useEffect(() => {
             if (assetStatus === 'unitiated' || assetStatus === 'changed')
-                dispatch(FetchOpenXDA({ dataSourceID: props.EventSource.ID, sourceType: 'event', table: 'Asset' }));
+                dispatch(FetchOpenXDA({ dataSourceID: props.EventSource.ID, sourceType: 'event', table: 'DetailedAsset' }));
         }, [assetStatus]);
+
+        React.useEffect(() => {
+            if (groupStatus === 'unitiated' || groupStatus === 'changed')
+                dispatch(FetchOpenXDA({ dataSourceID: props.EventSource.ID, sourceType: 'event', table: 'AssetGroup' }));
+        }, [groupStatus]);
+
+        React.useEffect(() => {
+            if (locationStatus === 'unitiated' || locationStatus === 'changed')
+                dispatch(FetchOpenXDA({ dataSourceID: props.EventSource.ID, sourceType: 'event', table: 'DetailedLocation' }));
+        }, [locationStatus]);
 
         React.useEffect(() => {
             if (typeStatus === 'unitiated' || typeStatus === 'changed')
@@ -157,253 +191,209 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
                 dispatch(FetchOpenXDA({ dataSourceID: props.EventSource.ID, sourceType: 'event', table: 'StandardMagDurCurve' }));
         }, [curveStatus]);
 
-        function valid(field: keyof IDatasetSetting) {
+        function valid(field: keyof IEventCharacteristicFilter) {
             function NullOrNaN(val) {
                 return val == null || isNaN(val);
             }
 
-            if (field == 'DurationMin')
-                return NullOrNaN(props.Settings.DurationMin) || (
-                    props.Settings.DurationMin >= 0 && props.Settings.DurationMin < 100 &&
-                    (NullOrNaN(props.Settings.DurationMax) ||
-                        props.Settings.DurationMax >= props.Settings.DurationMin));
-            if (field == 'DurationMax')
-                return NullOrNaN(props.Settings.DurationMax) || (
-                    props.Settings.DurationMax >= 0 && props.Settings.DurationMax < 100 &&
-                    (NullOrNaN(props.Settings.DurationMin) ||
-                        props.Settings.DurationMax >= props.Settings.DurationMin));
-            if (field == 'SagMin')
-                return NullOrNaN(props.Settings.SagMin) || (
-                    props.Settings.SagMin >= 0 && props.Settings.SagMin < 1 &&
-                    (NullOrNaN(props.Settings.SagMax) ||
-                        props.Settings.SagMax >= props.Settings.SagMin));
-            if (field == 'SagMax')
-                return NullOrNaN(props.Settings.SagMax) || (
-                    props.Settings.SagMax >= 0 && props.Settings.SagMax < 1 &&
-                    (NullOrNaN(props.Settings.SagMax) ||
-                        props.Settings.SagMax >= props.Settings.SagMax));
-            if (field == 'SwellMin')
-                return NullOrNaN(props.Settings.SwellMin) || (
-                    props.Settings.SwellMin >= 1 && props.Settings.SwellMin < 9999 &&
-                    (NullOrNaN(props.Settings.SwellMax) ||
-                        props.Settings.SwellMax >= props.Settings.SwellMin));
-            if (field == 'SwellMax')
-                return NullOrNaN(props.Settings.SwellMax) || (
-                    props.Settings.SwellMax >= 1 && props.Settings.SwellMax < 9999 &&
-                    (NullOrNaN(props.Settings.SwellMin) ||
-                        props.Settings.SwellMax >= props.Settings.SwellMin));
-            if (field == 'TransientMin')
-                return NullOrNaN(props.Settings.TransientMin) || (
-                    props.Settings.TransientMin >= 0 && props.Settings.TransientMin < 9999 &&
-                    (NullOrNaN(props.Settings.TransientMax) ||
-                        props.Settings.TransientMax >= props.Settings.TransientMin));
-            if (field == 'TransientMax')
-                return NullOrNaN(props.Settings.TransientMax) || (
-                    props.Settings.TransientMax >= 0 && props.Settings.TransientMax < 9999 &&
-                    (NullOrNaN(props.Settings.TransientMin) ||
-                        props.Settings.TransientMax >= props.Settings.TransientMin));
+            if (field == 'durationMin')
+                return NullOrNaN(props.Settings.EventCharacteristicFilter.durationMin) || (
+                    props.Settings.EventCharacteristicFilter.durationMin! >= 0 && props.Settings.EventCharacteristicFilter.durationMin! < 100 &&
+                    (NullOrNaN(props.Settings.EventCharacteristicFilter.durationMax) ||
+                        props.Settings.EventCharacteristicFilter.durationMax! >= props.Settings.EventCharacteristicFilter.durationMin!));
+            if (field == 'durationMax')
+                return NullOrNaN(props.Settings.EventCharacteristicFilter.durationMax) || (
+                    props.Settings.EventCharacteristicFilter.durationMax! >= 0 && props.Settings.EventCharacteristicFilter.durationMax! < 100 &&
+                    (NullOrNaN(props.Settings.EventCharacteristicFilter.durationMin) ||
+                        props.Settings.EventCharacteristicFilter.durationMax! >= props.Settings.EventCharacteristicFilter.durationMin!));
+            if (field == 'sagMin')
+                return NullOrNaN(props.Settings.EventCharacteristicFilter.sagMin) || (
+                    props.Settings.EventCharacteristicFilter.sagMin! >= 0 && props.Settings.EventCharacteristicFilter.sagMin! < 1 &&
+                    (NullOrNaN(props.Settings.EventCharacteristicFilter.sagMax) ||
+                        props.Settings.EventCharacteristicFilter.sagMax! >= props.Settings.EventCharacteristicFilter.sagMin!));
+            if (field == 'sagMax')
+                return NullOrNaN(props.Settings.EventCharacteristicFilter.sagMax) || (
+                    props.Settings.EventCharacteristicFilter.sagMax! >= 0 && props.Settings.EventCharacteristicFilter.sagMax! < 1 &&
+                    (NullOrNaN(props.Settings.EventCharacteristicFilter.sagMax) ||
+                        props.Settings.EventCharacteristicFilter.sagMax! >= props.Settings.EventCharacteristicFilter.sagMax!));
+            if (field == 'swellMin')
+                return NullOrNaN(props.Settings.EventCharacteristicFilter.swellMin) || (
+                    props.Settings.EventCharacteristicFilter.swellMin! >= 1 && props.Settings.EventCharacteristicFilter.swellMin! < 9999 &&
+                    (NullOrNaN(props.Settings.EventCharacteristicFilter.swellMax) ||
+                        props.Settings.EventCharacteristicFilter.swellMax! >= props.Settings.EventCharacteristicFilter.swellMin!));
+            if (field == 'swellMax')
+                return NullOrNaN(props.Settings.EventCharacteristicFilter.swellMax) || (
+                    props.Settings.EventCharacteristicFilter.swellMax! >= 1 && props.Settings.EventCharacteristicFilter.swellMax! < 9999 &&
+                    (NullOrNaN(props.Settings.EventCharacteristicFilter.swellMin) ||
+                        props.Settings.EventCharacteristicFilter.swellMax! >= props.Settings.EventCharacteristicFilter.swellMin!));
+            if (field == 'transientMin')
+                return NullOrNaN(props.Settings.EventCharacteristicFilter.transientMin) || (
+                    props.Settings.EventCharacteristicFilter.transientMin! >= 0 && props.Settings.EventCharacteristicFilter.transientMin! < 9999 &&
+                    (NullOrNaN(props.Settings.EventCharacteristicFilter.transientMax) ||
+                        props.Settings.EventCharacteristicFilter.transientMax! >= props.Settings.EventCharacteristicFilter.transientMin!));
+            if (field == 'transientMax')
+                return NullOrNaN(props.Settings.EventCharacteristicFilter.transientMax) || (
+                    props.Settings.EventCharacteristicFilter.transientMax! >= 0 && props.Settings.EventCharacteristicFilter.transientMax! < 9999 &&
+                    (NullOrNaN(props.Settings.EventCharacteristicFilter.transientMin) ||
+                        props.Settings.EventCharacteristicFilter.transientMax! >= props.Settings.EventCharacteristicFilter.transientMin!));
 
             return true;
         }
 
-        function setPhases(record: IDatasetSetting) {
-            const phaseFilter = { ...props.Settings.LegacyPhases };
-            Object.keys(phaseFilter).forEach(phaseField => {
-                const phaseId = phases.find(p => p.Name == phaseField)?.ID ?? -1;
-                phaseFilter[phaseField] = (phaseId !== -1) &&
-                    (record.Phases.findIndex(p => p == phaseId) !== -1);
-            });
-            const newRecord: IDatasetSetting = { ...record, LegacyPhases: phaseFilter };
-            props.SetSettings(newRecord);
-        }
-
         return (
-            <div className="row" style={{ flex: 1, overflow: 'hidden' }}>
-                <div className="col d-none d-xl-flex" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                    <Select<IDatasetSetting> Record={props.Settings} Field="By" Options={[{ Value: 'Meter', Label: 'Meter' }, { Value: 'Asset', Label: 'Asset' }]} Setter={props.SetSettings} />
-                    <ArrayMultiSelect<IDatasetSetting> GroupStyle={{ overflowY: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }} Style={{ overflowY: 'auto', flex: 1 }}
-                        Record={props.Settings} Field="IDs" Label={props.Settings.By + "(s)"} Setter={props.SetSettings} 
-                        Options={(props.Settings.By == 'Meter' ? meters?.map(m => ({ Value: m.ID.toString(), Label: m.Name })) : assets?.map(m => ({ Value: m.ID.toString(), Label: m.AssetName }))) ?? []} />
+            <>
+                <div className="row" style={{paddingLeft: "15px", paddingRight: "15px"}}>
+                    <EventCharacteristicFilter setEventFilters={(newCharacteristics, newTypes) => {
+                        const newSettings = {...props.Settings};
+                        newSettings.Types = newTypes ?? OpenXDAEvents.DefaultDataSetSettings.Types;
+                        newSettings.EventCharacteristicFilter = newCharacteristics ?? OpenXDAEvents.DefaultDataSetSettings.EventCharacteristicFilter;
+                        props.SetSettings(newSettings);
+                    }} eventTypes={types} eventCharacteristicFilter={props.Settings.EventCharacteristicFilter} magDurCurves={curves} eventTypeFilter={props.Settings.Types} />
                 </div>
-                <div className="col" style={{ height: '100%', overflow: 'auto' }}>
-                    <ArrayCheckBoxes<IDatasetSetting> Record={props.Settings} Checkboxes={types?.map(m => ({ ID: m.ID.toString(), Label: m.Description })) ?? []} Field="Types" Setter={props.SetSettings} />
-                    <ArrayCheckBoxes<IDatasetSetting> Record={props.Settings} Checkboxes={phases?.map(m => ({ ID: m.ID.toString(), Label: m.Description })) ?? []} Field="Phases" Setter={setPhases} />
-                    <div className="row">
-                        <div className={"col-6"}>
-                            <form>
-                                <div className="form-group">
-                                    <div className='input-group input-group-sm' style={{ width: '100%' }}>
-                                        <Select<IDatasetSetting> Record={props.Settings} Label='Mag-Dur:' Field='CurveID' Setter={props.SetSettings} EmptyOption={true} EmptyLabel=''
-                                            Options={curves.map((v) => (v.Area != null && v.Area.length > 0 ? { Value: v.ID.toString(), Label: v.Name } : null))} />
-                                    </div>
-                                    <div className='form-check form-check-inline'>
-                                        <input className="form-check-input" type="radio"
-                                            onChange={() => props.SetSettings({ ...props.Settings, CurveInside: true })}
-                                            checked={props.Settings.CurveInside} />
-                                        <label className="form-check-label">Inside</label>
-                                    </div>
-                                    <div className='form-check form-check-inline'>
-                                        <input className="form-check-input" type="radio"
-                                            onChange={() => props.SetSettings({ ...props.Settings, CurveInside: false })}
-                                        checked={!props.Settings.CurveInside} />
-                                        <label className="form-check-label">Outside</label>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
+                <div className="row">
+                    <div className="col-6">
+                        <EventTypeFilter SetSelectedTypeIDs={(newTypes) => {
+                            const newSettings = {...props.Settings};
+                            newSettings.Types = newTypes;
+                            props.SetSettings(newSettings);
+                        }} EventTypes={types} SelectedTypeID={props.Settings.Types} />
                     </div>
-                    <div className="row">
-                        <div className={"col-6"}>
-                            <form>
-                                <label style={{ margin: 0 }}>Sags (p.u.):</label>
-                                <div className="form-group">
-                                    <div className="row">
-                                        <div className='input-group input-group-sm'>
-                                            <div className='col' style={{ width: '45%', paddingRight: 0, paddingLeft: 0 }}>
-                                                <Input<IDatasetSetting> Record={props.Settings} Label='' Field='SagMin' Setter={props.SetSettings}
-                                                    Valid={valid} Feedback={'Min must be less than max and between 0 and 1'} Type='number' Size={'small'} AllowNull={true} />
-                                            </div>
-                                            <div className="input-group-append" style={{ height: '37px' }}>
-                                                <span className="input-group-text"> to </span>
-                                            </div>
-                                            <div className='col' style={{ width: '45%', paddingLeft: 0, paddingRight: 0 }}>
-                                                <Input<IDatasetSetting> Record={props.Settings} Label='' Field='SagMax' Setter={props.SetSettings}
-                                                    Valid={valid} Feedback={'Max must be greater than min and between 0 and 1'} Type='number' Size={'small'} AllowNull={true} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="row justify-content-md-center">
-                                        <div className='form-check form-check-inline'>
-                                            <input className="form-check-input" type="radio"
-                                                onChange={() => props.SetSettings({ ...props.Settings, SagType: 'LL' })}
-                                                checked={props.Settings?.SagType === 'LL'} />
-                                            <label className="form-check-label">LL</label>
-                                        </div>
-                                        <div className='form-check form-check-inline'>
-                                            <input className="form-check-input" type="radio"
-                                                onChange={() => props.SetSettings({ ...props.Settings, SagType: 'LN' })}
-                                                checked={props.Settings?.SagType === 'LN'} />
-                                            <label className="form-check-label">LN</label>
-                                        </div>
-                                        <div className='form-check form-check-inline'>
-                                            <input className="form-check-input" type="radio"
-                                                onChange={() => props.SetSettings({ ...props.Settings, SagType: 'both' })}
-                                                checked={props.Settings?.SagType === 'both'} />
-                                            <label className="form-check-label">Both</label>
-                                        </div>
-                                    </div>
+                    <div className="col-6">
+                        <fieldset className="border" style={{ padding: '10px', height: '100%' }}>
+                            <legend className="w-auto" style={{ fontSize: 'large' }}>Other Filters:</legend>
+                            <div className={"row"}>
+                                <div className={'col'}>
+                                    <NavBarFilterButton<SystemCenter.Types.DetailedMeter> Type={'Meter'} OnClick={() => setFilter('Meter')} Data={meterList} />
                                 </div>
-                            </form>
-                        </div>
-                        <div className={"col-6"}>
-                            <form>
-                                <label style={{ margin: 0 }}>Transients (p.u.):</label>
-                                <div className="form-group">
-                                    <div className="row">
-                                        <div className='input-group input-group-sm'>
-                                            <div className='col' style={{ width: '45%', paddingRight: 0, paddingLeft: 0 }}>
-                                                <Input<IDatasetSetting> Record={props.Settings} Label='' Field='TransientMin' Setter={props.SetSettings}
-                                                    Valid={valid} Feedback={'Min must be less than max and between 0 and 9999'} Type='number' Size={'small'} AllowNull={true} />
-                                            </div>
-                                            <div className="input-group-append" style={{ height: '37px' }}>
-                                                <span className="input-group-text"> to </span>
-                                            </div>
-                                            <div className='col' style={{ width: '45%', paddingLeft: 0, paddingRight: 0 }}>
-                                                <Input<IDatasetSetting> Record={props.Settings} Label='' Field='TransientMax' Setter={props.SetSettings}
-                                                    Valid={valid} Feedback={'Max must be greater than min and between 0 and 9999'} Type='number' Size={'small'} AllowNull={true} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="row justify-content-md-center">
-                                        <div className='form-check form-check-inline'>
-                                            <input className="form-check-input" type="radio"
-                                                onChange={() => props.SetSettings({ ...props.Settings, TransientType: 'LL' })}
-                                                checked={props.Settings?.TransientType === 'LL'} />
-                                            <label className="form-check-label">LL</label>
-                                        </div>
-                                        <div className='form-check form-check-inline'>
-                                            <input className="form-check-input" type="radio"
-                                                onChange={() => props.SetSettings({ ...props.Settings, TransientType: 'LN' })}
-                                                checked={props.Settings?.TransientType === 'LN'} />
-                                            <label className="form-check-label">LN</label>
-                                        </div>
-                                        <div className='form-check form-check-inline'>
-                                            <input className="form-check-input" type="radio"
-                                                onChange={() => props.SetSettings({ ...props.Settings, TransientType: 'both' })}
-                                                checked={props.Settings?.TransientType === 'both'} />
-                                            <label className="form-check-label">Both</label>
-                                        </div>
-                                    </div>
+                            </div>
+                            <div className={"row"}>
+                                <div className={'col'}>
+                                    <NavBarFilterButton<SystemCenter.Types.DetailedAsset> Type={'Asset'} OnClick={() => setFilter('Asset')} Data={assetList} />
                                 </div>
-                            </form>
-                        </div>
-                    </div>
-                    <div className="row">
-                        <div className={"col-6"}>
-                            <form>
-                                <label style={{ margin: 0 }}>Swells (p.u.):</label>
-                                <div className="form-group">
-                                    <div className="row">
-                                        <div className='input-group input-group-sm'>
-                                            <div className='col' style={{ width: '45%', paddingRight: 0, paddingLeft: 0 }}>
-                                                <Input<IDatasetSetting> Record={props.Settings} Label='' Field='SwellMin' Setter={props.SetSettings}
-                                                    Valid={valid} Feedback={'Min must be less than max and between 1 and 9999'} Type='number' Size={'small'} AllowNull={true} />
-                                            </div>
-                                            <div className="input-group-append" style={{ height: '37px' }}>
-                                                <span className="input-group-text"> to </span>
-                                            </div>
-                                            <div className='col' style={{ width: '45%', paddingLeft: 0, paddingRight: 0 }}>
-                                                <Input<IDatasetSetting> Record={props.Settings} Label='' Field='SwellMax' Setter={props.SetSettings}
-                                                    Valid={valid} Feedback={'Max must be greater than min and between 1 and 9999'} Type='number' Size={'small'} AllowNull={true} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="row justify-content-md-center">
-                                        <div className='form-check form-check-inline'>
-                                            <input className="form-check-input" type="radio"
-                                                onChange={() => props.SetSettings({ ...props.Settings, SwellType: 'LL' })}
-                                                checked={props.Settings?.SwellType === 'LL'} />
-                                            <label className="form-check-label">LL</label>
-                                        </div>
-                                        <div className='form-check form-check-inline'>
-                                            <input className="form-check-input" type="radio"
-                                                onChange={() => props.SetSettings({ ...props.Settings, SwellType: 'LN' })}
-                                                checked={props.Settings?.SwellType === 'LN'} />
-                                            <label className="form-check-label">LN</label>
-                                        </div>
-                                        <div className='form-check form-check-inline'>
-                                            <input className="form-check-input" type="radio"
-                                                onChange={() => props.SetSettings({ ...props.Settings, SwellType: 'both' })}
-                                                checked={props.Settings?.SwellType === 'both'} />
-                                            <label className="form-check-label">Both</label>
-                                        </div>
-                                    </div>
+                            </div>
+                            <div className={"row"}>
+                                <div className={'col'}>
+                                    <NavBarFilterButton<OpenXDA.Types.AssetGroup> Type={'AssetGroup'} OnClick={() => setFilter('AssetGroup')} Data={groupList} />
                                 </div>
-                            </form>
-                        </div>
-                        <div className={"col-6"}>
-                            <form>
-                                <label style={{ margin: 0 }}>Duration (cycle):</label>
-                                <div className="form-group">
-                                    <div className='input-group input-group-sm'>
-                                        <div className='col' style={{ width: '45%', paddingRight: 0, paddingLeft: 0 }}>
-                                            <Input<IDatasetSetting> Record={props.Settings} Label='' Field='DurationMin' Setter={props.SetSettings}
-                                                Valid={valid} Feedback={'Min must be less than max and between 0 and 100'} Type='number' Size={'small'} AllowNull={true} />
-                                        </div>
-                                        <div className="input-group-append" style={{ height: '37px' }}>
-                                            <span className="input-group-text"> to </span>
-                                        </div>
-                                        <div className='col' style={{ width: '45%', paddingLeft: 0, paddingRight: 0 }}>
-                                            <Input<IDatasetSetting> Record={props.Settings} Label='' Field='DurationMax' Setter={props.SetSettings}
-                                                Valid={valid} Feedback={'Max must be greater than min and between 0 and 100'} Type='number' Size={'small'} AllowNull={true} />
-                                        </div>
-                                    </div>
+                            </div>
+                            <div className={"row"}>
+                                <div className={'col'}>
+                                    <NavBarFilterButton<SystemCenter.Types.DetailedLocation> Type={'Station'} OnClick={() => setFilter('Station')} Data={locationList} />
                                 </div>
-                            </form>
-                        </div>
+                                </div>
+                        </fieldset>
                     </div>
                 </div>
-            </div>
+                <TrenDAPSelectPopup<SystemCenter.Types.DetailedMeter> Table='DetailedMeter' SourceID={props.EventSource.ID} SourceType='event'
+                    Show={filter === 'Meter'} Selection={meterList} Type='multiple'
+                    OnClose={(selected, conf) => {
+                        setFilter('None');
+                        if (conf) {
+                            const newSettings = { ...props.Settings };
+                            newSettings.MeterIDs = selected.map(item => item.ID);
+                            props.SetSettings(newSettings);
+                        }
+                    }}
+                    TableColumns={[
+                        { key: 'AssetKey', field: 'AssetKey', label: 'Key', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Name', field: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Location', field: 'Location', label: 'Substation', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'MappedAssets', field: 'MappedAssets', label: 'Assets', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Make', field: 'Make', label: 'Make', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Model', field: 'Model', label: 'Model', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Scroll', label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },
+                    ]} 
+                    SearchColumns={[
+                        { label: 'Key', key: 'AssetKey', type: 'string', isPivotField: false },
+                        { label: 'Name', key: 'Name', type: 'string', isPivotField: false },
+                        { label: 'Substation', key: 'Location', type: 'string', isPivotField: false },
+                        { label: 'Make', key: 'Make', type: 'string', isPivotField: false },
+                        { label: 'Model', key: 'Model', type: 'string', isPivotField: false },
+                        { label: 'Number of Assets', key: 'MappedAssets', type: 'number', isPivotField: false },
+                        { label: 'Description', key: 'Description', type: 'string', isPivotField: false },
+                    ]} DefaultSearchCol={{ label: 'Name', key: 'Name', type: 'string', isPivotField: false }} Title='Filter by Meter' />
+                <TrenDAPSelectPopup<SystemCenter.Types.DetailedAsset> Table='DetailedAsset' SourceID={props.EventSource.ID} SourceType='event'
+                    Show={filter === 'Asset'} Selection={assetList} Type='multiple'
+                    OnClose={(selected, conf) => {
+                        setFilter('None');
+                        if (conf) {
+                            const newSettings = { ...props.Settings };
+                            newSettings.AssetIDs = selected.map(item => item.ID);
+                            props.SetSettings(newSettings);
+                        }
+                    }}
+                    TableColumns={[
+                        { key: 'AssetKey', field: 'AssetKey', label: 'Key', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'AssetName', field: 'AssetName', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'AssetType', field: 'AssetType', label: 'Asset Type', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'VoltageKV', field: 'VoltageKV', label: 'Voltage (kV)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Meters', field: 'Meters', label: 'Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Locations', field: 'Locations', label: 'Substations', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } }
+                    ]} 
+                    SearchColumns={[
+                        { label: 'Key', key: 'AssetKey', type: 'string', isPivotField: false },
+                        { label: 'Name', key: 'AssetName', type: 'string', isPivotField: false },
+                        { label: 'Nominal Voltage (L-L kV)', key: 'VoltageKV', type: 'number', isPivotField: false },
+                        { label: 'Type', key: 'AssetType', type: 'enum', isPivotField: false },
+                        { label: 'Meter Key', key: 'Meter', type: 'string', isPivotField: false },
+                        { label: 'Substation Key', key: 'Location', type: 'string', isPivotField: false },
+                        { label: 'Number of Meters', key: 'Meters', type: 'integer', isPivotField: false },
+                        { label: 'Number of Substations', key: 'Locations', type: 'integer', isPivotField: false },
+                        { label: 'Description', key: 'Description', type: 'string', isPivotField: false },
+                    ]} DefaultSearchCol={{ label: 'Name', key: 'AssetName', type: 'string', isPivotField: false }} Title='Filter by Asset' />
+                <TrenDAPSelectPopup<OpenXDA.Types.AssetGroup> Table='AssetGroup' SourceID={props.EventSource.ID} SourceType='event'
+                    Show={filter === 'AssetGroup'} Selection={groupList} Type='multiple'
+                    OnClose={(selected, conf) => {
+                        setFilter('None');
+                        if (conf) {
+                            const newSettings = { ...props.Settings };
+                            newSettings.AssetGroupIDs = selected.map(item => item.ID);
+                            props.SetSettings(newSettings);
+                        }
+                    }}
+                    TableColumns={[
+                        { key: 'Name', field: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Assets', field: 'Assets', label: 'Assets', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Meters', field: 'Meters', label: 'Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Users', field: 'Users', label: 'Users', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'AssetGroups', field: 'AssetGroups', label: 'SubGroups', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Scroll', label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } }
+                    ]} 
+                    SearchColumns={[
+                        { label: 'Name', key: 'Name', type: 'string', isPivotField: false },
+                        { label: 'Number of Meters', key: 'Meters', type: 'integer', isPivotField: false },
+                        { label: 'Number of Transmission Assets', key: 'Assets', type: 'integer', isPivotField: false },
+                        { label: 'Number of Asset Groups', key: 'AssetGroups', type: 'integer', isPivotField: false },
+                        { label: 'Show in PQ Dashboard', key: 'DisplayDashboard', type: 'boolean', isPivotField: false },
+                        { label: 'Show in Email Subscription', key: 'DisplayEmail', type: 'boolean', isPivotField: false },
+                    ]} DefaultSearchCol={{ label: 'Name', key: 'Name', type: 'string', isPivotField: false }} Title='Filter by Asset Group' />
+                <TrenDAPSelectPopup<SystemCenter.Types.DetailedLocation> Table='DetailedLocation' SourceID={props.EventSource.ID} SourceType='event'
+                    Show={filter === 'Station'} Selection={locationList} Type='multiple'
+                    OnClose={(selected, conf) => {
+                        setFilter('None');
+                        if (conf) {
+                            const newSettings = { ...props.Settings };
+                            newSettings.SubstationIDs = selected.map(item => item.ID);
+                            props.SetSettings(newSettings);
+                        }
+                    }}
+                    TableColumns={[
+                        { key: 'Name', field: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'LocationKey', field: 'LocationKey', label: 'Key', headerStyle: { width: '30%' }, rowStyle: { width: '30%' } },
+                        { key: 'Meters', field: 'Meters', label: 'Meters', headerStyle: { width: '10%' }, rowStyle: { width: '10%' } },
+                        { key: 'Assets', field: 'Assets', label: 'Assets', headerStyle: { width: '10%' }, rowStyle: { width: '10%' } },
+                        { key: 'Scroll', label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } }
+                    ]} 
+                    SearchColumns={[
+                        { label: 'Name', key: 'Name', type: 'string', isPivotField: false },
+                        { label: 'Key', key: 'LocationKey', type: 'string', isPivotField: false },
+                        { label: 'Transmission Asset', key: 'Asset', type: 'string', isPivotField: false },
+                        { label: 'Meter', key: 'Meter', type: 'string', isPivotField: false },
+                        { label: 'Number of Transmission Assets', key: 'Assets', type: 'integer', isPivotField: false },
+                        { label: 'Number of Meters', key: 'Meters', type: 'integer', isPivotField: false },
+                        { label: 'Description', key: 'Description', type: 'string', isPivotField: false },
+                    ]} DefaultSearchCol={{ label: 'Name', key: 'Name', type: 'string', isPivotField: false }} Title='Filter by Substation' />
+            </>
         );
 
     },
@@ -422,8 +412,14 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
 
                 // Settings query params common to all events
                 const queryParams: any = {};
-                if (dataSetSettings.IDs.length > 0 && dataSetSettings.IDs.length < 100)
-                    dataSetSettings.IDs.forEach((arg, index) => queryParams[dataSetSettings.By === 'Meter' ? 'meters' : 'assets' + index] = arg);
+                function processArray(array: number[], name: string) {
+                    if (array.length > 0 && array.length < 100) array.forEach((arg, index) => queryParams[name + index] = arg);
+                }
+                processArray(dataSetSettings.MeterIDs, 'meters');
+                processArray(dataSetSettings.AssetIDs, 'assets');
+                processArray(dataSetSettings.AssetGroupIDs, 'groups');
+                processArray(dataSetSettings.SubstationIDs, 'stations');
+
                 queryParams['windowSize'] = 3;
                 queryParams['timeWindowUnits'] = 3; // hours
 
@@ -467,39 +463,42 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
             if (array.length > 0 && array.length < 100) array.forEach((arg, index) => queryParams[name + index] = arg);
         }
         processArray(dataSetSettings.Types, 'types');
-        processArray(dataSetSettings.IDs, dataSetSettings.By === 'Meter' ? 'meters' : 'assets');
+        processArray(dataSetSettings.MeterIDs, 'meters');
+        processArray(dataSetSettings.AssetIDs, 'assets');
+        processArray(dataSetSettings.AssetGroupIDs, 'groups');
+        processArray(dataSetSettings.SubstationIDs, 'stations');
 
         // Handle Curve Filter
-        if (dataSetSettings.CurveID != null)
-            queryParams['curveID'] = dataSetSettings.CurveID;
-        queryParams['curveInside'] = dataSetSettings.CurveInside;
-        queryParams['curveOutside'] = !dataSetSettings.CurveInside;
+        if (dataSetSettings.EventCharacteristicFilter.curveID != null)
+            queryParams['curveID'] = dataSetSettings.EventCharacteristicFilter.curveID;
+        queryParams['curveInside'] = dataSetSettings.EventCharacteristicFilter.curveInside;
+        queryParams['curveOutside'] = dataSetSettings.EventCharacteristicFilter.curveOutside;
 
         // Handle types
-        queryParams['sagType'] = dataSetSettings.SagType;
-        queryParams['swellType'] = dataSetSettings.SwellType;
-        queryParams['transientType'] = dataSetSettings.TransientType;
+        queryParams['sagType'] = dataSetSettings.EventCharacteristicFilter.sagType;
+        queryParams['swellType'] = dataSetSettings.EventCharacteristicFilter.swellType;
+        queryParams['transientType'] = dataSetSettings.EventCharacteristicFilter.transientType;
 
         // Handle ranges
-        if (dataSetSettings.DurationMin != null) queryParams['durationMin'] = dataSetSettings.DurationMin;
-        if (dataSetSettings.DurationMax != null) queryParams['durationMax'] = dataSetSettings.DurationMax;
-        if (dataSetSettings.TransientMin != null) queryParams['transientMin'] = dataSetSettings.TransientMin;
-        if (dataSetSettings.TransientMax != null) queryParams['transientMax'] = dataSetSettings.TransientMax;
-        if (dataSetSettings.SagMin != null) queryParams['sagMin'] = dataSetSettings.SagMin;
-        if (dataSetSettings.SagMax != null) queryParams['sagMax'] = dataSetSettings.SagMax;
-        if (dataSetSettings.SwellMax != null) queryParams['swellMax'] = dataSetSettings.SwellMax;
-        if (dataSetSettings.SwellMin != null) queryParams['swellMin'] = dataSetSettings.SwellMin;
+        if (dataSetSettings.EventCharacteristicFilter?.durationMin != null) queryParams['durationMin'] = dataSetSettings.EventCharacteristicFilter.durationMin;
+        if (dataSetSettings.EventCharacteristicFilter?.durationMax != null) queryParams['durationMax'] = dataSetSettings.EventCharacteristicFilter.durationMax;
+        if (dataSetSettings.EventCharacteristicFilter?.transientMin != null) queryParams['transientMin'] = dataSetSettings.EventCharacteristicFilter.transientMin;
+        if (dataSetSettings.EventCharacteristicFilter?.transientMax != null) queryParams['transientMax'] = dataSetSettings.EventCharacteristicFilter.transientMax;
+        if (dataSetSettings.EventCharacteristicFilter?.sagMin != null) queryParams['sagMin'] = dataSetSettings.EventCharacteristicFilter.sagMin;
+        if (dataSetSettings.EventCharacteristicFilter?.sagMax != null) queryParams['sagMax'] = dataSetSettings.EventCharacteristicFilter.sagMax;
+        if (dataSetSettings.EventCharacteristicFilter?.swellMax != null) queryParams['swellMax'] = dataSetSettings.EventCharacteristicFilter.swellMax;
+        if (dataSetSettings.EventCharacteristicFilter?.swellMin != null) queryParams['swellMin'] = dataSetSettings.EventCharacteristicFilter.swellMin;
 
-        queryParams['PhaseAN'] = dataSetSettings.LegacyPhases.AN;
-        queryParams['PhaseBN'] = dataSetSettings.LegacyPhases.BN;
-        queryParams['PhaseCN'] = dataSetSettings.LegacyPhases.CN;
-        queryParams['PhaseAB'] = dataSetSettings.LegacyPhases.AB;
-        queryParams['PhaseBC'] = dataSetSettings.LegacyPhases.BC;
-        queryParams['PhaseCA'] = dataSetSettings.LegacyPhases.CA;
-        queryParams['PhaseABG'] = dataSetSettings.LegacyPhases.ABG;
-        queryParams['PhaseBCG'] = dataSetSettings.LegacyPhases.BCG;
-        queryParams['PhaseABC'] = dataSetSettings.LegacyPhases.ABC;
-        queryParams['PhaseABCG'] = dataSetSettings.LegacyPhases.ABCG;
+        queryParams['PhaseAN'] = dataSetSettings.EventCharacteristicFilter.phases.AN;
+        queryParams['PhaseBN'] = dataSetSettings.EventCharacteristicFilter.phases.BN;
+        queryParams['PhaseCN'] = dataSetSettings.EventCharacteristicFilter.phases.CN;
+        queryParams['PhaseAB'] = dataSetSettings.EventCharacteristicFilter.phases.AB;
+        queryParams['PhaseBC'] = dataSetSettings.EventCharacteristicFilter.phases.BC;
+        queryParams['PhaseCA'] = dataSetSettings.EventCharacteristicFilter.phases.CA;
+        queryParams['PhaseABG'] = dataSetSettings.EventCharacteristicFilter.phases.ABG;
+        queryParams['PhaseBCG'] = dataSetSettings.EventCharacteristicFilter.phases.BCG;
+        queryParams['PhaseABC'] = dataSetSettings.EventCharacteristicFilter.phases.ABC;
+        queryParams['PhaseABCG'] = dataSetSettings.EventCharacteristicFilter.phases.ABCG;
 
         const queryUrl = queryString.stringify(queryParams, "&", "=", { encodeURIComponent: queryString.escape });
         // Regex removes trailing /
