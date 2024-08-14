@@ -65,10 +65,7 @@ const SOE: IEventSource<IDataSourceSettings, IDatasetSetting> = {
             </>
         );
     },
-    DataSetUI: (props: EventSourceTypes.IEventSourceDataSetProps<null, IDatasetSetting>) => {
-        const valueList = React.useMemo(() => {
-
-        }, [props.Settings.FilterOut]);
+    DataSetUI: (props: EventSourceTypes.IEventSourceDataSetProps<IDataSourceSettings, IDatasetSetting>) => {
 
         const setFilter = (val: IValue) => {
             const u = _.cloneDeep(props.Settings.FilterOut);
