@@ -28,6 +28,7 @@ import { FetchDataSources, SelectDataSources, SelectDataSourcesStatus } from '..
 import { Pencil, Plus, TrashCan } from '@gpa-gemstone/gpa-symbols';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import DataSourceWrapper from '../../DataSources/DataSourceWrapper';
+import { AllSources } from '../../DataSources/DataSources'
 
 interface IProps {
     DataSourceConnections: DataSourceTypes.IDataSourceDataSet[],
@@ -61,7 +62,8 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
 
     const AddDS = React.useCallback((dataSource: DataSourceTypes.IDataSourceView) => {
         const newConns = [...props.DataSourceConnections];
-        newConns.push({ ID: -1, DataSourceID: dataSource.ID, DataSourceName: dataSource.Name, DataSetID: props.DataSet.ID, DataSetName: props.DataSet.Name, Settings: {} });
+        const dataSourceImplementation = AllSources.find(implementation => implementation.Name === dataSource.Type);
+        newConns.push({ ID: -1, DataSourceID: dataSource.ID, DataSourceName: dataSource.Name, DataSetID: props.DataSet.ID, DataSetName: props.DataSet.Name, Settings: dataSourceImplementation?.DefaultDataSetSettings ?? {} });
         setCurrentIndex(newConns.length - 1);
         props.SetDataSourceConnections(newConns);
     }, [props.DataSourceConnections, props.SetDataSourceConnections, props.DataSet, currentIndex, dataSourceStatus]);

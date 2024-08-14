@@ -23,12 +23,13 @@
 
 import * as React from 'react';
 import { ReactTable } from '@gpa-gemstone/react-table';
-import { Pencil, Plus, TrashCan } from '@gpa-gemstone/gpa-symbols';
+import { Plus, TrashCan } from '@gpa-gemstone/gpa-symbols';
 import { TrenDAP } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { FetchEventSources, SelectEventSources, SelectEventSourcesStatus } from '../../EventSources/Slices/EventSourcesSlice';
 import { EventSourceTypes } from '../../EventSources/Interface';
 import EventDataSourceWrapper from '../../EventSources/EventDataSourceWrapper';
+import { EventDataSources } from '../../EventSources/ByEventSources'
 
 interface IProps {
     EventSourceConnections: EventSourceTypes.IEventSourceDataSet[],
@@ -62,7 +63,8 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
 
     const AddDS = React.useCallback((src: EventSourceTypes.IEventSourceView) => {
         const newConns = [...props.EventSourceConnections];
-        newConns.push({ ID: -1, EventSourceID: src.ID, EventSourceName: src.Name, DataSetID: props.DataSet.ID, DataSetName: props.DataSet.Name, Settings: {} });
+        const eventSourceImplementation = EventDataSources.find(implementation => implementation.Name === src.Type);
+        newConns.push({ ID: -1, EventSourceID: src.ID, EventSourceName: src.Name, DataSetID: props.DataSet.ID, DataSetName: props.DataSet.Name, Settings: eventSourceImplementation?.DefaultDataSetSettings ?? {} });
         setCurrentIndex(newConns.length - 1);
         props.SetEventSourceConnections(newConns);
     }, [props.EventSourceConnections, props.SetEventSourceConnections, props.DataSet, currentIndex, eventSourceStatus]);
