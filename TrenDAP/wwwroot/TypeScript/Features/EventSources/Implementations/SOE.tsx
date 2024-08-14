@@ -87,7 +87,7 @@ const SOE: IEventSource<IDataSourceSettings, IDatasetSetting> = {
                             const u = _.cloneDeep(props.Settings.FilterOut);
                             u.push('');
                             props.SetSettings({ FilterOut: u });
-                        } }>Add Exclusion Filter</button>
+                        } }>Add Status Exclusion Filter</button>
                     </div>
                 </div>
                 <br/>
