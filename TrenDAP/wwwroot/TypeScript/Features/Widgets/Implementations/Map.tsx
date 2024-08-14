@@ -30,6 +30,7 @@ import { sort } from '../HelperFunctions';
 import HeatMap from 'leaflet-heatmap'
 import leaflet from 'leaflet';
 import _ from 'lodash';
+import { channel } from 'diagnostics_channel';
 
 require("leaflet_css");
 
@@ -39,7 +40,7 @@ interface IProps {
     Zoom: number,
     UseZoomControls: boolean,
     Type: ('HeatMap' | 'Map'),
-    PopupHeader: ('Parent' | 'Channel'),
+    PopupHeader: ('Parent' | 'Channel' | 'Both'),
 }
 
 interface IChannelSettings {
@@ -134,9 +135,10 @@ export const Map: WidgetTypes.IWidget<IProps, IChannelSettings, null> = {
                 };
 
                 const heatmapLayer = new HeatMap(cfg);
-                heatmapLayer.setData({ data: props.Data
-                    .map(d => ({ Name: d.Name, Frequency: d.SeriesData[d.ChannelSettings.Field]?.[0]?.[1], Lat: d?.Latitude, Long: d?.Longitude }))
-                    .filter(d => d.Lat != null && d.Long != null) 
+                heatmapLayer.setData({
+                    data: props.Data
+                    .filter(d => d.Latitude != null && d.Longitude != null)
+                    .map(d => ({ Name: d.Name, Frequency: d.SeriesData[d.ChannelSettings.Field]?.[0]?.[1], Lat: d.Latitude, Long: d.Longitude })) 
                 });
                 heatmapLayer.addTo(map.current);
 
@@ -151,14 +153,39 @@ export const Map: WidgetTypes.IWidget<IProps, IChannelSettings, null> = {
         const updateCircles = () => {
             if (map.current == null || circleLayers.current == null) return;
 
-            props.Data.forEach(d => {
-                let circle = leaflet.circle([d.Latitude, d.Longitude], {
-                    color: d.ChannelSettings.Color,
-                    fillColor: d.ChannelSettings.Color,
+
+            const validData = props.Data.filter(datum => datum.Latitude != null && datum.Longitude != null);
+            // We are groupping all longitudes together, then doing another group within those groups for latitudes
+            const longitudeGroup = _.groupBy(validData, 'Longitude');
+            const latitudeGroup = Object.keys(longitudeGroup).map(key => _.groupBy(longitudeGroup[key], 'Latitude'));
+            // Unpacking the groups into a array of arrays
+            const grouppedData = latitudeGroup.flatMap((innerGroup) =>
+                Object.keys(innerGroup).map(groupKey =>
+                    innerGroup[groupKey]
+                )
+            );
+
+            function getHeaderTitle(channelSettings: WidgetTypes.IWidgetData<IChannelSettings>) {
+                switch (props.Settings.PopupHeader) {
+                    case "Parent":
+                        return channelSettings.ParentName;
+                    case "Channel":
+                        return channelSettings.Name;
+                    case "Both":
+                        return `${channelSettings.ParentName} - ${channelSettings.Name}`
+                }
+            };
+
+            grouppedData.forEach(group => {
+                let circle = leaflet.circle([group[0].Latitude, group[0].Longitude], {
+                    color: group[0].ChannelSettings.Color,
+                    fillColor: group[0].ChannelSettings.Color,
                     radius: 3.5
                 });
 
-                circle.bindPopup(`<b>${props.Settings.PopupHeader === 'Parent' ? d.ParentName : d.Name}</b><br>Value: ${d.SeriesData[d.ChannelSettings.Field]?.[0]?.[1]} (${d?.Unit})`);
+                circle.bindPopup(group.map(d =>
+                    `<b><span style="color: ${d.ChannelSettings.Color}">• </span>${getHeaderTitle(d)}</b>
+                    <br>Value: ${d.SeriesData[d.ChannelSettings.Field]?.[0]?.[1]} (${d?.Unit})`).join('<br>'));
 
                 circleLayers.current.addLayer(circle);
             });
@@ -202,7 +229,11 @@ export const Map: WidgetTypes.IWidget<IProps, IChannelSettings, null> = {
                 </div>
                 <div className="col-6">
                     <RadioButtons<IProps> Field='PopupHeader' Record={props.Settings} Setter={(r) => props.SetSettings(r)} Label="Popup Header" Help="Header used when a circle marker is clicked."
-                        Options={[{ Label: 'Parent Name', Value: 'Parent', Disabled: props.Settings.Type === "HeatMap" }, { Label: 'Channel Name', Value: 'Channel', Disabled: props.Settings.Type === "HeatMap" }]} />
+                        Options={[
+                            { Label: 'Parent Name', Value: 'Parent', Disabled: props.Settings.Type === "HeatMap" },
+                            { Label: 'Channel Name', Value: 'Channel', Disabled: props.Settings.Type === "HeatMap" },
+                            { Label: 'Both', Value: 'Both', Disabled: props.Settings.Type === "HeatMap" }
+                        ]} />
                 </div>
             </div>
         </>
