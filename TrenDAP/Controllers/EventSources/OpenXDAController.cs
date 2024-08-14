@@ -51,8 +51,8 @@ namespace TrenDAP.Controllers
 
         private IConfiguration Configuration { get; }
 
-        [HttpGet, Route("{sourceID:int}/{table?}")]
-        public virtual ActionResult GetTable(int sourceID, string table = "")
+        [HttpGet, Route("{sourceID:int}/{table}")]
+        public virtual ActionResult GetTable(int sourceID, string table)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
@@ -60,6 +60,24 @@ namespace TrenDAP.Controllers
                 {
                     EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
                     if (eventSource.Type == "openXDA") return GetOpenXDA(eventSource, table);
+                    else return StatusCode(StatusCodes.Status500InternalServerError, "Only openXDA eventsources are supported by this endpoint.");
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
+                }
+            }
+        }
+
+        [HttpPost, Route("{sourceID:int}/{table}")]
+        public virtual ActionResult PostTable(int sourceID, string table, [FromBody] JObject filter)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                try
+                {
+                    EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
+                    if (eventSource.Type == "openXDA") return GetOpenXDA(eventSource, table, filter);
                     else return StatusCode(StatusCodes.Status500InternalServerError, "Only openXDA eventsources are supported by this endpoint.");
                 }
                 catch (Exception ex)

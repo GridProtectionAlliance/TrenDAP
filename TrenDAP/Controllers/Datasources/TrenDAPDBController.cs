@@ -101,8 +101,8 @@ namespace TrenDAP.Controllers
         #endregion
 
         #region [ Http Methods ]
-        [HttpGet, Route("{sourceID:int}/{table?}")]
-        public virtual ActionResult GetTable(int sourceID, string table = "")
+        [HttpGet, Route("{sourceID:int}/{table}")]
+        public virtual ActionResult GetTable(int sourceID, string table)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
@@ -110,6 +110,24 @@ namespace TrenDAP.Controllers
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
                     if (dataSource.Type == "TrenDAPDB") return GetOpenXDA(dataSource, table);
+                    else return StatusCode(StatusCodes.Status500InternalServerError, "Only TrenDAPDB datasources are supported by this endpoint.");
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
+                }
+            }
+        }
+
+        [HttpPost, Route("{sourceID:int}/{table}")]
+        public virtual ActionResult PostTable(int sourceID, string table, [FromBody] JObject filter)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                try
+                {
+                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
+                    if (dataSource.Type == "TrenDAPDB") return GetOpenXDA(dataSource, table, filter);
                     else return StatusCode(StatusCodes.Status500InternalServerError, "Only TrenDAPDB datasources are supported by this endpoint.");
                 }
                 catch (Exception ex)
