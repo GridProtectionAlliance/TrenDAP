@@ -31,14 +31,17 @@ export const FetchOpenXDA = createAsyncThunk<string | object, { dataSourceID: nu
     return await GetOpenXDA(ds.dataSourceID, ds.sourceType ?? 'data', ds.table)
 });
 
-export const SearchOpenXDA = createAsyncThunk<string | object, { dataSourceID: number, table: string, filter: Search.IFilter<any>[], sourceType?: 'event' | 'data' }, {}>('OpenXDA/SearchOpenXDA', async (ds, { dispatch }) => {
-    return await PostOpenXDA(ds.dataSourceID, ds.sourceType ?? 'data', ds.table, ds.filter)
+export const SearchOpenXDA = createAsyncThunk<string | object, { dataSourceID: number, table: string, filters: Search.IFilter<any>[], sortField: string, ascending: boolean, sourceType?: 'event' | 'data' }, {}>('OpenXDA/SearchOpenXDA', async (ds, { dispatch,getState }) => {
+    return await PostOpenXDA(ds.dataSourceID, ds.sourceType ?? 'data', ds.table, ds.filters, ds.sortField, ds.ascending)
 });
 
 const getNewTable = () => ({
     Status: 'unitiated' as TrenDAP.Status,
     Data: [] as any,
     SearchStatus: 'unitiated' as TrenDAP.Status,
+    SortField: "ID",
+    Ascending: true,
+    Filters: [] as any,
     SearchData: [] as any
 });
 
@@ -104,6 +107,9 @@ export const OpenXDASlice = createSlice({
                 state[key][action.meta.arg.table] = getNewTable();
 
             state[key][action.meta.arg.table].SearchStatus = 'idle';
+            if (action.meta.arg.sortField != null) state[key][action.meta.arg.table].SortField = action.meta.arg.sortField;
+            if (action.meta.arg.ascending != null) state[key][action.meta.arg.table].Ascending = action.meta.arg.ascending;
+            if (action.meta.arg.ascending != null) state[key][action.meta.arg.table].Filters = action.meta.arg.filters;
             if (typeof (action.payload) === "string")
                 state[key][action.meta.arg.table].SearchData.push(...JSON.parse(action.payload));
             else if (typeof (action.payload) === "object")
@@ -141,10 +147,15 @@ export const OpenXDASlice = createSlice({
 
 export const { } = OpenXDASlice.actions;
 export default OpenXDASlice.reducer;
-export const SelectOpenXDA = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table].Data : [] ) ;
+export const SelectOpenXDA = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table]?.Data : [] ) ;
 export const SelectOpenXDAStatus = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table]?.Status ?? 'unitiated' : 'unitiated') as TrenDAP.Status
-export const SelectSearchOpenXDA = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table].SearchData : []);
+export const SelectSearchOpenXDA = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table]?.SearchData : []);
 export const SelectSearchOpenXDAStatus = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table]?.SearchStatus ?? 'unitiated' : 'unitiated') as TrenDAP.Status
+export const SelectSearchOpenXDASortField = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table]?.SortField ?? 'ID' : 'ID');
+export const SelectSearchOpenXDAAscending = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table]?.Ascending ?? true : true);
+export const SelectSearchOpenXDAFilters = (state: Redux.StoreState, dsid: number, table: string, type?: 'event' | 'data') => (state.OpenXDA[dsid + (type ?? 'data')] ? state.OpenXDA[dsid + (type ?? 'data')][table]?.Filters ?? [] : []);
+
+
 
 function GetOpenXDA(sourceID: number, type: 'event' | 'data',  table: string): JQuery.jqXHR<string> {
     return $.ajax({
@@ -156,14 +167,13 @@ function GetOpenXDA(sourceID: number, type: 'event' | 'data',  table: string): J
         async: true
     });
 }
-function PostOpenXDA(sourceID: number, type: 'event' | 'data', table: string, filters: Search.IFilter<any>[]): JQuery.jqXHR<string> {
+function PostOpenXDA(sourceID: number, type: 'event' | 'data', table: string, filters: Search.IFilter<any>[], sortField: string, ascending: boolean): JQuery.jqXHR<string> {
     return $.ajax({
         type: "Post",
         url: `${homePath}api/${type === 'data' ? 'TrenDAPDB' : 'OpenXDA'}/${sourceID}/${table}`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
-        // Todo: If there is no ID col, this won't work. Every single one does, but this should still be more resilient
-        data: JSON.stringify({ Searches: filters, OrderBy: "ID", Ascending: true }),
+        data: JSON.stringify({ Searches: filters, OrderBy: sortField, Ascending: ascending }),
         cache: true,
         async: true
     });

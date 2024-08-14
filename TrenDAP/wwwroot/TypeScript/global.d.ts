@@ -66,7 +66,10 @@ export namespace Redux {
         Status: TrenDAP.Status,
         Data: any[],
         SearchStatus: TrenDAP.Status,
-        SearchData: any[]
+        SortField: string,
+        Ascending: boolean,
+        SearchData: any[],
+        Filters: any[]
     }
 
     interface SapphireTableSlice {
@@ -190,7 +193,7 @@ export namespace TrenDAP {
     }
 
     // XDA
-    interface iXDADataSet { By: 'Asset' | 'Meter', IDs: number[], Phases: number[], Groups: number[], ChannelIDs: number[], Aggregate: '' | '1h' | '1d' | '1w' }
+    interface iXDADataSet { MeterIDs: number[], AssetIDs: number[], Phases: number[], Groups: number[], ChannelIDs: number[], Aggregate: '' | '1h' | '1d' | '1w' }
     interface iXDADataSource { PQBrowserUrl: string }
     interface iXDAReturn { ID: number, Meter: string, Name: string, Station: string, Phase: OpenXDA.Types.PhaseName, Type: OpenXDA.Types.MeasurementTypeName, Harmonic: number, Latitude: number, Longitude: number, Asset: string, Characteristic: OpenXDA.Types.MeasurementCharacteristicName, Unit: string }
     interface iXDAReturnWithDataSource extends iXDAReturnData { DataSourceID: number, DataSource: string }
