@@ -297,13 +297,15 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         const rowIDs = props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels.filter(c => !isVirtual(c.Key)).map(c => c.Key['Parent'])).flat()).flat();
         const virtualIDs = props.WorkSpaceJSON.VirtualChannels.flatMap(channel => channel.ComponentChannels.map(key => key.Key.Parent));
         const parentID = _.uniq(rowIDs.concat(virtualIDs)).sort((a, b) => a - b);
-        if (allParents.length === 0)
+        if (allParents.length === 0) {
+            setSelectedParentKey(parentID.length > 0 ? parentID[0] : null)
             setParentMatches(parentID.map(p => ({
                 Key: p,
                 Name: 'Parent ' + p,
                 Status: 'NoMatch',
                 ParentID: null
             })));
+        }
         else {
             const parents = allParents.filter(p => p.ID != "")
             const newParentMatches: IParentMatch[] = parentID.map((parent, idx) => {
@@ -316,6 +318,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 };
             });
 
+            setSelectedParentKey(newParentMatches.length > 0 ? newParentMatches[0].Key : null)
             setParentMatches(newParentMatches);
         }
     }, [allParents, props.WorkSpaceJSON, props.IsModalOpen]);
@@ -726,12 +729,13 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                     Options={eventSourceMetas.map(p => ({ Value: p.ID.toString(), Label: p.Name }))}
                                                     Label={''} Field={'ID'} Setter={(newRecord) => setEventMatches(matches => {
                                                         const clonedMatches = _.cloneDeep(matches);
+                                                        const index = clonedMatches.findIndex(match => match.Key === row.item.Key);
                                                         if (newRecord?.ID == null) {
-                                                            clonedMatches[row.item.Key] = { ...newRecord, ID: undefined, Match: 'NoMatch' };
+                                                            clonedMatches[index] = { ...newRecord, ID: undefined, Match: 'NoMatch' };
                                                         } else {
                                                             const newID = _.toInteger(newRecord.ID);
                                                             const multiMatch = clonedMatches.filter(match => match?.ID === newID).length > 0;
-                                                            clonedMatches[row.item.Key] = { ...newRecord, ID: newID, Match: multiMatch ? 'MultipleMatches' : 'Match' };
+                                                            clonedMatches[index] = { ...newRecord, ID: newID, Match: multiMatch ? 'MultipleMatches' : 'Match' };
                                                         }
                                                         return clonedMatches;
                                                     })} />}
