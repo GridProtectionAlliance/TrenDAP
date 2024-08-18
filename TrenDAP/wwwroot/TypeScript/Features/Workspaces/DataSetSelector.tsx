@@ -447,13 +447,15 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     return (
         <>
             <Modal
-                ConfirmBtnClass={"btn btn-success mr-auto"}
+                ConfirmBtnClass={`btn-${step === lastStep ? 'primary' : 'success'} mr-auto pull-left`}
+                CancelBtnClass={"btn-danger pull-right"}
                 Show={props.IsModalOpen}
                 ShowX={true}
                 ConfirmText={step === lastStep ? 'Apply' : 'Next'}
-                CancelText={step === firstStep ? 'Exit' : 'Previous'}
+                CancelText={'Previous'}
+                ShowCancel={step !== firstStep}
                 Title={'Select a Data Set'}
-                CallBack={conf => {
+                CallBack={(conf, isButton) => {
                     if (conf) {
                         if (step >= lastStep) {
                             props.GenerateMapping(
@@ -467,7 +469,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                             setStep(firstStep);
                             props.SetIsModalOpen(false);
                         }
-                        else 
+                        else
                             setStep(s => {
                                 let newStep = s;
                                 do {
@@ -487,7 +489,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 }
                                 return newStep;
                             });
-                    } else {
+                    } else if (isButton) {
                         if (step <= firstStep) {
                             setStep(firstStep);
                             props.SetIsModalOpen(false);
@@ -501,13 +503,16 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 return newStep;
                             });
                     }
+                    else {
+                        setStep(firstStep);
+                        props.SetIsModalOpen(false);
+                    }
 
                 }}
                 Size="lg"
                 DisableConfirm={disallowStep()}
                 ConfirmShowToolTip={getToolTipContent().length > 0}
                 ConfirmToolTipContent={getToolTipContent().map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>)}
-                ShowCancel={true}
             >
                 <div className="container-fluid d-flex flex-column p-0" style={{ height: 'calc(-210px + 100vh - 2rem)' }}>
                     <div className="row h-100">
@@ -520,7 +525,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                             TableClass="table table-hover"
                                             TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                             SortKey={dataSetSortField === "UpdatedOn" ? "Name" : dataSetSortField}
                                             OnClick={data => { setSelectedDataSet(data.row); navigate(`${homePath}Workspaces/${workspaceId}/DataSet/${data.row.ID}`) }}
@@ -564,7 +569,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                     TableClass={"table table-hover"}
                                                     TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                                     TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                                                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                                                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                                     OnClick={({ row }) => setSelectedParentKey(row.Key)}
                                                     OnSort={() => { }}
@@ -621,7 +626,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                         TableClass={"table table-hover"}
                                                         TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                                         TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                                        TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                                                        TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                                                         RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                                         OnClick={() => { }}
                                                         OnSort={() => { }}
@@ -705,7 +710,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                             TableClass={"table table-hover"}
                                             TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                             OnClick={() => { }}
                                             OnSort={() => { }}
