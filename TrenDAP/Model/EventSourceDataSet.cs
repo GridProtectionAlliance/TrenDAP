@@ -80,37 +80,5 @@ namespace TrenDAP.Model
     {
         public EventSourceDataSetController(IConfiguration configuration) : base(configuration) { }
 
-        [HttpGet, Route("Query/{eventSourceDataSetID:int}")]
-        public IActionResult GetData(int eventSourceDataSetID, CancellationToken cancellationToken)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
-            {
-                EventSourceDataSet sourceSet = new TableOperations<EventSourceDataSet>(connection).QueryRecordWhere("ID = {0}", eventSourceDataSetID);
-                if (sourceSet == null) return BadRequest($"Could not find source set relationship with ID {eventSourceDataSetID}");
-                DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSetID);
-                EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", sourceSet.EventSourceID);
-                if (dataSet is null || eventSource is null) return BadRequest("Failure loading event source or data set.");
-                return Query(dataSet, eventSource, sourceSet.Settings, cancellationToken);
-            }
-        }
-
-        private IActionResult Query(DataSet dataset, EventSource eventSource, JObject json, CancellationToken cancellationToken)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
-            {
-                EventSourceHelper helper = new EventSourceHelper(eventSource);
-                if (eventSource.Type == "openXDA")
-                {
-                    Tuple<DateTime, DateTime> timeEnds = dataset.ComputeTimeEnds();
-                    json.Add("StartTime", timeEnds.Item1);
-                    json.Add("EndTime", timeEnds.Item2);
-                    IEnumerable<TimeFilter> timeFilters = dataset.GetTimeFilters();
-                    json.Add("TimeFilters", new JArray(timeFilters));
-                    return helper.GetActionResult("api/Event/TrenDAP", new StringContent(json.ToString(), Encoding.UTF8, "application/json"));
-                }
-                else
-                    throw new ArgumentException($"Type of {eventSource.Type} not supported.");
-            }
-        }
     }
 }

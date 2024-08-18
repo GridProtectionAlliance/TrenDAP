@@ -400,13 +400,13 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
     Load: function (eventSource: EventSourceTypes.IEventSourceView, _dataSet: TrenDAP.iDataSet, setConn: EventSourceTypes.IEventSourceDataSet): Promise<TrenDAP.IEvent[]> {
         return new Promise<TrenDAP.IEvent[]>((resolve, reject) => {
             $.ajax({
-                type: "Get",
-                url: `${homePath}api/EventSourceDataSet/Query/${setConn.ID}`,
+                type: "GET",
+                url: `${homePath}api/OpenXDA/Query/${setConn.ID}`,
                 contentType: "application/json; charset=utf-8",
-                dataType: 'text',
+                dataType: 'json',
                 cache: true,
                 async: true
-            }).done((data: string) => {
+            }).done((xdaEvents: IxdaEvent[]) => {
                 const dataSetSettings = EnsureTypeSafety(setConn.Settings, OpenXDAEvents.DefaultDataSetSettings);
                 const sourceSettings = EnsureTypeSafety(eventSource.Settings, OpenXDAEvents.DefaultSourceSettings);
 
@@ -422,9 +422,6 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
 
                 queryParams['windowSize'] = 3;
                 queryParams['timeWindowUnits'] = 3; // hours
-
-                // Parse events from response data
-                const xdaEvents: IxdaEvent[] = JSON.parse(data);
 
                 // Map XDA event to trenDAP event
                 const tdapEvents: TrenDAP.IEvent[] = xdaEvents.map(evt => {
@@ -512,7 +509,7 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
         return new Promise<boolean>((resolve, reject) => {
             $.ajax({
                 type: "GET",
-                url: `${homePath}api/EventSource/TestAuth/${eventSource.ID}`,
+                url: `${homePath}api/OpenXDA/TestAuth/${eventSource.ID}`,
                 contentType: "application/json; charset=utf-8",
                 cache: true,
                 async: true

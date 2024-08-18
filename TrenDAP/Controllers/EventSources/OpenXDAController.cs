@@ -27,10 +27,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
+using openXDA.APIAuthentication;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -42,14 +42,96 @@ namespace TrenDAP.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class OpenXDAController : ControllerBase 
+    public class OpenXDAController : EventSourceImplementationController
     {
-        public OpenXDAController(IConfiguration configuration)
+        protected override string typeName { get { return "openXDA"; } }
+        public OpenXDAController(IConfiguration configuration) : base(configuration) { }
+
+        private class EventSourceHelper : XDAAPIHelper
         {
-            Configuration = configuration;
+            private EventSource m_eventSource;
+
+            public EventSourceHelper(IConfiguration config, int dataSourceId)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection(config["SystemSettings:ConnectionString"], config["SystemSettings:DataProviderString"]))
+                {
+                    m_eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", dataSourceId);
+                }
+            }
+
+            public EventSourceHelper(EventSource source)
+            {
+                m_eventSource = source;
+            }
+
+            protected override string Token
+            {
+                get
+                {
+                    return m_eventSource.APIToken;
+                }
+
+            }
+            protected override string Key
+            {
+                get
+                {
+                    return m_eventSource.RegistrationKey;
+                }
+
+            }
+            protected override string Host
+            {
+                get
+                {
+                    return m_eventSource.URL;
+                }
+            }
+
+            public IActionResult GetActionResult(string requestURI, HttpContent content = null)
+            {
+                Task<HttpResponseMessage> rsp = GetResponseTask(requestURI, content);
+                return new RspConverter(rsp);
+            }
         }
 
-        private IConfiguration Configuration { get; }
+        protected override IActionResult QueryEvents(DataSet dataset, EventSource eventSource, JObject eventSourceDataSetSettings, CancellationToken cancellationToken)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                EventSourceHelper helper = new EventSourceHelper(eventSource);
+                if (eventSource.Type == typeName)
+                {
+                    Tuple<DateTime, DateTime> timeEnds = dataset.ComputeTimeEnds();
+                    eventSourceDataSetSettings.Add("StartTime", timeEnds.Item1);
+                    eventSourceDataSetSettings.Add("EndTime", timeEnds.Item2);
+                    IEnumerable<TimeFilter> timeFilters = dataset.GetTimeFilters();
+                    eventSourceDataSetSettings.Add("TimeFilters", new JArray(timeFilters));
+                    return helper.GetActionResult("api/Event/TrenDAP", new StringContent(eventSourceDataSetSettings.ToString(), Encoding.UTF8, "application/json"));
+                }
+                else
+                    throw new ArgumentException($"Type of {eventSource.Type} not supported.");
+            }
+        }
+
+        protected override string TestAuthentication(EventSource eventSource)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                EventSourceHelper helper = new EventSourceHelper(eventSource);
+                HttpResponseMessage rsp = helper.GetResponseTask($"api/TestAuth").Result;
+                switch (rsp.StatusCode)
+                {
+                    default:
+                    case HttpStatusCode.Unauthorized:
+                        return "Failed to authorize with datasource credentials.";
+                    case HttpStatusCode.NotFound:
+                        return "Unable to find datasource.";
+                    case HttpStatusCode.OK:
+                        return "1";
+                }
+            }
+        }
 
         [HttpGet, Route("{sourceID:int}/{table}")]
         public virtual ActionResult GetTable(int sourceID, string table)
@@ -59,7 +141,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
-                    if (eventSource.Type == "openXDA") return GetOpenXDA(eventSource, table);
+                    if (eventSource.Type == typeName) return GetOpenXDA(eventSource, table);
                     else return StatusCode(StatusCodes.Status500InternalServerError, "Only openXDA eventsources are supported by this endpoint.");
                 }
                 catch (Exception ex)
@@ -77,7 +159,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
-                    if (eventSource.Type == "openXDA") return GetOpenXDA(eventSource, table, filter);
+                    if (eventSource.Type == typeName) return GetOpenXDA(eventSource, table, filter);
                     else return StatusCode(StatusCodes.Status500InternalServerError, "Only openXDA eventsources are supported by this endpoint.");
                 }
                 catch (Exception ex)
