@@ -282,7 +282,6 @@ export namespace TrenDAP {
 
     interface IWidgetEventSources<T> {
         Key: number,
-        Enabled: boolean,
         EventSettings: T
     }
 

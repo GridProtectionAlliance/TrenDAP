@@ -69,8 +69,10 @@ export namespace WidgetTypes {
     }
 
     interface IEventSourceSelectionProps<U> {
-        SetSource: (changedSource: ISelectedEvents<U>) => void,
-        SelectedSources: ISelectedEvents<U>[]
+        AddOrEditSource: (source: ISelectedEvents<U>) => void,
+        RemoveSource: (source: ISelectedEvents<U>) => void,
+        SelectedSources: ISelectedEvents<U>[],
+        AllEventSources: TrenDAP.IEventSourceMetaData[]
     }
 
     /*
