@@ -27,7 +27,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
-using openXDA.APIAuthentication;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -46,60 +45,11 @@ namespace TrenDAP.Controllers
     {
         protected override string typeName { get { return "openXDA"; } }
         public OpenXDAController(IConfiguration configuration) : base(configuration) { }
-
-        private class EventSourceHelper : XDAAPIHelper
-        {
-            private EventSource m_eventSource;
-
-            public EventSourceHelper(IConfiguration config, int dataSourceId)
-            {
-                using (AdoDataConnection connection = new AdoDataConnection(config["SystemSettings:ConnectionString"], config["SystemSettings:DataProviderString"]))
-                {
-                    m_eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", dataSourceId);
-                }
-            }
-
-            public EventSourceHelper(EventSource source)
-            {
-                m_eventSource = source;
-            }
-
-            protected override string Token
-            {
-                get
-                {
-                    return m_eventSource.APIToken;
-                }
-
-            }
-            protected override string Key
-            {
-                get
-                {
-                    return m_eventSource.RegistrationKey;
-                }
-
-            }
-            protected override string Host
-            {
-                get
-                {
-                    return m_eventSource.URL;
-                }
-            }
-
-            public IActionResult GetActionResult(string requestURI, HttpContent content = null)
-            {
-                Task<HttpResponseMessage> rsp = GetResponseTask(requestURI, content);
-                return new RspConverter(rsp);
-            }
-        }
-
         protected override IActionResult QueryEvents(DataSet dataset, EventSource eventSource, JObject eventSourceDataSetSettings, CancellationToken cancellationToken)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
-                EventSourceHelper helper = new EventSourceHelper(eventSource);
+                TrenDAPXDAHelper helper = new TrenDAPXDAHelper(eventSource.PrivateSettings);
                 if (eventSource.Type == typeName)
                 {
                     Tuple<DateTime, DateTime> timeEnds = dataset.ComputeTimeEnds();
@@ -118,7 +68,7 @@ namespace TrenDAP.Controllers
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
-                EventSourceHelper helper = new EventSourceHelper(eventSource);
+                TrenDAPXDAHelper helper = new TrenDAPXDAHelper(eventSource.PrivateSettings);
                 HttpResponseMessage rsp = helper.GetResponseTask($"api/TestAuth").Result;
                 switch (rsp.StatusCode)
                 {
@@ -173,7 +123,7 @@ namespace TrenDAP.Controllers
         {
             try
             {
-                EventSourceHelper helper = new EventSourceHelper(eventSource);
+                TrenDAPXDAHelper helper = new TrenDAPXDAHelper(eventSource.PrivateSettings);
                 Task<string> rsp;
                 if (filter is null) rsp = helper.GetAsync($"api/{table}");
                 else rsp = helper.PostAsync($"api/{table}/SearchableList", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
