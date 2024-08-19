@@ -199,7 +199,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
                     JObject jObj = (JObject)JToken.FromObject(post);
                     return helper.GetResponseTask("api/HIDS", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
                 }
@@ -218,7 +218,7 @@ namespace TrenDAP.Controllers
         {
             try
             {
-                DataSourceHelper helper = new DataSourceHelper(dataSource);
+                TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
                 Task<string> rsp;
                 if (filter is null) rsp = helper.GetAsync($"api/{table}");
                 else rsp = helper.PostAsync($"api/{table}/SearchableList", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
@@ -237,7 +237,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
                     JObject jObj = (JObject)JToken.FromObject(post);
                     return helper.GetResponseTask("api/HIDS", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
                 }
@@ -253,7 +253,7 @@ namespace TrenDAP.Controllers
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                DataSourceHelper helper = new DataSourceHelper(dataSource);
+                TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
                 Task<Stream> rsp = helper.GetStreamAsync($"api/trendap/querymetadata");
                 BinaryFormatter formatter = new BinaryFormatter();
                 DataTable table = (DataTable)formatter.Deserialize(rsp.Result);

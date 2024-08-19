@@ -31,6 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -101,6 +102,113 @@ namespace TrenDAP.Controllers
         #endregion
 
         #region [ Http Methods ]
+        // Todo: Create base implementation controller
+        [HttpGet, Route("TestAuth/{dataSourceID:int}")]
+        public ActionResult TestAuth(int dataSourceID)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                try
+                {
+                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
+                    TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
+                    HttpResponseMessage rsp = helper.GetResponseTask($"api/TestAuth").Result;
+                    switch (rsp.StatusCode)
+                    {
+                        default:
+                        case HttpStatusCode.Unauthorized:
+                            return Ok("Failed to authorize with datasource credentials.");
+                        case HttpStatusCode.NotFound:
+                            return Ok("Unable to find datasource.");
+                        case HttpStatusCode.OK:
+                            return Ok("1");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
+                }
+            }
+        }
+
+        [HttpGet, Route("Query/{dataSourceDataSetID:int}")]
+        public IActionResult GetData(int dataSourceDataSetID, CancellationToken cancellationToken)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                DataSourceDataSet sourceSet = new TableOperations<DataSourceDataSet>(connection).QueryRecordWhere("ID = {0}", dataSourceDataSetID);
+                if (sourceSet == null) return BadRequest($"Could not find source set relationship with ID {dataSourceDataSetID}");
+                DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSetID);
+                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSourceID);
+                if (dataSet is null || dataSource is null) return BadRequest("Failure loading data source or data set.");
+                return Query(dataSet, dataSource, sourceSet.Settings, cancellationToken);
+            }
+        }
+
+        [HttpPost, Route("Query/ByEvents/{dataSourceDataSetID:int}")]
+        public IActionResult GetDataByEvents(int dataSourceDataSetID, [FromBody] JArray events, CancellationToken cancellationToken)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                DataSourceDataSet sourceSet = new TableOperations<DataSourceDataSet>(connection).QueryRecordWhere("ID = {0}", dataSourceDataSetID);
+                if (sourceSet == null) return BadRequest($"Could not find source set relationship with ID {dataSourceDataSetID}");
+                DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSetID);
+                DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSourceID);
+                if (dataSet is null || dataSource is null) return BadRequest("Failure loading data source or data set.");
+                return Query(dataSet, dataSource, sourceSet.Settings, events.ToObject<List<Event>>(), cancellationToken);
+            }
+        }
+
+        private IActionResult Query(DataSet dataset, DataSource dataSource, JObject json, CancellationToken cancellationToken)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
+
+                if (dataSource.Type == "TrenDAPDB")
+                {
+                    HIDSPost postData = TrenDAPDBController.CreatePost(dataset, json.ToObject<XDADataSetData>());
+                    JObject jObj = (JObject)JToken.FromObject(postData);
+                    return helper.GetActionResult("api/HIDS/QueryPoints", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
+                }
+                // ToDo: Add other types, see funcs in dataset.cs
+                /* else if (type == "openHistorian")
+                    return QueryOpenHistorian(jObject, dataset, dataSource, json, cancellationToken);
+                else if (type == "Sapphire")
+                {
+                    jObject["DataSource"]["OpenSEE"] = TrenDAPDBController.GetOpenSEEURL(dataSource.ID, Configuration).Result;
+                    return QuerySapphire(jObject, dataset, dataSource, json, cancellationToken);
+                } */
+                else
+                    throw new ArgumentException("Only datasources type of TrenDAPDB supported by this method.");
+            }
+        }
+
+        private IActionResult Query(DataSet dataset, DataSource dataSource, JObject json, List<Event> events, CancellationToken cancellationToken)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            {
+                TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
+
+                if (dataSource.Type == "TrenDAPDB")
+                {
+                    HIDSPostTimeSpans postData = TrenDAPDBController.CreatePostTimeSpans(dataset, json.ToObject<XDADataSetData>(), events);
+                    JObject jObj = (JObject)JToken.FromObject(postData);
+                    return helper.GetActionResult("api/HIDS/QueryPointsByTimeSpans", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
+                }
+                // ToDo: Add other types, see funcs in dataset.cs
+                /* else if (type == "openHistorian")
+                    return QueryOpenHistorian(jObject, dataset, dataSource, json, cancellationToken);
+                else if (type == "Sapphire")
+                {
+                    jObject["DataSource"]["OpenSEE"] = TrenDAPDBController.GetOpenSEEURL(dataSource.ID, Configuration).Result;
+                    return QuerySapphire(jObject, dataset, dataSource, json, cancellationToken);
+                } */
+                else
+                    throw new ArgumentException("Only datasources of type TrenDAPDB are supported by this endpoint.");
+            }
+        }
+
         [HttpGet, Route("{sourceID:int}/{table}")]
         public virtual ActionResult GetTable(int sourceID, string table)
         {
@@ -145,7 +253,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
                     Task<string> rsp;
 
                     if (dataSource.Type == "TrenDAPDB")
@@ -167,7 +275,7 @@ namespace TrenDAP.Controllers
         {
             try
             {
-                DataSourceHelper helper = new DataSourceHelper(dataSource);
+                TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
                 Task<string> rsp;
                 if (filter is null) rsp = helper.GetAsync($"api/{table}");
                 else rsp = helper.PostAsync($"api/{table}/SearchableList", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
@@ -188,7 +296,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
                     Task<string> rsp = helper.GetAsync($"api/HIDS");
                     return Ok(rsp.Result);
                 }
@@ -282,7 +390,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
                     return helper.GetAsync($"api/Setting/Category/HIDS").Result;
                 }
                 catch (Exception ex)
@@ -299,7 +407,7 @@ namespace TrenDAP.Controllers
                 try
                 {
                     DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
+                    TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
                     return await helper.GetAsync($"api/Setting/OpenSEE.URL").ConfigureAwait(false);
                 }
                 catch (Exception ex)
