@@ -137,11 +137,11 @@ namespace TrenDAP.Controllers
                         {
                             PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
                             if (parentKey.PropertyType == typeof(int))
-                                result = QueryRecordsWhere(null, false, ParentKey + " = {0}", int.Parse(parentID));
+                                result = QueryRecordsWhere(null, false, $"[{ParentKey}] = {{0}}", int.Parse(parentID));
                             else if (parentKey.PropertyType == typeof(Guid))
-                                result = QueryRecordsWhere(null, false, ParentKey + " = {0}", Guid.Parse(parentID));
+                                result = QueryRecordsWhere(null, false, $"[{ParentKey}] = {{0}}", Guid.Parse(parentID));
                             else
-                                result = QueryRecordsWhere(null, false, ParentKey + " = {0}", parentID);
+                                result = QueryRecordsWhere(null, false, $"[{ParentKey}] = {{0}}", parentID);
                         }
                         else
                             result = QueryRecordsWhere(null, false, null);
