@@ -28,10 +28,42 @@ import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectSapphire, FetchSapphire, SelectSapphireStatus } from '../../Sapphire/SapphireSlice';
 import { IDataSource } from '../Interface';
 
-const SapphireDataSource: IDataSource<{}, TrenDAP.iSapphireDataSet> = {
+interface IPrivateSettings {
+    URL: string,
+    RegistrationKey: string,
+    APIToken: string,
+}
+
+const SapphireDataSource: IDataSource<IPrivateSettings, {}, TrenDAP.iSapphireDataSet> = {
     Name: 'Sapphire',
+    DefaultPrivateSourceSettings: { URL: "http://localhost:8989/", APIToken: "", RegistrationKey: "TrenDAP" },
     DefaultSourceSettings: {},
     DefaultDataSetSettings: { IDs: [], Phases: [], Types: [], Aggregate: "", Harmonics: "" },
+    PrivateConfigUI: (props: TrenDAP.ISourceConfig<IPrivateSettings>) => {
+        React.useEffect(() => {
+            const errors: string[] = [];
+            if (props.Settings.URL == null || props.Settings.URL.length === 0)
+                errors.push("XDA URL is required by data source.");
+            if (props.Settings.APIToken == null || props.Settings.APIToken.length === 0)
+                errors.push("XDA API Token is required by data source.");
+            if (props.Settings.RegistrationKey == null || props.Settings.RegistrationKey.length === 0)
+                errors.push("XDA API Registration Key is required by data source.");
+            props.SetErrors(errors);
+        }, [props.Settings]);
+
+        function valid(field: keyof IPrivateSettings): boolean {
+            if (field === 'URL') return (props.Settings.URL != null && props.Settings.URL.length !== 0);
+            if (field === 'RegistrationKey') return (props.Settings.RegistrationKey != null && props.Settings.RegistrationKey.length !== 0);
+            if (field === 'APIToken') return (props.Settings.APIToken != null && props.Settings.APIToken.length !== 0);
+            return true;
+        }
+
+        return <>
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='URL' Label='XDA URL' Valid={valid} />
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='APIToken' Label='API Token' Valid={valid} />
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='RegistrationKey' Label='Regisrtation Key' Valid={valid} />
+        </>;
+    },
     ConfigUI: () => { return <></>; },
     DataSetUI: (props: DataSourceTypes.IDataSourceDataSetProps<{}, TrenDAP.iSapphireDataSet>) => {
         const dispatch = useAppDispatch();

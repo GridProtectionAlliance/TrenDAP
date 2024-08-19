@@ -21,18 +21,49 @@
 //
 //******************************************************************************************************
 
-import { Select, ArrayCheckBoxes, ArrayMultiSelect } from '@gpa-gemstone/react-forms';
+import { Select, ArrayCheckBoxes, ArrayMultiSelect, Input } from '@gpa-gemstone/react-forms';
 import { DataSourceTypes, TrenDAP, Redux, DataSetTypes } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import * as React from 'react';
 import { SelectOpenHistorian, FetchOpenHistorian } from '../../OpenHistorian/OpenHistorianSlice';
 import { IDataSource } from '../Interface';
 
+interface IPrivateSettings {
+    URL: string,
+    RegistrationKey: string,
+    APIToken: string,
+}
 
-const OpenHistorianDataSource: IDataSource<{}, TrenDAP.iOpenHistorianDataSet> = {
+const OpenHistorianDataSource: IDataSource<IPrivateSettings, {}, TrenDAP.iOpenHistorianDataSet> = {
     Name: 'openHistorian',
+    DefaultPrivateSourceSettings: { URL: "http://localhost:8989/", APIToken: "", RegistrationKey: "TrenDAP" },
     DefaultSourceSettings: {},
-    DefaultDataSetSettings: { Devices: [], Phases: [], Types: [], Instance: "", Aggregate: '1w'},
+    DefaultDataSetSettings: { Devices: [], Phases: [], Types: [], Instance: "", Aggregate: '1w' },
+    PrivateConfigUI: (props: TrenDAP.ISourceConfig<IPrivateSettings>) => {
+        React.useEffect(() => {
+            const errors: string[] = [];
+            if (props.Settings.URL == null || props.Settings.URL.length === 0)
+                errors.push("XDA URL is required by data source.");
+            if (props.Settings.APIToken == null || props.Settings.APIToken.length === 0)
+                errors.push("XDA API Token is required by data source.");
+            if (props.Settings.RegistrationKey == null || props.Settings.RegistrationKey.length === 0)
+                errors.push("XDA API Registration Key is required by data source.");
+            props.SetErrors(errors);
+        }, [props.Settings]);
+
+        function valid(field: keyof IPrivateSettings): boolean {
+            if (field === 'URL') return (props.Settings.URL != null && props.Settings.URL.length !== 0);
+            if (field === 'RegistrationKey') return (props.Settings.RegistrationKey != null && props.Settings.RegistrationKey.length !== 0);
+            if (field === 'APIToken') return (props.Settings.APIToken != null && props.Settings.APIToken.length !== 0);
+            return true;
+        }
+
+        return <>
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='URL' Label='XDA URL' Valid={valid} />
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='APIToken' Label='API Token' Valid={valid} />
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='RegistrationKey' Label='Regisrtation Key' Valid={valid} />
+        </>;
+    },
     ConfigUI: () => { return <></>; },
     DataSetUI: (props: DataSourceTypes.IDataSourceDataSetProps<{}, TrenDAP.iOpenHistorianDataSet>) => {
         const dispatch = useAppDispatch();

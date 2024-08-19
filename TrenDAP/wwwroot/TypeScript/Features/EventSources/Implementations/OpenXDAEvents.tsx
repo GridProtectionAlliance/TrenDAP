@@ -122,9 +122,9 @@ const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> =
         }
 
         return <>
-            <Input Record={props.Settings} Setter={props.SetSettings} Field='URL' Label='XDA URL' Valid={valid} />
-            <Input Record={props.Settings} Setter={props.SetSettings} Field='APIToken' Label='API Token' Valid={valid} />
-            <Input Record={props.Settings} Setter={props.SetSettings} Field='RegistrationKey' Label='Regisrtation Key' Valid={valid} />
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='URL' Label='XDA URL' Valid={valid} />
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='APIToken' Label='API Token' Valid={valid} />
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='RegistrationKey' Label='Regisrtation Key' Valid={valid} />
         </>;
     },
     ConfigUI: (props: TrenDAP.ISourceConfig<ISetting>) => {

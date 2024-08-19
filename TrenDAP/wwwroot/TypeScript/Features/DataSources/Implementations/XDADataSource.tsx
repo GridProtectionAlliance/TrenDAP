@@ -44,6 +44,12 @@ const hidsServerFormat = "YYYY-MM-DD[T]HH:mm:ss.SSSZ";
 const colList = ["Meter", "Asset", "Description", "Longitude", "Latitude", "Channel Group", "Unit"];
 const defaultCols = new Set(["Meter", "Asset"]);
 
+interface IPrivateSettings {
+    URL: string,
+    RegistrationKey: string,
+    APIToken: string,
+}
+
 interface XDAChannel extends OpenXDA.Types.Channel {
     AssetID: number,
     MeterID: number,
@@ -59,10 +65,36 @@ interface IMultiCheckboxOption {
     Selected: boolean
 }
 
-const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = {
+const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = {
     Name: 'TrenDAPDB',
+    DefaultPrivateSourceSettings: { URL: "http://localhost:8989/", APIToken: "", RegistrationKey: "TrenDAP" },
     DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/"},
-    DefaultDataSetSettings: { MeterIDs: [], AssetIDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: ''},
+    DefaultDataSetSettings: { MeterIDs: [], AssetIDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: '' },
+    PrivateConfigUI: (props: TrenDAP.ISourceConfig<IPrivateSettings>) => {
+        React.useEffect(() => {
+            const errors: string[] = [];
+            if (props.Settings.URL == null || props.Settings.URL.length === 0)
+                errors.push("XDA URL is required by data source.");
+            if (props.Settings.APIToken == null || props.Settings.APIToken.length === 0)
+                errors.push("XDA API Token is required by data source.");
+            if (props.Settings.RegistrationKey == null || props.Settings.RegistrationKey.length === 0)
+                errors.push("XDA API Registration Key is required by data source.");
+            props.SetErrors(errors);
+        }, [props.Settings]);
+
+        function valid(field: keyof IPrivateSettings): boolean {
+            if (field === 'URL') return (props.Settings.URL != null && props.Settings.URL.length !== 0);
+            if (field === 'RegistrationKey') return (props.Settings.RegistrationKey != null && props.Settings.RegistrationKey.length !== 0);
+            if (field === 'APIToken') return (props.Settings.APIToken != null && props.Settings.APIToken.length !== 0);
+            return true;
+        }
+
+        return <>
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='URL' Label='XDA URL' Valid={valid} />
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='APIToken' Label='API Token' Valid={valid} />
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='RegistrationKey' Label='Regisrtation Key' Valid={valid} />
+        </>;
+    },
     ConfigUI: (props: TrenDAP.ISourceConfig<TrenDAP.iXDADataSource>) => {
         React.useEffect(() => {
             const errors: string[] = [];
@@ -431,7 +463,7 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
             let dataHandle: JQuery.jqXHR<string>;
             if (events == null) dataHandle = $.ajax({
                 type: "Get",
-                url: `${homePath}api/DataSourceDataSet/Query/${setConn.ID}`,
+                url: `${homePath}api/TrenDAPDB/Query/${setConn.ID}`,
                 contentType: "application/json; charset=utf-8",
                 dataType: 'text',
                 cache: false,
@@ -439,7 +471,7 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
             });
             else if (events.length !== 0) dataHandle = $.ajax({
                 type: "Post",
-                url: `${homePath}api/DataSourceDataSet/Query/ByEvents/${setConn.ID}`,
+                url: `${homePath}api/TrenDAPDB/Query/ByEvents/${setConn.ID}`,
                 contentType: "application/json; charset=utf-8",
                 data: JSON.stringify(events),
                 dataType: 'text',
@@ -549,7 +581,7 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
         return new Promise<boolean>((resolve, reject) => {
             $.ajax({
                 type: "GET",
-                url: `${homePath}api/DataSource/TestAuth/${dataSource.ID}`,
+                url: `${homePath}api/TrenDAPDB/TestAuth/${dataSource.ID}`,
                 contentType: "application/json; charset=utf-8",
                 cache: true,
                 async: true

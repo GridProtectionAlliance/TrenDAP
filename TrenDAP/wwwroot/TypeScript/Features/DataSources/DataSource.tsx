@@ -40,7 +40,7 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
     const publicDataSources = useAppSelector(SelectPublicDataSources);
     const publicDataSourceStatus = useAppSelector(SelectPublicDataSourcesStatus);
     const [configErrors, setConfigErrors] = React.useState<string[]>([]);
-    const implementation: IDataSource<any, any> | null = React.useMemo(() =>
+    const [privateErrors, setPrivateErrors] = React.useState<string[]>([]);
     const implementation: IDataSource<any, any, any> | null = React.useMemo(() =>
         AllSources.find(t => t.Name == props.DataSource.Type), [props.DataSource.Type]);
 
@@ -56,6 +56,19 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
         }
         return s;
     }, [implementation, props.DataSource.Settings]);
+
+    const privateSettings = React.useMemo(() => {
+        if (implementation == null)
+            return {};
+        const s = _.cloneDeep(implementation.DefaultPrivateSourceSettings ?? {});
+        const custom = props.DataSource.PrivateSettings;
+
+        for (const [k] of Object.entries(implementation?.DefaultPrivateSourceSettings ?? {})) {
+            if (custom.hasOwnProperty(k))
+                s[k] = _.cloneDeep(custom[k]);
+        }
+        return s;
+    }, [implementation, props.DataSource.PrivateSettings]);
 
     React.useEffect(() => {
         if (dataSourceStatus === 'unitiated' || dataSourceStatus === 'changed')
@@ -75,8 +88,8 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
         else if (dataSources.filter(ds => ds.ID !== props.DataSource.ID).concat(publicDataSources.filter(ds => ds.User !== userName)).map(ds => ds.Name.toLowerCase()).includes(props.DataSource.Name.toLowerCase()))
             errors.push("A shared datasource with this name was already created by another user.");
 
-        props.SetErrors(errors.concat(configErrors));
-    }, [props.DataSource, configErrors]);
+        props.SetErrors(errors.concat(configErrors).concat(privateErrors));
+    }, [props.DataSource, configErrors, privateErrors]);
 
     function valid(field: keyof (DataSourceTypes.IDataSourceView)): boolean {
         if (field == 'Name')
@@ -89,20 +102,24 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
             <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="Name" Setter={props.SetDataSource} Valid={valid} />
             <Select<DataSourceTypes.IDataSourceView> Record={props.DataSource} Label="Type" Field="Type" Setter={props.SetDataSource}
                 Options={AllSources.map((type) => ({ Value: type.Name, Label: type.Name }))} />
-            <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="URL" Setter={props.SetDataSource} Valid={() => true} />
-            <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="RegistrationKey" Label={'API Key'} Setter={props.SetDataSource} Valid={() => true} />
-            <Input<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="APIToken" Label={'API Token'} Setter={props.SetDataSource} Valid={() => true} />
             <div className="row">
                 <div className='col'>
                     <CheckBox<DataSourceTypes.IDataSourceView> Record={props.DataSource} Field="Public" Label='Shared' Setter={props.SetDataSource} />
                 </div>
             </div>
-            {implementation != null ?
+            {implementation?.PrivateConfigUI != null ?
+                <>
+                    <hr />
+                    <implementation.PrivateConfigUI SetErrors={setPrivateErrors} Settings={privateSettings}
+                        SetSettings={(s) => props.SetDataSource({ ...props.DataSource, PrivateSettings: s })} />
+                </>: <></>
+            }
+            {implementation?.ConfigUI != null ?
                 <>
                     <hr />
                     <implementation.ConfigUI SetErrors={setConfigErrors} Settings={settings}
                         SetSettings={(s) => props.SetDataSource({ ...props.DataSource, Settings: s })} />
-                </>: <></>
+                </> : <></>
             }
         </form>
     );
