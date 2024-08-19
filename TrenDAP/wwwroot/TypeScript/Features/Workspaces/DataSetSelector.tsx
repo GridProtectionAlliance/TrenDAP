@@ -26,7 +26,10 @@ import * as $ from 'jquery';
 import { TrenDAP, Redux, DataSourceTypes, DataSetTypes } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, Sort, SelectDataSetsSortField, SelectDataSetsAscending, FetchDataSets, SelectDataSetsStatus } from '../DataSets/DataSetsSlice';
-import { SelectDataSources, FetchDataSources, SelectDataSourcesStatus } from '../DataSources/DataSourcesSlice';
+import {
+    SelectDataSources, FetchDataSources, SelectDataSourcesStatus,
+    SelectPublicDataSources, FetchPublicDataSources, SelectPublicDataSourcesStatus
+} from '../DataSources/DataSourcesSlice';
 import { SelectEventSources, FetchEventSources, SelectEventSourcesStatus, SelectPublicEventSources, SelectPublicEventSourcesStatus, FetchPublicEventSources } from '../EventSources/Slices/EventSourcesSlice';
 
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
@@ -105,11 +108,13 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     const navigate = useNavigate();
     const { workspaceId, dataSetID, channels } = useParams();
     const dataSourceViews = useAppSelector(SelectDataSources);
+    const publicDataSourceViews = useAppSelector(SelectPublicDataSources);
     const dataSetsForUser = useAppSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
     const publicDataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
     const dataSetSortField = useAppSelector(SelectDataSetsSortField);
     const dataSetAscending = useAppSelector(SelectDataSetsAscending);
     const dataSourceStatus = useAppSelector(SelectDataSourcesStatus);
+    const publicDataSourceStatus = useAppSelector(SelectPublicDataSourcesStatus);
     const dataSetStatus = useAppSelector(SelectDataSetsStatus);
 
     const eventSourceViews = useAppSelector(SelectEventSources);
@@ -194,6 +199,11 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     }, [dataSourceStatus]);
 
     React.useEffect(() => {
+        if (publicDataSourceStatus === 'unitiated' || publicDataSourceStatus === 'changed')
+            dispatch(FetchPublicDataSources());
+    }, [publicDataSourceStatus]);
+
+    React.useEffect(() => {
         if (eventSourceStatus === 'unitiated' || eventSourceStatus === 'changed')
             dispatch(FetchEventSources());
     }, [eventSourceStatus]);
@@ -252,9 +262,10 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             return;
 
         const channelHandlers = datasources.map((ds) => {
-            const dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
-            const implementation: IDataSource<any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
-            if (implementation == null)
+            let dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
+            if (dataSourceView == null) publicDataSourceViews.find(d => d.ID === ds.DataSourceID); 
+            const implementation: IDataSource<any, any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
+            if (implementation == null || dataSourceView == null)
                 return Promise.resolve([]);
             return implementation.LoadDataSetMeta(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds)
         })
@@ -419,9 +430,10 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 }, (arg) => reject(arg));
         })).then((allEvents) =>
             Promise.all(datasources.map((ds) => {
-                const dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
-                const implementation: IDataSource<any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
-                if (implementation == null)
+                let dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
+                if (dataSourceView == null) publicDataSourceViews.find(d => d.ID === ds.DataSourceID);
+                const implementation: IDataSource<any, any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
+                if (implementation == null || dataSourceView == null)
                     return Promise.resolve([] as DataSetTypes.IDataSetData[]);
                 return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds, allEvents);
             }))

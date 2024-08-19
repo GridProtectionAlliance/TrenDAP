@@ -38,7 +38,7 @@ declare global {
 export namespace Redux {
     interface StoreState {
         DataSets: State<TrenDAP.iDataSet>,
-        DataSources: State<DataSourceTypes.IDataSourceView>,
+        DataSources: PublicPrivateState<DataSourceTypes.IDataSourceView>,
         EventSources: PublicPrivateState<EventSourceTypes.IEventSourceView>,
         WorkSpaces: State<TrenDAP.iWorkSpace>,
         OpenHistorian: { ID: number, State: OpenHistorianState }[],
@@ -103,12 +103,10 @@ export namespace DataSourceTypes {
         ID: number,
         Name: string,
         Type: string,
-        URL: string,
-        RegistrationKey: string,
-        APIToken: string,
         Public: boolean,
         User: string,
-        Settings: any
+        Settings: any,
+        PrivateSettings: any
     }
 
     interface IDataSourceDataSet {

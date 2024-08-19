@@ -28,15 +28,20 @@ import { useAppDispatch, useAppSelector } from '../../hooks';
 import { Input, Select, CheckBox } from '@gpa-gemstone/react-forms';
 import { IDataSource } from './Interface';
 import { AllSources } from './DataSources';
-import { SelectDataSourcesStatus, SelectDataSourcesAllPublicNotUser, SelectDataSourcesForUser, FetchDataSources } from './DataSourcesSlice';
+import {
+    SelectDataSourcesStatus, FetchDataSources, SelectDataSources,
+    SelectPublicDataSourcesStatus, SelectPublicDataSources, FetchPublicDataSources
+} from './DataSourcesSlice';
 
 const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSourceView, SetDataSource: (ds: DataSourceTypes.IDataSourceView) => void, SetErrors: (e: string[]) => void }> = (props) => {
     const dispatch = useAppDispatch();
-    const dataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesForUser(state, userName)) as DataSourceTypes.IDataSourceView[];
-    const publicDataSources = useAppSelector((state: Redux.StoreState) => SelectDataSourcesAllPublicNotUser(state, userName)) as DataSourceTypes.IDataSourceView[];
-    const dsStatus = useAppSelector(SelectDataSourcesStatus);
+    const dataSources = useAppSelector(SelectDataSources);
+    const dataSourceStatus = useAppSelector(SelectDataSourcesStatus);
+    const publicDataSources = useAppSelector(SelectPublicDataSources);
+    const publicDataSourceStatus = useAppSelector(SelectPublicDataSourcesStatus);
     const [configErrors, setConfigErrors] = React.useState<string[]>([]);
     const implementation: IDataSource<any, any> | null = React.useMemo(() =>
+    const implementation: IDataSource<any, any, any> | null = React.useMemo(() =>
         AllSources.find(t => t.Name == props.DataSource.Type), [props.DataSource.Type]);
 
     const settings = React.useMemo(() => {
@@ -53,15 +58,21 @@ const DataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSou
     }, [implementation, props.DataSource.Settings]);
 
     React.useEffect(() => {
-        if (dsStatus === 'unitiated' || dsStatus === 'changed') dispatch(FetchDataSources());
-    }, [dsStatus]);
+        if (dataSourceStatus === 'unitiated' || dataSourceStatus === 'changed')
+            dispatch(FetchDataSources());
+    }, [dataSourceStatus]);
+
+    React.useEffect(() => {
+        if (publicDataSourceStatus === 'unitiated' || publicDataSourceStatus === 'changed')
+            dispatch(FetchPublicDataSources());
+    }, [publicDataSourceStatus]);
 
     React.useEffect(() => {
         const errors: string[] = [];
         if (!valid('Name')) errors.push("Name between 0 and 200 characters is required.");
         else if (dataSources.filter(ds => ds.ID !== props.DataSource.ID).map(ds => ds.Name.toLowerCase()).includes(props.DataSource.Name.toLowerCase()))
             errors.push("A datasource with this name already exists.")
-        else if (dataSources.filter(ds => ds.ID !== props.DataSource.ID).concat(publicDataSources).map(ds => ds.Name.toLowerCase()).includes(props.DataSource.Name.toLowerCase()))
+        else if (dataSources.filter(ds => ds.ID !== props.DataSource.ID).concat(publicDataSources.filter(ds => ds.User !== userName)).map(ds => ds.Name.toLowerCase()).includes(props.DataSource.Name.toLowerCase()))
             errors.push("A shared datasource with this name was already created by another user.");
 
         props.SetErrors(errors.concat(configErrors));
