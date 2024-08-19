@@ -72,6 +72,9 @@ namespace TrenDAP.Controllers
             PrimaryKeyField = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<PrimaryKeyAttribute>().Any())?.Name ?? "ID";
             ParentKey = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "";
             CustomView = typeof(T).GetCustomAttribute<CustomViewAttribute>()?.CustomView ?? "";
+            RootQueryRestrictionAttribute rqra = typeof(T).GetCustomAttribute<RootQueryRestrictionAttribute>();
+            if (rqra != null)
+                RootQueryRestriction = new RecordRestriction(rqra.FilterExpression, rqra.Parameters.ToArray());
         }
 
         #endregion
@@ -90,6 +93,7 @@ namespace TrenDAP.Controllers
         protected virtual string DeleteRoles { get; } = "Administrator";
         protected virtual string CustomView { get; } = "";
         protected virtual string GetOrderByExpression { get; } = null;
+        protected RecordRestriction RootQueryRestriction { get; } = null;
         #endregion
 
         #region [ Http Methods ]
@@ -209,6 +213,13 @@ namespace TrenDAP.Controllers
                     return new TableOperations<T>(connection).QueryRecords(null, restriction);
 
                 string flt = filterExpression;
+                object[] param = parameters;
+
+                if (RootQueryRestriction != null)
+                {
+                    flt = $"{RootQueryRestriction.FilterExpression} {(string.IsNullOrEmpty(filterExpression) ? "" : $"AND {filterExpression}")}";
+                    param = RootQueryRestriction.Parameters.Concat(parameters).ToArray();
+                }
 
                 string orderString = null;
                 if (!string.IsNullOrEmpty(orderBy))
@@ -217,11 +228,11 @@ namespace TrenDAP.Controllers
                 string sql = $@"
                     SELECT * FROM 
                     ({CustomView}) FullTbl 
-                    {(string.IsNullOrEmpty(filterExpression) ? "" : $"WHERE { flt}")}
+                    {(string.IsNullOrEmpty(flt) ? "" : $"WHERE {flt}")}
                     {(string.IsNullOrEmpty(orderBy) ? "" : " ORDER BY " + orderString)}";
 
 
-                DataTable dataTbl = connection.RetrieveData(sql, parameters);
+                DataTable dataTbl = connection.RetrieveData(sql, param);
 
                 List<T> result = new List<T>();
                 TableOperations<T> tblOperations = new TableOperations<T>(connection);
@@ -242,6 +253,12 @@ namespace TrenDAP.Controllers
 
                 string whereClause = filterExpression;
                 object[] param = parameters;
+
+                if (RootQueryRestriction != null)
+                {
+                    whereClause = RootQueryRestriction.FilterExpression + " AND " + filterExpression;
+                    param = RootQueryRestriction.Parameters.Concat(parameters).ToArray();
+                }
 
                 whereClause = " WHERE " + whereClause;
                 string sql = "SELECT * FROM (" + CustomView + ") FullTbl";
