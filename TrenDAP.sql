@@ -101,11 +101,9 @@ CREATE TABLE EventSource
     Name VARCHAR(200) NULL,
     [User] VARCHAR(MAX) NOT NULL,
     Type VARCHAR(50) NOT NULL,
-    URL VARCHAR(MAX) NULL,
     [Public] bit NULL DEFAULT 0,
-    RegistrationKey VARCHAR(50) NOT NULL,
-    APIToken VARCHAR(50) NOT NULL,
-    SettingsString VARCHAR(MAX) NOT NULL DEFAULT '{}'
+    SettingsString VARCHAR(MAX) NOT NULL DEFAULT '{}',
+    PrivateString VARCHAR(MAX) NOT NULL DEFAULT '{}'
 )
 GO
 

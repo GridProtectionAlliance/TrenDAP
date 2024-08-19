@@ -22,19 +22,11 @@
 //******************************************************************************************************
 
 using Gemstone.Data.Model;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Text;
 using TrenDAP.Controllers;
-using System.Threading;
-using Gemstone.Data;
 using GSF.Data.Model;
 using TrenDAP.Attributes;
-using System.Net.Http;
-using HIDS;
-using System.Collections.Generic;
 
 namespace TrenDAP.Model
 {
