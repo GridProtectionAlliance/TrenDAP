@@ -31,6 +31,10 @@ export const FetchEventSources = createAsyncThunk('EventSources/FetchEventSource
     return await GetEventSources();
 });
 
+export const FetchPublicEventSources = createAsyncThunk('EventSources/FetchPublicEventSources', async (_, { dispatch }) => {
+    return await GetPublicEventSources();
+});
+
 export const AddEventSource = createAsyncThunk('EventSources/AddEventSource', async (EventSource: EventSourceTypes.IEventSourceView) => {
     return await PostEventSource(EventSource);
 });
@@ -52,8 +56,10 @@ export const EventSourcesSlice = createSlice({
         Data: [],
         Error: null,
         SortField: 'Name',
-        Ascending: true
-    } as Redux.State<EventSourceTypes.IEventSourceView>,
+        Ascending: true,
+        PublicStatus: 'unitiated',
+        PublicData: []
+    } as Redux.PublicPrivateState<EventSourceTypes.IEventSourceView>,
     reducers: {
         Sort: (state, action) => {
             if(state.SortField === action.payload.SortField)
@@ -66,6 +72,20 @@ export const EventSourcesSlice = createSlice({
         }
     },
     extraReducers: (builder) => {
+
+        builder.addCase(FetchPublicEventSources.fulfilled, (state, action) => {
+            state.PublicStatus = 'idle';
+            state.Error = null;
+            state.PublicData = action.payload;
+
+        });
+        builder.addCase(FetchPublicEventSources.pending, (state, action) => {
+            state.PublicStatus = 'loading';
+        });
+        builder.addCase(FetchPublicEventSources.rejected, (state, action) => {
+            state.PublicStatus = 'error';
+            state.Error = action.error.message;
+        });
 
         builder.addCase(FetchEventSources.fulfilled, (state, action) => {
             state.Status = 'idle';
@@ -129,6 +149,8 @@ export default EventSourcesSlice.reducer;
 // #endregion
 
 // #region [ Selectors ]
+export const SelectPublicEventSources = (state: Redux.StoreState) => state.EventSources.PublicData;
+export const SelectPublicEventSourcesStatus = (state: Redux.StoreState) => state.EventSources.PublicStatus;
 export const SelectEventSources = (state: Redux.StoreState) => state.EventSources.Data;
 export const SelectEventSourcesStatus = (state: Redux.StoreState) => state.EventSources.Status;
 export const SelectEventSourcesSortField = (state: Redux.StoreState) => state.EventSources.SortField;
@@ -142,6 +164,17 @@ function GetEventSources(): JQuery.jqXHR<EventSourceTypes.IEventSourceView[]> {
     return $.ajax({
         type: "GET",
         url: `${homePath}api/EventSource`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        cache: true,
+        async: true
+    });
+}
+
+function GetPublicEventSources(): JQuery.jqXHR<EventSourceTypes.IEventSourceView[]> {
+    return $.ajax({
+        type: "GET",
+        url: `${homePath}api/EventSourcePublic`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
         cache: true,

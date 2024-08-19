@@ -54,6 +54,15 @@ export namespace Redux {
         Ascending: boolean,
         Record?: T
     }
+    interface PublicPrivateState<T> {
+        Status: TrenDAP.Status,
+        Data: T[],
+        SortField: keyof T,
+        Ascending: boolean,
+        PublicStatus: TrenDAP.Status,
+        PublicData: T[],
+        Error: null | string
+    }
 
     interface OpenHistorianState {
         Instances: OpenHistorian.Types.iHistorian[],

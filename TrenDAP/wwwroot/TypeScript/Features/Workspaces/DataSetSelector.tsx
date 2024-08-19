@@ -27,7 +27,7 @@ import { TrenDAP, Redux, DataSourceTypes, DataSetTypes } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, Sort, SelectDataSetsSortField, SelectDataSetsAscending, FetchDataSets, SelectDataSetsStatus } from '../DataSets/DataSetsSlice';
 import { SelectDataSources, FetchDataSources, SelectDataSourcesStatus } from '../DataSources/DataSourcesSlice';
-import { SelectEventSources, FetchEventSources, SelectEventSourcesStatus } from '../EventSources/Slices/EventSourcesSlice';
+import { SelectEventSources, FetchEventSources, SelectEventSourcesStatus, SelectPublicEventSources, SelectPublicEventSourcesStatus, FetchPublicEventSources } from '../EventSources/Slices/EventSourcesSlice';
 
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { Modal, ToolTip } from '@gpa-gemstone/react-interactive';
@@ -114,6 +114,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     const eventSourceViews = useAppSelector(SelectEventSources);
     const eventSourceStatus = useAppSelector(SelectEventSourcesStatus);
+    const publicEventSourceViews = useAppSelector(SelectPublicEventSources);
+    const publicEventSourceStatus = useAppSelector(SelectPublicEventSourcesStatus);
 
     const [selectedDataSet, setSelectedDataSet] = React.useState<TrenDAP.iDataSet | null>(null);
     const [channelHover, setChannelHover] = React.useState<IChannelHover>({ Hover: 'None', Index: -1 });
@@ -195,6 +197,11 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         if (eventSourceStatus === 'unitiated' || eventSourceStatus === 'changed')
             dispatch(FetchEventSources());
     }, [eventSourceStatus]);
+
+    React.useEffect(() => {
+        if (publicEventSourceStatus === 'unitiated' || publicEventSourceStatus === 'changed')
+            dispatch(FetchPublicEventSources());
+    }, [publicEventSourceStatus]);
 
     React.useEffect(() => {
         if (dataSetStatus === 'unitiated' || dataSetStatus === 'changed')
@@ -282,8 +289,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         }
 
         setEventSourceMetas(eventSources.map(ds => {
-            const eventSourceView = eventSourceViews.find(d => d.ID === ds.EventSourceID);
-            const implementation: IEventSource<any, any> | undefined = EventDataSources.find(t => t.Name == eventSourceView?.Type);
+            let eventSourceView = eventSourceViews.find(d => d.ID === ds.EventSourceID);
+            if (eventSourceView == null) publicEventSourceViews.find(d => d.ID === ds.EventSourceID); 
             const implementation: IEventSource<any, any, any> | undefined = EventDataSources.find(t => t.Name == eventSourceView?.Type);
             if (implementation == null || eventSourceView == null)
                 return undefined;
@@ -386,8 +393,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         return db.ClearTables(['Channel', 'Event', 'Virtual']).then(() =>
             Promise.all(eventSources.map(conn => 
                 new Promise<{Events: TrenDAP.IEvent[], EventMeta: TrenDAP.IEventSourceMetaData}>((resolve, reject) => {
-                    const view = eventSourceViews.find(eventView => eventView.ID === conn.EventSourceID);
-                    const implementation: IEventSource<any, any> | undefined = EventDataSources.find(evtSrc => evtSrc.Name === view?.Type);
+                    let view = eventSourceViews.find(eventView => eventView.ID === conn.EventSourceID);
+                    if (view == null) publicEventSourceViews.find(d => d.ID === conn.EventSourceID); 
                     const implementation: IEventSource<any, any, any> | undefined = EventDataSources.find(evtSrc => evtSrc.Name === view?.Type);
                     const meta = eventSourceMetas.find(evtMeta => evtMeta.ID === conn.ID);
                     if (view == null || meta == null || implementation == null)
