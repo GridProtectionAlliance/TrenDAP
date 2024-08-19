@@ -30,7 +30,7 @@ import { ComputeTimeEnds } from '../../DataSets/HelperFunctions'
 interface ISetting { Title: string }
 interface IDatasetSetting { Number: number }
 
-const RandomEvents: IEventSource<null, ISetting, IDatasetSetting> = {
+const RandomEvents: IEventSource<{}, ISetting, IDatasetSetting> = {
     DataSetUI: (props) => <Input<IDatasetSetting> Record={props.Settings} Field="Number" Label="Number of Randomly Generated Events" Setter={props.SetSettings} Valid={() => true} />,
     ConfigUI: (props) => <Input<ISetting> Record={props.Settings} Field="Title" Setter={props.SetSettings} Valid={() => true} />,
     Load: (eventSource: EventSourceTypes.IEventSourceView, dataSet: TrenDAP.iDataSet, dataConn: EventSourceTypes.IEventSourceDataSet) => {
@@ -53,7 +53,7 @@ const RandomEvents: IEventSource<null, ISetting, IDatasetSetting> = {
     TestAuth: () => Promise.resolve(true),
     DefaultSourceSettings: { Title: 'test' },
     DefaultDataSetSettings: { Number: 1 },
-    DefaultPrivateSourceSettings: null,
+    DefaultPrivateSourceSettings: {},
     Name: 'Random',
 }
 export default RandomEvents;

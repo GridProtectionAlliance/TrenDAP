@@ -48,9 +48,9 @@ interface IDatasetSetting {
     FilterOut: string[]
 }
 
-const SOE: IEventSource<IPrivateSourceSettings, null, IDatasetSetting> = {
+const SOE: IEventSource<IPrivateSourceSettings, {}, IDatasetSetting> = {
     Name: 'SOE DB',
-    DefaultSourceSettings: null,
+    DefaultSourceSettings: {},
     DefaultPrivateSourceSettings: {
         ConnectionString: "",
         DataProviderString: ""
@@ -66,7 +66,7 @@ const SOE: IEventSource<IPrivateSourceSettings, null, IDatasetSetting> = {
             </>
         );
     },
-    DataSetUI: (props: EventSourceTypes.IEventSourceDataSetProps<null, IDatasetSetting>) => {
+    DataSetUI: (props: EventSourceTypes.IEventSourceDataSetProps<{}, IDatasetSetting>) => {
 
         const setFilter = (val: IValue) => {
             const u = _.cloneDeep(props.Settings.FilterOut);
