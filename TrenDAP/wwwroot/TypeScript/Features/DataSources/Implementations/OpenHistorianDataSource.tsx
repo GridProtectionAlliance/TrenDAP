@@ -61,7 +61,7 @@ const OpenHistorianDataSource: IDataSource<IPrivateSettings, {}, TrenDAP.iOpenHi
         return <>
             <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='URL' Label='XDA URL' Valid={valid} />
             <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='APIToken' Label='API Token' Valid={valid} />
-            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='RegistrationKey' Label='Regisrtation Key' Valid={valid} />
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='RegistrationKey' Label='Registration Key' Valid={valid} />
         </>;
     },
     ConfigUI: () => { return <></>; },
