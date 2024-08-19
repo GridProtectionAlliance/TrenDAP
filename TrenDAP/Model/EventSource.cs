@@ -92,10 +92,11 @@ namespace TrenDAP.Model
 
         public override ActionResult Post([FromBody] JObject record)
         {
-            record["User"] = Request.HttpContext.User.Identity.Name;
-            record["PrivateString"] = record["PrivateSettings"].ToString();
-            record["SettingsString"] = record["Settings"].ToString();
-            return base.Post(record);
+            EventSource newRecord = record.ToObject<EventSource>();
+            newRecord.User = Request.HttpContext.User.Identity.Name;
+            newRecord.PrivateString = record["PrivateSettings"].ToString();
+            newRecord.SettingsString = record["Settings"].ToString();
+            return Post(newRecord);
         }
         public override ActionResult Patch([FromBody] JObject record)
         {
@@ -105,10 +106,11 @@ namespace TrenDAP.Model
                 if (result == null) return BadRequest("Event source does not exist");
                 else if (!result.User.Equals(Request.HttpContext.User.Identity.Name, System.StringComparison.OrdinalIgnoreCase)) return Unauthorized("Event source does not belong to user");
             }
-            record["User"] = Request.HttpContext.User.Identity.Name;
-            record["PrivateString"] = record["PrivateSettings"].ToString();
-            record["SettingsString"] = record["Settings"].ToString();
-            return base.Patch(record);
+            EventSource newRecord = record.ToObject<EventSource>();
+            newRecord.User = Request.HttpContext.User.Identity.Name;
+            newRecord.PrivateString = record["PrivateSettings"].ToString();
+            newRecord.SettingsString = record["Settings"].ToString();
+            return Patch(newRecord);
         }
         public override ActionResult Delete([FromBody] EventSource record)
         {

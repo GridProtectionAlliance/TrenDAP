@@ -276,6 +276,12 @@ namespace TrenDAP.Controllers
         [HttpPost]
         public virtual ActionResult Post([FromBody] JObject record)
         {
+            T newRecord = record.ToObject<T>();
+            return Post(newRecord);
+        }
+
+        protected virtual ActionResult Post(T record)
+        {
             try
             {
                 if (CustomView != String.Empty) return BadRequest();
@@ -284,16 +290,15 @@ namespace TrenDAP.Controllers
                     using (AdoDataConnection connection = new AdoDataConnection(Configuration[SettingCategory + ":ConnectionString"], Configuration[SettingCategory + ":DataProviderString"]))
                     {
 
-                        T newRecord = record.ToObject<T>();
-                        int result = new TableOperations<T>(connection).AddNewRecord(newRecord);
+                        int result = new TableOperations<T>(connection).AddNewRecord(record);
                         if (HasUniqueKey)
                         {
                             PropertyInfo prop = typeof(T).GetProperty(UniqueKeyField);
                             if (prop != null)
                             {
-                                object uniqueKey = prop.GetValue(newRecord);
-                                newRecord = new TableOperations<T>(connection).QueryRecordWhere(UniqueKeyField + " = {0}", uniqueKey);
-                                return Ok(newRecord);
+                                object uniqueKey = prop.GetValue(record);
+                                record = new TableOperations<T>(connection).QueryRecordWhere(UniqueKeyField + " = {0}", uniqueKey);
+                                return Ok(record);
                             }
 
                         }
@@ -315,6 +320,12 @@ namespace TrenDAP.Controllers
         [HttpPatch]
         public virtual ActionResult Patch([FromBody] JObject record)
         {
+            T newRecord = record.ToObject<T>();
+            return Patch(newRecord);
+        }
+
+        protected virtual ActionResult Patch(T record)
+        {
             try
             {
                 if (CustomView != String.Empty) return BadRequest();
@@ -323,9 +334,8 @@ namespace TrenDAP.Controllers
 
                     using (AdoDataConnection connection = new AdoDataConnection(Configuration[SettingCategory + ":ConnectionString"], Configuration[SettingCategory + ":DataProviderString"]))
                     {
-                        T newRecord = record.ToObject<T>();
 
-                        int result = new TableOperations<T>(connection).AddNewOrUpdateRecord(newRecord);
+                        int result = new TableOperations<T>(connection).AddNewOrUpdateRecord(record);
                         return Ok(result);
                     }
                 }
