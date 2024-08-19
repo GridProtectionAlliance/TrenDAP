@@ -35,8 +35,8 @@ interface IProps {
 
 const EventSource: React.FunctionComponent<IProps> = (props: IProps) => {
     const [configErrors, setConfigErrors] = React.useState<string[]>([]);
-    const implementation: IEventSource<any, any> | null = React.useMemo(() => EventDataSources.find(t => t.Name == props.EventSource.Type), [props.EventSource.Type])
-
+    const [privateErrors, setPrivateErrors] = React.useState<string[]>([]);
+    const implementation: IEventSource<any, any, any> | null = React.useMemo(() => EventDataSources.find(t => t.Name == props.EventSource.Type), [props.EventSource.Type])
     const settings = React.useMemo(() => {
         if (implementation == null)
             return {};
@@ -50,11 +50,24 @@ const EventSource: React.FunctionComponent<IProps> = (props: IProps) => {
         return s;
     }, [implementation, props.EventSource.Settings]);
 
+    const privateSettings = React.useMemo(() => {
+        if (implementation == null)
+            return {};
+        const s = _.cloneDeep(implementation.DefaultPrivateSourceSettings ?? {});
+        const custom = props.EventSource.PrivateSettings;
+
+        for (const [k] of Object.entries(implementation?.DefaultPrivateSourceSettings ?? {})) {
+            if (custom.hasOwnProperty(k))
+                s[k] = _.cloneDeep(custom[k]);
+        }
+        return s;
+    }, [implementation, props.EventSource.PrivateSettings]);
+
     React.useEffect(() => {
         const errors: string[] = [];
         if (!valid('Name')) errors.push("Name between 0 and 200 characters is required.");
-        props.SetErrors([...errors, ...configErrors]);
-    }, [props.EventSource.Name, configErrors])
+        props.SetErrors([...errors, ...configErrors, ...privateErrors]);
+    }, [props.EventSource.Name, configErrors, privateErrors])
 
     function valid(field: keyof (EventSourceTypes.IEventSourceView)): boolean {
         if (field == 'Name')
@@ -67,11 +80,13 @@ const EventSource: React.FunctionComponent<IProps> = (props: IProps) => {
             <Input<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="Name" Setter={props.SetEventSource} Valid={valid} />
             <Select<EventSourceTypes.IEventSourceView> Record={props.EventSource} Label="Type" Field="Type" Setter={props.SetEventSource}
                 Options={EventDataSources.map((type) => ({ Value: type.Name, Label: type.Name }))} />
-            <Input<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="URL" Setter={props.SetEventSource} Valid={() => true} />
-            <Input<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="RegistrationKey" Label={'API Key'} Setter={props.SetEventSource} Valid={() => true} />
-            <Input<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="APIToken" Label={'API Token'} Setter={props.SetEventSource} Valid={() => true} />
             <CheckBox<EventSourceTypes.IEventSourceView> Record={props.EventSource} Field="Public" Label='Shared' Setter={props.SetEventSource} />
-            {implementation != null ?
+            {implementation?.PrivateConfigUI != null ?
+                <>
+                    <hr />
+                    <implementation.PrivateConfigUI SetErrors={setPrivateErrors} Settings={privateSettings} SetSettings={(s) => props.SetEventSource({ ...props.EventSource, PrivateSettings: s })} />
+                </> : <></>}
+            {implementation?.ConfigUI != null ?
                 <>
                     <hr />
                     <implementation.ConfigUI SetErrors={setConfigErrors} Settings={settings} SetSettings={(s) => props.SetEventSource({ ...props.EventSource, Settings: s })} />

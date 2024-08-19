@@ -284,6 +284,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         setEventSourceMetas(eventSources.map(ds => {
             const eventSourceView = eventSourceViews.find(d => d.ID === ds.EventSourceID);
             const implementation: IEventSource<any, any> | undefined = EventDataSources.find(t => t.Name == eventSourceView?.Type);
+            const implementation: IEventSource<any, any, any> | undefined = EventDataSources.find(t => t.Name == eventSourceView?.Type);
             if (implementation == null || eventSourceView == null)
                 return undefined;
             const logoString = implementation?.GetLogo != null ? implementation.GetLogo(eventSourceView) : undefined;
@@ -387,6 +388,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 new Promise<{Events: TrenDAP.IEvent[], EventMeta: TrenDAP.IEventSourceMetaData}>((resolve, reject) => {
                     const view = eventSourceViews.find(eventView => eventView.ID === conn.EventSourceID);
                     const implementation: IEventSource<any, any> | undefined = EventDataSources.find(evtSrc => evtSrc.Name === view?.Type);
+                    const implementation: IEventSource<any, any, any> | undefined = EventDataSources.find(evtSrc => evtSrc.Name === view?.Type);
                     const meta = eventSourceMetas.find(evtMeta => evtMeta.ID === conn.ID);
                     if (view == null || meta == null || implementation == null)
                         resolve({Events: [], EventMeta: meta as TrenDAP.IEventSourceMetaData});

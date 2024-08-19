@@ -39,7 +39,7 @@ export namespace Redux {
     interface StoreState {
         DataSets: State<TrenDAP.iDataSet>,
         DataSources: State<DataSourceTypes.IDataSourceView>,
-        EventSources: State<EventSourceTypes.IEventSourceView>,
+        EventSources: PublicPrivateState<EventSourceTypes.IEventSourceView>,
         WorkSpaces: State<TrenDAP.iWorkSpace>,
         OpenHistorian: { ID: number, State: OpenHistorianState }[],
         Sapphire: { [instance: number]: { [table: string]: Redux.SapphireTableSlice } },
