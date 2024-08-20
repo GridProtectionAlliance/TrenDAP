@@ -444,7 +444,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         switch (step) {
             case dataSetStep: return selectedDataSet == null;
             case parentStep: return channelErrors?.length > 0;
-            case eventStep: return eventSourceMetas.length !== 0 && eventErrors?.length > 0;
+            case eventStep: return false;
         }
     }, [selectedDataSet, channelErrors, eventErrors, step]);
 
@@ -744,10 +744,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                             <ReactTable.Column<IEventMatch>
                                                 Key={'Name'}
                                                 Field={'ID'}
-                                                Content={(row) => `Event Source ${row.item.Key + 1}` }
-                                            >
-                                                {'\u200B'}
-                                            </ReactTable.Column>
+                                                Content={(row) => `Event Source ${row.index + 1}` }
+                                            >Event Sources</ReactTable.Column>
                                             <ReactTable.Column<IEventMatch>
                                                 Key={'Key'}
                                                 Field={'Key'}
