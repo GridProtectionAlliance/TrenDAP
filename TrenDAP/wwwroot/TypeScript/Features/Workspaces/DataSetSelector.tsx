@@ -465,19 +465,34 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         }
     }, [selectedDataSet, channelErrors, eventErrors, step]);
 
+    // Note: we swap btns on the model due to needing the confirm button on the right
     return (
         <>
             <Modal
-                ConfirmBtnClass={`btn-${step === lastStep ? 'primary' : 'success'} mr-auto pull-left`}
-                CancelBtnClass={"btn-danger pull-right"}
-                Show={props.IsModalOpen}
                 ShowX={true}
-                ConfirmText={step === lastStep ? 'Apply' : 'Next'}
-                CancelText={'Previous'}
-                ShowCancel={step !== firstStep}
+                Show={props.IsModalOpen}
+                CancelBtnClass={`btn-${step === lastStep ? 'primary' : 'success'} pull-right`}
+                ConfirmBtnClass={"btn-danger mr-auto pull-left"}
+                CancelText={step === lastStep ? 'Apply' : 'Next'}
+                ConfirmText={'Previous'}
+                ShowConfirm={step !== firstStep}
+                ShowCancel={true}
                 Title={'Select a Data Set'}
                 CallBack={(conf, isButton) => {
                     if (conf) {
+                        if (step <= firstStep) {
+                            setStep(firstStep);
+                            props.SetIsModalOpen(false);
+                        } else
+                            setStep(s => {
+                                let newStep = s;
+                                do {
+                                    newStep--;
+                                } while (isStepSkipped(newStep));
+                                if (newStep <= firstStep) return firstStep;
+                                return newStep;
+                            });
+                    } else if(isButton) {
                         if (step >= lastStep) {
                             props.GenerateMapping(
                                 channelMatches.map(match => [match.Key, match.ChannelID] as [TrenDAP.IChannelKey, string]),
@@ -510,30 +525,16 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 }
                                 return newStep;
                             });
-                    } else if (isButton) {
-                        if (step <= firstStep) {
-                            setStep(firstStep);
-                            props.SetIsModalOpen(false);
-                        } else
-                            setStep(s => {
-                                let newStep = s;
-                                do {
-                                    newStep--;
-                                } while (isStepSkipped(newStep));
-                                if (newStep <= firstStep) return firstStep;
-                                return newStep;
-                            });
-                    }
-                    else {
+                    } else {
                         setStep(firstStep);
                         props.SetIsModalOpen(false);
                     }
 
                 }}
                 Size="lg"
-                DisableConfirm={disallowStep()}
-                ConfirmShowToolTip={getToolTipContent().length > 0}
-                ConfirmToolTipContent={getToolTipContent().map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>)}
+                DisableCancel={disallowStep()}
+                CancelShowToolTip={getToolTipContent().length > 0}
+                CancelToolTipContent={getToolTipContent().map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>)}
             >
                 <div className="container-fluid d-flex flex-column p-0" style={{ height: 'calc(-210px + 100vh - 2rem)' }}>
                     <div className="row h-100">
@@ -541,7 +542,6 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                             step === dataSetStep ?
                                 <div className="col-12 h-100">
                                     <div className="d-flex flex-column h-100">
-                                        Data Set
                                         <ReactTable.Table<TrenDAP.iDataSet>
                                             TableClass="table table-hover"
                                             TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
@@ -584,7 +584,6 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 {step === parentStep ?
                                     <div className="col-12 h-100">
                                         <div className="d-flex flex-column h-50">
-                                            Meters or Assets
                                             <>
                                                 <ReactTable.Table<IParentMatch>
                                                     TableClass={"table table-hover"}
@@ -603,9 +602,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                     <ReactTable.Column<IParentMatch>
                                                         Key={'Key'}
                                                         Field={'Name'}
-                                                    >
-                                                        {'\u200B'}
-                                                    </ReactTable.Column>
+                                                    >Meters or Assets</ReactTable.Column>
                                                     <ReactTable.Column<IParentMatch>
                                                         Key={'ParentID'}
                                                         Field={'ParentID'}
@@ -642,7 +639,6 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                         <div className="d-flex flex-column h-50">
                                             {parentChannelMatches.length > 0 ?
                                                 <>
-                                                    Channels
                                                     <ReactTable.Table<IndexedChannelMatch>
                                                         TableClass={"table table-hover"}
                                                         TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
@@ -661,9 +657,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                             Field={'Key'}
                                                             Content={({ item }) =>
                                                                 <p>{`${item.Key.Type ?? ''} ${item.Key.Phase ?? ''}`}</p>
-                                                            }>
-                                                            {'\u200B'}
-                                                        </ReactTable.Column>
+                                                            }>Channels</ReactTable.Column>
                                                         <ReactTable.Column<IndexedChannelMatch>
                                                             Key={'Channel'}
                                                             Field={'ChannelID'}
@@ -726,7 +720,6 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                             step === eventStep ?
                                 <div className="col-12 h-100">
                                     <div className="d-flex flex-column h-100">
-                                        Event Sources
                                         <ReactTable.Table<IEventMatch>
                                             TableClass={"table table-hover"}
                                             TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
