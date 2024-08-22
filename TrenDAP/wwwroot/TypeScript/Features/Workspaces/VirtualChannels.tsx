@@ -274,7 +274,8 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                                 </div>
                                                 <div className="col">
                                                     <Input<IVirtualChannelEditable> Record={selectedVirtualChannel} Field='Threshold' Label='Threshold (ms)' 
-                                                        Help='Time threshold for matching real datapoints together for calculation' Valid={() => true} Setter={handleChange} />
+                                                        Help='The number entered determines the maximum time difference (ms) to match datapoints when two or more channels have incompatible data intervals or timestamps.'
+                                                        Valid={() => true} Setter={handleChange} />
                                                 </div>
                                             </div>
                                             <TextArea<IVirtualChannelEditable> Rows={8} Record={selectedVirtualChannel} 
