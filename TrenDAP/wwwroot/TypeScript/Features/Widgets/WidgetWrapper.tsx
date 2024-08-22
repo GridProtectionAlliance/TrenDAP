@@ -85,6 +85,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
     const [tab, setTab] = React.useState<string>('channel');
 
     const [settingsErrors, setSettingsErrors] = React.useState<string[]>([]);
+    const [channelErrors, setChannelErrors] = React.useState<string[]>([]);
 
     const [allSelectableChannels, setAllSelectableChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([]);
     const [localChannels, setLocalChannels] = React.useState<WidgetTypes.ISelectedChannels<any>[]>([]);
@@ -227,10 +228,10 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
     }, [props.Widget.ShowHeader, editMode]);
 
     const allErrors: string[] = React.useMemo(() => {
-        const e = [ ...settingsErrors ];
+        const e = [ ...settingsErrors, ...channelErrors ];
         if (!isPercent(localCommonSettings.Width)) e.push("Enter a valid width");
         return e;
-    }, [settingsErrors, localCommonSettings]);
+    }, [settingsErrors, localCommonSettings, channelErrors]);
 
     const addOrChangeEventSource = React.useCallback((newSource: WidgetTypes.ISelectedEvents<any>) => {
         setLocalEventSources(currentLocal => {
@@ -431,6 +432,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                                             SelectedChannels={localChannels}
                                             SetSettings={setLocalSetting}
                                             Settings={localSetting}
+                                            SetErrors={setChannelErrors}
                                         /> : <ChannelSelector
                                             AddChannel={handleAddChannel}
                                             SetChannelSettings={(channelKey, settings) => {
@@ -452,6 +454,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                                             SelectedChannels={localChannels}
                                             SetSettings={setLocalSetting}
                                             Settings={localSetting}
+                                            SetErrors={setChannelErrors}
                                         />
                                 : <></>}
                                 {tab === 'evtSrc' ?
