@@ -68,7 +68,7 @@ interface IxdaEvent {
 }
 
 const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
-    Name: 'OpenXDA',
+    Name: 'openXDA',
     DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/" },
     DefaultDataSetSettings: {
         By: 'Meter',
@@ -220,13 +220,13 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
             <div className="row" style={{ flex: 1, overflow: 'hidden' }}>
                 <div className="col d-none d-xl-flex" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                     <Select<IDatasetSetting> Record={props.Settings} Field="By" Options={[{ Value: 'Meter', Label: 'Meter' }, { Value: 'Asset', Label: 'Asset' }]} Setter={props.SetSettings} />
-                    <ArrayMultiSelect<IDatasetSetting> GroupStyle={{ overflowY: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }} Style={{ overflowY: 'scroll', flex: 1 }}
+                    <ArrayMultiSelect<IDatasetSetting> GroupStyle={{ overflowY: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }} Style={{ overflowY: 'auto', flex: 1 }}
                         Record={props.Settings} Field="IDs" Label={props.Settings.By + "(s)"} Setter={props.SetSettings} 
                         Options={(props.Settings.By == 'Meter' ? meters?.map(m => ({ Value: m.ID.toString(), Label: m.Name })) : assets?.map(m => ({ Value: m.ID.toString(), Label: m.AssetName }))) ?? []} />
                 </div>
-                <div className="col">
-                    <ArrayCheckBoxes<IDatasetSetting> Record={props.Settings} Checkboxes={types?.map(m => ({ ID: m.ID.toString(), Label: m.Name })) ?? []} Field="Types" Setter={props.SetSettings} />
-                    <ArrayCheckBoxes<IDatasetSetting> Record={props.Settings} Checkboxes={phases?.map(m => ({ ID: m.ID.toString(), Label: m.Name })) ?? []} Field="Phases" Setter={setPhases} />
+                <div className="col" style={{ height: '100%', overflow: 'auto' }}>
+                    <ArrayCheckBoxes<IDatasetSetting> Record={props.Settings} Checkboxes={types?.map(m => ({ ID: m.ID.toString(), Label: m.Description })) ?? []} Field="Types" Setter={props.SetSettings} />
+                    <ArrayCheckBoxes<IDatasetSetting> Record={props.Settings} Checkboxes={phases?.map(m => ({ ID: m.ID.toString(), Label: m.Description })) ?? []} Field="Phases" Setter={setPhases} />
                     <div className="row">
                         <div className={"col-6"}>
                             <form>

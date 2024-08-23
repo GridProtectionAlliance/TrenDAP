@@ -46,22 +46,22 @@ const DataSources: React.FunctionComponent = () => {
                     <div className="card-header">
                         <div className="row">
                             <div className="d-flex col-6 justify-content-start">
-                                <h4>My Datasources</h4>
+                                <h4>My Data Sources</h4>
                             </div>
                             <div className="d-flex col-6 justify-content-end">
                                 <AddNewDataSource/>
                             </div>
                         </div>
                     </div>
-                    <div className="card-body">
+                    <div className="card-body p-0">
                         <DataSourceTable OwnedByUser={true}/>
                     </div>
                 </div>
             </div>
             <div className="col-4" style={{ padding: '0 0 0 0' }}>
                 <div className="card" style={{ width: '100%', height: '100%' }}>
-                    <div className="card-header"><h4>Shared Datasources</h4></div>
-                    <div className="card-body">
+                    <div className="card-header"><h4>Shared Data Sources</h4></div>
+                    <div className="card-body p-0">
                         <DataSourceTable OwnedByUser={false} />
                     </div>
                 </div>
@@ -104,7 +104,7 @@ const DataSourceTable = React.memo((props: ITableProps) => {
                     tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
                 }}
                 TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                 RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                 // Small note: ReactTable gives the key as sort, but here we wanna use field. This is not an issue if they match.
                 SortKey={sortField}
@@ -136,7 +136,7 @@ const DataSourceTable = React.memo((props: ITableProps) => {
                         : <></>
                 }
             </ReactTable.Table>
-            <Warning Title={'Delete ' + deleteItem?.Name} Show={deleteItem != null} Message={"This will remove the DataSource and can not be undone."}
+            <Warning Title={'Delete ' + deleteItem?.Name} Show={deleteItem != null} Message={"This will remove the Data Source and can not be undone."}
                 CallBack={(c) => {
                     if (c)
                         dispatch(RemoveDataSource(deleteItem));

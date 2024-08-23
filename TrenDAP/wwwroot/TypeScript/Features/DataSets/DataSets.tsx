@@ -64,7 +64,7 @@ const DataSets: React.FC = () => {
                                 <h4>My Data Sets</h4>
                             </div>
                             <div className="col">
-                                <button className="btn btn-primary pull-right"
+                                <button className="btn btn-info pull-right"
                                     onClick={() => {
                                         dispatch(New());
                                         navigate(`${homePath}DataSets/EditDataSet/-1`);
@@ -73,7 +73,7 @@ const DataSets: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="card-body" style={{ overflow: "hidden" }}>
+                    <div className="card-body p-0" style={{ overflow: "hidden" }}>
                         <ReactTable.Table<TrenDAP.iDataSet>
                             TableClass={"table table-hover"}
                             TableStyle={{
@@ -81,7 +81,7 @@ const DataSets: React.FC = () => {
                                 tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
                             }}
                             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             Data={DataSets}
@@ -117,26 +117,21 @@ const DataSets: React.FC = () => {
                                 AllowSort={false}
                                 Content={(d) =>
                                     <span>
-                                        {d.item.Data?.Status === 'idle' ?
-                                            <button className="btn" title='View/Edit DataSet Data.' onClick={() => navigate(`${homePath}DataSets/ViewDataSet/${d.item.ID}`)}>
-                                                {Wrench}
-                                            </button>
-                                            : null}
                                         <button data-toggle="tooltip" data-tooltip="pencil-btn" data-placement="bottom" className="btn" onMouseEnter={() => setHover('Pencil')}
                                             onMouseLeave={() => setHover('None')} onClick={() => navigate(`${homePath}DataSets/EditDataSet/${d.item.ID}`)}>
                                             {Pencil}
                                         </button>
-                                        <ToolTip Show={hover === 'Pencil'} Position={'top'} Target={'pencil-btn'}><p>Edit DataSet Parameters</p></ToolTip>
+                                        <ToolTip Show={hover === 'Pencil'} Position={'top'} Target={'pencil-btn'}><p>Edit Data Set Parameters</p></ToolTip>
                                         <a className="btn" data-toggle="tooltip" data-tooltip="clone-btn" data-placement="bottom" onMouseEnter={() => setHover('Clone')}
                                             onClick={() => dispatch(CloneDataSet(d.item))} onMouseLeave={() => setHover('None')}>
                                             {DNA}
                                         </a>
-                                        <ToolTip Show={hover === 'Clone'} Position={'top'} Target={'clone-btn'}><p>Clone DataSet</p></ToolTip>
+                                        <ToolTip Show={hover === 'Clone'} Position={'top'} Target={'clone-btn'}><p>Clone Data Set</p></ToolTip>
                                         <a className="btn" onClick={() => setDeleteItem(d.item)} data-tooltip="delete-btn" data-toggle="tooltip" data-placement="bottom"
                                             onMouseEnter={() => setHover('Delete')} onMouseLeave={() => setHover('None')}>
                                             {TrashCan}
                                         </a>
-                                        <ToolTip Show={hover === 'Delete'} Position={'top'} Target={'delete-btn'}><p>Delete DataSet</p></ToolTip>
+                                        <ToolTip Show={hover === 'Delete'} Position={'top'} Target={'delete-btn'}><p>Delete Data Set</p></ToolTip>
                                     </span>
                                 }
                             >
@@ -153,7 +148,7 @@ const DataSets: React.FC = () => {
                             Shared Data Sets
                         </h4>
                     </div>
-                    <div className="card-body" style={{ overflow: "hidden" }}>
+                    <div className="card-body p-0" style={{ overflow: "hidden" }}>
                         <ReactTable.Table<TrenDAP.iDataSet>
                             TableClass={"table table-hover"}
                             TableStyle={{
@@ -161,7 +156,7 @@ const DataSets: React.FC = () => {
                                 tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
                             }}
                             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                             Data={publicDataSets}
                             Ascending={ascending}

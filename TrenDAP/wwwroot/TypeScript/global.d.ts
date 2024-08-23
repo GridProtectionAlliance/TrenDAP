@@ -86,8 +86,7 @@ export namespace OpenXDAExt {
 }
 
 export namespace DataSourceTypes {
-    // The following are how datasources are stored in DB
-    type DataSourceType = 'TrenDAPDB' | 'OpenHistorian' | 'None' | 'Sapphire';
+    type DataSourceType = 'TrenDAPDB' | 'openHistorian' | 'None' | 'Sapphire';
     interface IDataSourceView {
         ID: number,
         Name: string,

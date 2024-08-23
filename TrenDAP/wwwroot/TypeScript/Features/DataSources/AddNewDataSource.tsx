@@ -38,16 +38,17 @@ const AddNewDataSource: React.FunctionComponent = () => {
 
     return (
         <>
-            <button className="btn btn-primary" onClick={() => setShowModal(true)}>Add New</button>
+            <button className="btn btn-info" onClick={() => setShowModal(true)}>Add New</button>
             <Modal
-                ConfirmBtnClass={"btn btn-success mr-auto"}
+                ConfirmBtnClass={"btn btn-primary pull-right"}
                 DisableConfirm={errors.length > 0}
                 Show={showModal}
                 ShowX={true}
+                ShowCancel={false}
                 ConfirmText={'Save'}
                 ConfirmShowToolTip={errors.length > 0}
                 ConfirmToolTipContent={errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
-                Title={'Add New DataSource'}
+                Title={'Add New Data Source'}
                 CallBack={conf => {
                     if (conf)
                         dispatch(AddDataSource(dataSource));

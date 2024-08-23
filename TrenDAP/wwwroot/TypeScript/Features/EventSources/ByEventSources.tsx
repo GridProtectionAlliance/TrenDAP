@@ -51,7 +51,7 @@ const ByEventSources: React.FunctionComponent = () => {
                                 <h4>My Event Data Sources</h4>
                             </div>
                             <div className="d-flex col-6 justify-content-end">
-                                <button className="btn btn-primary" onClick={() => {
+                                <button className="btn btn-info" onClick={() => {
                                     setShowEdit(true);
                                     setEditEvt({
                                         ID: -1,
@@ -68,7 +68,7 @@ const ByEventSources: React.FunctionComponent = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="card-body" style={{ overflow: "hidden" }}>
+                    <div className="card-body p-0" style={{ overflow: "hidden" }}>
                         <EventSourceTable OwnedByUser={true} SetEventSource={setEditEvt} SetShowEdit={setShowEdit} SetShowDelete={setShowDelete} />
                     </div>
                 </div>
@@ -76,7 +76,7 @@ const ByEventSources: React.FunctionComponent = () => {
             <div className="col-4" style={{ padding: '0 0 0 0' }}>
                 <div className="card" style={{ width: '100%', height: '100%' }}>
                     <div className="card-header"><h4>Shared Event Data Sources</h4></div>
-                    <div className="card-body" style={{ overflow: "hidden" }}>
+                    <div className="card-body p-0" style={{ overflow: "hidden" }}>
                         <EventSourceTable OwnedByUser={false} SetEventSource={setEditEvt} SetShowEdit={setShowEdit} SetShowDelete={setShowDelete} />
                     </div>
                 </div>
@@ -129,7 +129,7 @@ const EventSourceTable = React.memo((props: ITableProps) => {
                 tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
             }}
             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
             SortKey={sortField}
             OnClick={() => { }}
