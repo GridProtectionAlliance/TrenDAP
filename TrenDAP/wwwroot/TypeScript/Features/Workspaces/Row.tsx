@@ -40,6 +40,7 @@ type Hover = ('None' | 'Add' | 'Remove' | 'Settings')
 
 interface IProps {
     AllChannels: DataSetTypes.IDataSetMetaData[],
+    AllVirtualChannels: TrenDAP.IVirtualChannelLoaded[],
     AllEventSources: TrenDAP.IEventSourceMetaData[],
     ChannelMap: TrenDAP.IChannelMap,
     SetChannelMapVersion: (version: number) => void
@@ -157,6 +158,7 @@ const Row: React.FunctionComponent<IProps> = (props) => {
                     {props.Widgets.map((widget, index) => {
                         return <WidgetWrapper
                             AllChannels={props.AllChannels}
+                            AllVirtualChannels={props.AllVirtualChannels}
                             AllEventSources={props.AllEventSources}
                             ChannelMap={props.ChannelMap}
                             ParentMap={props.ParentMap}

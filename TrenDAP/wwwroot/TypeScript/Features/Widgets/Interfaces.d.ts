@@ -65,7 +65,7 @@ export namespace WidgetTypes {
         AddChannel: (channelID: string, channelSettings: U) => void,
         RemoveChannel: (channelID: string) => void,
         SelectedChannels: ISelectedChannels<U>[],
-        SetChannelSettings: (channelKey: TrenDAP.IChannelKey, channelSettings: U) => void,
+        SetChannelSettings: (channelKey: TrenDAP.IChannelKey | string, channelSettings: U) => void,
     }
 
     interface IEventSourceSelectionProps<U> {

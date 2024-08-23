@@ -42,6 +42,17 @@ export const isPercent = (percent: number) => {
     return true
 }
 
+export const isVirtual = (channelKey: TrenDAP.IChannelKey | string) => {
+    return !channelKey.hasOwnProperty('Parent');
+}
+
+export const createVirtualFunc = (componentChannels: {Key: TrenDAP.IChannelKey, Name: string}[], evalExpression: string) => {
+    return eval?.(
+        `"use strict";
+        (T, ${componentChannels.map(compChannel => compChannel.Name).join(', ')}) => ${evalExpression}`
+    );
+} 
+
 export const sort = (newField: keyof DataSetTypes.IDataSetMetaData, currentSortField: keyof DataSetTypes.IDataSetMetaData, setSortField: (sort: keyof DataSetTypes.IDataSetMetaData) => void, newAscend: boolean, setAscend: (asc: boolean) => void, currentAsc: boolean, channels: DataSetTypes.IDataSetMetaData[], setChannels: (chans: DataSetTypes.IDataSetMetaData[]) => void) => {
     const updatedAscend = currentSortField === newField ? !currentAsc : newAscend
     if (newField === currentSortField)

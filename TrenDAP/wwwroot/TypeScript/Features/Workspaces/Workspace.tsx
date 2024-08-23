@@ -38,8 +38,10 @@ import HashTable from './HashTable';
 import * as _ from 'lodash';
 import DataSetSelector from './DataSetSelector';
 import WorkspaceSettings from './WorkspaceSettings';
-import { CreateWidget } from '../Widgets/HelperFunctions';
+import { CreateWidget, isVirtual } from '../Widgets/HelperFunctions';
 import { useParams } from 'react-router-dom';
+import VirtualChannels from './VirtualChannels';
+import TrenDAPDB from '../DataSets/TrenDAPDB';
 
 type Hover = ('Share' | 'Save' | 'Settings' | 'Add' | 'SaveIcon' | 'None' | 'ShareDisabled')
 
@@ -58,7 +60,7 @@ const Workspace: React.FunctionComponent = () => {
     const [mapVersion, setMapVersion] = React.useState<number>(0);
     const [eventMapVersion, setEventMapVersion] = React.useState<number>(0);
 
-    const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [] });
+    const [workSpaceJSON, setWorkSpaceJSON] = React.useState<TrenDAP.WorkSpaceJSON>({ Rows: [], VirtualChannels: [] });
     const [workspaceLink, setWorkspaceLink] = React.useState<string | null>(null);
     const [showWorkspaceLink, setShowWorkspaceLink] = React.useState<boolean>(false);
 
@@ -67,10 +69,13 @@ const Workspace: React.FunctionComponent = () => {
     const [showSettingsModal, setShowSettingsModal] = React.useState<boolean>(false);
     const [allChannels, setAllChannels] = React.useState<DataSetTypes.IDataSetMetaData[]>([]);
     const [allEvents, setAllEvents] = React.useState<TrenDAP.IEventSourceMetaData[]>([]);
-    const [showShowDataSetModal, setShowDataSetModal] = React.useState<boolean>(true)
+    const [showShowDataSetModal, setShowDataSetModal] = React.useState<boolean>(true);
     const [loading, setLoading] = React.useState<boolean>(false);
     const [dataSet, setDataset] = React.useState<TrenDAP.iDataSet | null>(null)
     const [isLinkShareable, setIsLinkShareable] = React.useState<{ DisabledMessage: string, Shareable: boolean }>({ Shareable: false, DisabledMessage: '' });
+
+    const [showVirtual, setShowVirtual] = React.useState<boolean>(false);
+    const [loadedVirtuals, setLoadedVirtuals] = React.useState<TrenDAP.IVirtualChannelLoaded[]>([]);
 
     //Effect to update isLinkShareable
     React.useEffect(() => {
@@ -104,7 +109,7 @@ const Workspace: React.FunctionComponent = () => {
         }
 
         const channelMap = workSpaceJSON.Rows
-            .flatMap(row => row.Widgets.flatMap(widget => widget.Channels.map(channel => [channel.Key, channelMapping.current.get(channel.Key)])));
+            .flatMap(row => row.Widgets.flatMap(widget => widget.Channels.filter(channel => !isVirtual(channel.Key)).map(channel => [channel.Key, channelMapping.current.get(channel.Key as TrenDAP.IChannelKey)])));
         const chans = new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, channelMap as [TrenDAP.IChannelKey, string][]).serialize();
 
         let pathName = _.cloneDeep(window.location.pathname)
@@ -119,28 +124,77 @@ const Workspace: React.FunctionComponent = () => {
         setWorkSpaceJSON(json);
     }, [workSpace]);
 
+    // Effect to set workSpace
     React.useEffect(() => {
         if (workspaceStatus == 'unitiated' || workspaceStatus == 'changed')
             dispatch(FetchWorkSpaces());
     }, [dispatch, workspaceStatus]);
 
-    function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], eventMap: [number, number][], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
+    function GenerateMapping(channelMap: [TrenDAP.IChannelKey, string][], parentMap: [string, number][], eventMap: [number, number][],
+        allParents: { ID: string, Name: string }[], dataset: TrenDAP.iDataSet, loadHandle: Promise<any>) {
         setLoading(true);
-        loadHandle.then(() => setLoading(false));
+        loadHandle.then(() => {
+            // Reset virtual table
+            const db = new TrenDAPDB();
+            db.ClearTable('Virtual');
+        }
+        ).then(() => setLoading(false));
 
         setDataset(dataset);
         channelMapping.current = new HashTable<TrenDAP.IChannelKey, string>((k) => `${k?.Phase ?? ''}~${k?.Type ?? ''}~${k?.Parent ?? ''}~${k?.Harmonic ?? -1}`, channelMap);
-        parentMapping.current = new Map<string, number>(parentMap);
+
+        // Added all parents to map, not just matches
+        let currentKey = 0;
+        const orderedKeys = [...parentMap].sort((a,b) => b[1] - a[1]);
+        const newParentMap: [string, number][] = allParents.map(parent => {
+            const existingMatch = parentMap.find(match => match[0] === parent.ID);
+            if (existingMatch == null) {
+                while(orderedKeys.length > 0 && currentKey === orderedKeys[orderedKeys.length-1][1]) {
+                    currentKey++;
+                    orderedKeys.pop();
+                }
+                currentKey++;
+                return [parent.ID, currentKey-1];
+            }
+            return existingMatch;
+        });
+        parentMapping.current = new Map<string, number>(newParentMap);
+        
+        setLoadedVirtuals(
+            workSpaceJSON.VirtualChannels.map(chan => {
+                const parent = allParents.find(currentParent => chan.ParentKey === parentMapping.current.get(currentParent.ID));
+                return {
+                    ...chan,
+                    ParentID: parent?.ID,
+                    ParentName: parent?.Name
+                };
+            })
+        );
         eventMapping.current = new Map<number, number>(eventMap);
         setEventMapVersion(version => version + 1);
         setMapVersion(version => version + 1);
     }
 
+    const HandleChangeVirtuals = React.useCallback((newVirtuals: TrenDAP.IVirtualChannelLoaded[]) => {
+        setLoadedVirtuals(newVirtuals);
+        setWorkSpaceJSON(wsJSON => ({
+            Rows: [...wsJSON.Rows],
+            VirtualChannels: newVirtuals.map(item => ({
+                ID: item.ID,
+                Name: item.Name,
+                ParentKey: item?.ParentKey,
+                ComponentChannels: item.ComponentChannels,
+                Calculation: item.Calculation,
+                Threshold: item.Threshold
+            }))
+        }));
+    }, []);
+
     function HandleAddObject(type: string | 'Row') {
         if (type === 'Row')
-            setWorkSpaceJSON({ Rows: [...workSpaceJSON.Rows, { Height: 50, Widgets: [], Label: "", ShowHeader: true }] })
+            setWorkSpaceJSON({ Rows: [...workSpaceJSON.Rows, { Height: 50, Widgets: [], Label: "", ShowHeader: true }], VirtualChannels: [...workSpaceJSON.VirtualChannels] })
         else
-            setWorkSpaceJSON({ Rows: [...workSpaceJSON.Rows, { Height: 50, Widgets: [CreateWidget(type, 100)], Label: "", ShowHeader: true }] })
+            setWorkSpaceJSON({ Rows: [...workSpaceJSON.Rows, { Height: 50, Widgets: [CreateWidget(type, 100)], Label: "", ShowHeader: true }], VirtualChannels: [...workSpaceJSON.VirtualChannels] })
     }
 
     if (workSpace == undefined) return null;
@@ -166,7 +220,10 @@ const Workspace: React.FunctionComponent = () => {
                             </ul>
                         </div>
                         <div className="col-6 d-flex flex-row align-items-center justify-content-end pr-1" style={{ zIndex: 9986 }}>
-                            <BtnDropdown Label={'Row'} Options={AllWidgets.map(widget => ({ Label: widget.Name, Callback: () => HandleAddObject(widget.Name), Group: 0 })).concat({ Label: 'Row', Callback: () => HandleAddObject('Row'), Group: 1 })}
+                            <BtnDropdown Label={'Row'}
+                                Options={
+                                    AllWidgets.map(widget => ({ Label: widget.Name, Callback: () => HandleAddObject(widget.Name), Group: 0 }))
+                                        .concat([{ Label: 'Row', Callback: () => HandleAddObject('Row'), Group: 1 }, { Label: 'Virtual Channel', Callback: () => setShowVirtual(true), Group: 2 }])}
                                 Callback={() => HandleAddObject('Row')} ShowToolTip={true} TooltipContent={<p>Add Row or Widget</p>} TooltipLocation={'bottom'} />
 
                             <div className="btn-group align-items-center pl-1">
@@ -239,6 +296,7 @@ const Workspace: React.FunctionComponent = () => {
                                     EventMapVersion={eventMapVersion}
                                     SetEventMapVersion={setEventMapVersion}
                                     AllChannels={allChannels}
+                                    AllVirtualChannels={loadedVirtuals}
                                     AllEventSources={allEvents}
                                     Label={row?.Label}
                                     Widgets={row.Widgets}
@@ -283,11 +341,30 @@ const Workspace: React.FunctionComponent = () => {
                 SetIsModalOpen={setShowDataSetModal} WorkSpaceJSON={workSpaceJSON}
                 GenerateMapping={GenerateMapping}
                 AllChannels={allChannels} SetAllChannels={setAllChannels} SetAllEventSources={setAllEvents} />
+            <VirtualChannels VirtualChannels={loadedVirtuals} SetVirtualChannels={HandleChangeVirtuals} AllChannels={allChannels}
+                ShowModal={showVirtual} SetShowModal={setShowVirtual}
+                ParentMap={parentMapping} ChannelMap={channelMapping} ChannelMapVersion={mapVersion} SetChannelMapVersion={setMapVersion} />
         </div>
     );
 }
 
-const WorkspaceWrapper = (props: {}) => {
+export const AddChannelToMap = (chanKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData, parentMap: Map<string, number>, channelMap: HashTable<TrenDAP.IChannelKey, string>) => {
+    let maxValue = -1;
+
+    for (let value of parentMap.values()) {
+        if (value > maxValue)
+            maxValue = value;
+    }
+
+    if (!parentMap.has(channel.ParentID))
+        parentMap.set(channel.ParentID, maxValue + 1);
+
+    let parent = parentMap.get(channel.ParentID) as number;
+    channelMap.set({ ...chanKey, Parent: parent }, channel.ID);
+    return parent;
+}
+
+export const WorkspaceWrapper = (props: {}) => {
     const { workspaceId } = props['useParams'];
 
     return (
