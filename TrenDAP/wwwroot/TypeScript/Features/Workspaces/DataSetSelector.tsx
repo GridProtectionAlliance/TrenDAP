@@ -78,10 +78,6 @@ interface IndexedChannelMatch extends IChannelMatch {
     Index: number
 }
 
-interface IEventData extends TrenDAP.IEventSourceMetaData {
-    Data: TrenDAP.IEvent[]
-}
-
 const dataSetStep = 0;
 const parentStep = 1;
 const eventStep = 2;
@@ -101,7 +97,7 @@ interface IProps {
         eventMap: [number, number][],
         parents: { ID: string, Name: string }[],
         dataSet: TrenDAP.iDataSet,
-        loadHandle: Promise<void>) => void
+        loadHandle: Promise<unknown>) => void
 }
 
 const DataSetSelector: React.FC<IProps> = (props) => {
@@ -126,7 +122,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     const [evtStatus, setEvtStatus] = React.useState<Application.Types.Status>('unintiated')
     const [eventSources, setEventSources] = React.useState<EventSourceTypes.IEventSourceDataSet[]>([]);
-    const [loadedEvents, setLoadedEvents] = React.useState<IEventData[]>([]);
+    const [eventSourceMetas, setEventSourceMetas] = React.useState<TrenDAP.IEventSourceMetaData[]>([]);
 
     const [channelErrors, setChannelErrors] = React.useState<string[]>([]);
     const [eventErrors, setEventErrors] = React.useState<string[]>([]);
@@ -236,6 +232,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             cache: false,
             async: true
         }).done((data: EventSourceTypes.IEventSourceDataSet[]) => {
+            setEvtStatus('idle');
             setEventSources(data);
         });
 
@@ -244,8 +241,6 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
     //Effect to load all parents and channels from the selected dataset
     React.useEffect(() => {
-
-        // Events will be set in generate mapping, so we should wait for them to be ready in case we need them
         if (datasources.length == 0 || evtStatus !== 'idle')
             return;
 
@@ -282,28 +277,20 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     }, [datasources, evtStatus]);
     
     React.useEffect(() => {
-        if (eventSources.length == 0) {
-            setEvtStatus('idle');
+        if (evtStatus !== 'idle' || eventSourceStatus !== 'idle') {
             return;
         }
-        const newEvents: IEventData[] = [];
 
-        const eventSrcHandlers = eventSources.map(ds => {
+        setEventSourceMetas(eventSources.map(ds => {
             const eventSourceView = eventSourceViews.find(d => d.ID === ds.EventSourceID);
-            const implementation: IEventSource<any, any> | undefined = EventDataSources.find(t => t.Name == eventSourceView.Type);
-            if (implementation == null)
-                return Promise.resolve([]);
+            const implementation: IEventSource<any, any> | undefined = EventDataSources.find(t => t.Name == eventSourceView?.Type);
+            if (implementation == null || eventSourceView == null)
+                return undefined;
             const logoString = implementation?.GetLogo != null ? implementation.GetLogo(eventSourceView) : undefined;
-            return implementation.Load(eventSourceView, selectedDataSet, ds).then(d => {
-                newEvents.push({ ID: eventSourceView.ID, SourceType: eventSourceView.Type, Name: eventSourceView.Name, Data: d, Logo: logoString });
-            });
-        });
+            return { ID: ds.ID, SourceType: eventSourceView.Type, Name: eventSourceView.Name, Logo: logoString };
+        }).filter(meta => meta != null));
 
-        Promise.all(eventSrcHandlers).then(_ => {
-            setEvtStatus('idle'); setLoadedEvents(newEvents);
-        });
-
-        }, [eventSources]);
+        }, [eventSources, eventSourceStatus]);
 
     // Effect to initialize parent matches
     React.useEffect(() => {
@@ -336,19 +323,19 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     //Effect to intialize event matches
     React.useEffect(() => {
         let loadedEventSourceIndex = 0;
-        if (loadedEvents.length === 0) return;
+        if (eventSourceMetas.length === 0) return;
         const eventKeys = _.uniqWith(props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.EventSources).flat()).flat().map(eventSrc => eventSrc.Key), _.isEqual);
         setEventMatches(eventKeys.map(c => {
-            const autoMatched = loadedEventSourceIndex < loadedEvents.length;
+            const autoMatched = loadedEventSourceIndex < eventSourceMetas.length;
             const newMatch: IEventMatch = {
                 Key: c,
                 Match: autoMatched ? 'Match' : 'NoMatch',
-                ID: autoMatched ? loadedEvents[loadedEventSourceIndex].ID : undefined
+                ID: autoMatched ? eventSourceMetas[loadedEventSourceIndex].ID : undefined
             }
             loadedEventSourceIndex++;
             return newMatch;
         }));
-    }, [props.WorkSpaceJSON.Rows, loadedEvents]);
+    }, [props.WorkSpaceJSON.Rows, eventSourceMetas]);
 
     //Effect to intialize channel matches
     React.useEffect(() => {
@@ -385,36 +372,65 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     }, [parentMatches])
 
     const loadData = () => {
-        // Assumption that 0 is user error, meant to be null.
-        // Not neccessarily true, but the use case of a 0 window is pretty narrow...
-        const allEvents = (selectedDataSet.EventWindowSize != null && selectedDataSet.EventWindowSize !== 0) ?
-            loadedEvents.flatMap(d => d.Data) : undefined;
+        if (selectedDataSet == null) {
+            throw new TypeError("Data set selected is null");
+        }
 
-        props.SetAllEventSources(loadedEvents.map(d => ({ ID: d.ID, Name: d.Name, SourceType: d.SourceType, Logo: d?.Logo })));
-        const dataHandlers = datasources.map((ds) => {
-            const dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
-            const implementation: IDataSource<any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
-            if (implementation == null)
-                return Promise.resolve([] as DataSetTypes.IDataSetData[]);
-            return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds, allEvents);
-        });
+        const db = new TrenDAPDB();
+        props.SetAllEventSources(eventSourceMetas.map(d => ({ ID: d.ID, Name: d.Name, SourceType: d.SourceType, Logo: d?.Logo })));
 
-        const loaded = Promise.all(dataHandlers).then(d => {
-            const db = new TrenDAPDB();
-            db.AddMultipleEvents(loadedEvents);
-            db.AddMultiple(d.flat());
-        });
-
-        return loaded;
+        return db.ClearTables(['Channel', 'Event', 'Virtual']).then(() =>
+            Promise.all(eventSources.map(conn => 
+                new Promise<{Events: TrenDAP.IEvent[], EventMeta: TrenDAP.IEventSourceMetaData}>((resolve, reject) => {
+                    const view = eventSourceViews.find(eventView => eventView.ID === conn.EventSourceID);
+                    const implementation: IEventSource<any, any> | undefined = EventDataSources.find(evtSrc => evtSrc.Name === view?.Type);
+                    const meta = eventSourceMetas.find(evtMeta => evtMeta.ID === conn.ID);
+                    if (view == null || meta == null || implementation == null)
+                        resolve({Events: [], EventMeta: meta as TrenDAP.IEventSourceMetaData});
+                    else
+                        implementation.Load(view, selectedDataSet as TrenDAP.iDataSet, conn).then(d =>
+                            resolve({ EventMeta: meta as  TrenDAP.IEventSourceMetaData, Events: d}),
+                        (arg) => reject(arg));
+                })
+            ))
+        ).then((metasWithEvents) => 
+            new Promise<TrenDAP.IEvent[] | undefined>((resolve, reject) => {
+                if (metasWithEvents.length === 0) {
+                    resolve(undefined);
+                    return;
+                }
+                db.AddMultipleEvents(metasWithEvents.map(evt => ({ID: evt.EventMeta.ID, Data: evt.Events}))).then(() => {
+                    // Assumption that 0 is user error, meant to be null.
+                    // Not neccessarily true, but the use case of a 0 window is pretty narrow...
+                    resolve((selectedDataSet.EventWindowSize != null && selectedDataSet.EventWindowSize !== 0) ?
+                        metasWithEvents.flatMap(d => d.Events) : undefined);
+                }, (arg) => reject(arg));
+        })).then((allEvents) =>
+            Promise.all(datasources.map((ds) => {
+                const dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
+                const implementation: IDataSource<any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
+                if (implementation == null)
+                    return Promise.resolve([] as DataSetTypes.IDataSetData[]);
+                return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds, allEvents);
+            }))
+        ).then(d => db.AddMultiple(d.flat()));;
     }
 
     const disallowStep = React.useCallback(() => {
         switch (step) {
             case dataSetStep: return selectedDataSet == null;
             case parentStep: return channelErrors?.length > 0;
-            case eventStep: return loadedEvents.length !== 0 && eventErrors?.length > 0;
+            case eventStep: return eventSourceMetas.length !== 0 && eventErrors?.length > 0;
         }
     }, [selectedDataSet, channelErrors, eventErrors, step]);
+
+    const isStepSkipped = React.useCallback((checkedStep: number) => {
+        switch(checkedStep) {
+            default: return false;
+            case parentStep: return parentMatches.length === 0 && datasources.length !== 0;
+            case eventStep: return eventMatches.length === 0 && evtStatus === 'idle';
+        }
+    }, [parentMatches, datasources, eventMatches, evtStatus]);
 
     const getToolTipContent = React.useCallback(() => {
         switch (step) {
@@ -448,19 +464,44 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                             setStep(firstStep);
                             props.SetIsModalOpen(false);
                         }
-                        else
-                            setStep(s => s + 1);
+                        else 
+                            setStep(s => {
+                                let newStep = s;
+                                do {
+                                    newStep++;
+                                } while (isStepSkipped(newStep));
+                                if (newStep > lastStep) {
+                                    props.GenerateMapping(
+                                        channelMatches.map(match => [match.Key, match.ChannelID] as [TrenDAP.IChannelKey, string]),
+                                        parentMatches.map(match => [match.ParentID, match.Key] as [string, number]),
+                                        eventMatches.map(match => [match.Key, match.ID] as [number, number]),
+                                        allParents,
+                                        selectedDataSet as TrenDAP.iDataSet,
+                                        loadData()
+                                    );
+                                    props.SetIsModalOpen(false);
+                                    return firstStep;
+                                }
+                                return newStep;
+                            });
                     } else {
                         if (step <= firstStep) {
                             setStep(firstStep);
                             props.SetIsModalOpen(false);
                         } else
-                            setStep(s => s - 1);
+                            setStep(s => {
+                                let newStep = s;
+                                do {
+                                    newStep--;
+                                } while (isStepSkipped(newStep));
+                                if (newStep <= firstStep) return firstStep;
+                                return newStep;
+                            });
                     }
 
                 }}
                 Size="lg"
-                DisableConfirm={disallowStep() || (step === lastStep && evtStatus !== 'idle')}
+                DisableConfirm={disallowStep()}
                 ConfirmShowToolTip={getToolTipContent().length > 0}
                 ConfirmToolTipContent={getToolTipContent().map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>)}
                 ShowCancel={true}
@@ -682,7 +723,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                 Key={'Key'}
                                                 Field={'Key'}
                                                 Content={(row) => <Select<IEventMatch> key={row.index} EmptyOption={true} Record={row.item}
-                                                    Options={loadedEvents.map(p => ({ Value: p.ID.toString(), Label: p.Name }))}
+                                                    Options={eventSourceMetas.map(p => ({ Value: p.ID.toString(), Label: p.Name }))}
                                                     Label={''} Field={'ID'} Setter={(newRecord) => setEventMatches(matches => {
                                                         const clonedMatches = _.cloneDeep(matches);
                                                         if (newRecord?.ID == null) {

@@ -340,7 +340,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                     </div>
                 </div>
                 <Modal
-                    ConfirmBtnClass="btn btn-success mr-auto"
+                    ConfirmBtnClass="btn btn-primary mr-auto"
                     Show={showSettingsModal}
                     ShowX={true}
                     ConfirmText='Save'
@@ -351,10 +351,11 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                     ConfirmShowToolTip={!isPercent(localCommonSettings.Width)}
                     ConfirmToolTipContent={<span>Enter a valid width</span>}
                     Size="xlg"
+                    BodyStyle={{ height: 'calc(-210px + 100vh)' }}
                 >
-                    <div className="container-fluid d-flex h-100 flex-column">
-                        <div className="row h-100" style={{ overflow: 'hidden' }}>
-                            <div className="col-4">
+                    <div className="container-fluid d-flex flex-column p-0 h-100">
+                        <div className="row h-100">
+                            <div className="col-4 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                                 <div className="row">
                                     <div className="col-12">
                                         <Input<WidgetTypes.ICommonSettings> Field='Label' Record={localCommonSettings} Type='text' Setter={(r) => setCommonLocalSettings(r)} Valid={() => true} />
@@ -377,7 +378,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                                     ChannelSettings={localChannels.map(chan => chan.ChannelSettings)}
                                 />}
                             </div>
-                            <div className="col-8">
+                            <div className="col-8 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                                 <TabSelector CurrentTab={tab} SetTab={setTab} Tabs={
                                     [{ Id: 'channel', Label: 'Channels' },
                                         { Id: 'evtSrc', Label: 'Event Sources' }]} />

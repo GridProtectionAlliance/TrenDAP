@@ -301,18 +301,16 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any> = {
         };
 
         return <>
-            <div className="container-fluid d-flex h-100 flex-column p-0">
                 <div className="row">
                     <div className="col-12">
-                        <button className="btn btn-primary" onClick={() => setShowPairSelection(true)}>Add New Pair</button>
+                        <button className="btn btn-info" onClick={() => setShowPairSelection(true)}>Add New Pair</button>
                     </div>
                 </div>
-
                 <ReactTable.Table<[IPairChannel, IPairChannel]>
                     TableClass="table table-hover"
-                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                    TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                     TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                     SortKey={""}
                     OnClick={() => { }}
@@ -484,7 +482,6 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any> = {
                         Regression Line
                     </ReactTable.Column>
                 </ReactTable.Table>
-            </div>
             <Modal
                 Show={showPairSelection}
                 ConfirmBtnClass="btn btn-success mr-auto"
@@ -502,7 +499,7 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any> = {
                     TableClass="table table-hover"
                     TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                     TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                     SortKey={sortField}
                     OnClick={({ row }) => {

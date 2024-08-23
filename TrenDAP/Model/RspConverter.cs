@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using System.Collections.Generic;
@@ -42,6 +43,7 @@ namespace TrenDAP.Model
         {
             HttpResponseMessage rsp = rspTask.Result;
             context.HttpContext.Response.StatusCode = (int)rsp.StatusCode;
+            context.HttpContext.Response.HttpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = rsp.ReasonPhrase;
 
             // Have to clear chunking header, results in errors client side otherwise
             if (rsp.Headers.TransferEncodingChunked == true && rsp.Headers.TransferEncoding.Count == 1) rsp.Headers.TransferEncoding.Clear();
