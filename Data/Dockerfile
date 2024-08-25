@@ -31,7 +31,7 @@ RUN POWERSHELL ls 'c:/scripts/sql/'
 
 RUN POWERSHELL Start-SERVICE -Name 'SQL Server (SQLEXPRESS)'; \
 foreach ($file in Get-ChildItem 'c:/scripts/sql/') { \
-    sqlcmd -S 'localhost\SQLEXPRESS' -d TrenDAP -i $file.FullName \
+    sqlcmd -S 'localhost\SQLEXPRESS' -i $file.FullName \
 }
 
 EXPOSE 1433/tcp
