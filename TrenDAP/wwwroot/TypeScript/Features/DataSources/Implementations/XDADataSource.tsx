@@ -207,12 +207,12 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                         <legend className="w-auto" style={{ fontSize: 'large' }}>Channel Filters:</legend>
                         <div className={"row"}>
                             <div className={'col'}>
-                                <NavBarFilterButton<SystemCenter.Types.DetailedMeter> Type={'Meter'} OnClick={() => setFilter('Meter')} Data={meterList} AlternateColors={{ normal: "#3840B5", selected: "#FF9B4B" }}/>
+                                <NavBarFilterButton Type={'Meter'} OnClick={() => setFilter('Meter')} Data={meterList} AlternateColors={{ normal: "#3840B5", selected: "#FF9B4B" }}/>
                             </div>
                         </div>
                         <div className={"row"}>
                             <div className={'col'}>
-                                <NavBarFilterButton<SystemCenter.Types.DetailedAsset> Type={'Asset'} OnClick={() => setFilter('Asset')} Data={assetList} />
+                                <NavBarFilterButton Type={'Asset'} OnClick={() => setFilter('Asset')} Data={assetList} />
                             </div>
                         </div>
                         <label style={{ width: '100%', position: 'relative', float: "left" }}>Phase: </label>

@@ -263,22 +263,22 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
                             <legend className="w-auto" style={{ fontSize: 'large' }}>Other Filters:</legend>
                             <div className={"row"}>
                                 <div className={'col'}>
-                                    <NavBarFilterButton<SystemCenter.Types.DetailedMeter> Type={'Meter'} OnClick={() => setFilter('Meter')} Data={meterList} />
+                                    <NavBarFilterButton Type={'Meter'} OnClick={() => setFilter('Meter')} Data={meterList} />
                                 </div>
                             </div>
                             <div className={"row"}>
                                 <div className={'col'}>
-                                    <NavBarFilterButton<SystemCenter.Types.DetailedAsset> Type={'Asset'} OnClick={() => setFilter('Asset')} Data={assetList} />
+                                    <NavBarFilterButton Type={'Asset'} OnClick={() => setFilter('Asset')} Data={assetList} />
                                 </div>
                             </div>
                             <div className={"row"}>
                                 <div className={'col'}>
-                                    <NavBarFilterButton<OpenXDA.Types.AssetGroup> Type={'AssetGroup'} OnClick={() => setFilter('AssetGroup')} Data={groupList} />
+                                    <NavBarFilterButton Type={'AssetGroup'} OnClick={() => setFilter('AssetGroup')} Data={groupList} />
                                 </div>
                             </div>
                             <div className={"row"}>
                                 <div className={'col'}>
-                                    <NavBarFilterButton<SystemCenter.Types.DetailedLocation> Type={'Station'} OnClick={() => setFilter('Station')} Data={locationList} />
+                                    <NavBarFilterButton Type={'Station'} OnClick={() => setFilter('Station')} Data={locationList} />
                                 </div>
                                 </div>
                         </fieldset>
