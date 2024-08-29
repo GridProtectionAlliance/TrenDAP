@@ -40,6 +40,7 @@
     <Content Remove="wwwroot\TypeScript\Features\EventSources\Slices\EventSourcesSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenHistorian\OpenHistorianSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\OpenXDA\OpenXDASlice.ts" />
+    <Content Remove="wwwroot\TypeScript\Features\OpenXDA\TrenDAPSelectPopup.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Sapphire\SapphireSlice.ts" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Histogram.tsx" />
     <Content Remove="wwwroot\TypeScript\Features\Widgets\Profile.tsx" />
@@ -96,6 +97,9 @@
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\DataSources\Implementations\OpenHistorianDataSource.tsx" />
     <TypeScriptCompile Include="wwwroot\TypeScript\Features\EventSources\Slices\EventSourcesSlice.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="wwwroot\TypeScript\Features\OpenXDA\TrenDAPSelectPopup.tsx">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="wwwroot\TypeScript\hooks.ts" />

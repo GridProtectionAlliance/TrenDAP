@@ -22,8 +22,8 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { Select, ArrayCheckBoxes, ArrayMultiSelect, Input } from '@gpa-gemstone/react-forms';
-import { OpenXDA } from '@gpa-gemstone/application-typings';
+import { Input, MultiCheckBoxSelect } from '@gpa-gemstone/react-forms';
+import { OpenXDA, SystemCenter } from '@gpa-gemstone/application-typings';
 import { DataSourceTypes, TrenDAP, Redux, DataSetTypes } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { SelectOpenXDA, FetchOpenXDA, SelectOpenXDAStatus } from '../../OpenXDA/OpenXDASlice';
@@ -31,11 +31,18 @@ import { IDataSource, EnsureTypeSafety } from '../Interface';
 import $ from 'jquery';
 import queryString from 'querystring';
 import moment from 'moment';
+import { NavBarFilterButton } from '@gpa-gemstone/common-pages';
+import TrenDAPSelectPopup from '../../OpenXDA/TrenDAPSelectPopup';
+import { ConfigTable } from '@gpa-gemstone/react-interactive';
+import _ from 'lodash';
+import { ReactTable } from '@gpa-gemstone/react-table';
 
 const encodedDateFormat = 'MM/DD/YYYY';
 const encodedTimeFormat = 'HH:mm:ss.SSS';
 const tdapDateFormat = 'YYYY-MM-DD';
 const hidsServerFormat = "YYYY-MM-DD[T]HH:mm:ss.SSSZ";
+const colList = ["Meter", "Asset", "Description", "Longitude", "Latitude", "Channel Group", "Unit"];
+const defaultCols = new Set(["Meter", "Asset"]);
 
 interface XDAChannel extends OpenXDA.Types.Channel {
     AssetID: number,
@@ -46,10 +53,16 @@ interface XDAChannel extends OpenXDA.Types.Channel {
     Latitude: number
 }
 
+interface IMultiCheckboxOption {
+    Value: number|string,
+    Text: string,
+    Selected: boolean
+}
+
 const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = {
     Name: 'TrenDAPDB',
     DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/"},
-    DefaultDataSetSettings: { By: 'Meter', IDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: ''},
+    DefaultDataSetSettings: { MeterIDs: [], AssetIDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: ''},
     ConfigUI: (props: TrenDAP.ISourceConfig<TrenDAP.iXDADataSource>) => {
         React.useEffect(() => {
             const errors: string[] = [];
@@ -67,22 +80,61 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
     },
     DataSetUI: (props: DataSourceTypes.IDataSourceDataSetProps<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet>) => {
         const dispatch = useAppDispatch();
-        const phases: OpenXDA.Types.Phase[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'Phase'));
-        const phStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'Phase'));
-        const meters: OpenXDA.Types.Meter[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'Meter'));
-        const meterStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'Meter'));
-        const assets: OpenXDA.Types.Asset[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'Asset'));
-        const assetStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'Asset'));
+        const phases: OpenXDA.Types.Phase[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'Phase', 'data'));
+        const phStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'Phase', 'data'));
+        const meters: SystemCenter.Types.DetailedMeter[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'DetailedMeter', 'data'));
+        const meterStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'DetailedMeter', 'data'));
+        const assets: SystemCenter.Types.DetailedAsset[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'DetailedAsset', 'data'));
+        const assetStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'DetailedAsset', 'data'));
+        const channelGroups: any[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'ChannelGroup', 'data'));
+        const cgStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'ChannelGroup', 'data'));
 
-        const channelGroups: any[] = useAppSelector((state: Redux.StoreState) => SelectOpenXDA(state, props.DataSource.ID, 'ChannelGroup'));
-        const cgStatus: TrenDAP.Status = useAppSelector((state: Redux.StoreState) => SelectOpenXDAStatus(state, props.DataSource.ID, 'ChannelGroup'));
+        const [filter, setFilter] = React.useState<string>('None');
+        const [phaseOptions, setPhaseOptions] = React.useState<IMultiCheckboxOption[]>([]);
+        const [channelGroupOptions, setChannelGroupOptions] = React.useState<IMultiCheckboxOption[]>([]);
 
         const [channels, setChannels] = React.useState<XDAChannel[]>([]);
+        const [sortField, setSortField] = React.useState<keyof XDAChannel>('Name');
+        const [ascending, setAscending] = React.useState<boolean>(true);
+
+
+        const meterList: SystemCenter.Types.DetailedMeter[] = React.useMemo(() => {
+            if (meterStatus != 'idle') return [];
+            return meters.filter(item => props.DataSetSettings.MeterIDs.findIndex(id => id === item.ID) !== -1);
+        }, [props.DataSetSettings.MeterIDs, meterStatus]);
+
+        const assetList: SystemCenter.Types.DetailedAsset[] = React.useMemo(() => {
+            if (assetStatus != 'idle') return [];
+            return assets.filter(item => props.DataSetSettings.AssetIDs.findIndex(id => id === item.ID) !== -1);
+        }, [props.DataSetSettings.AssetIDs, assetStatus]);
+
+        function makeMultiCheckboxOptions(field: keyof TrenDAP.iXDADataSet & ('Phases' | 'Groups'), setOptions: (options: IMultiCheckboxOption[]) => void, allKeys: any[]) {
+            if (allKeys == null || allKeys.length === 0) return;
+            const newOptions: IMultiCheckboxOption[] = allKeys.map((key) => ({ Value: key['ID'], Text: key.Name, Selected: props.DataSetSettings[field].findIndex(id => id === key.ID) !== -1 }));
+            setOptions(newOptions);
+        }
+
+        function multiCheckboxUpdate(field: keyof TrenDAP.iXDADataSet & ('Phases' | 'Groups'), newOptions: IMultiCheckboxOption[], oldOptions: IMultiCheckboxOption[]) {
+            const ids: number[] = [];
+            oldOptions.forEach(item => {
+                const selected: boolean = item.Selected != (newOptions.findIndex(option => item.Value === option.Value) > -1);
+                if (selected) ids.push(item.Value as number);
+            });
+            const newSettings = {...props.DataSetSettings};
+            newSettings.ChannelIDs = [];
+            newSettings[field] = ids;
+            props.SetDataSetSettings(newSettings);
+        }
+
+        // Handle table sort
+        React.useEffect(() => {
+            setChannels(_.orderBy(channels, [sortField], [ascending ? 'asc' : 'desc']));
+        }, [sortField, ascending]);
 
         React.useEffect(() => {
             const errors: string[] = [];
-            if (props.DataSetSettings.IDs === null || props.DataSetSettings.IDs.length === 0)
-                errors.push(`${props.DataSetSettings.By === 'Meter' ? 'Meter' : 'Asset'}s must be selected to filter for channels.`);
+            if (props.DataSetSettings.MeterIDs === null || props.DataSetSettings.MeterIDs.length === 0)
+                errors.push(`Meters must be selected to filter for channels.`);
             if (props.DataSetSettings.Phases === null || props.DataSetSettings.Phases.length === 0)
                 errors.push(`Phases must be selected to filter for channels.`);
             if (props.DataSetSettings.Groups === null || props.DataSetSettings.Groups.length === 0)
@@ -92,6 +144,17 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
             props.SetErrors(errors);
         }, [props.DataSetSettings]);
 
+        // Multicheckbox Options Updates
+        React.useEffect(() => {
+            if (phStatus !== 'idle') return;
+            makeMultiCheckboxOptions('Phases', setPhaseOptions, phases);
+        }, [phStatus, props.DataSetSettings.Phases]);
+    
+        React.useEffect(() => {
+            if (cgStatus !== 'idle') return;
+            makeMultiCheckboxOptions('Groups', setChannelGroupOptions, channelGroups);
+        }, [cgStatus, props.DataSetSettings.Groups]);
+
         React.useEffect(() => {
             if (phStatus != 'unitiated' && phStatus != 'changed') return;
             dispatch(FetchOpenXDA({ dataSourceID: props.DataSource.ID, table: 'Phase' }));
@@ -99,12 +162,12 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
 
         React.useEffect(() => {
             if (meterStatus != 'unitiated' && meterStatus != 'changed') return;
-            dispatch(FetchOpenXDA({ dataSourceID: props.DataSource.ID, table: 'Meter' }));
+            dispatch(FetchOpenXDA({ dataSourceID: props.DataSource.ID, table: 'DetailedMeter' }));
         }, [meterStatus]);
 
         React.useEffect(() => {
             if (assetStatus != 'unitiated' && assetStatus != 'changed') return;
-            dispatch(FetchOpenXDA({ dataSourceID: props.DataSource.ID, table: 'Asset' }));
+            dispatch(FetchOpenXDA({ dataSourceID: props.DataSource.ID, table: 'DetailedAsset' }));
         }, [assetStatus]);
 
         React.useEffect(() => {
@@ -116,8 +179,8 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
             const filter = {
                 Phases: props.DataSetSettings.Phases,
                 ChannelGroups: props.DataSetSettings.Groups,
-                MeterList: props.DataSetSettings.By === 'Meter' ? props.DataSetSettings.IDs : [],
-                AssetList: props.DataSetSettings.By === 'Asset' ? props.DataSetSettings.IDs : []
+                MeterList: props.DataSetSettings.MeterIDs,
+                AssetList: props.DataSetSettings.AssetIDs
             };
 
             const handle = $.ajax({
@@ -129,7 +192,7 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                 cache: true,
                 async: true
             }).done((data: XDAChannel[]) => {
-                setChannels(data);
+                setChannels(_.orderBy(data, [sortField], [ascending ? 'asc' : 'desc']));
             });
 
             return () => {
@@ -138,34 +201,169 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
         }, [props.DataSetSettings]);
 
         return (
-            <>
-                <div className="row">
-                    <div className="col">
-                        <Select<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Field="Aggregate" EmptyOption={true} EmptyLabel="None"
-                            Options={[{ Value: '1h', Label: 'Hour' }, { Value: '1d', Label: 'Day' }, { Value: '1w', Label: 'Week' }]}
-                            Setter={props.SetDataSetSettings} />
-                        <Select<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Field="By" Options={[{ Value: 'Meter', Label: 'Meter' }, { Value: 'Asset', Label: 'Asset' }]} Setter={props.SetDataSetSettings} />
-
-                    </div>
-                    <div className="col">
-                        <ArrayCheckBoxes<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Checkboxes={phases?.map(m => ({ ID: m.ID.toString(), Label: m.Name })) ?? []} Field="Phases" Setter={props.SetDataSetSettings} />
-                        <ArrayCheckBoxes<TrenDAP.iXDADataSet> Record={props.DataSetSettings} Label="Channel Groups" Checkboxes={channelGroups?.map(m => ({ ID: m.ID.toString(), Label: m.Name })) ?? []} Field="Groups" Setter={props.SetDataSetSettings} />
-
-                    </div>
+            <div className={'row'} style={{ flex: 1, overflow: 'hidden' }}>
+                <div className="col-3">
+                    <fieldset className="border" style={{ padding: '10px' }}>
+                        <legend className="w-auto" style={{ fontSize: 'large' }}>Channel Filters:</legend>
+                        <div className={"row"}>
+                            <div className={'col'}>
+                                <NavBarFilterButton Type={'Meter'} OnClick={() => setFilter('Meter')} Data={meterList} AlternateColors={{ normal: "#3840B5", selected: "#FF9B4B" }}/>
+                            </div>
+                        </div>
+                        <div className={"row"}>
+                            <div className={'col'}>
+                                <NavBarFilterButton Type={'Asset'} OnClick={() => setFilter('Asset')} Data={assetList} />
+                            </div>
+                        </div>
+                        <label style={{ width: '100%', position: 'relative', float: "left" }}>Phase: </label>
+                        <div className={"row"}>
+                            <div className={"col"}>
+                                <MultiCheckBoxSelect
+                                    ItemTooltip={'dark'}
+                                    Options={phaseOptions}
+                                    Label={''}
+                                    OnChange={(evt, Options: IMultiCheckboxOption[]) => multiCheckboxUpdate("Phases", Options, phaseOptions)}
+                                />
+                            </div>
+                        </div>
+                        <label style={{ width: '100%', position: 'relative', float: "left" }}>Channel Group: </label>
+                        <div className={"row"}>
+                            <div className={"col"}>
+                                <MultiCheckBoxSelect
+                                    ItemTooltip={'dark'}
+                                    Options={channelGroupOptions}
+                                    Label={''}
+                                    OnChange={(evt, Options: IMultiCheckboxOption[]) => multiCheckboxUpdate("Groups", Options, channelGroupOptions)}
+                                />
+                            </div>
+                        </div>
+                    </fieldset>
                 </div>
-                <div className={'row'} style={{ flex: 1, overflow: 'hidden' }}>
-                    <div className="col" style={{height: '100%', overflow: 'hidden'}}>
-                        <ArrayMultiSelect<TrenDAP.iXDADataSet> GroupStyle={{ height: '100%', display: 'flex', flexDirection: 'column' }} Style={{ overflowY: 'auto', flex: 1 }} Record={props.DataSetSettings} Label={props.DataSetSettings.By + "(s)"}
-                            Options={(props.DataSetSettings.By == 'Meter' ? meters?.map(m => ({ Value: m.ID.toString(), Label: m.Name })) : assets?.map(m => ({ Value: m.ID.toString(), Label: m.AssetName }))) ?? []}
-                            Field="IDs" Setter={props.SetDataSetSettings} />
-                    </div>
-                    <div className="col" style={{height: '100%', overflow: 'hidden'}}>
-                        <ArrayMultiSelect<TrenDAP.iXDADataSet> GroupStyle={{ height: '100%', display: 'flex', flexDirection: 'column' }} Style={{ overflowY: 'auto', flex: 1 }} Record={props.DataSetSettings}
-                            Options={channels?.map(m => ({ Value: m.ID.toString(), Label: `${props.DataSetSettings.By === 'Meter' ? m.Meter : m.Asset} - ${m.Name}` })) ?? []}
-                            Field="ChannelIDs" Label="Channel(s)" Setter={props.SetDataSetSettings} />
-                    </div>
+                <div className="col-9 h-100">
+                    <ConfigTable.Table<XDAChannel>
+                        Data={channels}
+                        SortKey={sortField}
+                        Ascending={ascending}
+                        OnSort={(data) => {
+                            if (data.colField == null) return;
+                            if (data.colField === sortField) setAscending(!ascending);
+                            else setSortField(data.colField);
+                        }}
+                        KeySelector={(item) => item.ID}
+                        OnClick={(item, event) => {
+                            event.preventDefault();
+                            const newIds: Set<number> = new Set();
+                            if (event.shiftKey) {
+                                const clickIndex: number = channels.findIndex(chan => chan.ID === item.row.ID);
+                                const firstSelectedIndex: number = channels.findIndex(chan => props.DataSetSettings.ChannelIDs.findIndex(id => id === chan.ID) !== -1);
+                                if (firstSelectedIndex >= 0) {
+                                    const lowerIndex: number = clickIndex < firstSelectedIndex ? clickIndex : firstSelectedIndex;
+                                    const upperIndex: number = clickIndex > firstSelectedIndex ? clickIndex : firstSelectedIndex;
+                                    for (let index: number = lowerIndex; index <= upperIndex; index++) {
+                                        newIds.add(channels[index].ID);
+                                    }
+                                }
+                            } else
+                                newIds.add(item.row.ID);
+        
+                            // Changing the added values based on held ctrl key
+                            if (event.ctrlKey) {
+                                props.DataSetSettings.ChannelIDs.forEach(id => newIds.add(id));
+                                // Handle the unselect case
+                                if (!event.shiftKey && props.DataSetSettings.ChannelIDs.findIndex(id => id === item.row.ID) !== -1) newIds.delete(item.row.ID);
+                            }
+                            const newSettings = { ...props.DataSetSettings };
+                            newSettings.ChannelIDs = [...newIds.keys()];
+                            props.SetDataSetSettings(newSettings);
+                        }}
+                        Selected={(item) => props.DataSetSettings.ChannelIDs.findIndex(id => id === item.ID) !== -1}
+                        TableClass="table table-hover"
+                        TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                        TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                        TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1, userSelect: 'none' }}
+                        RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}>
+                        <ReactTable.AdjustableCol<XDAChannel>
+                            Key={'Name'}
+                            AllowSort={true}
+                            Field={'Name'}
+                        >Channel Name</ReactTable.AdjustableCol>
+                        <ReactTable.AdjustableCol<XDAChannel>
+                            Key={'Phase'}
+                            AllowSort={true}
+                            Field={'Phase'}
+                        />
+                        {colList.map(name =>
+                            <ConfigTable.Configurable key={name.replace(/\s/, "")} Key={name.replace(/\s/, "")} Label={name} Default={defaultCols.has(name)}>
+                                <ReactTable.AdjustableCol<XDAChannel>
+                                    Key={name.replace(/\s/, "")}
+                                    AllowSort={true}
+                                    Field={name.replace(/\s/, "") as keyof XDAChannel}
+                                >{name}</ReactTable.AdjustableCol>
+                            </ConfigTable.Configurable>)
+                        }
+                    </ConfigTable.Table>
                 </div>
-            </>
+                <TrenDAPSelectPopup<SystemCenter.Types.DetailedMeter> Table='DetailedMeter' SourceID={props.DataSource.ID} SourceType='data'
+                    Show={filter === 'Meter'} Selection={meterList} Type='multiple'
+                    OnClose={(selected, conf) => {
+                        setFilter('None');
+                        if (conf) {
+                            const newSettings = { ...props.DataSetSettings };
+                            newSettings.ChannelIDs = [];
+                            newSettings.MeterIDs = selected.map(item => item.ID);
+                            props.SetDataSetSettings(newSettings);
+                        }
+                    }}
+                    TableColumns={[
+                        { key: 'AssetKey', field: 'AssetKey', label: 'Key', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Name', field: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Location', field: 'Location', label: 'Substation', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'MappedAssets', field: 'MappedAssets', label: 'Assets', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Make', field: 'Make', label: 'Make', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Model', field: 'Model', label: 'Model', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Scroll', label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },
+                    ]} 
+                    SearchColumns={[
+                        { label: 'Key', key: 'AssetKey', type: 'string', isPivotField: false },
+                        { label: 'Name', key: 'Name', type: 'string', isPivotField: false },
+                        { label: 'Substation', key: 'Location', type: 'string', isPivotField: false },
+                        { label: 'Make', key: 'Make', type: 'string', isPivotField: false },
+                        { label: 'Model', key: 'Model', type: 'string', isPivotField: false },
+                        { label: 'Number of Assets', key: 'MappedAssets', type: 'number', isPivotField: false },
+                        { label: 'Description', key: 'Description', type: 'string', isPivotField: false },
+                    ]} DefaultSearchCol={{ label: 'Name', key: 'Name', type: 'string', isPivotField: false }} Title='Filter by Meter' />
+                <TrenDAPSelectPopup<SystemCenter.Types.DetailedAsset> Table='DetailedAsset' SourceID={props.DataSource.ID} SourceType='data'
+                    Show={filter === 'Asset'} Selection={assetList} Type='multiple'
+                    OnClose={(selected, conf) => {
+                        setFilter('None');
+                        if (conf) {
+                            const newSettings = { ...props.DataSetSettings };
+                            newSettings.ChannelIDs = [];
+                            newSettings.AssetIDs = selected.map(item => item.ID);
+                            props.SetDataSetSettings(newSettings);
+                        }
+                    }}
+                    TableColumns={[
+                        { key: 'AssetKey', field: 'AssetKey', label: 'Key', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'AssetName', field: 'AssetName', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'AssetType', field: 'AssetType', label: 'Asset Type', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'VoltageKV', field: 'VoltageKV', label: 'Voltage (kV)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Meters', field: 'Meters', label: 'Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
+                        { key: 'Locations', field: 'Locations', label: 'Substations', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } }
+                    ]} 
+                    SearchColumns={[
+                        { label: 'Key', key: 'AssetKey', type: 'string', isPivotField: false },
+                        { label: 'Name', key: 'AssetName', type: 'string', isPivotField: false },
+                        { label: 'Nominal Voltage (L-L kV)', key: 'VoltageKV', type: 'number', isPivotField: false },
+                        { label: 'Type', key: 'AssetType', type: 'enum', isPivotField: false },
+                        { label: 'Meter Key', key: 'Meter', type: 'string', isPivotField: false },
+                        { label: 'Substation Key', key: 'Location', type: 'string', isPivotField: false },
+                        { label: 'Number of Meters', key: 'Meters', type: 'integer', isPivotField: false },
+                        { label: 'Number of Substations', key: 'Locations', type: 'integer', isPivotField: false },
+                        { label: 'Description', key: 'Description', type: 'string', isPivotField: false },
+                    ]} DefaultSearchCol={{ label: 'Name', key: 'AssetName', type: 'string', isPivotField: false }} Title='Filter by Asset' />
+                
+            </div>
         );
 
     },
@@ -187,8 +385,8 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                 data: JSON.stringify({
                     Phases: dataSetSettings.Phases,
                     ChannelGroups: dataSetSettings.Groups,
-                    MeterList: dataSetSettings.By === 'Meter' ? dataSetSettings.IDs : [],
-                    AssetList: dataSetSettings.By === 'Asset' ? dataSetSettings.IDs : []
+                    MeterList: dataSetSettings.MeterIDs,
+                    AssetList: dataSetSettings.AssetIDs
                 }),
                 dataType: 'json',
                 cache: true,
@@ -202,8 +400,8 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                     }
                     // Setting it to this to avoid collisons between multiple sources
                     returnData[index].ID = `${setConn.ID}-${returnData[index].ID}`;
-                    returnData[index].ParentID = `${setConn.ID}-${(dataSetSettings.By === 'Meter' ? channelDatum.MeterID : channelDatum.AssetID).toString()}`;
-                    returnData[index].ParentName = dataSetSettings.By === 'Meter' ? channelDatum.Meter : channelDatum.Asset;
+                    returnData[index].ParentID = `${setConn.ID}-${channelDatum.MeterID}`;
+                    returnData[index].ParentName = channelDatum.Meter;
                     returnData[index].Name = channelDatum.Name;
                     returnData[index].Phase = channelDatum.Phase;
                     returnData[index].Type = channelDatum.ChannelGroup;
@@ -228,7 +426,7 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                 Type: '',
                 SeriesData: { Minimum: [], Maximum: [], Average: [] }
             }));
-            let metaData: DataSetTypes.IDataSetMetaData[] = null;
+            let metaData: DataSetTypes.IDataSetMetaData[] | null = null;
             // Handle to query HIDS information (through XDA)
             let dataHandle: JQuery.jqXHR<string>;
             if (events == null) dataHandle = $.ajax({
@@ -248,12 +446,15 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                 cache: false,
                 async: true
             });
-            else resolve([]);
+            else {
+                resolve([]);
+                return;
+            }
             
             dataHandle.done((data: string) => {
                 const newPoints: string[] = data.split("\n");
                 newPoints.forEach(jsonPoint => {
-                    let point: TrenDAP.iXDATrendDataPoint = undefined;
+                    let point: TrenDAP.iXDATrendDataPoint | undefined = undefined;
                     try {
                         if (jsonPoint !== "") point = JSON.parse(jsonPoint);
                     }
@@ -284,7 +485,7 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
                 for (let index = 0; index < returnData.length; index++) {
                     // Setting it to this to avoid collisons between multiple sources
                     returnData[index].ID = `${setConn.ID}-${returnData[index].ID}`;
-                    const metaDatum = metaData.find(chan => chan.ID === returnData[index].ID);
+                    const metaDatum = metaData!.find(chan => chan.ID === returnData[index].ID);
                     if (metaDatum == null) {
                         console.warn(`Unable to retrieve meta data for channel with ID ${returnData[index].ID}.`);
                         continue;
@@ -335,7 +536,8 @@ const XDADataSource: IDataSource<TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = 
         queryParams['windowSize'] = windowSize;
         queryParams['timeWindowUnits'] = 3; // hours
 
-        queryParams[dataSetSettings.By.toLowerCase() + 's'] = `[${dataSetSettings.IDs.join(',')}]`;
+        queryParams['meters'] = `[${dataSetSettings.MeterIDs.join(',')}]`;
+        queryParams['assets'] = `[${dataSetSettings.AssetIDs.join(',')}]`;
         queryParams['phases'] = `[${dataSetSettings.Phases.join(',')}]`;
         queryParams['groups'] = `[${dataSetSettings.Groups.join(',')}]`;
 

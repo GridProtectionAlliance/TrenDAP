@@ -192,7 +192,7 @@ export const SelectDataSets = (state: Redux.StoreState) => state.DataSets.Data;
 export const SelectDataSetByID = (state: Redux.StoreState, id: number) => state.DataSets.Data.find(ds => ds.ID === id) as TrenDAP.iDataSet;
 export const SelectRecord = (state: Redux.StoreState) => state.DataSets.Record;
 export const SelectNewDataSet = () => newDataSet;
-export const SelectNewXDADataSet = () => ({ By: 'Meter', IDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: '' }) as TrenDAP.iXDADataSet;
+export const SelectNewXDADataSet = () => ({ AssetIDs: [], MeterIDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: '' }) as TrenDAP.iXDADataSet;
 export const SelectDataSetsStatus = (state: Redux.StoreState)  => state.DataSets.Status;
 export const SelectDataSetsForUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.User === user);
 export const SelectDataSetsAllPublicNotUser = (state: Redux.StoreState, user) => state.DataSets.Data.filter(ws => ws.Public && ws.User !== user);

@@ -221,11 +221,14 @@ export default class TrenDAPDB {
                     });
             })).then((results) => 
                 new Promise<{ Data: DataSetTypes.IDataSetData, ChannelKey: string, ChannelSettings: any }>((resolve, reject) => {
-                    if (!results.hasOwnProperty('length')) return resolve(results as { Data: DataSetTypes.IDataSetData, ChannelKey: string, ChannelSettings: any });
+                    if (!results.hasOwnProperty('length')) {
+                        resolve(results as { Data: DataSetTypes.IDataSetData, ChannelKey: string, ChannelSettings: any });
+                        return;
+                    }
                     
                     // We've ensured this typing earlier
                     const realResults = results as { Data: DataSetTypes.IDataSetData, ChannelKey: TrenDAP.IChannelKey }[];
-                    const virtualResult: DataSetTypes.IDataSetData = { ...virtualChannel.Info, SeriesData: { Minimum: [], Maximum: [], Average: [] }}
+                    const virtualResult: DataSetTypes.IDataSetData = { ...virtualChannel.Info, SeriesData: { Minimum: [], Maximum: [], Average: [] } }
 
                     const userFunc = createVirtualFunc(virtualChannel.VirtualInfo.ComponentChannels, virtualChannel.VirtualInfo.Calculation);
 
@@ -243,7 +246,7 @@ export default class TrenDAPDB {
                             return (timeSum / count) * 1.05;
                         });
 
-                        let currentTimeStamp: undefined|number;
+                        let currentTimeStamp: undefined | number;
                         while (indexArray.some((dataIndex, resultIndex) => dataIndex < realResults[resultIndex].Data.SeriesData[objectKey].length)) {
                             // Grab next potential values
                             for (let index = 0; index < valueArray.length; index++){

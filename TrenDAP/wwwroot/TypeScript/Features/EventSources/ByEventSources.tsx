@@ -32,8 +32,9 @@ import AddEditEventSource from './AddEditEventSource';
 import { Warning } from '@gpa-gemstone/react-interactive';
 import RandomEvents from './Implementations/RandomEvents';
 import OpenXDAEvents from './Implementations/OpenXDAEvents';
+import SOE from './Implementations/SOE';
 
-export const EventDataSources: IEventSource<any, any>[] = [OpenXDAEvents, RandomEvents];
+export const EventDataSources: IEventSource<any, any>[] = [OpenXDAEvents, SOE, RandomEvents];
 
 const ByEventSources: React.FunctionComponent = () => {
     const dispatch = useAppDispatch();

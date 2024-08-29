@@ -1,7 +1,7 @@
 //******************************************************************************************************
-//  TrenDAPDBController.cs - Gbtc
+//  EventSourceImplementationController.cs - Gbtc
 //
-//  Copyright © 2020, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2024, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,51 +16,43 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  10/07/2020 - Billy Ernest
+//  08/06/2024 - Gabriel Santos
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using Gemstone.Data.Model;
-using HIDS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using TrenDAP.Model;
 using AdoDataConnection = Gemstone.Data.AdoDataConnection;
-using DataSet = TrenDAP.Model.DataSet;
+
 namespace TrenDAP.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class OpenXDAController : ControllerBase 
+    public abstract class EventSourceImplementationController : ControllerBase
     {
-        public OpenXDAController(IConfiguration configuration)
+        protected virtual string typeName { get; }
+        protected IConfiguration Configuration { get; }
+
+        public EventSourceImplementationController(IConfiguration configuration)
         {
             Configuration = configuration;
         }
-
-        private IConfiguration Configuration { get; }
-
-        [HttpGet, Route("{sourceID:int}/{table}")]
-        public virtual ActionResult GetTable(int sourceID, string table)
+        [HttpGet, Route("TestAuth/{eventSourceID:int}")]
+        public ActionResult TestAuth(int eventSourceID)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
                 try
                 {
-                    EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
-                    if (eventSource.Type == "openXDA") return GetOpenXDA(eventSource, table);
-                    else return StatusCode(StatusCodes.Status500InternalServerError, "Only openXDA eventsources are supported by this endpoint.");
+                    EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", eventSourceID);
+                    if (eventSource.Type != typeName) return StatusCode(StatusCodes.Status400BadRequest, $"Only ${typeName} eventsources are supported by this endpoint.");
+                    return Ok(TestAuthentication(eventSource));
                 }
                 catch (Exception ex)
                 {
@@ -69,16 +61,19 @@ namespace TrenDAP.Controllers
             }
         }
 
-        [HttpPost, Route("{sourceID:int}/{table}")]
-        public virtual ActionResult PostTable(int sourceID, string table, [FromBody] JObject filter)
+        [HttpGet, Route("Query/{eventSourceDataSetID:int}")]
+        public IActionResult GetEvents(int eventSourceDataSetID, CancellationToken cancellationToken)
         {
             using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
             {
                 try
                 {
-                    EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", sourceID);
-                    if (eventSource.Type == "openXDA") return GetOpenXDA(eventSource, table, filter);
-                    else return StatusCode(StatusCodes.Status500InternalServerError, "Only openXDA eventsources are supported by this endpoint.");
+                    EventSourceDataSet sourceSet = new TableOperations<EventSourceDataSet>(connection).QueryRecordWhere("ID = {0}", eventSourceDataSetID);
+                    if (sourceSet == null) return StatusCode(StatusCodes.Status400BadRequest, $"Could not find source set relationship with ID {eventSourceDataSetID}");
+                    DataSet dataSet = new TableOperations<DataSet>(connection).QueryRecordWhere("ID = {0}", sourceSet.DataSetID);
+                    EventSource eventSource = new TableOperations<EventSource>(connection).QueryRecordWhere("ID = {0}", sourceSet.EventSourceID);
+                    if (eventSource.Type != typeName) return StatusCode(StatusCodes.Status400BadRequest, $"Only ${typeName} eventsources are supported by this endpoint.");
+                    return QueryEvents(dataSet, eventSource, sourceSet.Settings, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -87,20 +82,7 @@ namespace TrenDAP.Controllers
             }
         }
 
-        private ActionResult GetOpenXDA(EventSource eventSource, string table, JObject filter = null)
-        {
-            try
-            {
-                EventSourceHelper helper = new EventSourceHelper(eventSource);
-                Task<string> rsp;
-                if (filter is null) rsp = helper.GetAsync($"api/{table}");
-                else rsp = helper.PostAsync($"api/{table}/SearchableList", new StringContent(filter.ToString(), Encoding.UTF8, "application/json"));
-                return Ok(rsp.Result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex);
-            }
-        }
+        protected abstract string TestAuthentication(EventSource eventSource);
+        protected abstract IActionResult QueryEvents(DataSet dataset, EventSource eventSource, JObject eventSourceDataSetSettings, CancellationToken cancellationToken);
     }
 }

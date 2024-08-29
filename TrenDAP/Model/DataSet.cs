@@ -111,6 +111,26 @@ namespace TrenDAP.Model
                 .Concat(ReadTimeFilters((ulong)Weeks, TimeFilter.Week00, 53))
                 .Concat(ReadTimeFilters((ulong)Months, TimeFilter.January, 12));
         }
+
+        public string GetTimeFiltersQuery(string fieldName)
+        {
+            IEnumerable<TimeFilter> timeFilters = this.GetTimeFilters();
+            IEnumerable<int> hours = timeFilters.Where(filt => filt < TimeFilter.Sunday).Select(filt => (int)filt);
+            // SQL dw is 1-7, starting on sunday
+            IEnumerable<int> days = timeFilters.Where(filt => filt >= TimeFilter.Sunday && filt < TimeFilter.Week00).Select(filt => filt - TimeFilter.Sunday + 1);
+            // Influx uses the iso week standard, i.e. 1-53
+            IEnumerable<int> weeks = timeFilters.Where(filt => filt >= TimeFilter.Week00 && filt < TimeFilter.January).Select(filt => filt - TimeFilter.Week00 + 1);
+            IEnumerable<int> months = timeFilters.Where(filt => filt >= TimeFilter.January).Select(filt => filt - TimeFilter.January + 1);
+
+            string hourFilt = hours.Any() ? $"DATEPART(hh,{fieldName}) not in ({string.Join(",", hours)})" : null;
+            string dayFilt = days.Any() ? $"DATEPART(dw, {fieldName}) not in ({string.Join(",", days)})" : null;
+            string weekFilt = weeks.Any() ? $"DATEPART(isowk, {fieldName}) not in ({string.Join(",", weeks)})" : null;
+            string monthFilt = months.Any() ? $"DATEPART(mm, {fieldName}) not in ({string.Join(",", months)})" : null;
+
+            string[] filters = { hourFilt, dayFilt, weekFilt, monthFilt };
+
+            return string.Join(" AND ", filters.Where(filt => !(filt is null)));
+        }
         #endregion
     }
 
