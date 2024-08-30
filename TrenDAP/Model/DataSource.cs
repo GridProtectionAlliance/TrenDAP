@@ -21,22 +21,16 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Generic;
 using Gemstone.Data;
 using Gemstone.Data.Model;
-using InfluxDB.Client.Api.Domain;
-using Microsoft.AspNetCore.Http;
+using GSF.Data.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
-using openXDA.APIAuthentication;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
+using TrenDAP.Attributes;
 using TrenDAP.Controllers;
+using JsonIgnore = Newtonsoft.Json.JsonIgnoreAttribute;
 using PrimaryKeyAttribute = Gemstone.Data.Model.PrimaryKeyAttribute;
 using UseEscapedNameAttribute = Gemstone.Data.Model.UseEscapedNameAttribute;
 
@@ -48,14 +42,23 @@ namespace TrenDAP.Model
         public int ID { get; set; }
         public string Type { get; set; }
         public string Name { get; set; }
-        public string URL { get; set; }
-        // Todo: maybe we want to break datasource from api auth? two tables where a source is linked to an auth row?
-        public string RegistrationKey { get; set; }
-        public string APIToken { get; set; }
         [UseEscapedName]
         public bool Public { get; set; }
+        [ParentKey(typeof(string))]
         [UseEscapedName]
         public string User { get; set; }
+        [JsonIgnore]
+        public string PrivateString { get; set; }
+        [NonRecordField]
+        public JObject PrivateSettings
+        {
+            get
+            {
+                try { return JObject.Parse(PrivateString); }
+                catch { return new JObject(); }
+            }
+        }
+        [JsonIgnore]
         public string SettingsString { get; set; }
         [NonRecordField]
         public JObject Settings
@@ -70,56 +73,8 @@ namespace TrenDAP.Model
         {
             using (AdoDataConnection connection = new AdoDataConnection(configuration["SystemSettings:ConnectionString"], configuration["SystemSettings:DataProviderString"]))
             {
-                return new Gemstone.Data.Model.TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", id);
+                return new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", id);
             }
-        }
-    }
-
-    public class DataSourceHelper : XDAAPIHelper
-    {
-        private DataSource m_dataSource;
-
-        public DataSourceHelper(IConfiguration config, int dataSourceId)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(config["SystemSettings:ConnectionString"], config["SystemSettings:DataProviderString"]))
-            {
-                m_dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceId);
-            }
-        }
-
-        public DataSourceHelper(DataSource source)
-        {
-            m_dataSource = source;
-        }
-
-        protected override string Token
-        {
-            get
-            {
-                return m_dataSource.APIToken;
-            }
-
-        }
-        protected override string Key
-        {
-            get
-            {
-                return m_dataSource.RegistrationKey;
-            }
-
-        }
-        protected override string Host
-        {
-            get
-            {
-                return m_dataSource.URL;
-            }
-        }
-
-        public IActionResult GetActionResult(string requestURI, HttpContent content = null)
-        {
-            Task<HttpResponseMessage> rsp = GetResponseTask(requestURI, content);
-            return new RspConverter(rsp);
         }
     }
 
@@ -127,43 +82,65 @@ namespace TrenDAP.Model
     {
         public DataSourceController(IConfiguration configuration) : base(configuration){ }
 
+        public override ActionResult GetOne(string _id)
+        {
+            return BadRequest("Method not allowed");
+        }
+        public override ActionResult<IEnumerable<DataSource>> Get(string _id)
+        {
+            return base.Get(Request.HttpContext.User.Identity.Name);
+        }
         public override ActionResult Post([FromBody] JObject record)
         {
-            record["SettingsString"] = record["Settings"].ToString();
-            return base.Post(record);
+            DataSource newRecord = record.ToObject<DataSource>();
+            newRecord.User = Request.HttpContext.User.Identity.Name;
+            newRecord.PrivateString = record["PrivateSettings"].ToString();
+            newRecord.SettingsString = record["Settings"].ToString();
+            return Post(newRecord);
         }
         public override ActionResult Patch([FromBody] JObject record)
         {
-            record["SettingsString"] = record["Settings"].ToString();
-            return base.Patch(record);
-        }
-
-        [HttpGet, Route("TestAuth/{dataSourceID:int}")]
-        public ActionResult TestAuth(int dataSourceID)
-        {
-            using (AdoDataConnection connection = new AdoDataConnection(Configuration["SystemSettings:ConnectionString"], Configuration["SystemSettings:DataProviderString"]))
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration[SettingCategory + ":ConnectionString"], Configuration[SettingCategory + ":DataProviderString"]))
             {
-                try
-                {
-                    DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
-                    DataSourceHelper helper = new DataSourceHelper(dataSource);
-                    HttpResponseMessage rsp = helper.GetResponseTask($"api/TestAuth").Result;
-                    switch (rsp.StatusCode)
-                    {
-                        default:
-                        case HttpStatusCode.Unauthorized:
-                            return Ok("Failed to authorize with datasource credentials.");
-                        case HttpStatusCode.NotFound:
-                            return Ok("Unable to find datasource.");
-                        case HttpStatusCode.OK:
-                            return Ok("1");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, ex);
-                }
+                DataSource result = new TableOperations<DataSource>(connection).QueryRecordWhere("ID={0}", record["ID"].ToString());
+                if (result == null) return BadRequest("Data source does not exist");
+                else if (!result.User.Equals(Request.HttpContext.User.Identity.Name, System.StringComparison.OrdinalIgnoreCase)) return Unauthorized("Data source does not belong to user");
             }
+            DataSource newRecord = record.ToObject<DataSource>();
+            newRecord.User = Request.HttpContext.User.Identity.Name;
+            newRecord.PrivateString = record["PrivateSettings"].ToString();
+            newRecord.SettingsString = record["Settings"].ToString();
+            return Patch(newRecord);
         }
+        public override ActionResult Delete([FromBody] DataSource record)
+        {
+            using (AdoDataConnection connection = new AdoDataConnection(Configuration[SettingCategory + ":ConnectionString"], Configuration[SettingCategory + ":DataProviderString"]))
+            {
+                DataSource result = new TableOperations<DataSource>(connection).QueryRecordWhere("ID={0}", record.ID);
+                if (result == null) base.Delete(record);
+                else if (result.User != Request.HttpContext.User.Identity.Name) return Unauthorized("Data source does not belong to user");
+            }
+            return base.Delete(record);
+        }
+    }
+
+    [RootQueryRestriction("[Public] = 1")]
+    [CustomView(@"
+        SELECT
+            DataSource.ID,
+            DataSource.Type,
+            DataSource.Name,
+            DataSource.[Public],
+            DataSource.[User],
+            'Hidden' as PrivateString,
+            DataSource.SettingsString
+        From 
+            DataSource
+    ")]
+    public class DataSourcePublic : DataSource { }
+
+    public class DataSourcePublicController : ModelController<DataSourcePublic>
+    {
+        public DataSourcePublicController(IConfiguration configuration) : base(configuration) { }
     }
 }

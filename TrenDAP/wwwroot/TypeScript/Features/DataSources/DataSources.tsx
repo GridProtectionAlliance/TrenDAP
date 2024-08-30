@@ -25,7 +25,10 @@ import * as React from 'react';
 import _ from 'lodash';
 import { DataSourceTypes } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { FetchDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSources } from './DataSourcesSlice'
+import {
+    SelectPublicDataSources, SelectPublicDataSourcesStatus,
+    FetchDataSources, FetchPublicDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSources
+} from './DataSourcesSlice'
 import { ReactTable } from '@gpa-gemstone/react-table';
 import EditDataSource from './EditDataSource';
 import { TrashCan, HeavyCheckMark } from './../../Constants';
@@ -36,9 +39,26 @@ import SapphireDataSource from './Implementations/SapphireDataSource';
 import OpenHistorianDataSource from './Implementations/OpenHistorianDataSource';
 import { IDataSource } from './Interface';
 
-export const AllSources: IDataSource<any, any>[] = [XDADataSource, SapphireDataSource, OpenHistorianDataSource];
+export const AllSources: IDataSource<any, any, any>[] = [XDADataSource, SapphireDataSource, OpenHistorianDataSource];
 
 const DataSources: React.FunctionComponent = () => {
+    const dispatch = useAppDispatch();
+    const publicStatus = useAppSelector(SelectPublicDataSourcesStatus);
+    const publicSources = useAppSelector(SelectPublicDataSources);
+    const privateStatus = useAppSelector(SelectDataSourcesStatus);
+    const privateSources = useAppSelector(SelectDataSources);
+
+
+    React.useEffect(() => {
+        if (publicStatus === 'unitiated' || publicStatus === 'changed')
+            dispatch(FetchPublicDataSources());
+    }, [publicStatus]);
+
+    React.useEffect(() => {
+        if (privateStatus === 'unitiated' || privateStatus === 'changed')
+            dispatch(FetchDataSources());
+    }, [privateStatus]);
+
     return (
         <div className="container-fluid d-flex h-100 flex-row" style={{ height: 'inherit', padding: '0 0 0 0' }}>
             <div className="col-8" style={{ padding: '0 20px 0 0' }}>
@@ -54,7 +74,7 @@ const DataSources: React.FunctionComponent = () => {
                         </div>
                     </div>
                     <div className="card-body p-0">
-                        <DataSourceTable OwnedByUser={true}/>
+                        <DataSourceTable OwnedByUser={true} DataSources={privateSources} />
                     </div>
                 </div>
             </div>
@@ -62,7 +82,7 @@ const DataSources: React.FunctionComponent = () => {
                 <div className="card" style={{ width: '100%', height: '100%' }}>
                     <div className="card-header"><h4>Shared Data Sources</h4></div>
                     <div className="card-body p-0">
-                        <DataSourceTable OwnedByUser={false} />
+                        <DataSourceTable OwnedByUser={false} DataSources={publicSources} />
                     </div>
                 </div>
             </div>
@@ -71,7 +91,8 @@ const DataSources: React.FunctionComponent = () => {
 }
 
 interface ITableProps {
-    OwnedByUser: boolean
+    OwnedByUser: boolean,
+    DataSources: DataSourceTypes.IDataSourceView[]
 }
 
 const DataSourceTable = React.memo((props: ITableProps) => {
@@ -80,20 +101,15 @@ const DataSourceTable = React.memo((props: ITableProps) => {
     const [dataSources, setDataSources] = React.useState<DataSourceTypes.IDataSourceView[]>([]);
 
     const dispatch = useAppDispatch();
-    const dsStatus = useAppSelector(SelectDataSourcesStatus);
-    const allDataSources = useAppSelector(SelectDataSources);
     const [deleteItem, setDeleteItem] = React.useState<DataSourceTypes.IDataSourceView>(null);
 
     React.useEffect(() => {
-        if (dsStatus === 'unitiated' || dsStatus === 'changed') dispatch(FetchDataSources());
-    }, [dsStatus]);
-
-    React.useEffect(() => {
-        setDataSources(_.orderBy(allDataSources.filter(source => {
-            if (props.OwnedByUser) return source.User === userName;
-            else return source.Public && source.User !== userName;
-        }), [sortField], [ascending ? 'asc' : 'desc']));
-    }, [sortField, ascending, allDataSources, props.OwnedByUser]);
+        setDataSources(_.orderBy((
+            props.OwnedByUser ?
+                props.DataSources :
+                props.DataSources.filter(src => src.User !== userName)
+        ), [sortField], [ascending ? 'asc' : 'desc']));
+    }, [sortField, ascending, props.DataSources]);
 
     return (
         <>

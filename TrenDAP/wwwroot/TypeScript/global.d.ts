@@ -38,8 +38,8 @@ declare global {
 export namespace Redux {
     interface StoreState {
         DataSets: State<TrenDAP.iDataSet>,
-        DataSources: State<DataSourceTypes.IDataSourceView>,
-        EventSources: State<EventSourceTypes.IEventSourceView>,
+        DataSources: PublicPrivateState<DataSourceTypes.IDataSourceView>,
+        EventSources: PublicPrivateState<EventSourceTypes.IEventSourceView>,
         WorkSpaces: State<TrenDAP.iWorkSpace>,
         OpenHistorian: { ID: number, State: OpenHistorianState }[],
         Sapphire: { [instance: number]: { [table: string]: Redux.SapphireTableSlice } },
@@ -53,6 +53,15 @@ export namespace Redux {
         SortField: keyof T,
         Ascending: boolean,
         Record?: T
+    }
+    interface PublicPrivateState<T> {
+        Status: TrenDAP.Status,
+        Data: T[],
+        SortField: keyof T,
+        Ascending: boolean,
+        PublicStatus: TrenDAP.Status,
+        PublicData: T[],
+        Error: null | string
     }
 
     interface OpenHistorianState {
@@ -94,12 +103,10 @@ export namespace DataSourceTypes {
         ID: number,
         Name: string,
         Type: string,
-        URL: string,
-        RegistrationKey: string,
-        APIToken: string,
         Public: boolean,
         User: string,
-        Settings: any
+        Settings: any,
+        PrivateSettings: any
     }
 
     interface IDataSourceDataSet {
@@ -282,7 +289,6 @@ export namespace TrenDAP {
 
     interface IWidgetEventSources<T> {
         Key: number,
-        Enabled: boolean,
         EventSettings: T
     }
 

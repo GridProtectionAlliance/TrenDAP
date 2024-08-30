@@ -33,11 +33,9 @@ export namespace EventSourceTypes {
         ID: number,
         Name: string,
         Type: string,
-        URL: string,
-        RegistrationKey: string,
-        APIToken: string,
         Public: boolean,
         User: string,
+        PrivateSettings: any,
         Settings: any
     }
 
@@ -77,17 +75,20 @@ export function EnsureTypeSafety<T>(settingsObj: any, defaultSettings: T): T {
 
 /*
  Interface that needs to be implemented by an EventSource
- {T} => Settings Associated with this Eventsource
- {U} => Settings associated with the speicific Eventsource and Dataset
+ {T} => Secret Settings Associated with this Eventsource
+ {U} => Settings Associated with this Eventsource
+ {V} => Settings associated with the speicific Eventsource and Dataset
 */
-export interface IEventSource<T, U> {
-    DataSetUI: React.FC<EventSourceTypes.IEventSourceDataSetProps<T, U>>,
-    ConfigUI: React.FC<TrenDAP.ISourceConfig<T>>,
+export interface IEventSource<T, U, V> {
+    PrivateConfigUI?: React.FC<TrenDAP.ISourceConfig<T>>,
+    ConfigUI?: React.FC<TrenDAP.ISourceConfig<U>>,
+    DataSetUI: React.FC<EventSourceTypes.IEventSourceDataSetProps<U, V>>,
     Load: (eventSource: EventSourceTypes.IEventSourceView, dataSet: TrenDAP.iDataSet, dataConn: EventSourceTypes.IEventSourceDataSet) => Promise<TrenDAP.IEvent[]>,
     QuickView?: (eventSource: EventSourceTypes.IEventSourceView, dataSet: TrenDAP.iDataSet, dataConn: EventSourceTypes.IEventSourceDataSet) => string,
     GetLogo?: (eventSource: EventSourceTypes.IEventSourceView) => string,
     TestAuth: (eventSource: EventSourceTypes.IEventSourceView) => Promise<boolean>,
-    DefaultSourceSettings: T,
-    DefaultDataSetSettings: U,
+    DefaultPrivateSourceSettings: T,
+    DefaultSourceSettings: U,
+    DefaultDataSetSettings: V,
     Name: string,
 }

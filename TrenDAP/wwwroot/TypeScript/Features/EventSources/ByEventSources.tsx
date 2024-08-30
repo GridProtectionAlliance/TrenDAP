@@ -26,7 +26,10 @@ import _ from 'lodash';
 import { EventSourceTypes, IEventSource } from './Interface';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { ReactTable } from '@gpa-gemstone/react-table';
-import { SelectEventSources, SelectEventSourcesStatus, FetchEventSources, RemoveEventSource } from './Slices/EventSourcesSlice';
+import {
+    RemoveEventSource, SelectPublicEventSourcesStatus, SelectEventSourcesStatus, SelectPublicEventSources, SelectEventSources,
+    FetchPublicEventSources, FetchEventSources
+} from './Slices/EventSourcesSlice';
 import { TrashCan, HeavyCheckMark, Pencil } from './../../Constants';
 import AddEditEventSource from './AddEditEventSource';
 import { Warning } from '@gpa-gemstone/react-interactive';
@@ -34,13 +37,28 @@ import RandomEvents from './Implementations/RandomEvents';
 import OpenXDAEvents from './Implementations/OpenXDAEvents';
 import SOE from './Implementations/SOE';
 
-export const EventDataSources: IEventSource<any, any>[] = [OpenXDAEvents, SOE, RandomEvents];
+export const EventDataSources: IEventSource<any, any, any>[] = [OpenXDAEvents, SOE, RandomEvents];
 
 const ByEventSources: React.FunctionComponent = () => {
     const dispatch = useAppDispatch();
     const [editEvt, setEditEvt] = React.useState<EventSourceTypes.IEventSourceView>(undefined);
     const [showDelete, setShowDelete] = React.useState<boolean>(false);
     const [showEdit, setShowEdit] = React.useState<boolean>(false);
+
+    const publicStatus = useAppSelector(SelectPublicEventSourcesStatus);
+    const publicSources = useAppSelector(SelectPublicEventSources);
+    const privateStatus = useAppSelector(SelectEventSourcesStatus);
+    const privateSources = useAppSelector(SelectEventSources);
+
+    React.useEffect(() => {
+        if (publicStatus === 'unitiated' || publicStatus === 'changed')
+            dispatch(FetchPublicEventSources());
+    }, [publicStatus]);
+
+    React.useEffect(() => {
+        if (privateStatus === 'unitiated' || privateStatus === 'changed')
+            dispatch(FetchEventSources());
+    }, [privateStatus]);
 
     return (
         <div className="container-fluid d-flex h-100 flex-row" style={{ height: 'inherit', padding: '0 0 0 0' }}>
@@ -58,19 +76,17 @@ const ByEventSources: React.FunctionComponent = () => {
                                         ID: -1,
                                         Name: '',
                                         Type: EventDataSources[0].Name,
-                                        URL: '',
-                                        RegistrationKey: '',
-                                        APIToken: '',
                                         Public: false,
                                         User: undefined,
-                                        Settings: EventDataSources[0].DefaultSourceSettings
+                                        Settings: EventDataSources[0].DefaultSourceSettings,
+                                        PrivateSettings: EventDataSources[0].DefaultPrivateSourceSettings
                                     });
                                 }}>Add New</button>
                             </div>
                         </div>
                     </div>
                     <div className="card-body p-0" style={{ overflow: "hidden" }}>
-                        <EventSourceTable OwnedByUser={true} SetEventSource={setEditEvt} SetShowEdit={setShowEdit} SetShowDelete={setShowDelete} />
+                        <EventSourceTable EventSources={privateSources} OwnedByUser={true} SetEventSource={setEditEvt} SetShowEdit={setShowEdit} SetShowDelete={setShowDelete} />
                     </div>
                 </div>
             </div>
@@ -78,7 +94,7 @@ const ByEventSources: React.FunctionComponent = () => {
                 <div className="card" style={{ width: '100%', height: '100%' }}>
                     <div className="card-header"><h4>Shared Event Data Sources</h4></div>
                     <div className="card-body p-0" style={{ overflow: "hidden" }}>
-                        <EventSourceTable OwnedByUser={false} SetEventSource={setEditEvt} SetShowEdit={setShowEdit} SetShowDelete={setShowDelete} />
+                        <EventSourceTable EventSources={publicSources} OwnedByUser={false} SetEventSource={setEditEvt} SetShowEdit={setShowEdit} SetShowDelete={setShowDelete} />
                     </div>
                 </div>
             </div>
@@ -94,6 +110,7 @@ const ByEventSources: React.FunctionComponent = () => {
 
 interface ITableProps {
     OwnedByUser: boolean,
+    EventSources: EventSourceTypes.IEventSourceView[],
     SetEventSource: (evt: EventSourceTypes.IEventSourceView) => void,
     SetShowEdit: (shw: boolean) => void,
     SetShowDelete: (shw: boolean) => void
@@ -104,23 +121,13 @@ const EventSourceTable = React.memo((props: ITableProps) => {
     const [ascending, setAscending] = React.useState<boolean>(true);
     const [eventSources, setEventSources] = React.useState<EventSourceTypes.IEventSourceView[]>([]);
 
-    const dispatch = useAppDispatch();
-    const allEventSources = useAppSelector(SelectEventSources);
-    const evtStatus = useAppSelector(SelectEventSourcesStatus);
-
-
     React.useEffect(() => {
-        if (evtStatus === 'unitiated' || evtStatus === 'changed')
-            dispatch(FetchEventSources());
-    }, [evtStatus]);
-
-    // #ToDO Clean up Slicing and sorting
-    React.useEffect(() => {
-        setEventSources(_.orderBy(allEventSources.filter(source => {
-            if (props.OwnedByUser) return source.User === userName;
-            else return source.Public && source.User !== userName;
-        }), [sortField], [ascending ? 'asc' : 'desc']));
-    }, [sortField, ascending, allEventSources, props.OwnedByUser]);
+        setEventSources(_.orderBy((
+            props.OwnedByUser ?
+                props.EventSources :
+                props.EventSources.filter(src => src.User !== userName)
+        ), [sortField], [ascending ? 'asc' : 'desc']));
+    }, [sortField, ascending, props.EventSources]);
 
     return (
         <ReactTable.Table<EventSourceTypes.IEventSourceView>

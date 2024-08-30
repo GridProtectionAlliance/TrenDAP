@@ -974,9 +974,18 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
         const [sortField, setSortField] = React.useState<keyof WidgetTypes.ISelectedEvents<IEventSourceSettings>>('Name');
 
         React.useEffect(() => {
-            if (props.SelectedSources.length === 0) return;
-            setAllEventSources(_.orderBy(props.SelectedSources, [sortField], [ascending ? 'asc' : 'desc']));
-        }, [ascending, sortField, props.SelectedSources]);
+            if (props.AllEventSources.length === 0) return;
+            // All keys should be unique, positive keys exist in map, negative don't
+            const tempSources: WidgetTypes.ISelectedEvents<any>[] = props.AllEventSources
+                .filter(eventSource => props.SelectedSources.findIndex(selected => selected.ID === eventSource.ID) === -1)
+                .map((src) => ({ ...src, Key: -src.ID, EventSettings: TrendWidget.DefaultEventSourceSettings }));
+            setAllEventSources(_.orderBy(tempSources.concat(props.SelectedSources), [sortField], [ascending ? 'asc' : 'desc']));
+        }, [props.AllEventSources, props.SelectedSources, TrendWidget.DefaultEventSourceSettings]);
+
+        React.useEffect(() => {
+            if (allEventSources.length === 0) return;
+            setAllEventSources(_.orderBy(allEventSources, [sortField], [ascending ? 'asc' : 'desc']));
+        }, [ascending, sortField]);
 
         const symbolOptions: { Value: allowedSymbols, Element: any }[] = React.useMemo(() => [
             { Value: 'ArrowDropUp', Element: <PreviewEventIcon Symbol='ArrowDropUp' /> },
@@ -1024,9 +1033,13 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                 <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
                     Key={'Display'}
                     AllowSort={false}
-                    Content={({ item }) =>
-                        <ToggleSwitch Record={item} Label="" Field="Enabled" Setter={props.SetSource} />
-                    }
+                    Content={row => {
+                        let record = { Enabled: props.SelectedSources.findIndex(src => src.ID === row.item.ID) !== -1 }
+                        return (<ToggleSwitch<{ Enabled: boolean }> Record={record} Label="" Field="Enabled" Setter={newRecord => {
+                            if (newRecord.Enabled) props.AddOrEditSource(row.item);
+                            else props.RemoveSource(row.item)
+                        }} />);
+                    }}
                 >
                     Display
                 </ReactTable.Column>
@@ -1035,7 +1048,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                     AllowSort={false}
                     Content={({ item }) =>
                         <StylableSelect<IEventSourceSettings> Record={item.EventSettings} Label="" Field="Symbol" Options={symbolOptions}
-                            Setter={(newSettings) => props.SetSource({ ...item, EventSettings: newSettings })} />
+                            Setter={(newSettings) => props.AddOrEditSource({ ...item, EventSettings: newSettings })} />
                     }
                 >
                     Symbol
@@ -1048,7 +1061,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                             Setter={(newSettings) => {
                                 const newSrc = { ...item };
                                 newSrc.EventSettings = newSettings;
-                                props.SetSource(newSrc);
+                                props.AddOrEditSource(newSrc);
                             }}
                             Style={{ backgroundColor: item.EventSettings?.Color, borderColor: item.EventSettings?.Color}} />
                     }

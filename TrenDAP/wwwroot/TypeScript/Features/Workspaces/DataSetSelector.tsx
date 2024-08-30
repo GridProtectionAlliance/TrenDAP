@@ -26,8 +26,11 @@ import * as $ from 'jquery';
 import { TrenDAP, Redux, DataSourceTypes, DataSetTypes } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, Sort, SelectDataSetsSortField, SelectDataSetsAscending, FetchDataSets, SelectDataSetsStatus } from '../DataSets/DataSetsSlice';
-import { SelectDataSources, FetchDataSources, SelectDataSourcesStatus } from '../DataSources/DataSourcesSlice';
-import { SelectEventSources, FetchEventSources, SelectEventSourcesStatus } from '../EventSources/Slices/EventSourcesSlice';
+import {
+    SelectDataSources, FetchDataSources, SelectDataSourcesStatus,
+    SelectPublicDataSources, FetchPublicDataSources, SelectPublicDataSourcesStatus
+} from '../DataSources/DataSourcesSlice';
+import { SelectEventSources, FetchEventSources, SelectEventSourcesStatus, SelectPublicEventSources, SelectPublicEventSourcesStatus, FetchPublicEventSources } from '../EventSources/Slices/EventSourcesSlice';
 
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { Modal, ToolTip } from '@gpa-gemstone/react-interactive';
@@ -105,15 +108,19 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     const navigate = useNavigate();
     const { workspaceId, dataSetID, channels } = useParams();
     const dataSourceViews = useAppSelector(SelectDataSources);
+    const publicDataSourceViews = useAppSelector(SelectPublicDataSources);
     const dataSetsForUser = useAppSelector((state: Redux.StoreState) => SelectDataSetsForUser(state, userName));
     const publicDataSets = useAppSelector((state: Redux.StoreState) => SelectDataSetsAllPublicNotUser(state, userName));
     const dataSetSortField = useAppSelector(SelectDataSetsSortField);
     const dataSetAscending = useAppSelector(SelectDataSetsAscending);
     const dataSourceStatus = useAppSelector(SelectDataSourcesStatus);
+    const publicDataSourceStatus = useAppSelector(SelectPublicDataSourcesStatus);
     const dataSetStatus = useAppSelector(SelectDataSetsStatus);
 
     const eventSourceViews = useAppSelector(SelectEventSources);
     const eventSourceStatus = useAppSelector(SelectEventSourcesStatus);
+    const publicEventSourceViews = useAppSelector(SelectPublicEventSources);
+    const publicEventSourceStatus = useAppSelector(SelectPublicEventSourcesStatus);
 
     const [selectedDataSet, setSelectedDataSet] = React.useState<TrenDAP.iDataSet | null>(null);
     const [channelHover, setChannelHover] = React.useState<IChannelHover>({ Hover: 'None', Index: -1 });
@@ -192,9 +199,19 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     }, [dataSourceStatus]);
 
     React.useEffect(() => {
+        if (publicDataSourceStatus === 'unitiated' || publicDataSourceStatus === 'changed')
+            dispatch(FetchPublicDataSources());
+    }, [publicDataSourceStatus]);
+
+    React.useEffect(() => {
         if (eventSourceStatus === 'unitiated' || eventSourceStatus === 'changed')
             dispatch(FetchEventSources());
     }, [eventSourceStatus]);
+
+    React.useEffect(() => {
+        if (publicEventSourceStatus === 'unitiated' || publicEventSourceStatus === 'changed')
+            dispatch(FetchPublicEventSources());
+    }, [publicEventSourceStatus]);
 
     React.useEffect(() => {
         if (dataSetStatus === 'unitiated' || dataSetStatus === 'changed')
@@ -245,9 +262,10 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             return;
 
         const channelHandlers = datasources.map((ds) => {
-            const dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
-            const implementation: IDataSource<any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
-            if (implementation == null)
+            let dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
+            if (dataSourceView == null) publicDataSourceViews.find(d => d.ID === ds.DataSourceID); 
+            const implementation: IDataSource<any, any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
+            if (implementation == null || dataSourceView == null)
                 return Promise.resolve([]);
             return implementation.LoadDataSetMeta(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds)
         })
@@ -282,8 +300,9 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         }
 
         setEventSourceMetas(eventSources.map(ds => {
-            const eventSourceView = eventSourceViews.find(d => d.ID === ds.EventSourceID);
-            const implementation: IEventSource<any, any> | undefined = EventDataSources.find(t => t.Name == eventSourceView?.Type);
+            let eventSourceView = eventSourceViews.find(d => d.ID === ds.EventSourceID);
+            if (eventSourceView == null) publicEventSourceViews.find(d => d.ID === ds.EventSourceID); 
+            const implementation: IEventSource<any, any, any> | undefined = EventDataSources.find(t => t.Name == eventSourceView?.Type);
             if (implementation == null || eventSourceView == null)
                 return undefined;
             const logoString = implementation?.GetLogo != null ? implementation.GetLogo(eventSourceView) : undefined;
@@ -297,13 +316,15 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         const rowIDs = props.WorkSpaceJSON.Rows.map(r => r.Widgets.map(w => w.Channels.filter(c => !isVirtual(c.Key)).map(c => c.Key['Parent'])).flat()).flat();
         const virtualIDs = props.WorkSpaceJSON.VirtualChannels.flatMap(channel => channel.ComponentChannels.map(key => key.Key.Parent));
         const parentID = _.uniq(rowIDs.concat(virtualIDs)).sort((a, b) => a - b);
-        if (allParents.length === 0)
+        if (allParents.length === 0) {
+            setSelectedParentKey(parentID.length > 0 ? parentID[0] : null)
             setParentMatches(parentID.map(p => ({
                 Key: p,
                 Name: 'Parent ' + p,
                 Status: 'NoMatch',
                 ParentID: null
             })));
+        }
         else {
             const parents = allParents.filter(p => p.ID != "")
             const newParentMatches: IParentMatch[] = parentID.map((parent, idx) => {
@@ -316,6 +337,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 };
             });
 
+            setSelectedParentKey(newParentMatches.length > 0 ? newParentMatches[0].Key : null)
             setParentMatches(newParentMatches);
         }
     }, [allParents, props.WorkSpaceJSON, props.IsModalOpen]);
@@ -382,8 +404,9 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         return db.ClearTables(['Channel', 'Event', 'Virtual']).then(() =>
             Promise.all(eventSources.map(conn => 
                 new Promise<{Events: TrenDAP.IEvent[], EventMeta: TrenDAP.IEventSourceMetaData}>((resolve, reject) => {
-                    const view = eventSourceViews.find(eventView => eventView.ID === conn.EventSourceID);
-                    const implementation: IEventSource<any, any> | undefined = EventDataSources.find(evtSrc => evtSrc.Name === view?.Type);
+                    let view = eventSourceViews.find(eventView => eventView.ID === conn.EventSourceID);
+                    if (view == null) publicEventSourceViews.find(d => d.ID === conn.EventSourceID); 
+                    const implementation: IEventSource<any, any, any> | undefined = EventDataSources.find(evtSrc => evtSrc.Name === view?.Type);
                     const meta = eventSourceMetas.find(evtMeta => evtMeta.ID === conn.ID);
                     if (view == null || meta == null || implementation == null)
                         resolve({Events: [], EventMeta: meta as TrenDAP.IEventSourceMetaData});
@@ -407,9 +430,10 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                 }, (arg) => reject(arg));
         })).then((allEvents) =>
             Promise.all(datasources.map((ds) => {
-                const dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
-                const implementation: IDataSource<any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
-                if (implementation == null)
+                let dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
+                if (dataSourceView == null) publicDataSourceViews.find(d => d.ID === ds.DataSourceID);
+                const implementation: IDataSource<any, any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
+                if (implementation == null || dataSourceView == null)
                     return Promise.resolve([] as DataSetTypes.IDataSetData[]);
                 return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds, allEvents);
             }))
@@ -420,7 +444,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         switch (step) {
             case dataSetStep: return selectedDataSet == null;
             case parentStep: return channelErrors?.length > 0;
-            case eventStep: return eventSourceMetas.length !== 0 && eventErrors?.length > 0;
+            case eventStep: return false;
         }
     }, [selectedDataSet, channelErrors, eventErrors, step]);
 
@@ -441,17 +465,34 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         }
     }, [selectedDataSet, channelErrors, eventErrors, step]);
 
+    // Note: we swap btns on the model due to needing the confirm button on the right
     return (
         <>
             <Modal
-                ConfirmBtnClass={"btn btn-success mr-auto"}
-                Show={props.IsModalOpen}
                 ShowX={true}
-                ConfirmText={step === lastStep ? 'Apply' : 'Next'}
-                CancelText={step === firstStep ? 'Exit' : 'Previous'}
+                Show={props.IsModalOpen}
+                CancelBtnClass={`btn-${step === lastStep ? 'primary' : 'success'} pull-right`}
+                ConfirmBtnClass={"btn-danger mr-auto pull-left"}
+                CancelText={step === lastStep ? 'Apply' : 'Next'}
+                ConfirmText={'Previous'}
+                ShowConfirm={step !== firstStep}
+                ShowCancel={true}
                 Title={'Select a Data Set'}
-                CallBack={conf => {
+                CallBack={(conf, isButton) => {
                     if (conf) {
+                        if (step <= firstStep) {
+                            setStep(firstStep);
+                            props.SetIsModalOpen(false);
+                        } else
+                            setStep(s => {
+                                let newStep = s;
+                                do {
+                                    newStep--;
+                                } while (isStepSkipped(newStep));
+                                if (newStep <= firstStep) return firstStep;
+                                return newStep;
+                            });
+                    } else if(isButton) {
                         if (step >= lastStep) {
                             props.GenerateMapping(
                                 channelMatches.map(match => [match.Key, match.ChannelID] as [TrenDAP.IChannelKey, string]),
@@ -464,7 +505,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                             setStep(firstStep);
                             props.SetIsModalOpen(false);
                         }
-                        else 
+                        else
                             setStep(s => {
                                 let newStep = s;
                                 do {
@@ -485,26 +526,15 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 return newStep;
                             });
                     } else {
-                        if (step <= firstStep) {
-                            setStep(firstStep);
-                            props.SetIsModalOpen(false);
-                        } else
-                            setStep(s => {
-                                let newStep = s;
-                                do {
-                                    newStep--;
-                                } while (isStepSkipped(newStep));
-                                if (newStep <= firstStep) return firstStep;
-                                return newStep;
-                            });
+                        setStep(firstStep);
+                        props.SetIsModalOpen(false);
                     }
 
                 }}
                 Size="lg"
-                DisableConfirm={disallowStep()}
-                ConfirmShowToolTip={getToolTipContent().length > 0}
-                ConfirmToolTipContent={getToolTipContent().map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>)}
-                ShowCancel={true}
+                DisableCancel={disallowStep()}
+                CancelShowToolTip={getToolTipContent().length > 0}
+                CancelToolTipContent={getToolTipContent().map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>)}
             >
                 <div className="container-fluid d-flex flex-column p-0" style={{ height: 'calc(-210px + 100vh - 2rem)' }}>
                     <div className="row h-100">
@@ -512,12 +542,11 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                             step === dataSetStep ?
                                 <div className="col-12 h-100">
                                     <div className="d-flex flex-column h-100">
-                                        Data Set
                                         <ReactTable.Table<TrenDAP.iDataSet>
                                             TableClass="table table-hover"
                                             TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                             SortKey={dataSetSortField === "UpdatedOn" ? "Name" : dataSetSortField}
                                             OnClick={data => { setSelectedDataSet(data.row); navigate(`${homePath}Workspaces/${workspaceId}/DataSet/${data.row.ID}`) }}
@@ -555,13 +584,12 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 {step === parentStep ?
                                     <div className="col-12 h-100">
                                         <div className="d-flex flex-column h-50">
-                                            Meters or Assets
                                             <>
                                                 <ReactTable.Table<IParentMatch>
                                                     TableClass={"table table-hover"}
                                                     TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                                     TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                                                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                                                     RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                                     OnClick={({ row }) => setSelectedParentKey(row.Key)}
                                                     OnSort={() => { }}
@@ -574,9 +602,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                     <ReactTable.Column<IParentMatch>
                                                         Key={'Key'}
                                                         Field={'Name'}
-                                                    >
-                                                        {'\u200B'}
-                                                    </ReactTable.Column>
+                                                    >Meters or Assets</ReactTable.Column>
                                                     <ReactTable.Column<IParentMatch>
                                                         Key={'ParentID'}
                                                         Field={'ParentID'}
@@ -613,12 +639,11 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                         <div className="d-flex flex-column h-50">
                                             {parentChannelMatches.length > 0 ?
                                                 <>
-                                                    Channels
                                                     <ReactTable.Table<IndexedChannelMatch>
                                                         TableClass={"table table-hover"}
                                                         TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                                         TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                                        TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                                                        TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                                                         RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                                         OnClick={() => { }}
                                                         OnSort={() => { }}
@@ -632,9 +657,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                             Field={'Key'}
                                                             Content={({ item }) =>
                                                                 <p>{`${item.Key.Type ?? ''} ${item.Key.Phase ?? ''}`}</p>
-                                                            }>
-                                                            {'\u200B'}
-                                                        </ReactTable.Column>
+                                                            }>Channels</ReactTable.Column>
                                                         <ReactTable.Column<IndexedChannelMatch>
                                                             Key={'Channel'}
                                                             Field={'ChannelID'}
@@ -697,12 +720,11 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                             step === eventStep ?
                                 <div className="col-12 h-100">
                                     <div className="d-flex flex-column h-100">
-                                        Event Sources
                                         <ReactTable.Table<IEventMatch>
                                             TableClass={"table table-hover"}
                                             TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
                                             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                             OnClick={() => { }}
                                             OnSort={() => { }}
@@ -715,10 +737,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                             <ReactTable.Column<IEventMatch>
                                                 Key={'Name'}
                                                 Field={'ID'}
-                                                Content={(row) => `Event Source ${row.item.Key + 1}` }
-                                            >
-                                                {'\u200B'}
-                                            </ReactTable.Column>
+                                                Content={(row) => `Event Source ${row.index + 1}` }
+                                            >Event Sources</ReactTable.Column>
                                             <ReactTable.Column<IEventMatch>
                                                 Key={'Key'}
                                                 Field={'Key'}
@@ -726,12 +746,13 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                     Options={eventSourceMetas.map(p => ({ Value: p.ID.toString(), Label: p.Name }))}
                                                     Label={''} Field={'ID'} Setter={(newRecord) => setEventMatches(matches => {
                                                         const clonedMatches = _.cloneDeep(matches);
+                                                        const index = clonedMatches.findIndex(match => match.Key === row.item.Key);
                                                         if (newRecord?.ID == null) {
-                                                            clonedMatches[row.item.Key] = { ...newRecord, ID: undefined, Match: 'NoMatch' };
+                                                            clonedMatches[index] = { ...newRecord, ID: undefined, Match: 'NoMatch' };
                                                         } else {
                                                             const newID = _.toInteger(newRecord.ID);
                                                             const multiMatch = clonedMatches.filter(match => match?.ID === newID).length > 0;
-                                                            clonedMatches[row.item.Key] = { ...newRecord, ID: newID, Match: multiMatch ? 'MultipleMatches' : 'Match' };
+                                                            clonedMatches[index] = { ...newRecord, ID: newID, Match: multiMatch ? 'MultipleMatches' : 'Match' };
                                                         }
                                                         return clonedMatches;
                                                     })} />}

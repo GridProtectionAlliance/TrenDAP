@@ -26,7 +26,7 @@ import { ReactTable } from '@gpa-gemstone/react-table';
 import { Plus, TrashCan } from '@gpa-gemstone/gpa-symbols';
 import { TrenDAP } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
-import { FetchEventSources, SelectEventSources, SelectEventSourcesStatus } from '../../EventSources/Slices/EventSourcesSlice';
+import { FetchEventSources, FetchPublicEventSources, SelectEventSources, SelectEventSourcesStatus, SelectPublicEventSources, SelectPublicEventSourcesStatus } from '../../EventSources/Slices/EventSourcesSlice';
 import { EventSourceTypes } from '../../EventSources/Interface';
 import EventDataSourceWrapper from '../../EventSources/EventDataSourceWrapper';
 import { EventDataSources } from '../../EventSources/ByEventSources'
@@ -42,6 +42,8 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
     const dispatch = useAppDispatch();
     const eventSources = useAppSelector(SelectEventSources);
     const eventSourceStatus = useAppSelector(SelectEventSourcesStatus);
+    const publicEventSources = useAppSelector(SelectPublicEventSources);
+    const publicEventSourceStatus = useAppSelector(SelectPublicEventSourcesStatus);
     const errors = React.useRef<Array<string[]>>(new Array<string[]>().fill(null));
     const [currentIndex, setCurrentIndex] = React.useState<number>(0);
 
@@ -49,6 +51,11 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
         if (eventSourceStatus === 'unitiated' || eventSourceStatus === 'changed')
             dispatch(FetchEventSources());
     }, [eventSourceStatus]);
+
+    React.useEffect(() => {
+        if (publicEventSourceStatus === 'unitiated' || publicEventSourceStatus === 'changed')
+            dispatch(FetchPublicEventSources());
+    }, [publicEventSourceStatus]);
 
     React.useEffect(() => {
         props.SetErrors([]);
@@ -97,10 +104,10 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                             </button>
                             <div className="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
                                 <div className="dropdown-header">Your Event Sources</div>
-                                {eventSources.filter(src => src.User === userName).map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }}
+                                {eventSources.map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }}
                                     onClick={() => AddDS(ds)}>{ds.Name} ({ds.Type})</a>)}
                                 <div className="dropdown-header">Shared Event Sources</div>
-                                {eventSources.filter(src => src.Public && src.User !== userName).map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }}
+                                {publicEventSources.filter(src => src.User !== userName).map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }}
                                     onClick={() => AddDS(ds)}>{ds.Name} ({ds.Type})</a>)}
                             </div>
                         </div>

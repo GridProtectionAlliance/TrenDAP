@@ -42,7 +42,7 @@ namespace TrenDAP.Controllers
 
         protected override IActionResult QueryEvents(DataSet dataset, EventSource eventSource, JObject eventSourceDataSetSettings, CancellationToken cancellationToken)
         {
-            JObject sourceSettings = eventSource.Settings;
+            JObject sourceSettings = eventSource.PrivateSettings;
             Tuple<DateTime, DateTime> timeEnds = dataset.ComputeTimeEnds();
             string timeFilter = dataset.GetTimeFiltersQuery("AlarmDateTime");
 

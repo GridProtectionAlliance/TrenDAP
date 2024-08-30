@@ -38,7 +38,7 @@ interface IProps {
 }
 
 const DataSourceWrapper: React.FC<IProps> = (props: IProps) => {
-    const implementation: IDataSource<any, any> | null =
+    const implementation: IDataSource<any, any, any> | null =
         React.useMemo(() => AllSources.find(t => t.Name == props.DataSource?.Type), [props.DataSource?.Type]);
 
     const DataSetSettings = React.useMemo(() => {

@@ -23,18 +23,32 @@
 
 import * as React from 'react';
 import _ from 'lodash';
+import { TrenDAP } from '../../global';
 import { WidgetTypes } from './Interfaces';
 import { ReactTable } from '@gpa-gemstone/react-table';
 
-const EventSelector: React.FC<WidgetTypes.IEventSourceSelectionProps<any>> = (props) => {
+interface IGenericSelector extends WidgetTypes.IEventSourceSelectionProps<any> {
+    DefaultSettings: any
+}
+
+const EventSelector: React.FC<IGenericSelector> = (props) => {
     const [allEventSources, setAllEventSources] = React.useState<WidgetTypes.ISelectedEvents<any>[]>([]);
     const [ascending, setAscending] = React.useState<boolean>(false);
     const [sortField, setSortField] = React.useState<keyof WidgetTypes.ISelectedEvents<any>>('Name');
 
     React.useEffect(() => {
-        if (props.SelectedSources.length === 0) return;
-        setAllEventSources(_.orderBy(props.SelectedSources, [sortField], [ascending ? 'asc' : 'desc']));
-    }, [ascending, sortField, props.SelectedSources]);
+        if (props.AllEventSources.length === 0) return;
+        // All keys should be unique, positive keys exist in map, negative don't
+        const tempSources: WidgetTypes.ISelectedEvents<any>[] = props.AllEventSources
+            .filter(eventSource => props.SelectedSources.findIndex(selected => selected.ID === eventSource.ID) === -1)
+            .map((src) => ({ ...src, Key: -src.ID, EventSettings: props.DefaultSettings}));
+        setAllEventSources(_.orderBy(tempSources.concat(props.SelectedSources), [sortField], [ascending ? 'asc' : 'desc']));
+    }, [props.AllEventSources, props.SelectedSources, props.DefaultSettings]);
+
+    React.useEffect(() => {
+        if (allEventSources.length === 0) return;
+        setAllEventSources(_.orderBy(allEventSources, [sortField], [ascending ? 'asc' : 'desc']));
+    }, [ascending, sortField]);
 
     return (
         <ReactTable.Table<WidgetTypes.ISelectedEvents<any>>
@@ -45,9 +59,9 @@ const EventSelector: React.FC<WidgetTypes.IEventSourceSelectionProps<any>> = (pr
             RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
             SortKey={sortField}
             OnClick={(item) => {
-                const changedSource = { ...item.row };
-                changedSource.Enabled = !changedSource.Enabled;
-                props.SetSource(changedSource)
+                const ind = props.SelectedSources.findIndex(src => src.ID === item.row.ID);
+                if (ind !== -1) props.RemoveSource(props.SelectedSources[ind]);
+                else props.AddOrEditSource(item.row);
             }}
             OnSort={data => {
                 if (sortField === data.colField) setAscending(a => !a);
@@ -59,7 +73,7 @@ const EventSelector: React.FC<WidgetTypes.IEventSourceSelectionProps<any>> = (pr
             Data={allEventSources}
             Ascending={ascending}
             KeySelector={(row) => row.Key}
-            Selected={(row) => row.Enabled}
+            Selected={(row) => props.SelectedSources.findIndex(selected => selected.ID === row.ID) !== -1}
         >
             <ReactTable.Column<WidgetTypes.ISelectedEvents<any>>
                 Key={'Name'}

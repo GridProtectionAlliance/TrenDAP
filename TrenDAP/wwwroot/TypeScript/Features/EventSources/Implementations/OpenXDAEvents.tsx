@@ -40,6 +40,11 @@ const encodedDateFormat = 'MM/DD/YYYY';
 const encodedTimeFormat = 'HH:mm:ss.SSS';
 const xdaServerFormat = "YYYY-MM-DD[T]HH:mm:ss.SSSSSSS";
 
+interface IPrivateSettings {
+    URL: string,
+    RegistrationKey: string,
+    APIToken: string,
+}
 interface ISetting { PQBrowserUrl: string }
 interface IDatasetSetting {
     AssetIDs: number[],
@@ -68,8 +73,9 @@ interface IxdaEvent {
     AssetName: string
 }
 
-const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
+const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> = {
     Name: 'openXDA',
+    DefaultPrivateSourceSettings: { URL: "http://localhost:8989/", APIToken: "", RegistrationKey: "TrenDAP" },
     DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/" },
     DefaultDataSetSettings: {
         AssetIDs: [],
@@ -95,6 +101,31 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
 
         },
         Types: []
+    },
+    PrivateConfigUI: (props: TrenDAP.ISourceConfig<IPrivateSettings>) => {
+        React.useEffect(() => {
+            const errors: string[] = [];
+            if (props.Settings.URL == null || props.Settings.URL.length === 0)
+                errors.push("XDA URL is required by data source.");
+            if (props.Settings.APIToken == null || props.Settings.APIToken.length === 0)
+                errors.push("XDA API Token is required by data source.");
+            if (props.Settings.RegistrationKey == null || props.Settings.RegistrationKey.length === 0)
+                errors.push("XDA API Registration Key is required by data source.");
+            props.SetErrors(errors);
+        }, [props.Settings]);
+
+        function valid(field: keyof IPrivateSettings): boolean {
+            if (field === 'URL') return (props.Settings.URL != null && props.Settings.URL.length !== 0);
+            if (field === 'RegistrationKey') return (props.Settings.RegistrationKey != null && props.Settings.RegistrationKey.length !== 0);
+            if (field === 'APIToken') return (props.Settings.APIToken != null && props.Settings.APIToken.length !== 0);
+            return true;
+        }
+
+        return <>
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='URL' Label='XDA URL' Valid={valid} />
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='APIToken' Label='API Token' Valid={valid} />
+            <Input<IPrivateSettings> Record={props.Settings} Setter={props.SetSettings} Field='RegistrationKey' Label='Registration Key' Valid={valid} />
+        </>;
     },
     ConfigUI: (props: TrenDAP.ISourceConfig<ISetting>) => {
         React.useEffect(() => {
@@ -400,13 +431,13 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
     Load: function (eventSource: EventSourceTypes.IEventSourceView, _dataSet: TrenDAP.iDataSet, setConn: EventSourceTypes.IEventSourceDataSet): Promise<TrenDAP.IEvent[]> {
         return new Promise<TrenDAP.IEvent[]>((resolve, reject) => {
             $.ajax({
-                type: "Get",
-                url: `${homePath}api/EventSourceDataSet/Query/${setConn.ID}`,
+                type: "GET",
+                url: `${homePath}api/OpenXDA/Query/${setConn.ID}`,
                 contentType: "application/json; charset=utf-8",
-                dataType: 'text',
+                dataType: 'json',
                 cache: true,
                 async: true
-            }).done((data: string) => {
+            }).done((xdaEvents: IxdaEvent[]) => {
                 const dataSetSettings = EnsureTypeSafety(setConn.Settings, OpenXDAEvents.DefaultDataSetSettings);
                 const sourceSettings = EnsureTypeSafety(eventSource.Settings, OpenXDAEvents.DefaultSourceSettings);
 
@@ -422,9 +453,6 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
 
                 queryParams['windowSize'] = 3;
                 queryParams['timeWindowUnits'] = 3; // hours
-
-                // Parse events from response data
-                const xdaEvents: IxdaEvent[] = JSON.parse(data);
 
                 // Map XDA event to trenDAP event
                 const tdapEvents: TrenDAP.IEvent[] = xdaEvents.map(evt => {
@@ -512,7 +540,7 @@ const OpenXDAEvents: IEventSource<ISetting, IDatasetSetting> = {
         return new Promise<boolean>((resolve, reject) => {
             $.ajax({
                 type: "GET",
-                url: `${homePath}api/EventSource/TestAuth/${eventSource.ID}`,
+                url: `${homePath}api/OpenXDA/TestAuth/${eventSource.ID}`,
                 contentType: "application/json; charset=utf-8",
                 cache: true,
                 async: true

@@ -39,7 +39,7 @@ interface ISOEInfo {
     AlarmStatus: string 
 }
 
-interface IDataSourceSettings {
+interface IPrivateSourceSettings {
     ConnectionString: string,
     DataProviderString: string
 }
@@ -48,16 +48,17 @@ interface IDatasetSetting {
     FilterOut: string[]
 }
 
-const SOE: IEventSource<IDataSourceSettings, IDatasetSetting> = {
+const SOE: IEventSource<IPrivateSourceSettings, {}, IDatasetSetting> = {
     Name: 'SOE DB',
-    DefaultSourceSettings: {
+    DefaultSourceSettings: {},
+    DefaultPrivateSourceSettings: {
         ConnectionString: "",
         DataProviderString: ""
     },
     DefaultDataSetSettings: {
         FilterOut: ['abnormal', 'close', 'no', 'normal', 'received', 'start', 'trip', 'yes']
     },
-    ConfigUI: (props: TrenDAP.ISourceConfig<IDataSourceSettings>) => {
+    PrivateConfigUI: (props: TrenDAP.ISourceConfig<IPrivateSourceSettings>) => {
         return (
             <>
                 <Input Record={props.Settings} Setter={props.SetSettings} Field='ConnectionString' Label='Connection String' Valid={() => true} />
@@ -65,7 +66,7 @@ const SOE: IEventSource<IDataSourceSettings, IDatasetSetting> = {
             </>
         );
     },
-    DataSetUI: (props: EventSourceTypes.IEventSourceDataSetProps<IDataSourceSettings, IDatasetSetting>) => {
+    DataSetUI: (props: EventSourceTypes.IEventSourceDataSetProps<{}, IDatasetSetting>) => {
 
         const setFilter = (val: IValue) => {
             const u = _.cloneDeep(props.Settings.FilterOut);

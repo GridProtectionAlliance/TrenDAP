@@ -141,21 +141,9 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
             setLocalEventSources([]);
             return;
         }
-
-        const mappedIds = _.uniq([...props.EventMap.current.values()]);
-        const newIds = _.uniq(props.AllEventSources.map(src => src.ID)).filter(id => mappedIds.find(mapId => mapId === id) == null);
-
-        // Update Map, if we have new things
-        newIds.forEach(id => props.EventMap.current.set(props.EventMap.current.size, id));
-        if (newIds.length > 0) {
-            props.SetEventMapVersion(props.EventMapVersion + 1);
-        }
-
-        const eventSources: WidgetTypes.ISelectedEvents<any>[] = [...props.EventMap.current.keys()].map(key => {
-            const id = props.EventMap.current.get(key);
+        const eventSources: WidgetTypes.ISelectedEvents<any>[] = props.Widget.EventSources.map(widgetEventSource => {
+            const id = props.EventMap.current.get(widgetEventSource.Key);
             const sourceMetaData: TrenDAP.IEventSourceMetaData = props.AllEventSources.find(source => source.ID === id);
-            let widgetEventSource: TrenDAP.IWidgetEventSources<any> = props.Widget.EventSources.find(source => source.Key === key);
-            if (widgetEventSource == null) widgetEventSource = { Key: key, Enabled: false, EventSettings: Implementation.DefaultEventSourceSettings };
             return { ...widgetEventSource, ...sourceMetaData };
         });
 
@@ -225,7 +213,6 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
         }
 
         const eventSources: WidgetTypes.ISelectedEvents<any>[] = props.Widget.EventSources
-            .filter(evtSrc => evtSrc.Enabled)
             .map(evtSrc => ({ ...evtSrc, ...props.AllEventSources.find(src => props.EventMap.current.get(evtSrc.Key) === src.ID) }));
 
         const db = new TrenDAPDB();
@@ -238,12 +225,25 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
         else setHeaderOpacity(1)
     }, [props.Widget.ShowHeader, editMode]);
 
-    function handleChangeEventSource(newSource: WidgetTypes.IWidgetEvents<any>) {
-        const evtSrcs = [...localEventSources];
-        const ind = localEventSources.findIndex(src => src.Key === newSource.Key);
-        evtSrcs[ind] = newSource;
-        setLocalEventSources(evtSrcs);
-    }
+    const addOrChangeEventSource = React.useCallback((newSource: WidgetTypes.ISelectedEvents<any>) => {
+        setLocalEventSources(currentLocal => {
+            const evtSrcs = [...currentLocal];
+            const ind = evtSrcs.findIndex(evtSrc => evtSrc.Key === newSource.Key);
+            if (ind === -1) evtSrcs.push(newSource);
+            else evtSrcs[ind] = newSource;
+            return evtSrcs;
+        });
+    }, []);
+
+    const removeEventSource = React.useCallback((newSource: WidgetTypes.ISelectedEvents<any>) => {
+        setLocalEventSources(currentLocal => {
+            const evtSrcs = [...currentLocal];
+            const ind = currentLocal.findIndex(src => src.Key === newSource.Key);
+            if (ind !== -1) evtSrcs.splice(ind, 1);
+            else console.error("Could not find current local event source with key " + newSource.Key);
+            return evtSrcs;
+        });
+    }, []);
 
     function handleAddChannel(channelID: string, defaultSetting: any) {
         const channel = allSelectableChannels.find(channel => channel.ID === channelID) as DataSetTypes.IDataSetMetaData;
@@ -282,8 +282,26 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                 }
                 return { ChannelSettings: channel.ChannelSettings, Key: key }
             });
-
             if (mapChanged) props.SetChannelMapVersion(props.ChannelMap.Version + 1);
+
+            let eventMapChanged = false;
+            let newKey: null | number = null;
+            const updatedEventSources = localEventSources.map(src => {
+                // Checking if channel exists in map
+                if (props.EventMap.current.has(src.Key)) return { Key: src.Key, EventSettings: src.EventSettings };
+                else {
+                    const foundKey = [...props.EventMap.current.keys()].find(key => props.EventMap.current.get(key) === src.ID);
+                    if (foundKey != null) return { Key: foundKey, EventSettings: src.EventSettings };
+                    // Need to add channel to map, and update key
+                    eventMapChanged = true;
+                    if (newKey == null) newKey = Math.max(-1, ...props.EventMap.current.keys());
+                    newKey++;
+                    props.EventMap.current.set(newKey, src.ID);
+                    return { Key: newKey, EventSettings: src.EventSettings };
+                }
+            });
+            if (eventMapChanged) props.SetEventMapVersion(props.EventMapVersion + 1);
+
 
             props.UpdateWidget({
                 ...props.Widget,
@@ -292,9 +310,9 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                 Label: localCommonSettings.Label,
                 ShowHeader: localCommonSettings.ShowHeader,
                 Channels: updatedChannels,
-                EventSources: localEventSources.map(src => ({Key: src.Key, EventSettings: src.EventSettings, Enabled: src.Enabled}))
-            })
-            setShowSettingsModal(false)
+                EventSources: updatedEventSources
+            });
+            setShowSettingsModal(false);
         }
         else if (!confBtn && deleteBtn)
             setShowWarning(true);
@@ -430,8 +448,10 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                                 : <></>}
                                 {tab === 'evtSrc' ?
                                     Implementation?.EventSourceSelectionUI !== undefined ?
-                                        <Implementation.EventSourceSelectionUI SetSource={handleChangeEventSource} SelectedSources={localEventSources} /> :
-                                        <EventSelector SetSource={handleChangeEventSource} SelectedSources={localEventSources} />
+                                        <Implementation.EventSourceSelectionUI AddOrEditSource={addOrChangeEventSource} RemoveSource={removeEventSource}
+                                            AllEventSources={props.AllEventSources} SelectedSources={localEventSources} /> :
+                                        <EventSelector AddOrEditSource={addOrChangeEventSource} RemoveSource={removeEventSource}
+                                            AllEventSources={props.AllEventSources} SelectedSources={localEventSources} DefaultSettings={Implementation.DefaultEventSourceSettings} />
                                 : <></>}
                             </div>
                         </div>

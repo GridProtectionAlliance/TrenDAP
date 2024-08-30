@@ -30,6 +30,10 @@ export const FetchDataSources = createAsyncThunk('DataSources/FetchDataSources',
     return await GetDataSources();
 });
 
+export const FetchPublicDataSources = createAsyncThunk('DataSources/FetchPublicDataSources', async (_) => {
+    return await GetPublicDataSources();
+});
+
 export const AddDataSource = createAsyncThunk('DataSources/AddDataSource', async (dataSource: DataSourceTypes.IDataSourceView) => {
     return await PostDataSource(dataSource);
 });
@@ -51,8 +55,10 @@ export const DataSourcesSlice = createSlice({
         Data: [],
         Error: null,
         SortField: 'Name',
-        Ascending: true
-    } as Redux.State<DataSourceTypes.IDataSourceView>,
+        Ascending: true,
+        PublicStatus: 'unitiated',
+        PublicData: []
+    } as Redux.PublicPrivateState<DataSourceTypes.IDataSourceView>,
     reducers: {
         Sort: (state, action) => {
             if(state.SortField === action.payload.SortField)
@@ -65,6 +71,19 @@ export const DataSourcesSlice = createSlice({
         }
     },
     extraReducers: (builder) => {
+        builder.addCase(FetchPublicDataSources.fulfilled, (state, action) => {
+            state.PublicStatus = 'idle';
+            state.Error = null;
+            state.PublicData = action.payload;
+
+        });
+        builder.addCase(FetchPublicDataSources.pending, (state, action) => {
+            state.PublicStatus = 'loading';
+        });
+        builder.addCase(FetchPublicDataSources.rejected, (state, action) => {
+            state.PublicStatus = 'error';
+            state.Error = action.error.message;
+        });
 
         builder.addCase(FetchDataSources.fulfilled, (state, action) => {
             state.Status = 'idle';
@@ -130,9 +149,8 @@ export default DataSourcesSlice.reducer;
 // #region [ Selectors ]
 export const SelectDataSources = (state: Redux.StoreState) => state.DataSources.Data;
 export const SelectDataSourceByID = (state: Redux.StoreState, id) => state.DataSources.Data.find(ds => ds.ID === id);
-export const SelectDataSourcesForUser = (state: Redux.StoreState, user) => state.DataSources.Data.filter(ds => ds.User === user);
-export const SelectDataSourcesAllPublicNotUser = (state: Redux.StoreState, user) => state.DataSources.Data.filter(ds => ds.Public && ds.User !== user);
-
+export const SelectPublicDataSources = (state: Redux.StoreState) => state.DataSources.PublicData;
+export const SelectPublicDataSourcesStatus = (state: Redux.StoreState) => state.DataSources.PublicStatus;
 export const SelectDataSourcesStatus = (state: Redux.StoreState) => state.DataSources.Status;
 export const SelectDataSourcesSortField = (state: Redux.StoreState) => state.DataSources.SortField;
 export const SelectDataSourcesAscending = (state: Redux.StoreState) => state.DataSources.Ascending;
@@ -145,6 +163,17 @@ function GetDataSources(): JQuery.jqXHR<DataSourceTypes.IDataSourceView[]> {
     return $.ajax({
         type: "GET",
         url: `${homePath}api/DataSource`,
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        cache: true,
+        async: true
+    });
+}
+
+function GetPublicDataSources(): JQuery.jqXHR<DataSourceTypes.IDataSourceView[]> {
+    return $.ajax({
+        type: "GET",
+        url: `${homePath}api/DataSourcePublic`,
         contentType: "application/json; charset=utf-8",
         dataType: 'json',
         cache: true,

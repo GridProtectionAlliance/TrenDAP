@@ -72,6 +72,9 @@ namespace TrenDAP.Controllers
             PrimaryKeyField = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<PrimaryKeyAttribute>().Any())?.Name ?? "ID";
             ParentKey = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "";
             CustomView = typeof(T).GetCustomAttribute<CustomViewAttribute>()?.CustomView ?? "";
+            RootQueryRestrictionAttribute rqra = typeof(T).GetCustomAttribute<RootQueryRestrictionAttribute>();
+            if (rqra != null)
+                RootQueryRestriction = new RecordRestriction(rqra.FilterExpression, rqra.Parameters.ToArray());
         }
 
         #endregion
@@ -90,6 +93,7 @@ namespace TrenDAP.Controllers
         protected virtual string DeleteRoles { get; } = "Administrator";
         protected virtual string CustomView { get; } = "";
         protected virtual string GetOrderByExpression { get; } = null;
+        protected RecordRestriction RootQueryRestriction { get; } = null;
         #endregion
 
         #region [ Http Methods ]
@@ -133,11 +137,11 @@ namespace TrenDAP.Controllers
                         {
                             PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
                             if (parentKey.PropertyType == typeof(int))
-                                result = QueryRecordsWhere(null, false, ParentKey + " = {0}", int.Parse(parentID));
+                                result = QueryRecordsWhere(null, false, $"[{ParentKey}] = {{0}}", int.Parse(parentID));
                             else if (parentKey.PropertyType == typeof(Guid))
-                                result = QueryRecordsWhere(null, false, ParentKey + " = {0}", Guid.Parse(parentID));
+                                result = QueryRecordsWhere(null, false, $"[{ParentKey}] = {{0}}", Guid.Parse(parentID));
                             else
-                                result = QueryRecordsWhere(null, false, ParentKey + " = {0}", parentID);
+                                result = QueryRecordsWhere(null, false, $"[{ParentKey}] = {{0}}", parentID);
                         }
                         else
                             result = QueryRecordsWhere(null, false, null);
@@ -209,6 +213,13 @@ namespace TrenDAP.Controllers
                     return new TableOperations<T>(connection).QueryRecords(null, restriction);
 
                 string flt = filterExpression;
+                object[] param = parameters;
+
+                if (RootQueryRestriction != null)
+                {
+                    flt = $"{RootQueryRestriction.FilterExpression} {(string.IsNullOrEmpty(filterExpression) ? "" : $"AND {filterExpression}")}";
+                    param = RootQueryRestriction.Parameters.Concat(parameters).ToArray();
+                }
 
                 string orderString = null;
                 if (!string.IsNullOrEmpty(orderBy))
@@ -217,11 +228,11 @@ namespace TrenDAP.Controllers
                 string sql = $@"
                     SELECT * FROM 
                     ({CustomView}) FullTbl 
-                    {(string.IsNullOrEmpty(filterExpression) ? "" : $"WHERE { flt}")}
+                    {(string.IsNullOrEmpty(flt) ? "" : $"WHERE {flt}")}
                     {(string.IsNullOrEmpty(orderBy) ? "" : " ORDER BY " + orderString)}";
 
 
-                DataTable dataTbl = connection.RetrieveData(sql, parameters);
+                DataTable dataTbl = connection.RetrieveData(sql, param);
 
                 List<T> result = new List<T>();
                 TableOperations<T> tblOperations = new TableOperations<T>(connection);
@@ -243,6 +254,12 @@ namespace TrenDAP.Controllers
                 string whereClause = filterExpression;
                 object[] param = parameters;
 
+                if (RootQueryRestriction != null)
+                {
+                    whereClause = RootQueryRestriction.FilterExpression + " AND " + filterExpression;
+                    param = RootQueryRestriction.Parameters.Concat(parameters).ToArray();
+                }
+
                 whereClause = " WHERE " + whereClause;
                 string sql = "SELECT * FROM (" + CustomView + ") FullTbl";
                 DataTable dataTbl = connection.RetrieveData(sql + whereClause, param);
@@ -259,6 +276,12 @@ namespace TrenDAP.Controllers
         [HttpPost]
         public virtual ActionResult Post([FromBody] JObject record)
         {
+            T newRecord = record.ToObject<T>();
+            return Post(newRecord);
+        }
+
+        protected virtual ActionResult Post(T record)
+        {
             try
             {
                 if (CustomView != String.Empty) return BadRequest();
@@ -267,16 +290,15 @@ namespace TrenDAP.Controllers
                     using (AdoDataConnection connection = new AdoDataConnection(Configuration[SettingCategory + ":ConnectionString"], Configuration[SettingCategory + ":DataProviderString"]))
                     {
 
-                        T newRecord = record.ToObject<T>();
-                        int result = new TableOperations<T>(connection).AddNewRecord(newRecord);
+                        int result = new TableOperations<T>(connection).AddNewRecord(record);
                         if (HasUniqueKey)
                         {
                             PropertyInfo prop = typeof(T).GetProperty(UniqueKeyField);
                             if (prop != null)
                             {
-                                object uniqueKey = prop.GetValue(newRecord);
-                                newRecord = new TableOperations<T>(connection).QueryRecordWhere(UniqueKeyField + " = {0}", uniqueKey);
-                                return Ok(newRecord);
+                                object uniqueKey = prop.GetValue(record);
+                                record = new TableOperations<T>(connection).QueryRecordWhere(UniqueKeyField + " = {0}", uniqueKey);
+                                return Ok(record);
                             }
 
                         }
@@ -298,6 +320,12 @@ namespace TrenDAP.Controllers
         [HttpPatch]
         public virtual ActionResult Patch([FromBody] JObject record)
         {
+            T newRecord = record.ToObject<T>();
+            return Patch(newRecord);
+        }
+
+        protected virtual ActionResult Patch(T record)
+        {
             try
             {
                 if (CustomView != String.Empty) return BadRequest();
@@ -306,9 +334,8 @@ namespace TrenDAP.Controllers
 
                     using (AdoDataConnection connection = new AdoDataConnection(Configuration[SettingCategory + ":ConnectionString"], Configuration[SettingCategory + ":DataProviderString"]))
                     {
-                        T newRecord = record.ToObject<T>();
 
-                        int result = new TableOperations<T>(connection).AddNewOrUpdateRecord(newRecord);
+                        int result = new TableOperations<T>(connection).AddNewOrUpdateRecord(record);
                         return Ok(result);
                     }
                 }

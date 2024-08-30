@@ -24,8 +24,11 @@
 import * as React from 'react';
 import { ReactTable } from '@gpa-gemstone/react-table';
 import { DataSourceTypes, TrenDAP } from '../../../global';
-import { FetchDataSources, SelectDataSources, SelectDataSourcesStatus } from '../../DataSources/DataSourcesSlice';
-import { Pencil, Plus, TrashCan } from '@gpa-gemstone/gpa-symbols';
+import {
+    FetchDataSources, SelectDataSources, SelectDataSourcesStatus,
+    SelectPublicDataSources, SelectPublicDataSourcesStatus, FetchPublicDataSources
+} from '../../DataSources/DataSourcesSlice';
+import { Plus, TrashCan } from '@gpa-gemstone/gpa-symbols';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import DataSourceWrapper from '../../DataSources/DataSourceWrapper';
 import { AllSources } from '../../DataSources/DataSources'
@@ -41,6 +44,8 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
     const dispatch = useAppDispatch();
     const dataSources = useAppSelector(SelectDataSources);
     const dataSourceStatus = useAppSelector(SelectDataSourcesStatus);
+    const publicDataSources = useAppSelector(SelectPublicDataSources);
+    const publicDataSourceStatus = useAppSelector(SelectPublicDataSourcesStatus);
     const errors = React.useRef<Array<string[]>>(new Array<string[]>().fill(null));
     const [currentIndex, setCurrentIndex] = React.useState<number>(0);
 
@@ -48,6 +53,11 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
         if (dataSourceStatus === 'unitiated' || dataSourceStatus === 'changed')
             dispatch(FetchDataSources());
     }, [dataSourceStatus]);
+
+    React.useEffect(() => {
+        if (publicDataSourceStatus === 'unitiated' || publicDataSourceStatus === 'changed')
+            dispatch(FetchPublicDataSources());
+    }, [publicDataSourceStatus]);
 
     React.useEffect(() => {
         props.SetErrors([]);
@@ -96,9 +106,9 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                             </button>
                             <div className="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
                                 <div className="dropdown-header">Your Data Sources</div>
-                                {dataSources.filter(src => src.User === userName).map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddDS(ds)}>{ds.Name} ({ds.Type})</a>)}
+                                {dataSources.map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddDS(ds)}>{ds.Name} ({ds.Type})</a>)}
                                 <div className="dropdown-header">Shared Data Sources</div>
-                                {dataSources.filter(src => src.Public && src.User !== userName).map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddDS(ds)}>{ds.Name} ({ds.Type})</a>)}
+                                {publicDataSources.filter(src => src.User !== userName).map(ds => <a key={ds.ID} className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => AddDS(ds)}>{ds.Name} ({ds.Type})</a>)}
                             </div>
                         </div>
                     </div>

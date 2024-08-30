@@ -40,12 +40,14 @@ export function EnsureTypeSafety<T>(settingsObj: any, defaultSettings: T): T {
 
 /*
  Interface that needs to be implemented by an DataSource
- {T} => Settings Associated with this Datasource
- {U} => Settings associated with the specific Datasource and Dataset
+ {T} => Secret Settings Associated with this Datasource
+ {U} => Settings Associated with this Datasource
+ {V} => Settings associated with the specific Datasource and Dataset
 */
-export interface IDataSource<T, U> {
-    DataSetUI: React.FC<DataSourceTypes.IDataSourceDataSetProps<T, U>>,
-    ConfigUI: React.FC<TrenDAP.ISourceConfig<T>>,
+export interface IDataSource<T, U, V> {
+    PrivateConfigUI?: React.FC<TrenDAP.ISourceConfig<T>>,
+    ConfigUI?: React.FC<TrenDAP.ISourceConfig<U>>,
+    DataSetUI: React.FC<DataSourceTypes.IDataSourceDataSetProps<U, V>>,
     LoadDataSetMeta: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet)
         => Promise<DataSetTypes.IDataSetMetaData[]>,
     LoadDataSet: (dataSource: DataSourceTypes.IDataSourceView, dataSet: TrenDAP.iDataSet, dataConn: DataSourceTypes.IDataSourceDataSet, events?: TrenDAP.IEvent[])
@@ -54,7 +56,8 @@ export interface IDataSource<T, U> {
         => string,
     TestAuth: (dataSource: DataSourceTypes.IDataSourceView)
         => Promise<boolean>,
-    DefaultSourceSettings: T,
-    DefaultDataSetSettings: U,
+    DefaultPrivateSourceSettings: T,
+    DefaultSourceSettings: U,
+    DefaultDataSetSettings: V,
     Name: string,
 }
