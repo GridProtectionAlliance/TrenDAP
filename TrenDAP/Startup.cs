@@ -38,6 +38,7 @@ using System.Security.Principal;
 using TrenDAP.WebApp;
 using Serilog;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using System.Security.Claims;
 
 namespace TrenDAP
 {
@@ -100,7 +101,10 @@ namespace TrenDAP
 
                 //// Return the security principal that will be used for role-based authorization
                 //SecurityIdentity securityIdentity = new SecurityIdentity(securityProvider);
-                context.Request.HttpContext.User = new GemstoneSecurityPrincipal(context.Request.HttpContext.User, Configuration["SecurityProvider:ConnectionString"], Configuration["SecurityProvider:DataProviderString"]);
+                ClaimsIdentity identity = new ClaimsIdentity("basic");
+                ClaimsPrincipal user = new ClaimsPrincipal(identity);
+                identity.AddClaim(new Claim(ClaimTypes.Name, "external"));
+                context.Request.HttpContext.User = new GemstoneSecurityPrincipal(user, Configuration["SecurityProvider:ConnectionString"], Configuration["SecurityProvider:DataProviderString"]);
 
                 return next.Invoke();
             });
