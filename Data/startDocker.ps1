@@ -43,7 +43,7 @@ if ($onStartSQL -ne "") {
 
 if ($onStartSQLFile -ne "") {
     Write-Host "Running File $onStartSQLFile" 
-    sqlcmd -S "localhost\SQLEXPRESS" -d openXDA -i "$onStartSQLFile"
+    sqlcmd -S "localhost\SQLEXPRESS" -d TrenDAP -i "$onStartSQLFile"
 }
 
 
