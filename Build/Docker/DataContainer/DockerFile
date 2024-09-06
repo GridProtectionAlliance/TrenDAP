@@ -1,0 +1,21 @@
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
+
+ENV User="influx" \
+    Password="openXDA2024" \
+    Token="dqsZWTgF5NOCi-FZ_k79c9iOMMpbFYhIOcr4L03FeRGjZiC-VoakWjNrj20Pwni8PiRgoOv2PgYtGLwPXRo2dw==" \
+    Org="GPA" \
+    Bucket="trend" 
+
+RUN ["powershell", "wget https://dl.influxdata.com/influxdb/releases/influxdb2-2.7.10-windows.zip -UseBasicParsing -OutFile influxdb2-2.7.10-windows.zip"]
+
+RUN ["powershell", "Expand-Archive .\\influxdb2-2.7.10-windows.zip -DestinationPath 'C:\\Program Files\\InfluxData\\influxdb\\'"]
+RUN ["powershell","wget https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.7.5-windows-amd64.zip  -UseBasicParsing -OutFile influxdb2-client-2.7.5-windows-amd64.zip"]
+RUN ["powershell","Expand-Archive .\\influxdb2-client-2.7.5-windows-amd64.zip -DestinationPath 'C:\\Program Files\\InfluxData\\influx\\'"]
+WORKDIR 'C:\\Program Files\\InfluxData\\'
+
+COPY ./startDocker.ps1 ./startDocker.ps1
+
+# Expose the port
+EXPOSE 8086
+
+CMD ["powershell", "./startDocker.ps1"]

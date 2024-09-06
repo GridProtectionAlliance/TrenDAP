@@ -1,0 +1,11 @@
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
+
+ENV ConnectionString="" 
+
+ADD TrenDAP C:/TrenDAP
+
+WORKDIR C:/TrenDAP
+
+EXPOSE 8980/tcp
+
+CMD TrenDAP.exe
