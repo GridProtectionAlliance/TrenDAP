@@ -263,7 +263,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
         const channelHandlers = datasources.map((ds) => {
             let dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
-            if (dataSourceView == null) publicDataSourceViews.find(d => d.ID === ds.DataSourceID); 
+            if (dataSourceView == null) dataSourceView = publicDataSourceViews.find(d => d.ID === ds.DataSourceID); 
             const implementation: IDataSource<any, any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
             if (implementation == null || dataSourceView == null)
                 return Promise.resolve([]);
@@ -301,7 +301,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
         setEventSourceMetas(eventSources.map(ds => {
             let eventSourceView = eventSourceViews.find(d => d.ID === ds.EventSourceID);
-            if (eventSourceView == null) publicEventSourceViews.find(d => d.ID === ds.EventSourceID); 
+            if (eventSourceView == null) eventSourceView = publicEventSourceViews.find(d => d.ID === ds.EventSourceID); 
             const implementation: IEventSource<any, any, any> | undefined = EventDataSources.find(t => t.Name == eventSourceView?.Type);
             if (implementation == null || eventSourceView == null)
                 return undefined;
@@ -405,7 +405,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             Promise.all(eventSources.map(conn => 
                 new Promise<{Events: TrenDAP.IEvent[], EventMeta: TrenDAP.IEventSourceMetaData}>((resolve, reject) => {
                     let view = eventSourceViews.find(eventView => eventView.ID === conn.EventSourceID);
-                    if (view == null) publicEventSourceViews.find(d => d.ID === conn.EventSourceID); 
+                    if (view == null) view = publicEventSourceViews.find(d => d.ID === conn.EventSourceID); 
                     const implementation: IEventSource<any, any, any> | undefined = EventDataSources.find(evtSrc => evtSrc.Name === view?.Type);
                     const meta = eventSourceMetas.find(evtMeta => evtMeta.ID === conn.ID);
                     if (view == null || meta == null || implementation == null)
@@ -431,13 +431,13 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         })).then((allEvents) =>
             Promise.all(datasources.map((ds) => {
                 let dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
-                if (dataSourceView == null) publicDataSourceViews.find(d => d.ID === ds.DataSourceID);
+                if (dataSourceView == null) dataSourceView = publicDataSourceViews.find(d => d.ID === ds.DataSourceID);
                 const implementation: IDataSource<any, any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
                 if (implementation == null || dataSourceView == null)
                     return Promise.resolve([] as DataSetTypes.IDataSetData[]);
                 return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds, allEvents);
             }))
-        ).then(d => db.AddMultiple(d.flat()));;
+        ).then(d => db.AddMultiple(d.flat()));
     }
 
     const disallowStep = React.useCallback(() => {

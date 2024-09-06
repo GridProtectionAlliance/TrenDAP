@@ -61,7 +61,7 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
 
         React.useEffect(() => {
             if (props.Data == null || props.Events == null || props.Data.length === 0) return;
-            let results: ITableData[] = [];
+            const results: ITableData[] = [];
 
             // Process first channel data
             const firstChannelData = props.Data[0]?.SeriesData;

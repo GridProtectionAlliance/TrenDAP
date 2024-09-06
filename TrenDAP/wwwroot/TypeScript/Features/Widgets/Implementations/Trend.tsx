@@ -442,7 +442,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                 .attr('fill', d => d.Settings.Color)
                 .attr('data-tooltip', d => d.Target)
                 .on('mouseenter', (_, d) => { setEvtHover(d); setShowTooltip(true); })
-                .on('mouseleave', _ => setShowTooltip(false))
+                .on('mouseleave', () => setShowTooltip(false))
                 .style('cursor', d => d.Event?.Link != null ? 'pointer' : undefined)
                 .on('click', (e, d) => {
                     e.preventDefault();
@@ -982,7 +982,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
         React.useEffect(() => {
             if (props.AllEventSources.length === 0) return;
             // All keys should be unique, positive keys exist in map, negative don't
-            const tempSources: WidgetTypes.ISelectedEvents<any>[] = props.AllEventSources
+            const tempSources: WidgetTypes.ISelectedEvents<IEventSourceSettings>[] = props.AllEventSources
                 .filter(eventSource => props.SelectedSources.findIndex(selected => selected.ID === eventSource.ID) === -1)
                 .map((src) => ({ ...src, Key: -src.ID, EventSettings: TrendWidget.DefaultEventSourceSettings }));
             setAllEventSources(_.orderBy(tempSources.concat(props.SelectedSources), [sortField], [ascending ? 'asc' : 'desc']));
@@ -1040,7 +1040,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                     Key={'Display'}
                     AllowSort={false}
                     Content={row => {
-                        let record = { Enabled: props.SelectedSources.findIndex(src => src.ID === row.item.ID) !== -1 }
+                        const record = { Enabled: props.SelectedSources.findIndex(src => src.ID === row.item.ID) !== -1 }
                         return (<ToggleSwitch<{ Enabled: boolean }> Record={record} Label="" Field="Enabled" Setter={newRecord => {
                             if (newRecord.Enabled) props.AddOrEditSource(row.item);
                             else props.RemoveSource(row.item)
