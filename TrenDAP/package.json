@@ -1,11 +1,12 @@
 {
   "name": "trendap",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Visualization Application for power quality trending data.",
   "repository": "https://github.com/GridProtectionAlliance/TrenDAP",
   "main": "index.js",
   "scripts": {
-    "build": "npm prune && npm ci && webpack --mode=development",
+    "builddebug": "npm prune && npm ci && webpack --mode=development",
+	  "buildrelease": "npm prune && npm ci && webpack --mode=production",
     "watch": "webpack --watch --color --mode=development",
     "update": "npx npm-check-updates",
     "lint": "eslint . --ext .ts,.tsx"
@@ -33,11 +34,8 @@
     "html-webpack-plugin": "5.5.0",
     "mini-css-extract-plugin": "2.6.0",
     "node-polyfill-webpack-plugin": "1.1.4",
-    "node-sass": "7.0.1",
     "path": "0.12.7",
     "popper.js": "1.16.1",
-    "sass": "1.49.9",
-    "sass-loader": "12.6.0",
     "source-map-loader": "3.0.1",
     "stream-browserify": "3.0.0",
     "style-loader": "3.3.1",

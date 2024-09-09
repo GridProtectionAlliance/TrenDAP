@@ -351,3 +351,4 @@ MigrationBackup/
 .ionide/
 /TrenDAPClient/package-lock.json
 /TrenDAPClient/stats.json
+/TrenDAP/wwwroot/js/*
