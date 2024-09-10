@@ -22,21 +22,23 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import * as _ from 'lodash';
 import moment from 'moment';
 import * as $ from 'jquery';
 import { useNavigate } from "react-router-dom";
 import { TabSelector, ToolTip } from '@gpa-gemstone/react-interactive';
-import { CrossMark, Warning } from '@gpa-gemstone/gpa-symbols';
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { DataSourceTypes, TrenDAP } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { SelectDataSetsStatus, FetchDataSets, SelectDataSets, DataSetsHaveChanged, SelectNewDataSet } from './DataSetsSlice';
+import {
+    SelectDataSetsStatus, FetchDataSets, SelectDataSets,
+    DataSetsHaveChanged, SelectNewDataSet
+} from './DataSetsSlice';
 import DataSetSettingsTab from './Tabs/DataSetSettingsTab';
 import DataSourceConnectionTab from './Tabs/DataSourceConnectionTab';
 import EventSourceConnectionTab from './Tabs/EventSourceConnectionTab';
 import { EventSourceTypes } from '../EventSources/Interface';
 
-const EditDataSet: React.FunctionComponent<{}> = (props) => {
+const EditDataSet: React.FunctionComponent = (props) => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
@@ -193,8 +195,8 @@ const EditDataSet: React.FunctionComponent<{}> = (props) => {
                             >Save</button>
                         </div>
                         <ToolTip Target="newBtn" Show={hover && (warnings.length > 0 || errors.length > 0)} Position={'top'}>
-                            {warnings.map((w, i) => <p key={2 * i}>{Warning} {w} </p>)}
-                            {errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
+                            {warnings.map((w, i) => <p key={2 * i}><ReactIcons.Warning/> {w} </p>)}
+                            {errors.map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark /> {e} </p>)}
                         </ToolTip>
                     </div>
                 </div>
