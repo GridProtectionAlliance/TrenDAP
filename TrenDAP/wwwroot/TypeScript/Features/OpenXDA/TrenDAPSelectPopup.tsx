@@ -77,9 +77,7 @@ export default function SelectPopup<T extends U>(props: IProps<T>) {
     }, [status]);
 
     function AddCurrentList() {
-        let updatedData: any[];
-        updatedData = (selectedData as any[]).concat(data);
-        setSelectedData(_.uniqBy((updatedData as T[]), (d) => d.ID));
+        setSelectedData(_.uniqBy(((selectedData).concat(data)), (d) => d.ID));
     }
 
     return (<>
@@ -184,12 +182,12 @@ export default function SelectPopup<T extends U>(props: IProps<T>) {
                         ascending={ascendingSelected}
                         onSort={(d) => {
                             if (d.colKey === sortKeySelected) {
-                                const ordered = _.orderBy<T[]>(selectedData, [d.colKey], [(!ascendingSelected ? "asc" : "desc")]) as any;
+                                const ordered = _.orderBy<T[]>(selectedData, [d.colKey], [(!ascendingSelected ? "asc" : "desc")]) as T[];
                                 setAscendingSelected(!ascendingSelected);
                                 setSelectedData(ordered);
                             }
                             else {
-                                const ordered = _.orderBy(selectedData, [d.colKey], ["asc"]) as any;
+                                const ordered = _.orderBy(selectedData, [d.colKey], ["asc"]) as T[];
                                 setAscendingSelected(!ascendingSelected);
                                 setSelectedData(ordered);
                                 setSortKeySelected(d.colKey);
@@ -199,7 +197,7 @@ export default function SelectPopup<T extends U>(props: IProps<T>) {
                         theadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                         tbodyStyle={{ display: 'block', overflowY: 'scroll', maxHeight: '400px', width: '100%' }}
                         rowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                        selected={(item) => false}
+                        selected={() => false}
                     />
                 </div> : null}
             </div>

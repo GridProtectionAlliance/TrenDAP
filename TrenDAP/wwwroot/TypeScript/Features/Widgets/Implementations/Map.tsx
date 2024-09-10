@@ -30,7 +30,6 @@ import { sort } from '../HelperFunctions';
 import HeatMap from 'leaflet-heatmap'
 import leaflet from 'leaflet';
 import _ from 'lodash';
-import { channel } from 'diagnostics_channel';
 import { HsvToHex } from '@gpa-gemstone/helper-functions';
 import moment from 'moment';
 
@@ -240,7 +239,7 @@ export const Map: WidgetTypes.IWidget<IProps, IChannelSettings, null> = {
 
         React.useLayoutEffect(() => {
             if (divRef.current != null && map.current != null) {
-                let newSize = { Height: divRef.current.offsetHeight, Width: divRef.current.offsetWidth }
+                const newSize = { Height: divRef.current.offsetHeight, Width: divRef.current.offsetWidth }
                 if (!_.isEqual(newSize, mapSize.current)) {
                     mapSize.current = newSize;
                     map.current.invalidateSize();
@@ -343,17 +342,17 @@ export const Map: WidgetTypes.IWidget<IProps, IChannelSettings, null> = {
         return <>
             <div className="row">
                 <div className="col-12">
-                    <Input<IProps> Field='CenterLat' Record={props.Settings} Type='number' Label='Latitude' Setter={(r) => props.SetSettings(r)} Valid={(field) => true} Help={"The latitude for the map's initial center position."} />
+                    <Input<IProps> Field='CenterLat' Record={props.Settings} Type='number' Label='Latitude' Setter={(r) => props.SetSettings(r)} Valid={() => true} Help={"The latitude for the map's initial center position."} />
                 </div>
             </div>
             <div className="row">
                 <div className="col-12">
-                    <Input<IProps> Field='CenterLong' Record={props.Settings} Type='number' Label='Longitude' Setter={(r) => props.SetSettings(r)} Valid={(field) => true} Help={"The longitude for the map's initial center position."} />
+                    <Input<IProps> Field='CenterLong' Record={props.Settings} Type='number' Label='Longitude' Setter={(r) => props.SetSettings(r)} Valid={() => true} Help={"The longitude for the map's initial center position."} />
                 </div>
             </div>
             <div className="row">
                 <div className="col-12">
-                    <Input<IProps> Field='Zoom' Record={props.Settings} Type='number' Setter={(r) => props.SetSettings(r)} Valid={(field) => true} Help={"The initial zoom level of the map."} />
+                    <Input<IProps> Field='Zoom' Record={props.Settings} Type='number' Setter={(r) => props.SetSettings(r)} Valid={() => true} Help={"The initial zoom level of the map."} />
                 </div>
             </div>
             <div className="row">
