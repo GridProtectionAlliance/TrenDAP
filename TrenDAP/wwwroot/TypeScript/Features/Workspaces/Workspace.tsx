@@ -217,7 +217,7 @@ const Workspace: React.FunctionComponent = () => {
                             </ul>
                         </div>
                         <div className="col-6 d-flex flex-row align-items-center justify-content-end pr-1" style={{ zIndex: 9986 }}>
-                            <BtnDropdown Label={'Row'} BtnClass='btn btn-info'
+                            <BtnDropdown Label={'Row'} BtnClass='btn btn-info' Disabled={!editMode}
                                 Options={
                                     AllWidgets.map(widget => ({ Label: widget.Name, Callback: () => HandleAddObject(widget.Name), Group: 0 }))
                                         .concat([{ Label: 'Row', Callback: () => HandleAddObject('Row'), Group: 1 }, { Label: 'Virtual Channel', Callback: () => setShowVirtual(true), Group: 2 }])}
