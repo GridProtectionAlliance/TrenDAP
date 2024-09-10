@@ -442,7 +442,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                 .attr('fill', d => d.Settings.Color)
                 .attr('data-tooltip', d => d.Target)
                 .on('mouseenter', (_, d) => { setEvtHover(d); setShowTooltip(true); })
-                .on('mouseleave', _ => setShowTooltip(false))
+                .on('mouseleave', () => setShowTooltip(false))
                 .style('cursor', d => d.Event?.Link != null ? 'pointer' : undefined)
                 .on('click', (e, d) => {
                     e.preventDefault();
@@ -677,6 +677,12 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
     SettingsUI: (props) => {
         const [deleteHover, setDeleteHover] = React.useState<{ ID: number, Hover: boolean }>({ ID: -1, Hover: false });
 
+        React.useEffect(() => {
+            const e: string[] = [];
+            if (props.Settings.YAxis.some(axis => axis.Label === '')) e.push("Every y axis must have a label.");
+            props.SetErrors(e);
+        }, [props.Settings.YAxis]);
+
         return <>
             <div className="row">
                 <div className="col-6">
@@ -715,7 +721,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
             </div>
             <div className="row">
                 <div className="col-6 d-flex align-items-center justify-content-start">
-                    <h6>Y Axises</h6>
+                    <h6>Y Axes</h6>
                 </div>
                 <div className="col-6 d-flex align-items-center justify-content-end">
                     <button className='btn btn-info' onClick={() => {
@@ -850,7 +856,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                                     yAxisID = props.Settings.YAxis.reduce((max, current) => {
                                         return current.ID > max ? current.ID : max
                                     }, 0) + 1
-                                const newAxis: TrenDAP.IYAxis = { ID: yAxisID, Min: 0, Max: 10, AutoMaxScale: true, AutoMinScale: true, Label: '', Type: item.row.Type, Position: 'left' }
+                                const newAxis: TrenDAP.IYAxis = { ID: yAxisID, Min: 0, Max: 10, AutoMaxScale: true, AutoMinScale: true, Label: item.row.Type, Type: item.row.Type, Position: 'left' }
 
                                 props.SetSettings({
                                     ...props.Settings,
@@ -976,7 +982,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
         React.useEffect(() => {
             if (props.AllEventSources.length === 0) return;
             // All keys should be unique, positive keys exist in map, negative don't
-            const tempSources: WidgetTypes.ISelectedEvents<any>[] = props.AllEventSources
+            const tempSources: WidgetTypes.ISelectedEvents<IEventSourceSettings>[] = props.AllEventSources
                 .filter(eventSource => props.SelectedSources.findIndex(selected => selected.ID === eventSource.ID) === -1)
                 .map((src) => ({ ...src, Key: -src.ID, EventSettings: TrendWidget.DefaultEventSourceSettings }));
             setAllEventSources(_.orderBy(tempSources.concat(props.SelectedSources), [sortField], [ascending ? 'asc' : 'desc']));
@@ -1034,7 +1040,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                     Key={'Display'}
                     AllowSort={false}
                     Content={row => {
-                        let record = { Enabled: props.SelectedSources.findIndex(src => src.ID === row.item.ID) !== -1 }
+                        const record = { Enabled: props.SelectedSources.findIndex(src => src.ID === row.item.ID) !== -1 }
                         return (<ToggleSwitch<{ Enabled: boolean }> Record={record} Label="" Field="Enabled" Setter={newRecord => {
                             if (newRecord.Enabled) props.AddOrEditSource(row.item);
                             else props.RemoveSource(row.item)

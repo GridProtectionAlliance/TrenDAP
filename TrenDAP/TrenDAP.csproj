@@ -209,5 +209,10 @@
 		  <HintPath>..\Dependencies\openXDA\openXDA.APIAuthentication.dll</HintPath>
 	  </Reference>
   </ItemGroup>
-
+  <PropertyGroup>
+    <PreBuildEvent>CALL cd "$(MSBuildProjectDirectory)"
+      if $(Configuration) == Debug npm run builddebug
+      if $(Configuration) == Release npm run buildrelease
+    </PreBuildEvent>
+  </PropertyGroup>
 </Project>

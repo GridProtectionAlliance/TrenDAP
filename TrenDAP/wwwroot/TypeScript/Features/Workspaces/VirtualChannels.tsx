@@ -52,13 +52,13 @@ interface IVirtualChannelEditable extends TrenDAP.IVirtualChannelLoaded {
 }
 
 const generateQuickName = (existingChannels: IMetaDataVariableName[]) => {
-    let currentName: string;
+    let currentName: string = "A";
     let currentAttemptIndex = existingChannels.length;
-    while(true) {
+    while (currentName === 'T' || existingChannels.some(chan => chan.VariableName === currentName)) {
         currentName = findQuickName(currentAttemptIndex);
-        if (currentName !== 'T' &&  !existingChannels.some(chan => chan.VariableName === currentName)) return currentName;
-        currentAttemptIndex ++;
+        currentAttemptIndex++;
     }
+    return currentName;
 };
 
 const findQuickName = (index: number) => {
@@ -131,7 +131,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
         for(let index = 0; index < virtuals.length; index++) {
             try {
                 const userFunc = createVirtualFunc(virtuals[index].ComponentChannels, virtuals[index].Calculation);
-                userFunc(Math.random(), ...virtuals[index].ComponentChannels.map(_ => Math.random()));
+                userFunc(Math.random(), ...virtuals[index].ComponentChannels.map(() => Math.random()));
             } catch {
                 return index;
             }
@@ -216,7 +216,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                             Channels: [],
                                             Threshold: 0
                                         })
-                                        setAllVirtualChannels(_.orderBy(newVirtualChannels, [channelSortField], [channelAscending ? 'asc' : 'desc']));;
+                                        setAllVirtualChannels(_.orderBy(newVirtualChannels, [channelSortField], [channelAscending ? 'asc' : 'desc']));
                                     }}>
                                         Add New
                                     </button>

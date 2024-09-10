@@ -29,7 +29,8 @@ export namespace WidgetTypes {
     interface ISettingsProps<T, U> {
         SetSettings: (settings: T) => void,
         Settings: T,
-        ChannelSettings: U[]
+        ChannelSettings: U[],
+        SetErrors: (errors: string[]) => void
     }
 
     interface IWidgetProps<T, U, V> {
@@ -66,6 +67,7 @@ export namespace WidgetTypes {
         RemoveChannel: (channelID: string) => void,
         SelectedChannels: ISelectedChannels<U>[],
         SetChannelSettings: (channelKey: TrenDAP.IChannelKey | string, channelSettings: U) => void,
+        SetErrors: (errors: string[]) => void
     }
 
     interface IEventSourceSelectionProps<U> {

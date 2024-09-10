@@ -28,7 +28,7 @@ import moment from 'moment';
 import $ from 'jquery';
 
 // #region [ Thunks ]
-export const FetchDataSets = createAsyncThunk('DataSets/FetchDataSets', async (_) => {
+export const FetchDataSets = createAsyncThunk('DataSets/FetchDataSets', async () => {
     return await GetDataSets();
 });
 

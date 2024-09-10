@@ -28,7 +28,7 @@ import { useAppSelector, useAppDispatch } from '../../hooks';
 import { ReactTable } from '@gpa-gemstone/react-table'
 import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, CloneDataSet, New } from './DataSetsSlice';
 import moment from 'moment';
-import { DNA, TrashCan, HeavyCheckMark, Pencil, Wrench } from '@gpa-gemstone/gpa-symbols';
+import { DNA, TrashCan, HeavyCheckMark, Pencil } from '@gpa-gemstone/gpa-symbols';
 import { Warning, ToolTip } from '@gpa-gemstone/react-interactive'
 import { useNavigate } from "react-router-dom";
 

@@ -33,7 +33,7 @@
       }
     ]*/
   },
-  "ignorePatterns": [ "package/**/*", "__tests__", "lib", "**/*.d.ts" ],
+  "ignorePatterns": [ "package/**/*", "__tests__", "lib", "**/*.d.ts", "obj/**/*" ],
   "parserOptions": {
     "project": [ "./tsconfig.json" ]
   }

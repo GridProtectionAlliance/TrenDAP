@@ -41,7 +41,6 @@ import WorkspaceSettings from './WorkspaceSettings';
 import { CreateWidget, isVirtual } from '../Widgets/HelperFunctions';
 import { useParams } from 'react-router-dom';
 import VirtualChannels from './VirtualChannels';
-import TrenDAPDB from '../DataSets/TrenDAPDB';
 
 type Hover = ('Share' | 'Save' | 'Settings' | 'Add' | 'SaveIcon' | 'None' | 'ShareDisabled')
 
@@ -349,7 +348,7 @@ const Workspace: React.FunctionComponent = () => {
 export const AddChannelToMap = (chanKey: TrenDAP.IChannelKey, channel: DataSetTypes.IDataSetMetaData, parentMap: Map<string, number>, channelMap: HashTable<TrenDAP.IChannelKey, string>) => {
     let maxValue = -1;
 
-    for (let value of parentMap.values()) {
+    for (const value of parentMap.values()) {
         if (value > maxValue)
             maxValue = value;
     }
@@ -357,7 +356,7 @@ export const AddChannelToMap = (chanKey: TrenDAP.IChannelKey, channel: DataSetTy
     if (!parentMap.has(channel.ParentID))
         parentMap.set(channel.ParentID, maxValue + 1);
 
-    let parent = parentMap.get(channel.ParentID) as number;
+    const parent = parentMap.get(channel.ParentID) as number;
     channelMap.set({ ...chanKey, Parent: parent }, channel.ID);
     return parent;
 }

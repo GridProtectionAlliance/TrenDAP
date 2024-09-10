@@ -40,7 +40,6 @@ export interface EventTableRow {
 }
 
 const TimeFormat = 'MM/DD/YYYY HH:mm:ss';
-const AllowableVirtualTimeDelta = 60000;
 type TrenDAPTable = 'Channel' | 'Event' | 'Virtual';
 
 function getUpgradeTable(version: number): TrenDAPTable{
@@ -305,23 +304,23 @@ export default class TrenDAPDB {
         return Promise.all(promiseArray);
     }
 
-    public ReadManyEvents(eventSources: WidgetTypes.ISelectedEvents<any>[]) {
-        return new Promise<WidgetTypes.IWidgetEvents<any>[]>(async (resolve, reject) => {
+    public ReadManyEvents(eventSources: WidgetTypes.ISelectedEvents<unknown>[]) {
+        return new Promise<WidgetTypes.IWidgetEvents<unknown>[]>(async (resolve, reject) => {
             if (eventSources == null || eventSources.length === 0) {
                 resolve([]);
                 return;
             }
 
-            let db = await this.OpenDB();
-            let tx = db.transaction('Event', 'readonly');
-            let store = tx.objectStore('Event');
-            let results: WidgetTypes.IWidgetEvents<any>[] = [];
+            const db = await this.OpenDB();
+            const tx = db.transaction('Event', 'readonly');
+            const store = tx.objectStore('Event');
+            const results: WidgetTypes.IWidgetEvents<unknown>[] = [];
 
             let completed = 0;
             eventSources.forEach(eventSource => {
                 if (eventSource.ID == null) return;
 
-                let request = store.get(eventSource.ID);
+                const request = store.get(eventSource.ID);
                 request.onsuccess = (evt: any) => {
                     results.push({ ...eventSource, Events: evt.target.result.Data });
                     completed++;
@@ -343,12 +342,12 @@ export default class TrenDAPDB {
 
     public AddMultipleEvents(records: EventTableRow[]) {
         return new Promise(async (resolve, reject) => {
-            let db = await this.OpenDB();
+            const db = await this.OpenDB();
 
-            let tx = db.transaction('Event', 'readwrite');
-            let store = tx.objectStore('Event');
+            const tx = db.transaction('Event', 'readwrite');
+            const store = tx.objectStore('Event');
             Promise.all(records.map(r => new Promise((res, rej) => {
-                let result = store.put({ ID: r.ID, Created: moment().format(TimeFormat), Data: r.Data });
+                const result = store.put({ ID: r.ID, Created: moment().format(TimeFormat), Data: r.Data });
 
                 result.onsuccess = (evt: any) => {
                     res(evt.target.result);
