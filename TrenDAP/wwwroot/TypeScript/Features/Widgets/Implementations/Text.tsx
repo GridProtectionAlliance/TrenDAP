@@ -23,22 +23,54 @@
 
 import * as React from 'react';
 import { WidgetTypes } from '../Interfaces';
-import { TextArea } from '@gpa-gemstone/react-forms';
+import { Select, TextArea } from '@gpa-gemstone/react-forms';
 
-interface IProps { Text: string }
+interface IProps { Text: string, Mode: Mode }
+type Mode = ('text' | 'h1' | 'h2' | 'h3' | 'bold')
 
 export const TextWidget: WidgetTypes.IWidget<IProps, null, null> = {
-    DefaultSettings: { Text: "" },
+    DefaultSettings: { Text: "", Mode: 'text' },
     DefaultChannelSettings: null,
     DefaultEventSourceSettings: null,
     Name: "Text",
     WidgetUI: (props) => {
-        return (
-            <p style={{ position: 'relative', top: 30 }}>{props.Settings?.Text}</p>
-        );
+
+        if (props.Settings?.Mode === 'text')
+            return (
+            <p style={{ position: 'relative' }}>{props.Settings?.Text}</p>
+            );
+        if (props.Settings?.Mode === 'h1')
+            return (
+                <h1 style={{ position: 'relative' }}>{props.Settings?.Text}</h1>
+            );
+        if (props.Settings?.Mode === 'h2')
+            return (
+                <h3 style={{ position: 'relative' }}>{props.Settings?.Text}</h3>
+            );
+        if (props.Settings?.Mode === 'h3')
+            return (
+                <h5 style={{ position: 'relative' }}>{props.Settings?.Text}</h5>
+            );
+        if (props.Settings?.Mode === 'bold')
+            return (
+                <p style={{ position: 'relative', textDecoration: 'bold' }}>{props.Settings?.Text}</p>
+            );
+
     },
     SettingsUI: (props) => {
         return <>
+            <Select<IProps>
+                Label={'Mode'}
+                Record={props.Settings}
+                Setter={(item) => props.SetSettings(item)}
+                Options={[
+                    { Label: 'Text', Value: 'text' },
+                    { Label: 'Heading 1', Value: 'h1' },
+                    { Label: 'Heading 2', Value: 'h2' },
+                    { Label: 'Heading 3', Value: 'h3' },
+                    { Label: 'Bold Text', Value: 'bold' }
+                ]}
+                Field={'Mode'} />
             <TextArea<IProps> Record={props.Settings} Field="Text" Rows={10} Setter={r => props.SetSettings(r)} Valid={() => true} />
         </>
     },
