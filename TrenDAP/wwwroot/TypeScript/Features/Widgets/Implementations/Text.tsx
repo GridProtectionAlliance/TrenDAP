@@ -53,7 +53,7 @@ export const TextWidget: WidgetTypes.IWidget<IProps, null, null> = {
             );
         if (props.Settings?.Mode === 'bold')
             return (
-                <p style={{ position: 'relative', textDecoration: 'bold' }}>{props.Settings?.Text}</p>
+                <p style={{ position: 'relative', fontWeight: 'bold' }}>{props.Settings?.Text}</p>
             );
 
     },
