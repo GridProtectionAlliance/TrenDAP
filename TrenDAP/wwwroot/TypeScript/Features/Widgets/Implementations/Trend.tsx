@@ -40,8 +40,8 @@ export interface IProps {
     Legend: boolean,
     Split: boolean,
     SplitType: 'Axis' | 'Series',
+    ShowCtrl: boolean
 }
-
 interface IChannelSettings {
     Field: TrenDAP.SeriesField,
     Color: string,
@@ -108,12 +108,13 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
         Legend: true,
         Split: false,
         SplitType: 'Axis',
-        AutoXScale: true
+        AutoXScale: true,
+        ShowCtrl: true,
     },
     DefaultChannelSettings: { Field: 'Average', Color: 'Red', YAxisID: -1, Continuous: false },
     DefaultEventSourceSettings: { Color: 'Green', Symbol: 'ArrowDropUp' },
     Name: "Trend",
-    WidgetUI: (props) => {
+    WidgetUI: (props: WidgetTypes.IWidgetProps<IProps, IChannelSettings, IEventSourceSettings>) => {
         const plotRef = React.useRef<HTMLDivElement | null>(null);
         const svgs = React.useRef<d3.Selection<SVGSVGElement, unknown, null, undefined>[]>([]);
         const margin = React.useRef<{ bottom: number, left: number, top: number, right: number }>({ bottom: 50, left: 60, top: 40, right: 60 });
@@ -662,12 +663,12 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
 
         return (
             <div className="d-flex h-100 flex-column" ref={plotRef} style={{ userSelect: 'none' }}>
-                <div className="d-flex align-items-center" style={{ position: 'absolute', zIndex: 1010 }}>
+                {props.Settings.ShowCtrl? <div className="d-flex align-items-center" style={{ position: 'absolute', zIndex: 1010 }}>
                     <button className='btn btn-light' onClick={HandleReset}>
                         Reset Limits
                     </button>
                     <RadioButtons Record={{ chartAction }} Field="chartAction" Label="" Setter={(record) => setChartAction(record.chartAction)} Options={[{ Label: 'Pan', Value: 'Pan'}, { Label: 'ZoomX', Value: 'ZoomX' }, { Label: 'Click', Value: 'Click' }]} />
-                </div>
+                </div> : null}
                 <ToolTip Show={showTooltip && evtHover?.Event?.Title != null && evtHover?.Event?.Title != ''} Position='top' Target={evtHover?.Target}>
                     {`${evtHover?.Event?.Title}${(evtHover?.Event?.Description != null && evtHover.Event.Description != '') ? (" - " + evtHover.Event.Description) : ''}`}
                 </ToolTip>
@@ -695,8 +696,16 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                 </div>
             </div>
             <div className="row">
-                <div className="col-12">
-                    <ToggleSwitch<IProps> Record={props.Settings} Field="Legend" Setter={record => props.SetSettings(record)} />
+                <div className="col-6">
+                    <ToggleSwitch<IProps>
+                        Record={props.Settings} 
+                        Field="Legend"
+                        Setter={record => props.SetSettings(record)}
+                        Label='Show Legend'
+                    />
+                </div>
+                <div className="col-6">
+                    <ToggleSwitch<IProps> Record={props.Settings} Field="ShowCtrl" Setter={record => props.SetSettings(record)} Label={'Show Plot Controls'}/>
                 </div>
             </div>
             <br />
