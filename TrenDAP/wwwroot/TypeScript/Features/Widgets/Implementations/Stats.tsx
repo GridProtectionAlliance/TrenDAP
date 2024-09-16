@@ -103,10 +103,10 @@ export const StatsWidget: WidgetTypes.IWidget<ISettings, null, null> = {
             <>
                 <ReactTable.Table<IStatData>
                     TableClass={"table table-hover"}
-                    TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
-                    TbodyStyle={{ display: 'block', overflow: 'hidden', width: '100%' }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                    SortKey={"Category"}
+                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }} SortKey={"Category"}
                     OnClick={() => { }}
                     OnSort={() => { }}
                     Data={display}
