@@ -36,7 +36,11 @@ interface IProps {
 const EventSource: React.FunctionComponent<IProps> = (props: IProps) => {
     const [configErrors, setConfigErrors] = React.useState<string[]>([]);
     const [privateErrors, setPrivateErrors] = React.useState<string[]>([]);
-    const implementation: IEventSource<any, any, any> | null = React.useMemo(() => EventDataSources.find(t => t.Name == props.EventSource.Type), [props.EventSource.Type])
+    const implementation: IEventSource<any, any, any> | null = React.useMemo(() => {
+        setConfigErrors([]);
+        setPrivateErrors([]);
+        return EventDataSources.find(t => t.Name == props.EventSource.Type)
+    }            , [props.EventSource.Type])
     const settings = React.useMemo(() => {
         if (implementation == null)
             return {};
@@ -62,6 +66,7 @@ const EventSource: React.FunctionComponent<IProps> = (props: IProps) => {
         }
         return s;
     }, [implementation, props.EventSource.PrivateSettings]);
+
 
     React.useEffect(() => {
         const errors: string[] = [];
