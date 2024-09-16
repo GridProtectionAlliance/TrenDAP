@@ -333,9 +333,9 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any>
                         Key={'Profile'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
-                        Content={(row) => <CheckBox<IChannelSettings> Record={row.item?.ChannelSettings} Field="Profile" Setter={(item) => props.SetChannelSettings(row.item.Key, item)} />}
+                        Content={(row) => <CheckBox<IChannelSettings> Label={''} Record={row.item?.ChannelSettings} Field="Profile" Setter={(item) => props.SetChannelSettings(row.item.Key, item)} />}
                     >
-                        Profile
+                        Cummulative
                     </ReactTable.Column>
                 </ReactTable.Table>
             </div>
