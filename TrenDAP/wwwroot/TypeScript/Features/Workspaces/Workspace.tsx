@@ -219,8 +219,8 @@ const Workspace: React.FunctionComponent = () => {
                         <div className="col-6 d-flex flex-row align-items-center justify-content-end pr-1" style={{ zIndex: 9986 }}>
                             <BtnDropdown Label={'Row'} BtnClass='btn btn-info' Disabled={!editMode}
                                 Options={
-                                    AllWidgets.map(widget => ({ Label: widget.Name, Callback: () => HandleAddObject(widget.Name), Group: 0 }))
-                                        .concat([{ Label: 'Row', Callback: () => HandleAddObject('Row'), Group: 1 }, { Label: 'Virtual Channel', Callback: () => setShowVirtual(true), Group: 2 }])}
+                                    AllWidgets.map(widget => ({ Label: widget.Name, Callback: () => HandleAddObject(widget.Name), Group: 0, Disabled: !editMode }))
+                                        .concat([{ Label: 'Row', Callback: () => HandleAddObject('Row'), Group: 1, Disabled: !editMode }, { Label: 'Virtual Channel', Callback: () => setShowVirtual(true), Group: 2, Disabled: !editMode }])}
                                 Callback={() => HandleAddObject('Row')} ShowToolTip={true} TooltipContent={<p>Add Row or Widget</p>} TooltipLocation={'bottom'} />
 
                             <div className="btn-group align-items-center pl-1">
