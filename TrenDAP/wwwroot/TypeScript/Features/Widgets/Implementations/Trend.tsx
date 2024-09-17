@@ -31,6 +31,7 @@ import { ReactTable } from '@gpa-gemstone/react-table';
 import { ToolTip } from '@gpa-gemstone/react-interactive';
 import _ from 'lodash';
 import { sort } from '../HelperFunctions';
+import { CreateGuid } from '@gpa-gemstone/helper-functions';
 
 export interface IProps {
     AutoXScale: boolean
@@ -115,6 +116,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
     DefaultEventSourceSettings: { Color: 'Green', Symbol: 'ArrowDropUp' },
     Name: "Trend",
     WidgetUI: (props: WidgetTypes.IWidgetProps<IProps, IChannelSettings, IEventSourceSettings>) => {
+        const guid = React.useRef<string>(CreateGuid());
         const plotRef = React.useRef<HTMLDivElement | null>(null);
         const svgs = React.useRef<d3.Selection<SVGSVGElement, unknown, null, undefined>[]>([]);
         const margin = React.useRef<{ bottom: number, left: number, top: number, right: number }>({ bottom: 50, left: 60, top: 40, right: 60 });
@@ -441,7 +443,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                 .attr("transform", d => `translate(${xScaleRef.current(d.Event.Time)},${margin.current.top})`)
                 .attr('stroke', d => d.Settings.Color)
                 .attr('fill', d => d.Settings.Color)
-                .attr('data-tooltip', d => d.Target)
+                .attr('data-tooltip', d => guid.current + d.Target)
                 .on('mouseenter', (_, d) => { setEvtHover(d); setShowTooltip(true); })
                 .on('mouseleave', () => setShowTooltip(false))
                 .style('cursor', d => d.Event?.Link != null ? 'pointer' : undefined)
@@ -669,7 +671,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                     </button>
                     <RadioButtons Record={{ chartAction }} Field="chartAction" Label="" Setter={(record) => setChartAction(record.chartAction)} Options={[{ Label: 'Pan', Value: 'Pan'}, { Label: 'ZoomX', Value: 'ZoomX' }, { Label: 'Click', Value: 'Click' }]} />
                 </div> : null}
-                <ToolTip Show={showTooltip && evtHover?.Event?.Title != null && evtHover?.Event?.Title != ''} Position='top' Target={evtHover?.Target}>
+                <ToolTip Show={showTooltip && evtHover?.Event?.Title != null && evtHover?.Event?.Title != ''} Position='top' Target={guid.current + evtHover?.Target}>
                     {`${evtHover?.Event?.Title}${(evtHover?.Event?.Description != null && evtHover.Event.Description != '') ? (" - " + evtHover.Event.Description) : ''}`}
                 </ToolTip>
             </div>
