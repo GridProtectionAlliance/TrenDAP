@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-import { axisBottom, axisLeft, axisRight, brushX, format, line, scaleLinear, scaleUtc, select, bisector } from 'd3';
+import { axisBottom, axisLeft, axisRight, brushX, format, line, scaleLinear, scaleUtc, select, bisector, area } from 'd3';
 import * as React from 'react';
 import { DataSetTypes, TrenDAP } from '../../../global';
 import { WidgetTypes } from '../Interfaces';
@@ -44,7 +44,7 @@ export interface IProps {
     ShowCtrl: boolean
 }
 interface IChannelSettings {
-    Field: TrenDAP.SeriesField,
+    Field: TrenDAP.SeriesField | "Spread",
     Color: string,
     YAxisID: number,
     Continuous: boolean
@@ -170,7 +170,19 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
         }, [props.Events]);
 
         function GetChannelData(channel: WidgetTypes.IWidgetData<IChannelSettings>) {
-            return props.Data.find(data => data.ID === channel.ID).SeriesData[channel.ChannelSettings.Field].map(data => [data[0], data[1]]);
+            let fld: TrenDAP.SeriesField;
+            if (channel.ChannelSettings.Field == 'Spread')
+                fld = "Average";
+            else
+                fld = channel.ChannelSettings.Field;
+
+            return props.Data.find(data => data.ID === channel.ID).SeriesData[fld].map(data => [data[0], data[1]]);
+        }
+
+        function GetChannelAreaData(channel: WidgetTypes.IWidgetData<IChannelSettings>) {
+            const series = props.Data.find(data => data.ID === channel.ID);
+            if (series === undefined) return [];
+            return series.SeriesData["Minimum"].map((data,i) => [data[0], data[1], series.SeriesData["Maximum"][i][1]]);
         }
 
         function Initialize() {
@@ -364,6 +376,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                 AddLegend(svg, props.Data);
 
             svg.selectAll("g.line").remove();
+            svg.selectAll("g.Area").remove();
+
             svg.selectAll("g.line")
                 .data(props.Data)
                 .enter()
@@ -391,6 +405,35 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                             return dd[0] - data[ind - 1][0] <= gapValue;
                     }).x(dd => xScaleRef.current(dd[0])).y(dd => yScale(dd[1]));
                     return lineFunc(data);
+                })
+
+            svg.selectAll("g.Area")
+                .data(props.Data)
+                .enter()
+                .append("g")
+                .classed("Area", true)
+                .append("path")
+                .attr('clip-path', `url(#clip-${clipIndex})`)
+                .attr("fill", d => d.ChannelSettings.Color)
+                .attr("fill-opacity", 0.4)
+                .attr("d", d => {
+                    const yScale = yScalesRef.current.find(scale => d.ChannelSettings.YAxisID === scale.ID)?.Scale;
+                    const data = GetChannelAreaData(d);
+                    // Any data gap above 2x the average of the first 5 points should be considered a gap
+                    let count = 0;
+                    let gapValue = 0;
+                    while (count < 5 && count < data.length - 2) {
+                        count++;
+                        gapValue += data[count + 1][0] - data[count][0];
+                    }
+                    gapValue /= (count / 2);
+                    const lineFunc = area<number[]>()
+                        .defined((dd, ind, data) => {
+                            if (d.ChannelSettings.Continuous || ind === 0) return true;
+                            return dd[0] - data[ind - 1][0] <= gapValue;
+                    }).x(dd => xScaleRef.current(dd[0])).y1(dd => yScale(dd[2])).y0(dd => yScale(dd[1]));
+                    return lineFunc(data);
+
                 })
 
             svg.on('mousedown', (d: MouseEvent) => HandleChartAction(d, svg))
@@ -533,6 +576,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
             const dd = [].concat(...d)
             let yMax = Math.max(...dd.map(dp => dp[1]));
             let yMin = Math.min(...dd.map(dp => dp[1]));
+
             if (!axis.AutoMinScale)
                 yMin = axis.Min
             if (!axis.AutoMaxScale)
@@ -963,7 +1007,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                         Field={'ChannelSettings'}
                         Content={({ item }) =>
                             <Select<IChannelSettings> Record={item?.ChannelSettings} Label="" Field="Field" Setter={(record) => props.SetChannelSettings(item.Key, record)}
-                                Options={[{ Label: 'Average', Value: 'Average' }, { Label: 'Minimum', Value: 'Minimum' }, { Label: 'Maximum', Value: 'Maximum' }]} />
+                                Options={[{ Label: 'Average', Value: 'Average' }, { Label: 'Minimum', Value: 'Minimum' }, { Label: 'Maximum', Value: 'Maximum' }, { Label: 'Combination', Value: 'Spread' }]} />
                         }
                     >
                         Field
