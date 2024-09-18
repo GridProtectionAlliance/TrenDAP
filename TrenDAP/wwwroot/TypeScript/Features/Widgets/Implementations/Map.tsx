@@ -87,6 +87,8 @@ export const Map: WidgetTypes.IWidget<IProps, IChannelSettings, null> = {
         const mapSize = React.useRef<{ Height: number, Width: number }>();
         const circleLayers = React.useRef<leaflet.LayerGroup>(null);
         const circles = React.useRef<leaflet.CircleMarker[]>([]);
+        const heatmapLayer = React.useRef<any>(null);
+
         const animationTimeout = React.useRef<{ timeout?: NodeJS.Timeout, animationTime: number, cleanup?: () => void }>({ animationTime: 0 });
 
         const grouppedData = React.useMemo(() => {
@@ -237,6 +239,49 @@ export const Map: WidgetTypes.IWidget<IProps, IChannelSettings, null> = {
             };
         }, [grouppedData, getHeaderTitle, limitValues, props.Settings.Type, isAnimated]);
 
+        const updateHeatmap = React.useCallback((animationTimeStamp: number, firstAnimation: boolean) => {
+            if (map.current == null || heatmapLayer.current == null) return;
+
+            let control;
+            if (isAnimated) {
+                const controlText = `<div>${moment.utc(animationTimeStamp).format("ddd MMM Do, YYYY HH:mm")}</div>`;
+                if (firstAnimation) {
+                    const text = leaflet.DomUtil.create('div');
+                    const textbox = leaflet.Control.extend({
+                        onAdd: () => {
+                            text.id = "animationInfo";
+                            text.innerHTML = controlText;
+                            text.style.border = "solid";
+                            text.style.width = "13em";
+                            text.style.textAlign = "center";
+                            text.style.fontSize = "2em";
+                            text.style.background = "white";
+                            return text;
+                        },
+                        onRemove: () => {
+                            if (text != null) leaflet.DomUtil.remove(text);
+                        }
+                    });
+                    control = new textbox({ position: 'topright' });
+                    control.addTo(map.current)
+                } else {
+                    const text = leaflet.DomUtil.get("animationInfo");
+                    text.innerHTML = controlText;
+                }
+            }
+
+            const tIndices = props.Data.map(channel => channel.SeriesData[channel.ChannelSettings.Field]
+                ?.findIndex(datum => datum[0] >= animationTimeStamp));
+
+            heatmapLayer.current.setData({
+                data: props.Data
+                    .map((d,i) => ({ Name: d.Name, Frequency: d.SeriesData[d.ChannelSettings.Field]?.[tIndices[i]]?.[1], Lat: d.Latitude, Long: d.Longitude }))
+                    .filter(d => d.Lat != null && d.Long != null)
+                });
+
+
+        },[isAnimated, props.Data])
+
         React.useLayoutEffect(() => {
             if (divRef.current != null && map.current != null) {
                 const newSize = { Height: divRef.current.offsetHeight, Width: divRef.current.offsetWidth }
@@ -294,15 +339,15 @@ export const Map: WidgetTypes.IWidget<IProps, IChannelSettings, null> = {
                 valueField: 'Frequency'
             };
 
-            const heatmapLayer = new HeatMap(cfg);
-            heatmapLayer.setData({
+            heatmapLayer.current = new HeatMap(cfg);
+            heatmapLayer.current.setData({
                 data: props.Data
                     .filter(d => d.Latitude != null && d.Longitude != null)
                     .map(d => ({ Name: d.Name, Frequency: d.SeriesData[d.ChannelSettings.Field]?.[0]?.[1], Lat: d.Latitude, Long: d.Longitude }))
             });
-            heatmapLayer.addTo(map.current);
+            heatmapLayer.current.addTo(map.current);
 
-            return () => { map.current.removeLayer(heatmapLayer); }
+            return () => { map.current.removeLayer(heatmapLayer.current); }
         }, [props.Data, props.Settings.Type]);
 
         React.useEffect(() => {
@@ -310,18 +355,21 @@ export const Map: WidgetTypes.IWidget<IProps, IChannelSettings, null> = {
             clearInterval(animationTimeout.current.timeout);
             animationTimeout.current.animationTime = 0;
 
-            if (map.current == null || props.Settings.Type === 'HeatMap') return;
+            if (map.current == null) return;
 
             // Only need to set the interval if we need to animate
             if (isAnimated) {
                 animationTimeout.current.timeout = setInterval(() => {
                     animationTimeout.current.animationTime = (animationTimeout.current.animationTime + animationStep / 1000) % props.Settings.AnimationTime;
                     const animationTimeStamp = (animationTimeout.current.animationTime / props.Settings.AnimationTime) * (limitValues.end - limitValues.start) + limitValues.start;
-                    updateCircles(animationTimeStamp, false);
+                    if (props.Settings.Type === 'HeatMap')
+                        updateHeatmap(animationTimeStamp,false);
+                    else
+                        updateCircles(animationTimeStamp, false);
                 }, animationStep);
             }
             return updateCircles(0, true);
-        }, [updateCircles, props.Settings.Type, isAnimated, props.Settings.AnimationTime]);
+        }, [updateCircles, updateHeatmap, props.Settings.Type, isAnimated, props.Settings.AnimationTime]);
 
         return (
             <div className="d-flex h-100 flex-column" ref={divRef} />
