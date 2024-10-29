@@ -785,7 +785,7 @@ namespace TrenDAP.Controllers.Sapphire
             {
                 DataSource dataSource = new TableOperations<DataSource>(connection).QueryRecordWhere("ID = {0}", dataSourceID);
                 TrenDAPXDAHelper helper = new TrenDAPXDAHelper(dataSource.PrivateSettings);
-                return helper.GetAsync($"api/Event/TrenDAP");
+                return helper.GetAsync($"api/TrenDAP/Event");
             }
         }
 

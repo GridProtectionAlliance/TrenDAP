@@ -57,7 +57,7 @@ namespace TrenDAP.Controllers
                     eventSourceDataSetSettings.Add("EndTime", timeEnds.Item2);
                     IEnumerable<TimeFilter> timeFilters = dataset.GetTimeFilters();
                     eventSourceDataSetSettings.Add("TimeFilters", new JArray(timeFilters));
-                    return helper.GetActionResult("api/Event/TrenDAP", new StringContent(eventSourceDataSetSettings.ToString(), Encoding.UTF8, "application/json"));
+                    return helper.GetActionResult("api/TrenDAP/Event", new StringContent(eventSourceDataSetSettings.ToString(), Encoding.UTF8, "application/json"));
                 }
                 else
                     throw new ArgumentException($"Type of {eventSource.Type} not supported.");
