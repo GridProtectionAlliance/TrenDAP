@@ -172,9 +172,7 @@ namespace TrenDAP.Controllers
                     return helper.GetActionResult("api/HIDS/QueryPoints", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
                 }
                 // ToDo: Add other types, see funcs in dataset.cs
-                /* else if (type == "openHistorian")
-                    return QueryOpenHistorian(jObject, dataset, dataSource, json, cancellationToken);
-                else if (type == "Sapphire")
+                /* else if (type == "Sapphire")
                 {
                     jObject["DataSource"]["OpenSEE"] = TrenDAPDBController.GetOpenSEEURL(dataSource.ID, Configuration).Result;
                     return QuerySapphire(jObject, dataset, dataSource, json, cancellationToken);
@@ -197,9 +195,7 @@ namespace TrenDAP.Controllers
                     return helper.GetActionResult("api/HIDS/QueryPointsByTimeSpans", new StringContent(jObj.ToString(), Encoding.UTF8, "application/json"));
                 }
                 // ToDo: Add other types, see funcs in dataset.cs
-                /* else if (type == "openHistorian")
-                    return QueryOpenHistorian(jObject, dataset, dataSource, json, cancellationToken);
-                else if (type == "Sapphire")
+                /* else if (type == "Sapphire")
                 {
                     jObject["DataSource"]["OpenSEE"] = TrenDAPDBController.GetOpenSEEURL(dataSource.ID, Configuration).Result;
                     return QuerySapphire(jObject, dataset, dataSource, json, cancellationToken);

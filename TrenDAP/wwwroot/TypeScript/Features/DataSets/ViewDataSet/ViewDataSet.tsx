@@ -67,7 +67,7 @@ export default function ViewDataSet(props) {
         if(channelID == '0')
             setChannelID((data[0]?.Data ?? [{ ID:'0' }])[0].ID.toString());
 
-        const d = (data.find(ds => ds.DataSource.ID === dataSourceID)?.Data ?? []).find(dd => dd.ID == channelID)?.Data ?? [];
+        const d = (data.find(ds => ds.DataSource.ID === dataSourceID)?.Data ?? []).find(dd => dd.ID.toString() == channelID)?.Data ?? [];
         setSelectedData(d);
     }, [data]);
 
@@ -82,7 +82,7 @@ export default function ViewDataSet(props) {
     }, [flag]);
 
     React.useEffect(() => {
-        const d = (data.find(ds => ds.DataSource.ID === dataSourceID)?.Data ?? []).find(dd => dd.ID == channelID)?.Data ?? [];
+        const d = (data.find(ds => ds.DataSource.ID === dataSourceID)?.Data ?? []).find(dd => dd.ID.toString() == channelID)?.Data ?? [];
         setSelectedData(d);
         
     }, [channelID]);
@@ -96,14 +96,6 @@ export default function ViewDataSet(props) {
             (dataSource.Data as TrenDAP.iXDAReturnData[]).sort((a, b) => {
                 if (a.Meter + ' - ' + a.Name > b.Meter + ' - ' + b.Name) return 1;
                 else if (a.Meter + ' - ' + a.Name == b.Meter + ' - ' + b.Name) return 0;
-                else return -1;
-            })
-        }
-
-        else if (dataSource.DataSource.Type === 'openHistorian') {
-            (dataSource.Data as TrenDAP.iOpenHistorianReturn[]).sort((a, b) => {
-                if (a.Device + ' - ' + a.Description > b.Device + ' - ' + b.Description) return 1;
-                else if (a.Device + ' - ' + a.Description == b.Device + ' - ' + b.Description) return 0;
                 else return -1;
             })
         }
@@ -255,15 +247,6 @@ const Options = (dataSource: TrenDAP.iDataSetReturn) => {
         })
         return dataSource.Data.map(channel => <SapphireChannel key={channel.ID} channel={channel as TrenDAP.iXDAReturnData} />);
     }
-
-    else if (dataSource.DataSource.Type === 'openHistorian') {
-        (dataSource.Data as TrenDAP.iOpenHistorianReturn[]).sort((a, b) => {
-            if (a.Device + ' - ' + a.Description > b.Device + ' - ' + b.Description) return 1;
-            else if (a.Device + ' - ' + a.Description == b.Device + ' - ' + b.Description) return 0;
-            else return -1;
-        })
-        return dataSource.Data.map(channel => <OpenHistorianChannel key={channel.ID} channel={channel as TrenDAP.iOpenHistorianReturn} />);
-    }
     else
         return dataSource.Data.map(channel => <OtherChannel key={channel.ID} channel={channel} />);
 }
@@ -278,11 +261,6 @@ const SapphireChannel = (props: { channel: TrenDAP.iSapphireReturnData }) => {
     else
         return <option value={props.channel.ID}>{props.channel.Meter + ' - ' + props.channel.Name}</option>
 }
-
-const OpenHistorianChannel = (props: { channel: TrenDAP.iOpenHistorianReturn }) => {
-    return <option value={props.channel.ID}>{props.channel.Device + ' - ' + props.channel.Description}</option>
-}
-
 
 const OtherChannel = (props: { channel: object }) => {
     return <option value={props.channel['ID']}>{props.channel['Name']}</option>

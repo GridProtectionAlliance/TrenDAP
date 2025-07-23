@@ -231,45 +231,6 @@ namespace TrenDAP.Model
             }
         }
 
-        private Task<JObject> QueryOpenHistorian(JObject jObject, DataSet dataset, DataSource source, JObject data, CancellationToken cancellationToken)
-        {
-            return Task.Run(() =>
-            {
-
-                OpenHistorianController.OpenHistorianDataSet setData = data.ToObject<OpenHistorianController.OpenHistorianDataSet>();
-
-                OpenHistorianController.Post post = OpenHistorianController.CreatePost(dataset, setData);
-
-                jObject["Context"] = dataset.Context;
-                jObject["From"] = post.StartTime.ToString("MM/dd/yyyy");
-                jObject["To"] = post.EndTime.ToString("MM/dd/yyyy");
-
-                DataTable table = OpenHistorianController.GetDataTable(source.ID, post, Configuration, cancellationToken);
-
-                if (table.Rows.Count > 0)
-                {
-
-                    Task<HttpResponseMessage> rsp = OpenHistorianController.Query(source.ID, post, Configuration, cancellationToken);
-                    IEnumerable<HIDSPoint> points = ParsePoints(rsp, cancellationToken);
-                    IEnumerable<JObject> tableJson = JArray.FromObject(table).Select(row => JObject.FromObject(row));
-
-                    var groupjoin = tableJson.GroupJoin(points, row => row["ID"].ToString(), result => result.Tag, (row, resultcollection) =>
-                    {
-                        row["Data"] = JArray.FromObject(resultcollection);
-                        return row;
-                    });
-
-                    jObject["Data"] = JArray.FromObject(groupjoin);
-                }
-                else
-                    jObject["Data"] = JArray.FromObject(new List<string>() { });
-
-                return jObject;
-                
-            });
-
-        }
-
         private Task<JObject> QuerySapphire(JObject jObject, DataSet dataset, DataSource source, JObject data, CancellationToken cancellationToken)
         {
             return Task.Run(() =>

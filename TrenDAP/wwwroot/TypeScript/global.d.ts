@@ -20,7 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-import { OpenXDA, OpenHistorian } from '@gpa-gemstone/application-typings';
+import { OpenXDA } from '@gpa-gemstone/application-typings';
 
 export { };
 declare module '*.scss';
@@ -41,7 +41,6 @@ export namespace Redux {
         DataSources: PublicPrivateState<DataSourceTypes.IDataSourceView>,
         EventSources: PublicPrivateState<EventSourceTypes.IEventSourceView>,
         WorkSpaces: State<TrenDAP.iWorkSpace>,
-        OpenHistorian: { ID: number, State: OpenHistorianState }[],
         Sapphire: { [instance: number]: { [table: string]: Redux.SapphireTableSlice } },
         OpenXDA: { [instance: number]: { [table: string]: Redux.OpenXDATableSlice } },
         GeneralSettings: TrenDAP.GeneralSettings
@@ -62,13 +61,6 @@ export namespace Redux {
         PublicStatus: TrenDAP.Status,
         PublicData: T[],
         Error: null | string
-    }
-
-    interface OpenHistorianState {
-        Instances: OpenHistorian.Types.iHistorian[],
-        Measurements: OpenHistorian.Types.iActiveMeasurement[],
-        Status: TrenDAP.Status,
-        Error: string
     }
 
     interface OpenXDATableSlice {
@@ -98,7 +90,7 @@ export namespace OpenXDAExt {
 }
 
 export namespace DataSourceTypes {
-    type DataSourceType = 'TrenDAPDB' | 'openHistorian' | 'None' | 'Sapphire';
+    type DataSourceType = 'TrenDAPDB' | 'None' | 'Sapphire';
     interface IDataSourceView {
         ID: number,
         Name: string,
@@ -155,9 +147,9 @@ export namespace DataSetTypes {
 
 export namespace TrenDAP {
     type Status = 'loading' | 'idle' | 'error' | 'changed' | 'unitiated';
-    type iDataSetReturnType = iXDAReturnData | iOpenHistorianReturn | iSapphireReturnData;
+    type iDataSetReturnType = iXDAReturnData | iSapphireReturnData;
     type ChartAction = 'Click' | 'Pan' | 'ZoomX' ;
-    type iTrendDataPoint = iXDATrendDataPoint | iOpenHistorianAggregationPoint | iSapphireTrendDataPoint;
+    type iTrendDataPoint = iXDATrendDataPoint | iSapphireTrendDataPoint;
 
     // TrenDAP
     interface iWorkSpace { ID: number, Name: string, User: string, JSON: string, JSONString: string, Public: boolean, UpdatedOn: string }
@@ -207,11 +199,6 @@ export namespace TrenDAP {
     interface iXDAReturnData extends iXDAReturn { Data: iXDATrendDataPoint[], Events: { ID: number, ChannelID: number, StartTime: string }[] }
     interface iXDATrendDataPoint { Tag: string, Minimum: number, Maximum: number, Average: number, Timestamp: string, QualityFlags: number }
     type SeriesField = 'Minimum' | 'Maximum' | 'Average';
-
-    // openHistorian
-    interface iOpenHistorianDataSet { Devices: string[], Phases: string[], Types: string[], Instance: string, Aggregate: '1s' | '1m' | '1h' | '1d' | '1w' }
-    interface iOpenHistorianReturn extends OpenHistorian.Types.iActiveMeasurement { Data: iOpenHistorianAggregationPoint[] }
-    interface iOpenHistorianAggregationPoint extends iXDATrendDataPoint { }
 
     // Sapphire
     interface iSapphireDataSet { IDs: number[], Phases: number[], Types: number[], Aggregate: string, Harmonics: string }
