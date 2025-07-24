@@ -336,8 +336,8 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
             <div className="card-body">
                 <ServerErrorIcon Show={true} Label={`Widget ${props.Widget.Label} is not available. Please contact your system administrator.`} Size={150} />
             </div>
-        </div>
-            : <ErrorBoundary HeaderErrorMessage={`${props.Widget.Label} - Error`} BodyErrorMessage={`Widget ${props.Widget.Label} has encoutered an error.`} Width={`${props.Widget.Width}%`} Height={'100%'}>
+        </div> :
+            <>
                 <div className="card" style={{ width: `${props.Widget.Width}%`, height: '100%', overflowY: 'hidden' }}>
                     {props.Widget.ShowHeader || editMode ?
                         <div className="card-header" style={{ opacity: headerOpacity }} onMouseEnter={() => setHeaderHover(true)} onMouseLeave={() => setHeaderHover(false)}>
@@ -358,11 +358,13 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                             </div>
                         </div> : null}
                     <div className="card-body">
-                        <Implementation.WidgetUI
-                            Events={events}
-                            Data={data}
-                            Settings={Settings}
-                        />
+                        <ErrorBoundary ErrorMessage={`Widget ${props.Widget.Label} has encoutered an error.`}>
+                            <Implementation.WidgetUI
+                                Events={events}
+                                Data={data}
+                                Settings={Settings}
+                            />
+                        </ErrorBoundary>
                     </div>
                 </div>
                 <Modal
@@ -398,12 +400,16 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                                         <CheckBox<WidgetTypes.ICommonSettings> Field='ShowHeader' Record={localCommonSettings} Setter={r => setCommonLocalSettings(r)} Label="Show Widget Header" />
                                     </div>
                                 </div>
-                                {Implementation?.SettingsUI === undefined ? <></> : <Implementation.SettingsUI
-                                    Settings={localSetting ?? Settings}
-                                    SetSettings={setLocalSetting}
-                                    ChannelSettings={localChannels.map(chan => chan.ChannelSettings)}
-                                    SetErrors={setSettingsErrors}
-                                />}
+                                {Implementation?.SettingsUI === undefined ? <></> :
+                                    <ErrorBoundary ErrorMessage={`Widget ${props.Widget.Label} settings UI has encoutered an error.`}>
+                                        <Implementation.SettingsUI
+                                            Settings={localSetting ?? Settings}
+                                            SetSettings={setLocalSetting}
+                                            ChannelSettings={localChannels.map(chan => chan.ChannelSettings)}
+                                            SetErrors={setSettingsErrors}
+                                        />
+                                    </ErrorBoundary>
+                                }
                             </div>
                             <div className="col-8 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                                 <TabSelector CurrentTab={tab} SetTab={setTab} Tabs={
@@ -411,29 +417,32 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                                         { Id: 'evtSrc', Label: 'Event Sources' }]} />
                                 {tab === 'channel' ?
                                     Implementation?.ChannelSelectionUI != null ?
-                                        <Implementation.ChannelSelectionUI
-                                            AddChannel={handleAddChannel}
-                                            SetChannelSettings={(channelKey, settings) => {
-                                                setLocalChannels(prevChannels => {
-                                                    const updatedChans = prevChannels.map(chan =>
-                                                        _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
-                                                    );
+                                        <ErrorBoundary ErrorMessage={`Widget ${props.Widget.Label} channel selection UI has encoutered an error.`}>
+                                            <Implementation.ChannelSelectionUI
+                                                AddChannel={handleAddChannel}
+                                                SetChannelSettings={(channelKey, settings) => {
+                                                    setLocalChannels(prevChannels => {
+                                                        const updatedChans = prevChannels.map(chan =>
+                                                            _.isEqual(chan.Key, channelKey) ? { ...chan, ChannelSettings: settings } : chan
+                                                        );
 
-                                                    return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
-                                                });
-                                            }}
-                                            RemoveChannel={channel => setLocalChannels(channels => {
-                                                const updatedChannels = [...channels];
-                                                const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
-                                                index !== -1 ? updatedChannels.splice(index, 1) : null;
-                                                return updatedChannels;
-                                            })}
-                                            AllChannels={allSelectableChannels}
-                                            SelectedChannels={localChannels}
-                                            SetSettings={setLocalSetting}
-                                            Settings={localSetting}
-                                            SetErrors={setChannelErrors}
-                                        /> : <ChannelSelector
+                                                        return _.isEqual(updatedChans, prevChannels) ? prevChannels : updatedChans;
+                                                    });
+                                                }}
+                                                RemoveChannel={channel => setLocalChannels(channels => {
+                                                    const updatedChannels = [...channels];
+                                                    const index = updatedChannels.findIndex(chan => chan.MetaData.ID === channel);
+                                                    index !== -1 ? updatedChannels.splice(index, 1) : null;
+                                                    return updatedChannels;
+                                                })}
+                                                AllChannels={allSelectableChannels}
+                                                SelectedChannels={localChannels}
+                                                SetSettings={setLocalSetting}
+                                                Settings={localSetting}
+                                                SetErrors={setChannelErrors}
+                                                />
+                                        </ErrorBoundary> :
+                                        <ChannelSelector
                                             AddChannel={handleAddChannel}
                                             SetChannelSettings={(channelKey, settings) => {
                                                 setLocalChannels(prevChannels => {
@@ -459,8 +468,10 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                                 : <></>}
                                 {tab === 'evtSrc' ?
                                     Implementation?.EventSourceSelectionUI !== undefined ?
-                                        <Implementation.EventSourceSelectionUI AddOrEditSource={addOrChangeEventSource} RemoveSource={removeEventSource}
-                                            AllEventSources={props.AllEventSources} SelectedSources={localEventSources} /> :
+                                        <ErrorBoundary ErrorMessage={`Widget ${props.Widget.Label} event source UI has encoutered an error.`}>
+                                            <Implementation.EventSourceSelectionUI AddOrEditSource={addOrChangeEventSource} RemoveSource={removeEventSource}
+                                                AllEventSources={props.AllEventSources} SelectedSources={localEventSources} />
+                                        </ErrorBoundary> :
                                         <EventSelector AddOrEditSource={addOrChangeEventSource} RemoveSource={removeEventSource}
                                             AllEventSources={props.AllEventSources} SelectedSources={localEventSources} DefaultSettings={Implementation.DefaultEventSourceSettings} />
                                 : <></>}
@@ -475,7 +486,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                     }
                     setShowWarning(false);
                 }} />
-            </ErrorBoundary>
+            </>
         }
     </>
 }
