@@ -28,7 +28,7 @@ import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import store from './Store/Store';
 import { Application, Page, Section } from '@gpa-gemstone/react-interactive';
-import { SVGIcons } from '@gpa-gemstone/gpa-symbols';
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { Redux } from './global';
 import { useAppSelector } from './hooks';
 import { SelectWorkSpacesForUser } from './Features/Workspaces/WorkspacesSlice';
@@ -50,13 +50,13 @@ const TrenDAP: React.FunctionComponent = () => {
                 HomePath={homePath} DefaultPath={"Workspaces"}
                 Logo={homePath + "Images/trendaplogo.png"}
                 OnSignOut={() => { window.location.href = `/@GSF/Web/Security/Views/Login.cshtml?logout=yes`; }}> { /*need to make sure this page exists on the backend..*/}
-                <Page Name={'DataSources'} Label={'Data Sources'} Icon={SVGIcons.DataContainer}>
+                <Page Name={'DataSources'} Label={'Data Sources'} Icon={<ReactIcons.DataContainer />}>
                     <DataSources />
                 </Page>
-                <Page Name={'EventSources'} Label={'Event Sources'} Icon={SVGIcons.Alert}>
+                <Page Name={'EventSources'} Label={'Event Sources'} Icon={<ReactIcons.Alert />}>
                     <ByEventSources />
                 </Page>
-                <Page Name={'DataSets'} Label={'Data Sets'} Icon={SVGIcons.Cube}>
+                <Page Name={'DataSets'} Label={'Data Sets'} Icon={<ReactIcons.Cube />}>
                     <DataSets />
                 </Page>
                 <Page Name={'DataSets/EditDataSet/:id'}>
@@ -65,7 +65,7 @@ const TrenDAP: React.FunctionComponent = () => {
                 <Page Name={'DataSets/ViewDataSet/:id'}>
                     <ViewDataSet />
                 </Page>
-                <Page Name={'Workspaces'} Label={'Workspaces'} Icon={SVGIcons.House}>
+                <Page Name={'Workspaces'} Label={'Workspaces'} Icon={<ReactIcons.House />}>
                     <Workspaces />
                 </Page>
                 <Page Name={'Workspaces/:workspaceId'} Paths={['/DataSet/:dataSetID', '/DataSet/:dataSetID/Channels/:channels']}>
@@ -73,7 +73,7 @@ const TrenDAP: React.FunctionComponent = () => {
                 </Page>
                 <Section Label={"Recent Workspaces"}>
                     {workSpaces.map((item, i) =>
-                        <Page key={i} Name={`Workspaces/${item.ID}`} Icon={SVGIcons.Document} Label={item.Name} />
+                        <Page key={i} Name={`Workspaces/${item.ID}`} Icon={<ReactIcons.Document />} Label={item.Name} />
                     )}
                 </Section>
             </Application>
@@ -81,4 +81,4 @@ const TrenDAP: React.FunctionComponent = () => {
     );
 }
 
-ReactDOM.render(<Provider store={store}><TrenDAP/></Provider>, document.getElementById('window'));
+ReactDOM.render(<Provider store={store}><TrenDAP /></Provider>, document.getElementById('window'));

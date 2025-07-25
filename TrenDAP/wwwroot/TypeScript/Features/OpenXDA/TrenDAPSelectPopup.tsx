@@ -24,7 +24,7 @@ import { Table, Column, ReactTableProps } from "@gpa-gemstone/react-table";
 import * as React from 'react';
 import _ from 'lodash';
 import { Modal, Search, SearchBar } from "@gpa-gemstone/react-interactive";
-import { CrossMark } from "@gpa-gemstone/gpa-symbols";
+import { ReactIcons } from "@gpa-gemstone/gpa-symbols";
 import { SearchOpenXDA, SelectSearchOpenXDA, SelectSearchOpenXDAStatus, SelectSearchOpenXDAAscending, SelectSearchOpenXDAFilters, SelectSearchOpenXDASortField } from "./OpenXDASlice";
 import { TrenDAP, Redux } from '../../global';
 import { useAppDispatch, useAppSelector } from "../../hooks";
@@ -94,7 +94,11 @@ export default function SelectPopup<T extends U>(props: IProps<T>) {
                 CallBack={(conf) => props.OnClose(selectedData, conf)}
                 DisableConfirm={props.MinSelection !== undefined && selectedData.length < props.MinSelection}
                 ConfirmShowToolTip={props.MinSelection !== undefined && selectedData.length < props.MinSelection}
-                ConfirmToolTipContent={<p>{CrossMark} At least {props.MinSelection} items must be selected. </p>}
+                ConfirmToolTipContent={
+                    <p>
+                        <ReactIcons.CrossMark Color='red' /> At least {props.MinSelection} items must be selected.
+                    </p>
+                }
             >
                 <div className="row">
                     <div className="col">

@@ -28,7 +28,7 @@ import { UpdateEventSource, AddEventSource } from './Slices/EventSourcesSlice';
 import EventSource from './EventSource';
 import { EventSourceTypes } from './Interface';
 import { Modal } from '@gpa-gemstone/react-interactive';
-import { CrossMark } from '@gpa-gemstone/gpa-symbols';
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 
 interface IProps {
     EventSource: EventSourceTypes.IEventSourceView,
@@ -53,7 +53,7 @@ const AddEditEventSource: React.FunctionComponent<IProps> = (props: IProps) => {
             ShowX={true}
             ConfirmText={'Save'}
             ConfirmShowToolTip={errors.length > 0}
-            ConfirmToolTipContent={errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
+            ConfirmToolTipContent={errors.map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>)}
             Title={`${eventSource.ID > -1 ? 'Edit' : 'Add New'} Event Data Source`}
             CallBack={conf => {
                 if (conf) {

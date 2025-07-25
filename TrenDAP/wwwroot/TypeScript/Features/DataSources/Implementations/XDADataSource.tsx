@@ -250,7 +250,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                         <div className={"row"}>
                             <div className={"col"}>
                                 <MultiCheckBoxSelect
-                                    ItemTooltip={'dark'}
+                                    ShowToolTip={true}
                                     Options={phaseOptions}
                                     Label={''}
                                     OnChange={(evt, Options: IMultiCheckboxOption[]) => multiCheckboxUpdate("Phases", Options, phaseOptions)}
@@ -261,7 +261,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                         <div className={"row"}>
                             <div className={"col"}>
                                 <MultiCheckBoxSelect
-                                    ItemTooltip={'dark'}
+                                    ShowToolTip={true}
                                     Options={channelGroupOptions}
                                     Label={''}
                                     OnChange={(evt, Options: IMultiCheckboxOption[]) => multiCheckboxUpdate("Groups", Options, channelGroupOptions)}

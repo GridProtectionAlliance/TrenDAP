@@ -24,9 +24,9 @@
 import * as React from 'react';
 import { TrenDAP, DataSetTypes } from './../../global';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
-import { ToolTip, Modal, Warning } from '@gpa-gemstone/react-interactive';
+import { Modal, Warning } from '@gpa-gemstone/react-interactive';
 import WidgetWrapper from '../Widgets/WidgetWrapper';
-import { Input, CheckBox } from '@gpa-gemstone/react-forms';
+import { Input, CheckBox, ToolTip } from '@gpa-gemstone/react-forms';
 import { CreateGuid } from '@gpa-gemstone/helper-functions';
 import { SelectEditMode } from '../../Store/GeneralSettingsSlice';
 import { useAppSelector } from '../../hooks';

@@ -25,13 +25,13 @@
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { Table, Column } from '@gpa-gemstone/react-table'
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, CloneDataSet, New } from './DataSetsSlice';
 import moment from 'moment';
-import { DNA, TrashCan, HeavyCheckMark, Pencil } from '@gpa-gemstone/gpa-symbols';
-import { Warning, ToolTip } from '@gpa-gemstone/react-interactive'
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
+import { Warning } from '@gpa-gemstone/react-interactive'
 import { useNavigate } from "react-router-dom";
-
+import { ToolTip } from '@gpa-gemstone/react-forms';
 
 type Hover = ('Pencil' | 'Clone' | 'Delete' | 'None')
 
@@ -100,7 +100,7 @@ const DataSets: React.FC = () => {
                                 Key={'Public'}
                                 AllowSort={true}
                                 Field={'Public'}
-                                Content={(d) => <span>{d.item[d.key] ? HeavyCheckMark : null}</span>}
+                                Content={(d) => <span>{d.item[d.key] ? <ReactIcons.CheckMark Color="green" /> : null}</span>}
                             >
                                 Shared
                             </Column>
@@ -119,17 +119,17 @@ const DataSets: React.FC = () => {
                                     <span>
                                         <button data-toggle="tooltip" data-tooltip="pencil-btn" data-placement="bottom" className="btn" onMouseEnter={() => setHover('Pencil')}
                                             onMouseLeave={() => setHover('None')} onClick={() => navigate(`${homePath}DataSets/EditDataSet/${d.item.ID}`)}>
-                                            {Pencil}
+                                            <ReactIcons.Pencil />
                                         </button>
                                         <ToolTip Show={hover === 'Pencil'} Position={'top'} Target={'pencil-btn'}><p>Edit Data Set Parameters</p></ToolTip>
                                         <a className="btn" data-toggle="tooltip" data-tooltip="clone-btn" data-placement="bottom" onMouseEnter={() => setHover('Clone')}
                                             onClick={() => dispatch(CloneDataSet(d.item))} onMouseLeave={() => setHover('None')}>
-                                            {DNA}
+                                            <ReactIcons.Clone />
                                         </a>
                                         <ToolTip Show={hover === 'Clone'} Position={'top'} Target={'clone-btn'}><p>Clone Data Set</p></ToolTip>
                                         <a className="btn" onClick={() => setDeleteItem(d.item)} data-tooltip="delete-btn" data-toggle="tooltip" data-placement="bottom"
                                             onMouseEnter={() => setHover('Delete')} onMouseLeave={() => setHover('None')}>
-                                            {TrashCan}
+                                            <ReactIcons.TrashCan Color={'red'} />
                                         </a>
                                         <ToolTip Show={hover === 'Delete'} Position={'top'} Target={'delete-btn'}><p>Delete Data Set</p></ToolTip>
                                     </span>

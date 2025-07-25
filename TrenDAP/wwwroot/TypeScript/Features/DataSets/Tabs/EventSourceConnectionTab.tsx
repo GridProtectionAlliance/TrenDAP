@@ -23,7 +23,7 @@
 
 import * as React from 'react';
 import { Table, Column } from '@gpa-gemstone/react-table';
-import { Plus, TrashCan } from '@gpa-gemstone/gpa-symbols';
+import { Plus, ReactIcons, TrashCan } from '@gpa-gemstone/gpa-symbols';
 import { TrenDAP } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { FetchEventSources, FetchPublicEventSources, SelectEventSources, SelectEventSourcesStatus, SelectPublicEventSources, SelectPublicEventSourcesStatus } from '../../EventSources/Slices/EventSourcesSlice';
@@ -100,7 +100,7 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                     <div className="col-5">
                         <div className="dropdown">
                             <button className="btn btn-info pull-right dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                {Plus} Add New
+                                <ReactIcons.Plus /> Add New
                             </button>
                             <div className="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
                                 <div className="dropdown-header">Your Event Sources</div>
@@ -153,7 +153,9 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                                     props.SetEventSourceConnections(newConns);
                                     pushErrors();
                                     if (currentIndex === row.index) setCurrentIndex(0);
-                                }}>{TrashCan}</button>
+                                }}>
+                                    <ReactIcons.TrashCan Color={'red'} />
+                                </button>
                             </span>
                         }
                     >

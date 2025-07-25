@@ -28,7 +28,7 @@ import {
     FetchDataSources, SelectDataSources, SelectDataSourcesStatus,
     SelectPublicDataSources, SelectPublicDataSourcesStatus, FetchPublicDataSources
 } from '../../DataSources/DataSourcesSlice';
-import { Plus, TrashCan } from '@gpa-gemstone/gpa-symbols';
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import DataSourceWrapper from '../../DataSources/DataSourceWrapper';
 import { AllSources } from '../../DataSources/DataSources'
@@ -102,7 +102,7 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                     <div className="col-5">
                         <div className="dropdown">
                             <button className="btn btn-info pull-right dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                {Plus} Add New
+                                <ReactIcons.Plus /> Add New
                             </button>
                             <div className="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
                                 <div className="dropdown-header">Your Data Sources</div>
@@ -152,7 +152,9 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                                     props.SetDataSourceConnections(newConns);
                                     pushErrors();
                                     if (currentIndex === row.index) setCurrentIndex(0);
-                                }}>{TrashCan}</button>
+                                }}>
+                                    <ReactIcons.TrashCan Color={'red'} />
+                                </button>
                             </span>}
                     >
                         <></>

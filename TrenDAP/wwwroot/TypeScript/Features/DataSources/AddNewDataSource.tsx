@@ -27,7 +27,7 @@ import { useAppDispatch } from '../../hooks';
 import { AddDataSource } from './DataSourcesSlice'
 import DataSource from './DataSource';
 import { Modal } from '@gpa-gemstone/react-interactive';
-import { CrossMark } from '@gpa-gemstone/gpa-symbols';
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { AllSources } from './DataSources';
 
 const AddNewDataSource: React.FunctionComponent = () => {
@@ -50,7 +50,7 @@ const AddNewDataSource: React.FunctionComponent = () => {
                 ShowCancel={false}
                 ConfirmText={'Save'}
                 ConfirmShowToolTip={errors.length > 0}
-                ConfirmToolTipContent={errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
+                ConfirmToolTipContent={errors.map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>)}
                 Title={'Add New Data Source'}
                 CallBack={conf => {
                     if (conf)

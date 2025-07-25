@@ -22,11 +22,11 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { ServerErrorIcon, Modal, ToolTip, Warning, TabSelector } from '@gpa-gemstone/react-interactive';
+import { ServerErrorIcon, Modal, Warning, TabSelector } from '@gpa-gemstone/react-interactive';
 import { CreateGuid } from '@gpa-gemstone/helper-functions';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ErrorBoundary } from '@gpa-gemstone/common-pages';
-import { Input, CheckBox } from '@gpa-gemstone/react-forms';
+import { Input, CheckBox, ToolTip } from '@gpa-gemstone/react-forms';
 
 import { TrenDAP, DataSetTypes } from '../../global';
 import { useAppSelector } from '../../hooks';
