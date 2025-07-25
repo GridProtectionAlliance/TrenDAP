@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { DataSourceTypes, TrenDAP } from '../../../global';
 import {
     FetchDataSources, SelectDataSources, SelectDataSourcesStatus,
@@ -113,7 +113,7 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                         </div>
                     </div>
                 </div>
-                <ReactTable.Table<DataSourceTypes.IDataSourceDataSet>
+                <Table<DataSourceTypes.IDataSourceDataSet>
                     Data={props.DataSourceConnections}
                     SortKey={null}
                     Ascending={null}
@@ -127,15 +127,15 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                     KeySelector={(_item, index) => index}
                     OnClick={(item) => { setCurrentIndex(item.index); }}
                 >
-                    <ReactTable.Column<DataSourceTypes.IDataSourceDataSet>
+                    <Column<DataSourceTypes.IDataSourceDataSet>
                         Key={'DataSourceName'}
                         AllowSort={true}
                         Field={'DataSourceName'}
                         HeaderStyle={{ width: 'auto' }}
                         RowStyle={{ width: 'auto' }}
                     > DataSource
-                    </ReactTable.Column>
-                    <ReactTable.Column<DataSourceTypes.IDataSourceDataSet>
+                    </Column>
+                    <Column<DataSourceTypes.IDataSourceDataSet>
                         Key={'ID'}
                         AllowSort={false}
                         Field={'ID'}
@@ -154,8 +154,10 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                                     if (currentIndex === row.index) setCurrentIndex(0);
                                 }}>{TrashCan}</button>
                             </span>}
-                    ><></></ReactTable.Column>
-                </ReactTable.Table>
+                    >
+                        <></>
+                    </Column>
+                </Table>
             </div>
             <div className="col-8 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 {props.DataSourceConnections[currentIndex] != null ?

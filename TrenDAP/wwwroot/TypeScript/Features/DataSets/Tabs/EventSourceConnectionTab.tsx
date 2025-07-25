@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { Plus, TrashCan } from '@gpa-gemstone/gpa-symbols';
 import { TrenDAP } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
@@ -113,7 +113,7 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                         </div>
                     </div>
                 </div>
-                <ReactTable.Table<EventSourceTypes.IEventSourceDataSet>
+                <Table<EventSourceTypes.IEventSourceDataSet>
                     Data={props.EventSourceConnections}
                     SortKey={null}
                     Ascending={null}
@@ -127,15 +127,16 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                     KeySelector={(_item, index) => index}
                     OnClick={(item) => { setCurrentIndex(item.index); }}
                 >
-                    <ReactTable.Column<EventSourceTypes.IEventSourceDataSet>
+                    <Column<EventSourceTypes.IEventSourceDataSet>
                         Key={'EventSourceName'}
                         AllowSort={true}
                         Field={'EventSourceName'}
                         HeaderStyle={{ width: 'auto' }}
                         RowStyle={{ width: 'auto' }}
-                    > EventSource
-                    </ReactTable.Column>
-                    <ReactTable.Column<EventSourceTypes.IEventSourceDataSet>
+                    >
+                        EventSource
+                    </Column>
+                    <Column<EventSourceTypes.IEventSourceDataSet>
                         Key={'ID'}
                         AllowSort={false}
                         Field={'ID'}
@@ -153,9 +154,12 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                                     pushErrors();
                                     if (currentIndex === row.index) setCurrentIndex(0);
                                 }}>{TrashCan}</button>
-                            </span>}
-                    ><></></ReactTable.Column>
-                </ReactTable.Table>
+                            </span>
+                        }
+                    >
+                        <></>
+                    </Column>
+                </Table>
             </div>
             <div className="col-8 h-100" style={{ overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
                 {props.EventSourceConnections[currentIndex] != null ?

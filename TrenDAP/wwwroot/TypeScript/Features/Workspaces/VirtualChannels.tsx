@@ -26,7 +26,7 @@ import { TrenDAP, DataSetTypes } from '../../global';
 import HashTable from './HashTable';
 import { Modal, Warning } from '@gpa-gemstone/react-interactive';
 import { Input, TextArea } from '@gpa-gemstone/react-forms';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import * as _ from 'lodash';
 import { AddChannelToMap } from './Workspace';
 import { createVirtualFunc } from '../Widgets/HelperFunctions';
@@ -222,7 +222,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                     </button>
                                 </div>
                             </div>
-                            <ReactTable.Table<IVirtualChannelEditable>
+                            <Table<IVirtualChannelEditable>
                                 TableClass="table table-hover"
                                 TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                 TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
@@ -242,30 +242,30 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                 KeySelector={(row) => row.ID}
                                 Selected={(row) => row.ID === selectedVirtual}
                             >
-                                <ReactTable.Column<IVirtualChannelEditable>
+                                <Column<IVirtualChannelEditable>
                                     Key={'ParentName'}
                                     AllowSort={true}
                                     Field={'ParentName'}
                                     Content={(row) => row.item?.ParentName ?? 'N/A'}
                                 >
                                     Parent
-                                </ReactTable.Column>
-                                <ReactTable.Column<IVirtualChannelEditable>
+                                </Column>
+                                <Column<IVirtualChannelEditable>
                                     Key={'Name'}
                                     AllowSort={true}
                                     Field={'Name'}
                                 >
                                     Name
-                                </ReactTable.Column>
-                                <ReactTable.Column<IVirtualChannelEditable>
+                                </Column>
+                                <Column<IVirtualChannelEditable>
                                     Key={'ChannelIDs'}
                                     AllowSort={false}
                                     Field={'Channels'}
                                     Content={(row) => row.item.Channels.length}
                                 >
                                     Number of Channels
-                                </ReactTable.Column>
-                            </ReactTable.Table>
+                                </Column>
+                            </Table>
                         </div>
                         <div className="col-8 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                             <div className="row">
@@ -294,7 +294,7 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                             <div className="row" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                                 {
                                     selectedVirtual == null ? <></> :
-                                        <ReactTable.Table<DataSetTypes.IDataSetMetaData>
+                                        <Table<DataSetTypes.IDataSetMetaData>
                                             TableClass="table table-hover"
                                             TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
@@ -342,35 +342,35 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                             KeySelector={(row) => row.ID}
                                             Selected={(row) => selectedVirtualChannel?.Channels.find(c => c.ID === row.ID) != null}
                                         >
-                                            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                                            <Column<DataSetTypes.IDataSetMetaData>
                                                 Key={'ParentName'}
                                                 AllowSort={true}
                                                 Field={'ParentName'}
                                             >
                                                 Parent
-                                            </ReactTable.Column>
-                                            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                                            </Column>
+                                            <Column<DataSetTypes.IDataSetMetaData>
                                                 Key={'Name'}
                                                 AllowSort={true}
                                                 Field={'Name'}
                                             >
                                                 Name
-                                            </ReactTable.Column>
-                                            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                                            </Column>
+                                            <Column<DataSetTypes.IDataSetMetaData>
                                                 Key={'Type'}
                                                 AllowSort={true}
                                                 Field={'Type'}
                                             >
                                                 Type
-                                            </ReactTable.Column>
-                                            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                                            </Column>
+                                            <Column<DataSetTypes.IDataSetMetaData>
                                                 Key={'Phase'}
                                                 AllowSort={true}
                                                 Field={'Phase'}
                                             >
                                                 Phase
-                                            </ReactTable.Column>
-                                            <ReactTable.Column<IMetaDataVariableName>
+                                            </Column>
+                                            <Column<IMetaDataVariableName>
                                                 Key={'VariableName'}
                                                 AllowSort={true}
                                                 Field={'VariableName'}
@@ -404,8 +404,8 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                                 }}
                                             >
                                                 Variable Name
-                                            </ReactTable.Column>
-                                        </ReactTable.Table>
+                                            </Column>
+                                        </Table>
                                 }
                             </div>
                         </div>

@@ -25,10 +25,9 @@ import { axisBottom, axisLeft, axisRight, brushX, format, line, scaleLinear, sca
 import * as React from 'react';
 import { DataSetTypes, TrenDAP } from '../../../global';
 import { WidgetTypes } from '../Interfaces';
-import { Input, Select, ToggleSwitch, DatePicker, ColorPicker, RadioButtons, StylableSelect } from '@gpa-gemstone/react-forms';
+import { Input, Select, ToggleSwitch, DatePicker, ColorPicker, RadioButtons, StylableSelect, ToolTip } from '@gpa-gemstone/react-forms';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
-import { ReactTable } from '@gpa-gemstone/react-table';
-import { ToolTip } from '@gpa-gemstone/react-interactive';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import _ from 'lodash';
 import { sort } from '../HelperFunctions';
 
@@ -739,7 +738,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
             </div>
             <div className="row h-100" style={{ overflow: 'hidden' }}>
                 <div className="col-12 h-100">
-                    <ReactTable.Table<TrenDAP.IYAxis>
+                    <Table<TrenDAP.IYAxis>
                         TableClass="table table-hover"
                         TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                         TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
@@ -752,7 +751,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                         Ascending={true}
                         KeySelector={(row) => row.ID}
                     >
-                        <ReactTable.Column<TrenDAP.IYAxis>
+                        <Column<TrenDAP.IYAxis>
                             Key={'Label'}
                             AllowSort={true}
                             Field={'Label'}
@@ -762,8 +761,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                             }
                         >
                             Label
-                        </ReactTable.Column>
-                        <ReactTable.Column<TrenDAP.IYAxis>
+                        </Column>
+                        <Column<TrenDAP.IYAxis>
                             Key={'Position'}
                             AllowSort={true}
                             Field={'Position'}
@@ -773,8 +772,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                             }
                         >
                             Position
-                        </ReactTable.Column>
-                        <ReactTable.Column<TrenDAP.IYAxis>
+                        </Column>
+                        <Column<TrenDAP.IYAxis>
                             Key={'Min'}
                             AllowSort={true}
                             Field={'Min'}
@@ -788,8 +787,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                             }
                         >
                             Min
-                        </ReactTable.Column>
-                        <ReactTable.Column<TrenDAP.IYAxis>
+                        </Column>
+                        <Column<TrenDAP.IYAxis>
                             Key={'Max'}
                             AllowSort={true}
                             Field={'Max'}
@@ -803,8 +802,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                             }
                         >
                             Max
-                        </ReactTable.Column>
-                        <ReactTable.Column<TrenDAP.IYAxis>
+                        </Column>
+                        <Column<TrenDAP.IYAxis>
                             Key="Delete"
                             AllowSort={false}
                             Field="AutoMaxScale"
@@ -823,8 +822,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                             }
                         >
                             {'\u200B'}
-                        </ReactTable.Column>
-                    </ReactTable.Table>
+                        </Column>
+                    </Table>
                 </div>
             </div>
         </>
@@ -836,7 +835,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
 
         return <>
             <div className="h-50 p-0 row">
-                <ReactTable.Table<DataSetTypes.IDataSetMetaData>
+                <Table<DataSetTypes.IDataSetMetaData>
                     TableClass="table table-hover"
                     TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                     TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
@@ -873,39 +872,39 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                     KeySelector={(row) => row.ID}
                     Selected={(row) => props.SelectedChannels.find(c => c.MetaData.ID === row.ID) != null ? true : false}
                 >
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'ParentName'}
                         AllowSort={true}
                         Field={'ParentName'}
                     >
                         Parent
-                    </ReactTable.Column>
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    </Column>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'Name'}
                         AllowSort={true}
                         Field={'Name'}
                     >
                         Name
-                    </ReactTable.Column>
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    </Column>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'Type'}
                         AllowSort={true}
                         Field={'Type'}
                     >
                         Type
-                    </ReactTable.Column>
+                    </Column>
 
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'Phase'}
                         AllowSort={true}
                         Field={'Phase'}
                     >
                         Phase
-                    </ReactTable.Column>
-                </ReactTable.Table>
+                    </Column>
+                </Table>
             </div>
             <div className="row" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
-                <ReactTable.Table<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                <Table<WidgetTypes.ISelectedChannels<IChannelSettings>>
                     TableClass="table table-hover"
                     TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                     TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
@@ -917,15 +916,15 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                     Ascending={ascending}
                     KeySelector={(row, idx) => idx}
                 >
-                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                    <Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Name'}
                         AllowSort={true}
                         Field={'MetaData'}
                         Content={({ item }) => <p>{item?.MetaData?.Name}</p>}
                     >
                         Channel
-                    </ReactTable.Column>
-                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                    </Column>
+                    <Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Color'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
@@ -935,8 +934,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                         }
                     >
                         Color
-                    </ReactTable.Column>
-                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                    </Column>
+                    <Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Continuous'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
@@ -945,8 +944,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                         }
                     >
                         Continuous
-                    </ReactTable.Column>
-                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                    </Column>
+                    <Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'SeriesField'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
@@ -956,8 +955,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                         }
                     >
                         Field
-                    </ReactTable.Column>
-                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                    </Column>
+                    <Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'YAxis'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
@@ -969,8 +968,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                         }
                     >
                         Y Axis
-                    </ReactTable.Column>
-                </ReactTable.Table>
+                    </Column>
+                </Table>
             </div>
         </>
     },
@@ -1002,7 +1001,7 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
         ], []);
 
         return (
-            <ReactTable.Table<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+            <Table<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
                 TableClass="table table-hover"
                 TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                 TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
@@ -1022,21 +1021,21 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                 KeySelector={(row) => row.Key}
                 Selected={() => false}
             >
-                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                <Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
                     Key={'Name'}
                     AllowSort={true}
                     Field={'Name'}
                 >
                     Name
-                </ReactTable.Column>
-                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                </Column>
+                <Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
                     Key={'Type'}
                     AllowSort={true}
                     Field={'SourceType'}
                 >
                     Type
-                </ReactTable.Column>
-                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                </Column>
+                <Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
                     Key={'Display'}
                     AllowSort={false}
                     Content={row => {
@@ -1048,8 +1047,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                     }}
                 >
                     Display
-                </ReactTable.Column>
-                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                </Column>
+                <Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
                     Key={'Symbol'}
                     AllowSort={false}
                     Content={({ item }) =>
@@ -1058,8 +1057,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                     }
                 >
                     Symbol
-                </ReactTable.Column>
-                <ReactTable.Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
+                </Column>
+                <Column<WidgetTypes.ISelectedEvents<IEventSourceSettings>>
                     Key={'Color'}
                     AllowSort={false}
                     Content={({ item }) => 
@@ -1073,8 +1072,8 @@ export const TrendWidget: WidgetTypes.IWidget<IProps, IChannelSettings, IEventSo
                     }
                 >
                     Color
-                </ReactTable.Column>
-            </ReactTable.Table>
+                </Column>
+            </Table>
         );
     }
 }

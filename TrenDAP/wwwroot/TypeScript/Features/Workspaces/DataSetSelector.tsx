@@ -33,9 +33,9 @@ import {
 import { SelectEventSources, FetchEventSources, SelectEventSourcesStatus, SelectPublicEventSources, SelectPublicEventSourcesStatus, FetchPublicEventSources } from '../EventSources/Slices/EventSourcesSlice';
 
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
-import { Modal, ToolTip } from '@gpa-gemstone/react-interactive';
-import { ReactTable } from '@gpa-gemstone/react-table';
-import { Select } from '@gpa-gemstone/react-forms';
+import { Modal } from '@gpa-gemstone/react-interactive';
+import { Table, Column } from '@gpa-gemstone/react-table';
+import { Select, ToolTip } from '@gpa-gemstone/react-forms';
 import { Application } from '@gpa-gemstone/application-typings';
 
 import TrenDAPDB from '../DataSets/TrenDAPDB';
@@ -157,7 +157,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         const dataSet = dataSetsForUser.concat(publicDataSets).find(ds => ds.ID === parseInt(dataSetID))
         if (dataSet != null) {
             setSelectedDataSet(dataSet)
-            if(channels != null) props.SetIsModalOpen(false);
+            if (channels != null) props.SetIsModalOpen(false);
         }
 
     }, [dataSetID, workspaceId, dataSetsForUser.length, publicDataSets.length])
@@ -263,7 +263,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
         const channelHandlers = datasources.map((ds) => {
             let dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
-            if (dataSourceView == null) dataSourceView = publicDataSourceViews.find(d => d.ID === ds.DataSourceID); 
+            if (dataSourceView == null) dataSourceView = publicDataSourceViews.find(d => d.ID === ds.DataSourceID);
             const implementation: IDataSource<any, any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
             if (implementation == null || dataSourceView == null)
                 return Promise.resolve([]);
@@ -293,7 +293,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             }
         })
     }, [datasources, evtStatus]);
-    
+
     React.useEffect(() => {
         if (evtStatus !== 'idle' || eventSourceStatus !== 'idle') {
             return;
@@ -301,7 +301,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
 
         setEventSourceMetas(eventSources.map(ds => {
             let eventSourceView = eventSourceViews.find(d => d.ID === ds.EventSourceID);
-            if (eventSourceView == null) eventSourceView = publicEventSourceViews.find(d => d.ID === ds.EventSourceID); 
+            if (eventSourceView == null) eventSourceView = publicEventSourceViews.find(d => d.ID === ds.EventSourceID);
             const implementation: IEventSource<any, any, any> | undefined = EventDataSources.find(t => t.Name == eventSourceView?.Type);
             if (implementation == null || eventSourceView == null)
                 return undefined;
@@ -309,7 +309,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
             return { ID: ds.ID, SourceType: eventSourceView.Type, Name: eventSourceView.Name, Logo: logoString };
         }).filter(meta => meta != null));
 
-        }, [eventSources, eventSourceStatus]);
+    }, [eventSources, eventSourceStatus]);
 
     // Effect to initialize parent matches
     React.useEffect(() => {
@@ -402,42 +402,42 @@ const DataSetSelector: React.FC<IProps> = (props) => {
         props.SetAllEventSources(eventSourceMetas.map(d => ({ ID: d.ID, Name: d.Name, SourceType: d.SourceType, Logo: d?.Logo })));
 
         return db.ClearTables(['Channel', 'Event', 'Virtual']).then(() =>
-            Promise.all(eventSources.map(conn => 
-                new Promise<{Events: TrenDAP.IEvent[], EventMeta: TrenDAP.IEventSourceMetaData}>((resolve, reject) => {
+            Promise.all(eventSources.map(conn =>
+                new Promise<{ Events: TrenDAP.IEvent[], EventMeta: TrenDAP.IEventSourceMetaData }>((resolve, reject) => {
                     let view = eventSourceViews.find(eventView => eventView.ID === conn.EventSourceID);
-                    if (view == null) view = publicEventSourceViews.find(d => d.ID === conn.EventSourceID); 
+                    if (view == null) view = publicEventSourceViews.find(d => d.ID === conn.EventSourceID);
                     const implementation: IEventSource<any, any, any> | undefined = EventDataSources.find(evtSrc => evtSrc.Name === view?.Type);
                     const meta = eventSourceMetas.find(evtMeta => evtMeta.ID === conn.ID);
                     if (view == null || meta == null || implementation == null)
-                        resolve({Events: [], EventMeta: meta as TrenDAP.IEventSourceMetaData});
+                        resolve({ Events: [], EventMeta: meta as TrenDAP.IEventSourceMetaData });
                     else
                         implementation.Load(view, selectedDataSet as TrenDAP.iDataSet, conn).then(d =>
-                            resolve({ EventMeta: meta as  TrenDAP.IEventSourceMetaData, Events: d}),
-                        (arg) => reject(arg));
+                            resolve({ EventMeta: meta as TrenDAP.IEventSourceMetaData, Events: d }),
+                            (arg) => reject(arg));
                 })
             ))
-        ).then((metasWithEvents) => 
+        ).then((metasWithEvents) =>
             new Promise<TrenDAP.IEvent[] | undefined>((resolve, reject) => {
                 if (metasWithEvents.length === 0) {
                     resolve(undefined);
                     return;
                 }
-                db.AddMultipleEvents(metasWithEvents.map(evt => ({ID: evt.EventMeta.ID, Data: evt.Events}))).then(() => {
+                db.AddMultipleEvents(metasWithEvents.map(evt => ({ ID: evt.EventMeta.ID, Data: evt.Events }))).then(() => {
                     // Assumption that 0 is user error, meant to be null.
                     // Not neccessarily true, but the use case of a 0 window is pretty narrow...
                     resolve((selectedDataSet.EventWindowSize != null && selectedDataSet.EventWindowSize !== 0) ?
                         metasWithEvents.flatMap(d => d.Events) : undefined);
                 }, (arg) => reject(arg));
-        })).then((allEvents) =>
-            Promise.all(datasources.map((ds) => {
-                let dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
-                if (dataSourceView == null) dataSourceView = publicDataSourceViews.find(d => d.ID === ds.DataSourceID);
-                const implementation: IDataSource<any, any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
-                if (implementation == null || dataSourceView == null)
-                    return Promise.resolve([] as DataSetTypes.IDataSetData[]);
-                return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds, allEvents);
-            }))
-        ).then(d => db.AddMultiple(d.flat()));
+            })).then((allEvents) =>
+                Promise.all(datasources.map((ds) => {
+                    let dataSourceView = dataSourceViews.find((d) => d.ID === ds.DataSourceID);
+                    if (dataSourceView == null) dataSourceView = publicDataSourceViews.find(d => d.ID === ds.DataSourceID);
+                    const implementation: IDataSource<any, any, any> | undefined = AllSources.find(t => t.Name == dataSourceView?.Type);
+                    if (implementation == null || dataSourceView == null)
+                        return Promise.resolve([] as DataSetTypes.IDataSetData[]);
+                    return implementation.LoadDataSet(dataSourceView as DataSourceTypes.IDataSourceView, selectedDataSet as TrenDAP.iDataSet, ds, allEvents);
+                }))
+            ).then(d => db.AddMultiple(d.flat()));
     }
 
     const disallowStep = React.useCallback(() => {
@@ -449,7 +449,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
     }, [selectedDataSet, channelErrors, eventErrors, step]);
 
     const isStepSkipped = React.useCallback((checkedStep: number) => {
-        switch(checkedStep) {
+        switch (checkedStep) {
             default: return false;
             case parentStep: return parentMatches.length === 0 && datasources.length !== 0;
             case eventStep: return eventMatches.length === 0 && evtStatus === 'idle';
@@ -492,7 +492,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 if (newStep <= firstStep) return firstStep;
                                 return newStep;
                             });
-                    } else if(isButton) {
+                    } else if (isButton) {
                         if (step >= lastStep) {
                             props.GenerateMapping(
                                 channelMatches.map(match => [match.Key, match.ChannelID] as [TrenDAP.IChannelKey, string]),
@@ -542,7 +542,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                             step === dataSetStep ?
                                 <div className="col-12 h-100">
                                     <div className="d-flex flex-column h-100">
-                                        <ReactTable.Table<TrenDAP.iDataSet>
+                                        <Table<TrenDAP.iDataSet>
                                             TableClass="table table-hover"
                                             TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
@@ -556,163 +556,163 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                             KeySelector={(row) => row.ID}
                                             Selected={(row) => row?.ID === selectedDataSet?.ID}
                                         >
-                                            <ReactTable.Column<TrenDAP.iDataSet>
+                                            <Column<TrenDAP.iDataSet>
                                                 Key={'Name'}
                                                 AllowSort={true}
                                                 Field={'Name'}
                                             >
                                                 Name
-                                            </ReactTable.Column>
-                                            <ReactTable.Column<TrenDAP.iDataSet>
+                                            </Column>
+                                            <Column<TrenDAP.iDataSet>
                                                 Key={'From'}
                                                 AllowSort={true}
                                                 Field={'From'}
                                             >
                                                 From
-                                            </ReactTable.Column>
-                                            <ReactTable.Column<TrenDAP.iDataSet>
+                                            </Column>
+                                            <Column<TrenDAP.iDataSet>
                                                 Key={'To'}
                                                 AllowSort={true}
                                                 Field={'To'}
                                             >
                                                 To
-                                            </ReactTable.Column>
-                                        </ReactTable.Table>
+                                            </Column>
+                                        </Table>
                                     </div>
                                 </div> : <></>
                         }
-                                {step === parentStep ?
-                                    <div className="col-12 h-100">
-                                        <div className="d-flex flex-column h-50">
-                                            <>
-                                                <ReactTable.Table<IParentMatch>
-                                                    TableClass={"table table-hover"}
-                                                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                                                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                                                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                                    OnClick={({ row }) => setSelectedParentKey(row.Key)}
-                                                    OnSort={() => { }}
-                                                    SortKey={''}
-                                                    Data={parentMatches}
-                                                    Ascending={false}
-                                                    KeySelector={(row, index) => index as number}
-                                                    Selected={(row) => row.Key === selectedParentKey}
-                                                >
-                                                    <ReactTable.Column<IParentMatch>
-                                                        Key={'Key'}
-                                                        Field={'Name'}
-                                                    >Meters or Assets</ReactTable.Column>
-                                                    <ReactTable.Column<IParentMatch>
-                                                        Key={'ParentID'}
-                                                        Field={'ParentID'}
-                                                        Content={(row) => <Select<IParentMatch> key={row.index} EmptyOption={true} Record={row.item}
-                                                            Options={allParents.map(p => ({ Value: p.ID, Label: p.Name }))}
-                                                            Label={''} Field={'ParentID'} Setter={(r) => {
-                                                                //Need to set all the parentChannelMatches to noMatch before setting the parentID in case they pick a new parent
-                                                                setChannelMatches(channelMatches.map(chan => chan.Key.Parent === selectedParentKey ? ({ ...chan, Status: 'NoMatch' }) : chan))
-                                                                setParentMatches(d => {
-                                                                    const u = _.cloneDeep(d);
-                                                                    u[row.index] = { ...r, Status: 'Match' };
-                                                                    return u;
-                                                                })
+                        {step === parentStep ?
+                            <div className="col-12 h-100">
+                                <div className="d-flex flex-column h-50">
+                                    <>
+                                        <Table<IParentMatch>
+                                            TableClass={"table table-hover"}
+                                            TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                            OnClick={({ row }) => setSelectedParentKey(row.Key)}
+                                            OnSort={() => { }}
+                                            SortKey={''}
+                                            Data={parentMatches}
+                                            Ascending={false}
+                                            KeySelector={(row, index) => index as number}
+                                            Selected={(row) => row.Key === selectedParentKey}
+                                        >
+                                            <Column<IParentMatch>
+                                                Key={'Key'}
+                                                Field={'Name'}
+                                            >Meters or Assets</Column>
+                                            <Column<IParentMatch>
+                                                Key={'ParentID'}
+                                                Field={'ParentID'}
+                                                Content={(row) => <Select<IParentMatch> key={row.index} EmptyOption={true} Record={row.item}
+                                                    Options={allParents.map(p => ({ Value: p.ID, Label: p.Name }))}
+                                                    Label={''} Field={'ParentID'} Setter={(r) => {
+                                                        //Need to set all the parentChannelMatches to noMatch before setting the parentID in case they pick a new parent
+                                                        setChannelMatches(channelMatches.map(chan => chan.Key.Parent === selectedParentKey ? ({ ...chan, Status: 'NoMatch' }) : chan))
+                                                        setParentMatches(d => {
+                                                            const u = _.cloneDeep(d);
+                                                            u[row.index] = { ...r, Status: 'Match' };
+                                                            return u;
+                                                        })
 
-                                                            }} />}
-                                                    >
-                                                        {'\u200B'}
-                                                    </ReactTable.Column>
-                                                    <ReactTable.Column<IParentMatch>
-                                                        Key={'Status'}
-                                                        Field={'Status'}
-                                                        Content={({ item }) => {
-                                                            const allMatched = channelMatches.filter(chan => chan.Key.Parent === item.Key && (chan.Status === 'NoMatch' || chan.Status === 'MultipleMatches'))
-                                                            if (allMatched.length === 0)
-                                                                return <ReactIcons.CheckMark Color="green" />
-                                                            else
-                                                                return <ReactIcons.CrossMark Color="red" />
-                                                        }}>
-                                                        {'\u200B'}
-                                                    </ReactTable.Column>
-                                                </ReactTable.Table>
-                                            </>
-                                        </div>
-                                        <div className="d-flex flex-column h-50">
-                                            {parentChannelMatches.length > 0 ?
-                                                <>
-                                                    <ReactTable.Table<IndexedChannelMatch>
-                                                        TableClass={"table table-hover"}
-                                                        TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                                                        TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                                        TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                                                        RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                                                        OnClick={() => { }}
-                                                        OnSort={() => { }}
-                                                        SortKey={''}
-                                                        Data={parentChannelMatches}
-                                                        Ascending={dataSetAscending}
-                                                        KeySelector={(row, index) => `${row.Key.Phase ?? ''}~${row.Key.Type ?? ''}~${row.Key.Parent ?? ''}~${row.Key.Harmonic ?? -1}~${index}`}
-                                                    >
-                                                        <ReactTable.Column<IndexedChannelMatch>
-                                                            Key={'Key'}
-                                                            Field={'Key'}
-                                                            Content={({ item }) =>
-                                                                <p>{`${item.Key.Type ?? ''} ${item.Key.Phase ?? ''}`}</p>
-                                                            }>Channels</ReactTable.Column>
-                                                        <ReactTable.Column<IndexedChannelMatch>
-                                                            Key={'Channel'}
-                                                            Field={'ChannelID'}
-                                                            Content={(row) => <Select<IChannelMatch> key={row.index} EmptyOption={true} Record={row.item}
-                                                                Options={channelOptions} Label={''} Field={'ChannelID'} Setter={(item) => setChannelMatches(channels => {
-                                                                    const clonedChannels = _.cloneDeep(channels);
-                                                                    clonedChannels[row.item.Index] = { ...item, Status: 'Match' };
-                                                                    return clonedChannels;
-                                                                })} />}
-                                                        >
-                                                            {'\u200B'}
-                                                        </ReactTable.Column>
-                                                        <ReactTable.Column<IndexedChannelMatch>
-                                                            Key={'Status'}
-                                                            Field={'Status'}
-                                                            AllowSort={false}
-                                                            Content={({ item, index }) => {
-                                                                if (item.Status === 'NoMatch')
-                                                                    return (
-                                                                        <>
-                                                                            <button className="btn" data-tooltip={`NoMatch-${index}`} onMouseEnter={() => setChannelHover({ Hover: 'NoMatch', Index: index })}
-                                                                                onMouseLeave={() => setChannelHover({ Hover: 'None', Index: -1 })}>
-                                                                                < ReactIcons.CrossMark Color='red' />
-                                                                            </button>
-                                                                            <ToolTip Show={channelHover.Hover === 'NoMatch' && channelHover.Index === index} Target={`NoMatch-${index}`} Zindex={9991}>No Match found.</ToolTip>
-                                                                        </>
-                                                                    )
-                                                                else if (item.Status === 'MultipleMatches')
-                                                                    return (
-                                                                        <>
-                                                                            <button className="btn" data-tooltip={`MultipleMatches-${index}`} onMouseEnter={() => setChannelHover({ Hover: 'MultipleMatches', Index: index })}
-                                                                                onMouseLeave={() => setChannelHover({ Hover: 'None', Index: -1 })}>
-                                                                                <ReactIcons.Warning Color='yellow' />
-                                                                            </button>
-                                                                            <ToolTip Show={channelHover.Hover === 'MultipleMatches' && channelHover.Index === index} Target={`MultipleMatches-${index}`} Zindex={9991}>Multiple Matches found.</ToolTip>
-                                                                        </>
-                                                                    )
-                                                                else
-                                                                    return (
-                                                                        <>
-                                                                            <button className="btn" data-tooltip={`Match-${index}`} onMouseEnter={() => setChannelHover({ Hover: 'Match', Index: index })}
-                                                                                onMouseLeave={() => setChannelHover({ Hover: 'None', Index: -1 })}>
-                                                                                < ReactIcons.CheckMark Color='green' />
-                                                                            </button>
-                                                                            <ToolTip Show={channelHover.Hover === 'Match' && channelHover.Index === index} Target={`Match-${index}`} Zindex={9991}>Match found.</ToolTip>
-                                                                        </>
-                                                                    )
-                                                            }}>
-                                                            {'\u200B'}
-                                                        </ReactTable.Column>
-                                                    </ReactTable.Table>
-                                                </>
-                                                : <p>Select a Meter or Asset</p>}
-                                        </div>
-                                    </div>
+                                                    }} />}
+                                            >
+                                                {'\u200B'}
+                                            </Column>
+                                            <Column<IParentMatch>
+                                                Key={'Status'}
+                                                Field={'Status'}
+                                                Content={({ item }) => {
+                                                    const allMatched = channelMatches.filter(chan => chan.Key.Parent === item.Key && (chan.Status === 'NoMatch' || chan.Status === 'MultipleMatches'))
+                                                    if (allMatched.length === 0)
+                                                        return <ReactIcons.CheckMark Color="green" />
+                                                    else
+                                                        return <ReactIcons.CrossMark Color="red" />
+                                                }}>
+                                                {'\u200B'}
+                                            </Column>
+                                        </Table>
+                                    </>
+                                </div>
+                                <div className="d-flex flex-column h-50">
+                                    {parentChannelMatches.length > 0 ?
+                                        <>
+                                            <Table<IndexedChannelMatch>
+                                                TableClass={"table table-hover"}
+                                                TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                                                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                                                TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
+                                                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                                OnClick={() => { }}
+                                                OnSort={() => { }}
+                                                SortKey={''}
+                                                Data={parentChannelMatches}
+                                                Ascending={dataSetAscending}
+                                                KeySelector={(row, index) => `${row.Key.Phase ?? ''}~${row.Key.Type ?? ''}~${row.Key.Parent ?? ''}~${row.Key.Harmonic ?? -1}~${index}`}
+                                            >
+                                                <Column<IndexedChannelMatch>
+                                                    Key={'Key'}
+                                                    Field={'Key'}
+                                                    Content={({ item }) =>
+                                                        <p>{`${item.Key.Type ?? ''} ${item.Key.Phase ?? ''}`}</p>
+                                                    }>Channels</Column>
+                                                <Column<IndexedChannelMatch>
+                                                    Key={'Channel'}
+                                                    Field={'ChannelID'}
+                                                    Content={(row) => <Select<IChannelMatch> key={row.index} EmptyOption={true} Record={row.item}
+                                                        Options={channelOptions} Label={''} Field={'ChannelID'} Setter={(item) => setChannelMatches(channels => {
+                                                            const clonedChannels = _.cloneDeep(channels);
+                                                            clonedChannels[row.item.Index] = { ...item, Status: 'Match' };
+                                                            return clonedChannels;
+                                                        })} />}
+                                                >
+                                                    {'\u200B'}
+                                                </Column>
+                                                <Column<IndexedChannelMatch>
+                                                    Key={'Status'}
+                                                    Field={'Status'}
+                                                    AllowSort={false}
+                                                    Content={({ item, index }) => {
+                                                        if (item.Status === 'NoMatch')
+                                                            return (
+                                                                <>
+                                                                    <button className="btn" data-tooltip={`NoMatch-${index}`} onMouseEnter={() => setChannelHover({ Hover: 'NoMatch', Index: index })}
+                                                                        onMouseLeave={() => setChannelHover({ Hover: 'None', Index: -1 })}>
+                                                                        < ReactIcons.CrossMark Color='red' />
+                                                                    </button>
+                                                                    <ToolTip Show={channelHover.Hover === 'NoMatch' && channelHover.Index === index} Target={`NoMatch-${index}`} Zindex={9991}>No Match found.</ToolTip>
+                                                                </>
+                                                            )
+                                                        else if (item.Status === 'MultipleMatches')
+                                                            return (
+                                                                <>
+                                                                    <button className="btn" data-tooltip={`MultipleMatches-${index}`} onMouseEnter={() => setChannelHover({ Hover: 'MultipleMatches', Index: index })}
+                                                                        onMouseLeave={() => setChannelHover({ Hover: 'None', Index: -1 })}>
+                                                                        <ReactIcons.Warning Color='yellow' />
+                                                                    </button>
+                                                                    <ToolTip Show={channelHover.Hover === 'MultipleMatches' && channelHover.Index === index} Target={`MultipleMatches-${index}`} Zindex={9991}>Multiple Matches found.</ToolTip>
+                                                                </>
+                                                            )
+                                                        else
+                                                            return (
+                                                                <>
+                                                                    <button className="btn" data-tooltip={`Match-${index}`} onMouseEnter={() => setChannelHover({ Hover: 'Match', Index: index })}
+                                                                        onMouseLeave={() => setChannelHover({ Hover: 'None', Index: -1 })}>
+                                                                        < ReactIcons.CheckMark Color='green' />
+                                                                    </button>
+                                                                    <ToolTip Show={channelHover.Hover === 'Match' && channelHover.Index === index} Target={`Match-${index}`} Zindex={9991}>Match found.</ToolTip>
+                                                                </>
+                                                            )
+                                                    }}>
+                                                    {'\u200B'}
+                                                </Column>
+                                            </Table>
+                                        </>
+                                        : <p>Select a Meter or Asset</p>}
+                                </div>
+                            </div>
 
                             : <></>
                         }
@@ -720,7 +720,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                             step === eventStep ?
                                 <div className="col-12 h-100">
                                     <div className="d-flex flex-column h-100">
-                                        <ReactTable.Table<IEventMatch>
+                                        <Table<IEventMatch>
                                             TableClass={"table table-hover"}
                                             TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
                                             TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
@@ -734,12 +734,12 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                             KeySelector={(_, index) => index}
                                             Selected={() => false}
                                         >
-                                            <ReactTable.Column<IEventMatch>
+                                            <Column<IEventMatch>
                                                 Key={'Name'}
                                                 Field={'ID'}
-                                                Content={(row) => `Event Source ${row.index + 1}` }
-                                            >Event Sources</ReactTable.Column>
-                                            <ReactTable.Column<IEventMatch>
+                                                Content={(row) => `Event Source ${row.index + 1}`}
+                                            >Event Sources</Column>
+                                            <Column<IEventMatch>
                                                 Key={'Key'}
                                                 Field={'Key'}
                                                 Content={(row) => <Select<IEventMatch> key={row.index} EmptyOption={true} Record={row.item}
@@ -758,8 +758,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                     })} />}
                                             >
                                                 {'\u200B'}
-                                            </ReactTable.Column>
-                                            <ReactTable.Column<IEventMatch>
+                                            </Column>
+                                            <Column<IEventMatch>
                                                 Key={'ID'}
                                                 Field={'ID'}
                                                 Content={({ item }) => {
@@ -773,8 +773,8 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                                     }
                                                 }}>
                                                 {'\u200B'}
-                                            </ReactTable.Column>
-                                        </ReactTable.Table>
+                                            </Column>
+                                        </Table>
                                     </div>
                                 </div> : <></>
                         }

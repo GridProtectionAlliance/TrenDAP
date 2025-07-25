@@ -23,13 +23,14 @@
 
 import * as React from 'react';
 import { TrenDAP } from '../../../global';
-import Table from '@gpa-gemstone/react-table';
+import { Column, Table } from '@gpa-gemstone/react-table';
 import { Pencil, Flag } from '@gpa-gemstone/gpa-symbols';
 
 //Disabling ESLint as this file needs to be reworked/removed(use gemstone paged table)
 /* eslint-disable */
 
-export default function PagedTable(props: { Data: TrenDAP.iXDATrendDataPoint[], Selected: TrenDAP.iXDATrendDataPoint,SetFlag: (record: TrenDAP.iXDATrendDataPoint ) => void}) {
+/*
+export default function PagedTable(props: { Data: TrenDAP.iXDATrendDataPoint[], Selected: TrenDAP.iXDATrendDataPoint, SetFlag: (record: TrenDAP.iXDATrendDataPoint) => void }) {
     const [sortField, setSortField] = React.useState<keyof TrenDAP.iXDATrendDataPoint>('Timestamp');
     const [ascending, setAscending] = React.useState<boolean>(true);
     const [page, setPage] = React.useState<number>(0);
@@ -65,37 +66,53 @@ export default function PagedTable(props: { Data: TrenDAP.iXDATrendDataPoint[], 
         }
     }, [props.Selected]);
 
+    const cols = React.useMemo(() => {
+        return [
+            { Key: 'Timestamp', Field: 'Timestamp', Label: 'Timestamp' },
+            { Key: 'Minimum', Field: 'Minimum', Label: 'Min', Content: (item) => (item?.Minimum.toString() === 'NaN' ? 'NaN' : item.Minimum.toFixed(2)) },
+            { Key: 'Average', Field: 'Average', Label: 'Avg', Content: (item) => (item?.Average.toString() === 'NaN' ? 'NaN' : item.Average.toFixed(2)) },
+            { Key: 'Maximum', Field: 'Maximum', Label: 'Max', Content: (item) => (item?.Maximum.toString() === 'NaN' ? 'NaN' : item.Maximum.toFixed(2)) },
+            { Key: 'QualityFlags', Field: 'QualityFlags', Label: 'Flagged', Content: (item) => item.QualityFlags > 0 ? Flag : '' },
+            {
+                Key: null, Label: '', Content: (item) => <button className='btn btn-link' onClick={() => { setRecord(item); setToggle(true); }}>{Pencil}</button>
+            }
+        ];
+    }, [])
+
     return (
         <>
-            <Table<TrenDAP.iXDATrendDataPoint> tableClass='table'
-                cols={[
-                    { key: 'Timestamp', field: 'Timestamp', label: 'Timestamp' },
-                    { key: 'Minimum', field: 'Minimum', label: 'Min', content: (item, key, style) => (item?.Minimum.toString() === 'NaN' ? 'NaN' : item.Minimum.toFixed(2))},
-                    { key: 'Average', field: 'Average', label: 'Avg', content: (item, key, style) => (item?.Average.toString() === 'NaN' ? 'NaN' : item.Average.toFixed(2))},
-                    { key: 'Maximum', field: 'Maximum', label: 'Max', content: (item, key, style) => (item?.Maximum.toString() === 'NaN' ? 'NaN' : item.Maximum.toFixed(2))},
-                    { key: 'QualityFlags', field: 'QualityFlags', label: 'Flagged', content: (item, key, style) => item.QualityFlags > 0 ? Flag : ''},
-                    {
-                        key: null, label: '', content: (item) => <button className='btn btn-link' onClick={() => { setRecord(item); setToggle(true); } }>{Pencil}</button>}
-                ]}
-                selected={record => record.Timestamp === props.Selected?.Timestamp }
-                data={tableData}
-                sortKey={sortField}
-                onClick={(data) => { }}
-                ascending={ascending}
-                onSort={(data) => {
+            <Table<TrenDAP.iXDATrendDataPoint>
+                TableClass='table'
+                Selected={record => record.Timestamp === props.Selected?.Timestamp}
+                Data={tableData}
+                SortKey={sortField}
+                OnClick={(data) => { }}
+                Ascending={ascending}
+                OnSort={(data) => {
                     if (data.colField === sortField)
                         setAscending(!ascending)
                     else {
                         setSortField(data.colField)
                         setAscending(true)
                     }
-                }} />
+                }}
+                >
+                {cols.map(col => (
+                    <Column<TrenDAP.iXDATrendDataPoint>
+                        Key={col.Key}
+                        Field={col.Field as keyof TrenDAP.iXDATrendDataPoint}
+                        Content={col.Content}
+                    >
+                        {col.Label ? col.Label : col.Field}
+                    </Column>
+                ))}
+            </Table>
             <div className='pull-right'>
                 <button className='btn btn-link' title='Move back 10 pages' onClick={() => setPage((page >= 10 ? page - 10 : 0))} disabled={page <= 0}>{'<<'}</button>
                 <button className='btn btn-link' title='Move back 1 page' onClick={() => setPage((page >= 1 ? page - 1 : 0))} disabled={page <= 0}>{'<'}</button>
                 <span>Page&nbsp;</span>
-                <input value={page + 1} type='number' onChange={(evt) => setPage(parseInt(evt.target.value) - 1)} style={{width: 40}} />
-                <span>of&nbsp;{ maxPages + 1}</span>
+                <input value={page + 1} type='number' onChange={(evt) => setPage(parseInt(evt.target.value) - 1)} style={{ width: 40 }} />
+                <span>of&nbsp;{maxPages + 1}</span>
                 <button className='btn btn-link' title='Move forward 1 page' onClick={() => setPage((page <= maxPages ? page + 1 : maxPages))} disabled={page >= maxPages}>{'>'}</button>
                 <button className='btn btn-link' title='Move forward 10 pages' onClick={() => setPage((page <= maxPages - 10 ? page + 10 : maxPages))} disabled={page >= maxPages}>{'>>'}</button>
 
@@ -111,12 +128,12 @@ export default function PagedTable(props: { Data: TrenDAP.iXDATrendDataPoint[], 
                         </div>
                         <div className="modal-body">
                             <div className="row">
-                                <ul style={{listStyle: 'none'}}>
+                                <ul style={{ listStyle: 'none' }}>
                                     <li>Time: {record?.Timestamp}</li>
                                     <li>Max: {record?.Maximum}</li>
                                     <li>Avg: {record?.Average}</li>
                                     <li>Min: {record?.Minimum}</li>
-                                    <li>Flag: <input type='checkbox' checked={(record?.QualityFlags / Math.pow(2, 3) & 1) !== 0} onChange={(evt) => setRecord({ ...record, QualityFlags: evt.target.checked ? record.QualityFlags + Math.pow(2, 3) : record.QualityFlags - Math.pow(2, 3)}) }/></li>
+                                    <li>Flag: <input type='checkbox' checked={(record?.QualityFlags / Math.pow(2, 3) & 1) !== 0} onChange={(evt) => setRecord({ ...record, QualityFlags: evt.target.checked ? record.QualityFlags + Math.pow(2, 3) : record.QualityFlags - Math.pow(2, 3) })} /></li>
                                 </ul>
                             </div>
                         </div>
@@ -133,4 +150,4 @@ export default function PagedTable(props: { Data: TrenDAP.iXDATrendDataPoint[], 
 
         </>
     );
-}
+}*/

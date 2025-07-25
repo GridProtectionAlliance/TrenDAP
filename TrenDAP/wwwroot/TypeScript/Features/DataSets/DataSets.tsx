@@ -25,7 +25,7 @@
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { ReactTable } from '@gpa-gemstone/react-table'
+import { Table, Column } from '@gpa-gemstone/react-table'
 import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, CloneDataSet, New } from './DataSetsSlice';
 import moment from 'moment';
 import { DNA, TrashCan, HeavyCheckMark, Pencil } from '@gpa-gemstone/gpa-symbols';
@@ -74,7 +74,7 @@ const DataSets: React.FC = () => {
                         </div>
                     </div>
                     <div className="card-body p-0" style={{ overflow: "hidden" }}>
-                        <ReactTable.Table<TrenDAP.iDataSet>
+                        <Table<TrenDAP.iDataSet>
                             TableClass={"table table-hover"}
                             TableStyle={{
                                 padding: 0, width: 'calc(100%)', height: '100%',
@@ -89,30 +89,30 @@ const DataSets: React.FC = () => {
                             SortKey={sortField}
                             KeySelector={item => item.ID}
                         >
-                            <ReactTable.Column<TrenDAP.iDataSet>
+                            <Column<TrenDAP.iDataSet>
                                 Key={'Name'}
                                 AllowSort={true}
                                 Field={'Name'}
                             >
                                 Name
-                            </ReactTable.Column>
-                            <ReactTable.Column<TrenDAP.iDataSet>
+                            </Column>
+                            <Column<TrenDAP.iDataSet>
                                 Key={'Public'}
                                 AllowSort={true}
                                 Field={'Public'}
                                 Content={(d) => <span>{d.item[d.key] ? HeavyCheckMark : null}</span>}
                             >
                                 Shared
-                            </ReactTable.Column>
-                            <ReactTable.Column<TrenDAP.iDataSet>
+                            </Column>
+                            <Column<TrenDAP.iDataSet>
                                 Key={'UpdatedOn'}
                                 AllowSort={true}
                                 Field={'UpdatedOn'}
                                 Content={(d) => <span>{moment(d.item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span>}
                             >
                                 Updated
-                            </ReactTable.Column>
-                            <ReactTable.Column<TrenDAP.iDataSet>
+                            </Column>
+                            <Column<TrenDAP.iDataSet>
                                 Key={'Status'}
                                 AllowSort={false}
                                 Content={(d) =>
@@ -136,8 +136,8 @@ const DataSets: React.FC = () => {
                                 }
                             >
                                 {'\u200B'}
-                            </ReactTable.Column>
-                        </ReactTable.Table>
+                            </Column>
+                        </Table>
                     </div>
                 </div>
             </div>
@@ -149,7 +149,7 @@ const DataSets: React.FC = () => {
                         </h4>
                     </div>
                     <div className="card-body p-0" style={{ overflow: "hidden" }}>
-                        <ReactTable.Table<TrenDAP.iDataSet>
+                        <Table<TrenDAP.iDataSet>
                             TableClass={"table table-hover"}
                             TableStyle={{
                                 padding: 0, width: 'calc(100%)', height: '100%',
@@ -164,22 +164,22 @@ const DataSets: React.FC = () => {
                             SortKey={sortField}
                             KeySelector={(item) => item.ID}
                         >
-                            <ReactTable.Column<TrenDAP.iDataSet>
+                            <Column<TrenDAP.iDataSet>
                                 Key={'Name'}
                                 AllowSort={true}
                                 Field={'Name'}
                             >
                                 Name
-                            </ReactTable.Column>
-                            <ReactTable.Column<TrenDAP.iDataSet>
+                            </Column>
+                            <Column<TrenDAP.iDataSet>
                                 Key={'UpdatedOn'}
                                 AllowSort={true}
                                 Field={'UpdatedOn'}
                                 Content={(item) => <span>{moment(item.item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span>}
                             >
                                 Updated
-                            </ReactTable.Column>
-                        </ReactTable.Table>
+                            </Column>
+                        </Table>
                     </div>
                 </div>
             </div>
