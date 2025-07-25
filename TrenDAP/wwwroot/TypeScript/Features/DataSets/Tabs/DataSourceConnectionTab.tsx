@@ -119,10 +119,7 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                     Ascending={null}
                     OnSort={() => { }}
                     TableClass="table table-hover"
-                    TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+
                     Selected={(_item, index) => currentIndex === index}
                     KeySelector={(_item, index) => index}
                     OnClick={(item) => { setCurrentIndex(item.index); }}

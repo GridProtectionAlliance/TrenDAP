@@ -138,11 +138,7 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
         return (
             <>
                 <Table<ITableData>
-                    TableClass={"table table-hover"}
-                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                    TableClass={"table table-hover h-100"}
                     SortKey={sortField}
                     OnClick={(data, evt) => {
                         evt.preventDefault();
@@ -274,11 +270,7 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
 
         return (
             <Table<DataSetTypes.IDataSetMetaData>
-                TableClass="table table-hover"
-                TableStyle={{ padding: 0, width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0 }}
-                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                TableClass="table table-hover h-100"
                 SortKey={sortField}
                 OnClick={(item) => {
                     const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID) != null;

@@ -75,14 +75,7 @@ const DataSets: React.FC = () => {
                     </div>
                     <div className="card-body p-0" style={{ overflow: "hidden" }}>
                         <Table<TrenDAP.iDataSet>
-                            TableClass={"table table-hover"}
-                            TableStyle={{
-                                padding: 0, width: 'calc(100%)', height: '100%',
-                                tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
-                            }}
-                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            TableClass={"table table-hover h-100"}
                             OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             Data={DataSets}
                             Ascending={ascending}
@@ -150,14 +143,7 @@ const DataSets: React.FC = () => {
                     </div>
                     <div className="card-body p-0" style={{ overflow: "hidden" }}>
                         <Table<TrenDAP.iDataSet>
-                            TableClass={"table table-hover"}
-                            TableStyle={{
-                                padding: 0, width: 'calc(100%)', height: '100%',
-                                tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
-                            }}
-                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            TableClass={"table table-hover h-100"}
                             Data={publicDataSets}
                             Ascending={ascending}
                             OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}

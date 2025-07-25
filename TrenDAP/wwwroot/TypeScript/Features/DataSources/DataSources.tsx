@@ -113,14 +113,7 @@ const DataSourceTable = React.memo((props: ITableProps) => {
     return (
         <>
             <Table<DataSourceTypes.IDataSourceView>
-                TableClass="table table-hover"
-                TableStyle={{
-                    padding: 0, width: 'calc(100%)', height: '100%',
-                    tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
-                }}
-                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                TableClass="table table-hover h-100"
                 // Small note: ReactTable gives the key as sort, but here we wanna use field. This is not an issue if they match.
                 SortKey={sortField}
                 OnClick={() => { }}

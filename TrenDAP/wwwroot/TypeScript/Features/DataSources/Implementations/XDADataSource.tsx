@@ -308,11 +308,9 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                             props.SetDataSetSettings(newSettings);
                         }}
                         Selected={(item) => props.DataSetSettings.ChannelIDs.findIndex(id => id === item.ID) !== -1}
-                        TableClass="table table-hover"
-                        TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                        TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                        TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1, userSelect: 'none' }}
-                        RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}>
+                        TableClass="table table-hover h-100"
+                        TbodyStyle={{ userSelect: 'none' }}
+                        >
                         <Column<XDAChannel>
                             Key={'Name'}
                             AllowSort={true}

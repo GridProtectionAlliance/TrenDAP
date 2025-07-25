@@ -224,10 +224,6 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                             </div>
                             <Table<IVirtualChannelEditable>
                                 TableClass="table table-hover"
-                                TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                 SortKey={virtualSortField}
                                 OnClick={(item) => setSelectedVirtual(item.row.ID)}
                                 OnSort={sort => {
@@ -296,10 +292,6 @@ const VirtualChannels: React.FC<IProps> = (props) => {
                                     selectedVirtual == null ? <></> :
                                         <Table<DataSetTypes.IDataSetMetaData>
                                             TableClass="table table-hover"
-                                            TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                                             SortKey={channelSortField}
                                             OnClick={(item) => {
                                                 if (selectedVirtualChannel == null) return;

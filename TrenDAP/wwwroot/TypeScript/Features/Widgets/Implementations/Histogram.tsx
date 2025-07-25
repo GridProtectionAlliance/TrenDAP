@@ -211,11 +211,7 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any>
         return <>
             <div className="h-50 p-0 row">
                 <Table<DataSetTypes.IDataSetMetaData>
-                    TableClass="table table-hover"
-                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                    TableClass="table table-hover h-100"
                     SortKey={sortField}
                     OnClick={(item) => {
                         const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID) != null;
@@ -263,11 +259,7 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any>
             </div>
             <div className="row" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
                 <Table<WidgetTypes.ISelectedChannels<IChannelSettings>>
-                    TableClass="table table-hover"
-                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                    TableClass="table table-hover h-100"
                     SortKey={"ChannelKey"}
                     OnSort={() => { }}
                     Data={props.SelectedChannels}

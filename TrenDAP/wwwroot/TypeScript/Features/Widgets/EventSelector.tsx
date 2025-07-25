@@ -51,11 +51,7 @@ const EventSelector: React.FC<IGenericSelector> = (props) => {
 
     return (
         <Table<WidgetTypes.ISelectedEvents<unknown>>
-            TableClass="table table-hover"
-            TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+            TableClass="table table-hover h-100"
             SortKey={sortField}
             OnClick={(item) => {
                 const ind = props.SelectedSources.findIndex(src => src.ID === item.row.ID);

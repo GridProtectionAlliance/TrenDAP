@@ -66,7 +66,7 @@ const Workspaces: React.FunctionComponent = () => {
     }, [dispatch, dsStatus]);
 
     return (
-        <div className="row">
+        <div className="row h-100">
             <div className="col-12 col-md-6 col-xl-8">
                 <div className="card h-100">
                     <div className="card-header">
@@ -83,18 +83,11 @@ const Workspaces: React.FunctionComponent = () => {
                     <div className="card-body" style={{ overflow: 'hidden' }}>
                         <div className="container-fluid d-flex h-100 flex-column">
                             <Table<TrenDAP.iWorkSpace>
-                                TableClass="table table-hover"
-                                TableStyle={{
-                                    padding: 0, width: 'calc(100%)', height: '100%',
-                                    tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
-                                }}
-                                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
-                                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                TableClass="table table-hover h-100"
                                 SortKey={sortField}
                                 OnClick={(data, evt) => {
                                     //if ((evt.target as any).tagName.toLowerCase() === 'td')
-                                        navigate(`${homePath}Workspaces/${data.row.ID}`)
+                                    navigate(`${homePath}Workspaces/${data.row.ID}`)
                                 }}
                                 OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                                 Data={workSpaces}
@@ -130,7 +123,7 @@ const Workspaces: React.FunctionComponent = () => {
                                     Content={(row) =>
                                         <>
                                             <span>
-                                                <button className="btn" onClick={() => { setEdittedWorkspace(row.item); setShowEditModal(true);  }}><ReactIcons.Pencil /></button>
+                                                <button className="btn" onClick={() => { setEdittedWorkspace(row.item); setShowEditModal(true); }}><ReactIcons.Pencil /></button>
                                                 <button className="btn" onClick={() => setDeletedWorkspace(row.item)}><ReactIcons.TrashCan Color="red" /></button>
                                             </span>
                                         </>
@@ -151,18 +144,11 @@ const Workspaces: React.FunctionComponent = () => {
                     <div className="card-body" style={{ overflow: 'hidden' }}>
                         <div className="container-fluid d-flex h-100 flex-column">
                             <Table<TrenDAP.iWorkSpace>
-                                TableClass="table table-hover"
-                                TableStyle={{
-                                    padding: 0, width: 'calc(100%)', height: '100%',
-                                    tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
-                                }}
-                                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
-                                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                TableClass="table table-hover h-100"
                                 SortKey={sortField}
                                 OnClick={(data, evt) => {
-                                   // if ((evt.target as any).tagName.toLowerCase() === 'td')
-                                        navigate(`${homePath}Workspaces/${data.row.ID}`)
+                                    // if ((evt.target as any).tagName.toLowerCase() === 'td')
+                                    navigate(`${homePath}Workspaces/${data.row.ID}`)
                                 }}
                                 OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                                 Data={publicWorkSpaces}

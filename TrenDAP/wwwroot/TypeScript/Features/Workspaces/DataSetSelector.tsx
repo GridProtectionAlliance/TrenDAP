@@ -543,11 +543,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 <div className="col-12 h-100">
                                     <div className="d-flex flex-column h-100">
                                         <Table<TrenDAP.iDataSet>
-                                            TableClass="table table-hover"
-                                            TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                            TableClass="table table-hover h-100"
                                             SortKey={dataSetSortField === "UpdatedOn" ? "Name" : dataSetSortField}
                                             OnClick={data => { setSelectedDataSet(data.row); navigate(`${homePath}Workspaces/${workspaceId}/DataSet/${data.row.ID}`) }}
                                             OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
@@ -586,11 +582,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 <div className="d-flex flex-column h-50">
                                     <>
                                         <Table<IParentMatch>
-                                            TableClass={"table table-hover"}
-                                            TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                            TableClass={"table table-hover h-100"}
                                             OnClick={({ row }) => setSelectedParentKey(row.Key)}
                                             OnSort={() => { }}
                                             SortKey={''}
@@ -640,11 +632,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                     {parentChannelMatches.length > 0 ?
                                         <>
                                             <Table<IndexedChannelMatch>
-                                                TableClass={"table table-hover"}
-                                                TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                                                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                                TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                                                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                                TableClass={"table table-hover h-100"}
                                                 OnClick={() => { }}
                                                 OnSort={() => { }}
                                                 SortKey={''}
@@ -721,11 +709,7 @@ const DataSetSelector: React.FC<IProps> = (props) => {
                                 <div className="col-12 h-100">
                                     <div className="d-flex flex-column h-100">
                                         <Table<IEventMatch>
-                                            TableClass={"table table-hover"}
-                                            TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                                            TableClass={"table table-hover h-100"}
                                             OnClick={() => { }}
                                             OnSort={() => { }}
                                             SortKey={''}
