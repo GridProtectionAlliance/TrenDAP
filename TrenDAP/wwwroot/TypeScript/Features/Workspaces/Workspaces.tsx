@@ -86,8 +86,8 @@ const Workspaces: React.FunctionComponent = () => {
                                 TableClass="table table-hover h-100"
                                 SortKey={sortField}
                                 OnClick={(data, evt) => {
-                                    //if ((evt.target as any).tagName.toLowerCase() === 'td')
-                                    navigate(`${homePath}Workspaces/${data.row.ID}`)
+                                    if ((evt.target as any).tagName.toLowerCase() === 'td')
+                                        navigate(`${homePath}Workspaces/${data.row.ID}`)
                                 }}
                                 OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                                 Data={workSpaces}
@@ -147,8 +147,8 @@ const Workspaces: React.FunctionComponent = () => {
                                 TableClass="table table-hover h-100"
                                 SortKey={sortField}
                                 OnClick={(data, evt) => {
-                                    // if ((evt.target as any).tagName.toLowerCase() === 'td')
-                                    navigate(`${homePath}Workspaces/${data.row.ID}`)
+                                    if ((evt.target as any).tagName.toLowerCase() === 'td')
+                                        navigate(`${homePath}Workspaces/${data.row.ID}`)
                                 }}
                                 OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                                 Data={publicWorkSpaces}
