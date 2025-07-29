@@ -67,8 +67,8 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
     const dataSource = React.useMemo(() => {
         const srcId = props.DataSourceConnections[currentIndex]?.DataSourceID;
         if (srcId == undefined) return undefined;
-        return dataSources.find(src => srcId === src.ID);
-    }, [dataSourceStatus, currentIndex, props.DataSourceConnections]);
+        return dataSources.find(src => srcId === src.ID) ?? publicDataSources.find(src => srcId === src.ID);
+    }, [dataSourceStatus, publicDataSourceStatus, currentIndex, props.DataSourceConnections]);
 
     const AddDS = React.useCallback((dataSource: DataSourceTypes.IDataSourceView) => {
         const newConns = [...props.DataSourceConnections];

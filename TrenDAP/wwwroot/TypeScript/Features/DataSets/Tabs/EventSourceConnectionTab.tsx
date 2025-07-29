@@ -65,8 +65,8 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
     const eventSource = React.useMemo(() => {
         const srcId = props.EventSourceConnections[currentIndex]?.EventSourceID;
         if (srcId == undefined) return undefined;
-        return eventSources.find(src => srcId === src.ID);
-    }, [eventSourceStatus, currentIndex, props.EventSourceConnections]);
+        return eventSources.find(src => srcId === src.ID) ?? publicEventSources.find(src => srcId === src.ID);
+    }, [eventSourceStatus, publicEventSourceStatus, currentIndex, props.EventSourceConnections]);
 
     const AddDS = React.useCallback((src: EventSourceTypes.IEventSourceView) => {
         const newConns = [...props.EventSourceConnections];
