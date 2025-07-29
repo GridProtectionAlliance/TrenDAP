@@ -27,7 +27,6 @@ import EventSourcesReducuer from '../Features/EventSources/Slices/EventSourcesSl
 import WorkSpaceReducer from '../Features/Workspaces/WorkspacesSlice';
 import DataSetReducer from '../Features/DataSets/DataSetsSlice';
 import OpenXDAReducer from '../Features/OpenXDA/OpenXDASlice';
-import OpenHistorianReducer from '../Features/OpenHistorian/OpenHistorianSlice';
 import SapphireReducer from '../Features/Sapphire/SapphireSlice';
 import GeneralSettingsReducer from './GeneralSettingsSlice';
 
@@ -39,7 +38,6 @@ const reducer = {
     WorkSpaces: WorkSpaceReducer,
     DataSources: DataSourcesReducuer,
     OpenXDA: OpenXDAReducer,
-    OpenHistorian: OpenHistorianReducer,
     Sapphire: SapphireReducer,
     EventSources: EventSourcesReducuer,
     GeneralSettings: GeneralSettingsReducer
