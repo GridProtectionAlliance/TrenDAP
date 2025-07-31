@@ -33,9 +33,8 @@ import queryString from 'querystring';
 import moment from 'moment';
 import { NavBarFilterButton } from '@gpa-gemstone/common-pages';
 import TrenDAPSelectPopup from '../../OpenXDA/TrenDAPSelectPopup';
-import { ConfigTable } from '@gpa-gemstone/react-interactive';
 import _ from 'lodash';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column, ConfigurableTable, ConfigurableColumn } from '@gpa-gemstone/react-table';
 
 const encodedDateFormat = 'MM/DD/YYYY';
 const encodedTimeFormat = 'HH:mm:ss.SSS';
@@ -60,15 +59,15 @@ interface XDAChannel extends OpenXDA.Types.Channel {
 }
 
 interface IMultiCheckboxOption {
-    Value: number|string,
-    Text: string,
+    Value: number | string,
+    Label: string,
     Selected: boolean
 }
 
 const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenDAP.iXDADataSet> = {
     Name: 'TrenDAPDB',
     DefaultPrivateSourceSettings: { URL: "http://localhost:8989/", APIToken: "", RegistrationKey: "TrenDAP" },
-    DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/"},
+    DefaultSourceSettings: { PQBrowserUrl: "http://localhost:44368/" },
     DefaultDataSetSettings: { MeterIDs: [], AssetIDs: [], Phases: [], Groups: [], ChannelIDs: [], Aggregate: '' },
     PrivateConfigUI: (props: TrenDAP.ISourceConfig<IPrivateSettings>) => {
         React.useEffect(() => {
@@ -142,7 +141,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
 
         function makeMultiCheckboxOptions(field: keyof TrenDAP.iXDADataSet & ('Phases' | 'Groups'), setOptions: (options: IMultiCheckboxOption[]) => void, allKeys: any[]) {
             if (allKeys == null || allKeys.length === 0) return;
-            const newOptions: IMultiCheckboxOption[] = allKeys.map((key) => ({ Value: key['ID'], Text: key.Name, Selected: props.DataSetSettings[field].findIndex(id => id === key.ID) !== -1 }));
+            const newOptions: IMultiCheckboxOption[] = allKeys.map((key) => ({ Value: key['ID'], Label: key.Name, Selected: props.DataSetSettings[field].findIndex(id => id === key.ID) !== -1 }));
             setOptions(newOptions);
         }
 
@@ -152,7 +151,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                 const selected: boolean = item.Selected != (newOptions.findIndex(option => item.Value === option.Value) > -1);
                 if (selected) ids.push(item.Value as number);
             });
-            const newSettings = {...props.DataSetSettings};
+            const newSettings = { ...props.DataSetSettings };
             newSettings.ChannelIDs = [];
             newSettings[field] = ids;
             props.SetDataSetSettings(newSettings);
@@ -181,7 +180,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
             if (phStatus !== 'idle') return;
             makeMultiCheckboxOptions('Phases', setPhaseOptions, phases);
         }, [phStatus, props.DataSetSettings.Phases]);
-    
+
         React.useEffect(() => {
             if (cgStatus !== 'idle') return;
             makeMultiCheckboxOptions('Groups', setChannelGroupOptions, channelGroups);
@@ -228,7 +227,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
             });
 
             return () => {
-                if (handle != null && handle.abort() != null) handle.abort(); 
+                if (handle != null && handle.abort() != null) handle.abort();
             }
         }, [props.DataSetSettings]);
 
@@ -239,7 +238,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                         <legend className="w-auto" style={{ fontSize: 'large' }}>Channel Filters:</legend>
                         <div className={"row"}>
                             <div className={'col'}>
-                                <NavBarFilterButton Type={'Meter'} OnClick={() => setFilter('Meter')} Data={meterList} AlternateColors={{ normal: "#3840B5", selected: "#FF9B4B" }}/>
+                                <NavBarFilterButton Type={'Meter'} OnClick={() => setFilter('Meter')} Data={meterList} AlternateColors={{ normal: "#3840B5", selected: "#FF9B4B" }} />
                             </div>
                         </div>
                         <div className={"row"}>
@@ -251,7 +250,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                         <div className={"row"}>
                             <div className={"col"}>
                                 <MultiCheckBoxSelect
-                                    ItemTooltip={'dark'}
+                                    ShowToolTip={true}
                                     Options={phaseOptions}
                                     Label={''}
                                     OnChange={(evt, Options: IMultiCheckboxOption[]) => multiCheckboxUpdate("Phases", Options, phaseOptions)}
@@ -262,7 +261,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                         <div className={"row"}>
                             <div className={"col"}>
                                 <MultiCheckBoxSelect
-                                    ItemTooltip={'dark'}
+                                    ShowToolTip={true}
                                     Options={channelGroupOptions}
                                     Label={''}
                                     OnChange={(evt, Options: IMultiCheckboxOption[]) => multiCheckboxUpdate("Groups", Options, channelGroupOptions)}
@@ -272,7 +271,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                     </fieldset>
                 </div>
                 <div className="col-9 h-100">
-                    <ConfigTable.Table<XDAChannel>
+                    <ConfigurableTable<XDAChannel>
                         Data={channels}
                         SortKey={sortField}
                         Ascending={ascending}
@@ -297,7 +296,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                                 }
                             } else
                                 newIds.add(item.row.ID);
-        
+
                             // Changing the added values based on held ctrl key
                             if (event.ctrlKey) {
                                 props.DataSetSettings.ChannelIDs.forEach(id => newIds.add(id));
@@ -309,31 +308,36 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                             props.SetDataSetSettings(newSettings);
                         }}
                         Selected={(item) => props.DataSetSettings.ChannelIDs.findIndex(id => id === item.ID) !== -1}
-                        TableClass="table table-hover"
-                        TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                        TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                        TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1, userSelect: 'none' }}
-                        RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}>
-                        <ReactTable.AdjustableCol<XDAChannel>
+                        TableClass="table table-hover h-100"
+                        TbodyStyle={{ userSelect: 'none' }}
+                        >
+                        <Column<XDAChannel>
                             Key={'Name'}
                             AllowSort={true}
                             Field={'Name'}
-                        >Channel Name</ReactTable.AdjustableCol>
-                        <ReactTable.AdjustableCol<XDAChannel>
+                            Adjustable={true}
+                        >
+                            Channel Name
+                        </Column>
+                        <Column<XDAChannel>
                             Key={'Phase'}
                             AllowSort={true}
                             Field={'Phase'}
+                            Adjustable={true}
                         />
                         {colList.map(name =>
-                            <ConfigTable.Configurable key={name.replace(/\s/, "")} Key={name.replace(/\s/, "")} Label={name} Default={defaultCols.has(name)}>
-                                <ReactTable.AdjustableCol<XDAChannel>
+                            <ConfigurableColumn key={name.replace(/\s/, "")} Key={name.replace(/\s/, "")} Label={name} Default={defaultCols.has(name)}>
+                                <Column<XDAChannel>
                                     Key={name.replace(/\s/, "")}
                                     AllowSort={true}
                                     Field={name.replace(/\s/, "") as keyof XDAChannel}
-                                >{name}</ReactTable.AdjustableCol>
-                            </ConfigTable.Configurable>)
-                        }
-                    </ConfigTable.Table>
+                                    Adjustable={true}
+                                >
+                                    {name}
+                                </Column>
+                            </ConfigurableColumn>
+                        ) }
+                    </ConfigurableTable>
                 </div>
                 <TrenDAPSelectPopup<SystemCenter.Types.DetailedMeter> Table='DetailedMeter' SourceID={props.DataSource.ID} SourceType='data'
                     Show={filter === 'Meter'} Selection={meterList} Type='multiple'
@@ -347,14 +351,14 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                         }
                     }}
                     TableColumns={[
-                        { key: 'AssetKey', field: 'AssetKey', label: 'Key', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Name', field: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Location', field: 'Location', label: 'Substation', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'MappedAssets', field: 'MappedAssets', label: 'Assets', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Make', field: 'Make', label: 'Make', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Model', field: 'Model', label: 'Model', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Scroll', label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },
-                    ]} 
+                        { Key: 'AssetKey', Field: 'AssetKey', Label: 'Key', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Name', Field: 'Name', Label: 'Name', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Location', Field: 'Location', Label: 'Substation', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'MappedAssets', Field: 'MappedAssets', Label: 'Assets', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Make', Field: 'Make', Label: 'Make', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Model', Field: 'Model', Label: 'Model', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Scroll', Label: '', HeaderStyle: { width: 17, padding: 0 }, RowStyle: { width: 0, padding: 0 } },
+                    ]}
                     SearchColumns={[
                         { label: 'Key', key: 'AssetKey', type: 'string', isPivotField: false },
                         { label: 'Name', key: 'Name', type: 'string', isPivotField: false },
@@ -363,7 +367,8 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                         { label: 'Model', key: 'Model', type: 'string', isPivotField: false },
                         { label: 'Number of Assets', key: 'MappedAssets', type: 'number', isPivotField: false },
                         { label: 'Description', key: 'Description', type: 'string', isPivotField: false },
-                    ]} DefaultSearchCol={{ label: 'Name', key: 'Name', type: 'string', isPivotField: false }} Title='Filter by Meter' />
+                    ]}
+                    DefaultSearchCol={{ label: 'Name', key: 'Name', type: 'string', isPivotField: false }} Title='Filter by Meter' />
                 <TrenDAPSelectPopup<SystemCenter.Types.DetailedAsset> Table='DetailedAsset' SourceID={props.DataSource.ID} SourceType='data'
                     Show={filter === 'Asset'} Selection={assetList} Type='multiple'
                     OnClose={(selected, conf) => {
@@ -376,13 +381,13 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                         }
                     }}
                     TableColumns={[
-                        { key: 'AssetKey', field: 'AssetKey', label: 'Key', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'AssetName', field: 'AssetName', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'AssetType', field: 'AssetType', label: 'Asset Type', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'VoltageKV', field: 'VoltageKV', label: 'Voltage (kV)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Meters', field: 'Meters', label: 'Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Locations', field: 'Locations', label: 'Substations', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } }
-                    ]} 
+                        { Key: 'AssetKey', Field: 'AssetKey', Label: 'Key', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'AssetName', Field: 'AssetName', Label: 'Name', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'AssetType', Field: 'AssetType', Label: 'Asset Type', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'VoltageKV', Field: 'VoltageKV', Label: 'Voltage (kV)', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Meters', Field: 'Meters', Label: 'Meters', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Locations', Field: 'Locations', Label: 'Substations', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } }
+                    ]}
                     SearchColumns={[
                         { label: 'Key', key: 'AssetKey', type: 'string', isPivotField: false },
                         { label: 'Name', key: 'AssetName', type: 'string', isPivotField: false },
@@ -393,8 +398,8 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                         { label: 'Number of Meters', key: 'Meters', type: 'integer', isPivotField: false },
                         { label: 'Number of Substations', key: 'Locations', type: 'integer', isPivotField: false },
                         { label: 'Description', key: 'Description', type: 'string', isPivotField: false },
-                    ]} DefaultSearchCol={{ label: 'Name', key: 'AssetName', type: 'string', isPivotField: false }} Title='Filter by Asset' />
-                
+                    ]}
+                    DefaultSearchCol={{ label: 'Name', key: 'AssetName', type: 'string', isPivotField: false }} Title='Filter by Asset' />
             </div>
         );
 
@@ -482,7 +487,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                 resolve([]);
                 return;
             }
-            
+
             dataHandle.done((data: string) => {
                 const newPoints: string[] = data.split("\n");
                 newPoints.forEach(jsonPoint => {
@@ -551,7 +556,7 @@ const XDADataSource: IDataSource<IPrivateSettings, TrenDAP.iXDADataSource, TrenD
                     break;
                 default:
                     console.warn("Could not match relative window to a moment value");
-                    // Falls-through
+                // Falls-through
                 case 'Year':
                     duration = moment.duration(dataSet.RelativeValue, 'years');
                     break;

@@ -24,7 +24,7 @@
 import * as React from 'react';
 import { Input, Select } from '@gpa-gemstone/react-forms';
 import stats from 'stats-lite';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { WidgetTypes } from '../Interfaces'
 import { TrenDAP } from '../../../global';
 
@@ -84,7 +84,7 @@ export const StatsWidget: WidgetTypes.IWidget<IProps, null, null> = {
 
         return (
             <>
-                <ReactTable.Table<IStatData>
+                <Table<IStatData>
                     TableClass={"table table-hover"}
                     TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
                     TbodyStyle={{ display: 'block', overflow: 'hidden', width: '100%' }}
@@ -96,21 +96,21 @@ export const StatsWidget: WidgetTypes.IWidget<IProps, null, null> = {
                     Ascending={true}
                     KeySelector={(item) => item.Category}
                 >
-                    <ReactTable.Column<IStatData>
+                    <Column<IStatData>
                         Key={'Category'}
                         AllowSort={true}
                         Field={'Category'}
                     >
                         Category
-                    </ReactTable.Column>
-                    <ReactTable.Column<IStatData>
+                    </Column>
+                    <Column<IStatData>
                         Key={'Statistic'}
                         AllowSort={true}
                         Field={'Statistic'}
                     >
                         Statistic
-                    </ReactTable.Column>
-                </ReactTable.Table>
+                    </Column>
+                </Table>
             </>
         );
     },

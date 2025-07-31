@@ -30,7 +30,7 @@ import WorkspaceSettings from './WorkspaceSettings';
 import moment from 'moment';
 import { SelectDataSetsStatus, FetchDataSets } from '../DataSets/DataSetsSlice';
 import { useNavigate } from 'react-router-dom';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { Warning } from '@gpa-gemstone/react-interactive';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 
@@ -66,7 +66,7 @@ const Workspaces: React.FunctionComponent = () => {
     }, [dispatch, dsStatus]);
 
     return (
-        <div className="row">
+        <div className="row h-100">
             <div className="col-12 col-md-6 col-xl-8">
                 <div className="card h-100">
                     <div className="card-header">
@@ -82,18 +82,11 @@ const Workspaces: React.FunctionComponent = () => {
                     </div>
                     <div className="card-body" style={{ overflow: 'hidden' }}>
                         <div className="container-fluid d-flex h-100 flex-column">
-                            <ReactTable.Table<TrenDAP.iWorkSpace>
-                                TableClass="table table-hover"
-                                TableStyle={{
-                                    padding: 0, width: 'calc(100%)', height: '100%',
-                                    tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
-                                }}
-                                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
-                                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            <Table<TrenDAP.iWorkSpace>
+                                TableClass="table table-hover h-100"
                                 SortKey={sortField}
                                 OnClick={(data, evt) => {
-                                    if (evt.target.tagName.toLowerCase() === 'td')
+                                    if ((evt.target as any).tagName.toLowerCase() === 'td')
                                         navigate(`${homePath}Workspaces/${data.row.ID}`)
                                 }}
                                 OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
@@ -101,43 +94,43 @@ const Workspaces: React.FunctionComponent = () => {
                                 Ascending={ascending}
                                 KeySelector={(row) => row.ID}
                             >
-                                <ReactTable.Column<TrenDAP.iWorkSpace>
+                                <Column<TrenDAP.iWorkSpace>
                                     Key={'Name'}
                                     AllowSort={true}
                                     Field={'Name'}
                                 >
                                     Name
-                                </ReactTable.Column>
-                                <ReactTable.Column<TrenDAP.iWorkSpace>
+                                </Column>
+                                <Column<TrenDAP.iWorkSpace>
                                     Key={'Public'}
                                     AllowSort={true}
                                     Field={'Public'}
                                     Content={(row) => <span>{row.item.Public ? <ReactIcons.CheckMark Color="green" /> : <></>}</span>}
                                 >
                                     Shared
-                                </ReactTable.Column>
-                                <ReactTable.Column<TrenDAP.iWorkSpace>
+                                </Column>
+                                <Column<TrenDAP.iWorkSpace>
                                     Key={'UpdatedOn'}
                                     AllowSort={true}
                                     Field={'UpdatedOn'}
                                     Content={(row) => <span>{moment(row.item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span>}
                                 >
                                     Updated
-                                </ReactTable.Column>
-                                <ReactTable.Column<TrenDAP.iWorkSpace>
+                                </Column>
+                                <Column<TrenDAP.iWorkSpace>
                                     Key={'Buttons'}
                                     AllowSort={false}
                                     Content={(row) =>
                                         <>
                                             <span>
-                                                <button className="btn" onClick={() => { setEdittedWorkspace(row.item); setShowEditModal(true);  }}><ReactIcons.Pencil /></button>
+                                                <button className="btn" onClick={() => { setEdittedWorkspace(row.item); setShowEditModal(true); }}><ReactIcons.Pencil /></button>
                                                 <button className="btn" onClick={() => setDeletedWorkspace(row.item)}><ReactIcons.TrashCan Color="red" /></button>
                                             </span>
                                         </>
                                     }>
                                     {'\u200B'}
-                                </ReactTable.Column>
-                            </ReactTable.Table>
+                                </Column>
+                            </Table>
                             <WorkspaceSettings Workspace={edittedWorkspace} New={false} Show={showEditModal && edittedWorkspace != null} SetShow={setShowEditModal} />
                         </div>
                     </div>
@@ -150,18 +143,11 @@ const Workspaces: React.FunctionComponent = () => {
                     </div>
                     <div className="card-body" style={{ overflow: 'hidden' }}>
                         <div className="container-fluid d-flex h-100 flex-column">
-                            <ReactTable.Table<TrenDAP.iWorkSpace>
-                                TableClass="table table-hover"
-                                TableStyle={{
-                                    padding: 0, width: 'calc(100%)', height: '100%',
-                                    tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
-                                }}
-                                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                                TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
-                                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                            <Table<TrenDAP.iWorkSpace>
+                                TableClass="table table-hover h-100"
                                 SortKey={sortField}
                                 OnClick={(data, evt) => {
-                                    if (evt.target.tagName.toLowerCase() === 'td')
+                                    if ((evt.target as any).tagName.toLowerCase() === 'td')
                                         navigate(`${homePath}Workspaces/${data.row.ID}`)
                                 }}
                                 OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
@@ -169,22 +155,22 @@ const Workspaces: React.FunctionComponent = () => {
                                 Ascending={ascending}
                                 KeySelector={row => row.ID}
                             >
-                                <ReactTable.Column<TrenDAP.iWorkSpace>
+                                <Column<TrenDAP.iWorkSpace>
                                     Key={'Name'}
                                     AllowSort={true}
                                     Field={'Name'}
                                 >
                                     Name
-                                </ReactTable.Column>
-                                <ReactTable.Column<TrenDAP.iWorkSpace>
+                                </Column>
+                                <Column<TrenDAP.iWorkSpace>
                                     Key={'UpdatedOn'}
                                     AllowSort={true}
                                     Field={'UpdatedOn'}
                                     Content={(row) => <span>{moment(row.item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span>}
                                 >
                                     Updated
-                                </ReactTable.Column>
-                            </ReactTable.Table>
+                                </Column>
+                            </Table>
                         </div>
                         <Warning Title={'Delete ' + deletedWorkspace?.Name} Show={deletedWorkspace != null} Message={"This will remove the workspace and can not be undone."}
                             CallBack={(c) => {

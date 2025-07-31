@@ -25,7 +25,7 @@ import * as React from 'react';
 import { TrenDAP } from '../../../global';
 import { useAppDispatch, useAppSelector } from '../../../hooks';
 import { /*UpdateDataSetData,*/ SelectDataSetsStatus, FetchDataSets, SelectRecord, SetRecordByID,/* GetDataSetDataFromIDB*/ } from '../DataSetsSlice'
-import PagedTable from './PagedTable';
+//import PagedTable from './PagedTable';
 import Chart from './Chart';
 import Histogram from './Histogram';
 import { Plus } from '../../../Constants';
@@ -152,7 +152,9 @@ export default function ViewDataSet(props) {
 
                 </div>
                 <div className='col'>
-                    <PagedTable Data={selectedData} SetFlag={FlagData} Selected={selectedPoint }/>
+                    {/**
+                     * <PagedTable Data={selectedData} SetFlag={FlagData} Selected={selectedPoint }/>
+                     */}
                 </div>
 
             </div>

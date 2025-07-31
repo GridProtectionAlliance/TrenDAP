@@ -25,7 +25,7 @@ import * as d3 from 'd3';
 import * as React from 'react';
 import { TrenDAP } from '../../../global';
 import { Input, CheckBox, ColorPicker, StylableSelect } from '@gpa-gemstone/react-forms';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols'
 import { Modal } from '@gpa-gemstone/react-interactive';
 import { WidgetTypes } from '../Interfaces';
@@ -301,187 +301,183 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any> = {
         };
 
         return <>
-                <div className="row">
-                    <div className="col-12">
-                        <button className="btn btn-info" onClick={() => setShowPairSelection(true)}>Add New Pair</button>
-                    </div>
+            <div className="row">
+                <div className="col-12">
+                    <button className="btn btn-info" onClick={() => setShowPairSelection(true)}>Add New Pair</button>
                 </div>
-                <ReactTable.Table<[IPairChannel, IPairChannel]>
-                    TableClass="table table-hover"
-                    TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                    SortKey={""}
-                    OnClick={() => { }}
-                    OnSort={() => { }}
-                    Data={pairs}
-                    Ascending={ascending}
-                    KeySelector={(row, idx) => idx as number}
-                >
-                    <ReactTable.Column<[IPairChannel, IPairChannel]>
-                        Key={'PairParents'}
-                        AllowSort={true}
-                        Field={'0'}
-                        Content={({ item }) =>
-                            <>
-                                <span>{item[0]?.MetaData?.ParentName}</span>
-                                <br />
-                                <span>{item[1]?.MetaData?.ParentName}</span>
-                            </>}
-                    >
-                        Parents
-                    </ReactTable.Column>
-                    <ReactTable.Column<[IPairChannel, IPairChannel]>
-                        Key={'PairNames'}
-                        AllowSort={true}
-                        Field={'0'}
-                        Content={({ item }) =>
-                            <>
-                                <span>{item[0]?.MetaData?.Name}</span>
-                                <br />
-                                <span>{item[1]?.MetaData?.Name}</span>
-                            </>}
-                    >
-                        Names
-                    </ReactTable.Column>
-                    <ReactTable.Column<[IPairChannel, IPairChannel]>
-                        Key={'PairPhases'}
-                        AllowSort={true}
-                        Field={'0'}
-                        Content={({ item }) =>
-                            <>
-                                <span>{item[0]?.MetaData?.Phase}</span>
-                                <br />
-                                <span>{item[1]?.MetaData?.Phase}</span>
-                            </>}
-                    >
-                        Phases
-                    </ReactTable.Column>
-                    <ReactTable.Column<[IPairChannel, IPairChannel]>
-                        Key={'PairTypes'}
-                        AllowSort={true}
-                        Field={'0'}
-                        Content={({ item }) =>
-                            <>
-                                <span>{item[0]?.MetaData?.Type}</span>
-                                <br />
-                                <span>{item[1]?.MetaData?.Type}</span>
-                            </>}
-                    >
-                        Types
-                    </ReactTable.Column>
-                    <ReactTable.Column<[IPairChannel, IPairChannel]>
-                        Key={'Color'}
-                        AllowSort={true}
-                        Field={'1'}
-                        Content={({ item }) => {
-                            const pair = props.Settings.Pairs.find(pair => pair.Id === item[0].ChannelSettings.PairId)
-                            if (pair != null)
-
-                                return (
-                                    <ColorPicker<IPairSettings> Record={pair} Label="Color" Field="Color" Style={{ backgroundColor: pair?.Color, borderColor: pair?.Color }}
-                                        Setter={(record) => {
-                                            props.SetSettings({ ...props.Settings, Pairs: [...props.Settings.Pairs.map(p => p.Id === pair.Id ? record : p)] })
-                                        }}
-                                    />
-                                )
-
-                        }}
-                    >
-                        Color
-                    </ReactTable.Column>
-                    <ReactTable.Column<[IPairChannel, IPairChannel]>
-                        Key={'XAxis'}
-                        AllowSort={true}
-                        Field={'0'}
-                        Content={({ item }) => {
-                            const xChannel = item.find(item => item.ChannelSettings.Axis === 'X') as IPairChannel
-                            return (
-                                <StylableSelect<IPairChannel> Record={xChannel} Field="LabelValue" Options={getAxisOptions(item, 'X')} Label="" Setter={axis => {
-                                    const record: SelectValue = axis.LabelValue
-                                    const newXAxis = item.find(c => _.isEqual(record.Key, c.Key)) as IPairChannel
-                                    if (newXAxis.ChannelSettings.Axis !== record.Axis || newXAxis.ChannelSettings.Field !== record.Field)
-                                        props.SetChannelSettings(newXAxis.Key, {
-                                            Axis: record.Axis,
-                                            PairId: newXAxis.ChannelSettings.PairId,
-                                            Field: record.Field
-                                        })
-                                }} />
-                            )
-                        }}
-                    >
-                        X Axis
-                    </ReactTable.Column>
-                    <ReactTable.Column<[IPairChannel, IPairChannel]>
-                        Key={'YAxis'}
-                        AllowSort={true}
-                        Field={'0'}
-                        Content={({ item }) => {
-                            const yChannel = item.find(item => item?.ChannelSettings?.Axis === 'Y') ?? item[1]
-                            return (
-                                <StylableSelect<IPairChannel> Record={yChannel} Field="LabelValue" Options={getAxisOptions(item, 'Y')} Label="" Setter={axis => {
-                                    const record: SelectValue = axis.LabelValue
-                                    const newYAxis = item.find(c => _.isEqual(record.Key, c.Key)) as IPairChannel
-                                    if (newYAxis.ChannelSettings.Axis !== record.Axis || newYAxis.ChannelSettings.Field !== record.Field)
-                                        props.SetChannelSettings(newYAxis.Key, {
-                                            Axis: record.Axis,
-                                            Field: record.Field,
-                                            PairId: newYAxis.ChannelSettings.PairId
-                                        })
-                                }} />
-                            )
-                        }}
-                    >
-                        Y Axis
-                    </ReactTable.Column>
-                    <ReactTable.Column<[IPairChannel, IPairChannel]>
-                        Key={'Edit'}
-                        AllowSort={true}
-                        Field={'0'}
-                        Content={({ item }) => <>
-                            <div className="btn-group">
-                                <button className="btn" onClick={() => {
-                                    setShowPairSelection(true);
-                                    const chans = props.SelectedChannels.filter(c => _.isEqual(c.ChannelSettings.PairId, item[0].ChannelSettings.PairId))
-
-                                    setEdittedPair([{ ...chans[0], LabelValue: item[0].LabelValue }, { ...chans[1], LabelValue: item[1].LabelValue }]);
-                                    setSelectedPair([{ MetaData: chans[0].MetaData, Axis: item[0].ChannelSettings.Axis }, { MetaData: chans[1].MetaData, Axis: item[1].ChannelSettings.Axis }])
-                                }}><ReactIcons.Pencil Size={15} /></button>
-                                {/*
-                                <button className="btn" onClick={() => setShowPairSelection(true)}> <ReactIcons.Copy Size={15} /></button>
-                                */}
-                                <button className="btn" onClick={() => {
-                                    props.RemoveChannel(item[0].MetaData.ID);
-                                    props.RemoveChannel(item[1].MetaData.ID);
-                                    const updatedSettings = { ...props.Settings, Pairs: [...props.Settings.Pairs].filter(pair => pair.Id !== item[0].ChannelSettings.PairId) }
-                                    props.SetSettings(updatedSettings)
-                                }}>
-                                    <ReactIcons.TrashCan Color="Red" Size={15} />
-                                </button>
-                            </div>
+            </div>
+            <Table<[IPairChannel, IPairChannel]>
+                TableClass="table table-hover"
+                SortKey={""}
+                OnClick={() => { }}
+                OnSort={() => { }}
+                Data={pairs}
+                Ascending={ascending}
+                KeySelector={(row, idx) => idx as number}
+            >
+                <Column<[IPairChannel, IPairChannel]>
+                    Key={'PairParents'}
+                    AllowSort={true}
+                    Field={'0'}
+                    Content={({ item }) =>
+                        <>
+                            <span>{item[0]?.MetaData?.ParentName}</span>
+                            <br />
+                            <span>{item[1]?.MetaData?.ParentName}</span>
                         </>}
-                    >
-                        {'\u200B'}
-                    </ReactTable.Column>
-                    <ReactTable.Column<[IPairChannel, IPairChannel]>
-                        Key={'Regress'}
-                        AllowSort={true}
-                        Field={'0'}
-                        Content={({ item }) => {
-                            const pair = props.Settings.Pairs.find(pair => pair.Id === item[0].ChannelSettings.PairId)
-                            if (pair != null)
-                                return (
-                                    <CheckBox<IPairSettings> Record={pair} Field="RegressionLine" Label="" Setter={(record) => {
+                >
+                    Parents
+                </Column>
+                <Column<[IPairChannel, IPairChannel]>
+                    Key={'PairNames'}
+                    AllowSort={true}
+                    Field={'0'}
+                    Content={({ item }) =>
+                        <>
+                            <span>{item[0]?.MetaData?.Name}</span>
+                            <br />
+                            <span>{item[1]?.MetaData?.Name}</span>
+                        </>}
+                >
+                    Names
+                </Column>
+                <Column<[IPairChannel, IPairChannel]>
+                    Key={'PairPhases'}
+                    AllowSort={true}
+                    Field={'0'}
+                    Content={({ item }) =>
+                        <>
+                            <span>{item[0]?.MetaData?.Phase}</span>
+                            <br />
+                            <span>{item[1]?.MetaData?.Phase}</span>
+                        </>}
+                >
+                    Phases
+                </Column>
+                <Column<[IPairChannel, IPairChannel]>
+                    Key={'PairTypes'}
+                    AllowSort={true}
+                    Field={'0'}
+                    Content={({ item }) =>
+                        <>
+                            <span>{item[0]?.MetaData?.Type}</span>
+                            <br />
+                            <span>{item[1]?.MetaData?.Type}</span>
+                        </>}
+                >
+                    Types
+                </Column>
+                <Column<[IPairChannel, IPairChannel]>
+                    Key={'Color'}
+                    AllowSort={true}
+                    Field={'1'}
+                    Content={({ item }) => {
+                        const pair = props.Settings.Pairs.find(pair => pair.Id === item[0].ChannelSettings.PairId)
+                        if (pair != null)
+
+                            return (
+                                <ColorPicker<IPairSettings> Record={pair} Label="Color" Field="Color" Style={{ backgroundColor: pair?.Color, borderColor: pair?.Color }}
+                                    Setter={(record) => {
                                         props.SetSettings({ ...props.Settings, Pairs: [...props.Settings.Pairs.map(p => p.Id === pair.Id ? record : p)] })
                                     }}
-                                    />
-                                )
-                        }}
-                    >
-                        Regression Line
-                    </ReactTable.Column>
-                </ReactTable.Table>
+                                />
+                            )
+
+                    }}
+                >
+                    Color
+                </Column>
+                <Column<[IPairChannel, IPairChannel]>
+                    Key={'XAxis'}
+                    AllowSort={true}
+                    Field={'0'}
+                    Content={({ item }) => {
+                        const xChannel = item.find(item => item.ChannelSettings.Axis === 'X') as IPairChannel
+                        return (
+                            <StylableSelect<IPairChannel> Record={xChannel} Field="LabelValue" Options={getAxisOptions(item, 'X')} Label="" Setter={axis => {
+                                const record: SelectValue = axis.LabelValue
+                                const newXAxis = item.find(c => _.isEqual(record.Key, c.Key)) as IPairChannel
+                                if (newXAxis.ChannelSettings.Axis !== record.Axis || newXAxis.ChannelSettings.Field !== record.Field)
+                                    props.SetChannelSettings(newXAxis.Key, {
+                                        Axis: record.Axis,
+                                        PairId: newXAxis.ChannelSettings.PairId,
+                                        Field: record.Field
+                                    })
+                            }} />
+                        )
+                    }}
+                >
+                    X Axis
+                </Column>
+                <Column<[IPairChannel, IPairChannel]>
+                    Key={'YAxis'}
+                    AllowSort={true}
+                    Field={'0'}
+                    Content={({ item }) => {
+                        const yChannel = item.find(item => item?.ChannelSettings?.Axis === 'Y') ?? item[1]
+                        return (
+                            <StylableSelect<IPairChannel> Record={yChannel} Field="LabelValue" Options={getAxisOptions(item, 'Y')} Label="" Setter={axis => {
+                                const record: SelectValue = axis.LabelValue
+                                const newYAxis = item.find(c => _.isEqual(record.Key, c.Key)) as IPairChannel
+                                if (newYAxis.ChannelSettings.Axis !== record.Axis || newYAxis.ChannelSettings.Field !== record.Field)
+                                    props.SetChannelSettings(newYAxis.Key, {
+                                        Axis: record.Axis,
+                                        Field: record.Field,
+                                        PairId: newYAxis.ChannelSettings.PairId
+                                    })
+                            }} />
+                        )
+                    }}
+                >
+                    Y Axis
+                </Column>
+                <Column<[IPairChannel, IPairChannel]>
+                    Key={'Edit'}
+                    AllowSort={true}
+                    Field={'0'}
+                    Content={({ item }) => <>
+                        <div className="btn-group">
+                            <button className="btn" onClick={() => {
+                                setShowPairSelection(true);
+                                const chans = props.SelectedChannels.filter(c => _.isEqual(c.ChannelSettings.PairId, item[0].ChannelSettings.PairId))
+
+                                setEdittedPair([{ ...chans[0], LabelValue: item[0].LabelValue }, { ...chans[1], LabelValue: item[1].LabelValue }]);
+                                setSelectedPair([{ MetaData: chans[0].MetaData, Axis: item[0].ChannelSettings.Axis }, { MetaData: chans[1].MetaData, Axis: item[1].ChannelSettings.Axis }])
+                            }}><ReactIcons.Pencil Size={15} /></button>
+                            {/*
+                                <button className="btn" onClick={() => setShowPairSelection(true)}> <ReactIcons.Copy Size={15} /></button>
+                                */}
+                            <button className="btn" onClick={() => {
+                                props.RemoveChannel(item[0].MetaData.ID);
+                                props.RemoveChannel(item[1].MetaData.ID);
+                                const updatedSettings = { ...props.Settings, Pairs: [...props.Settings.Pairs].filter(pair => pair.Id !== item[0].ChannelSettings.PairId) }
+                                props.SetSettings(updatedSettings)
+                            }}>
+                                <ReactIcons.TrashCan Color="Red" Size={15} />
+                            </button>
+                        </div>
+                    </>}
+                >
+                    {'\u200B'}
+                </Column>
+                <Column<[IPairChannel, IPairChannel]>
+                    Key={'Regress'}
+                    AllowSort={true}
+                    Field={'0'}
+                    Content={({ item }) => {
+                        const pair = props.Settings.Pairs.find(pair => pair.Id === item[0].ChannelSettings.PairId)
+                        if (pair != null)
+                            return (
+                                <CheckBox<IPairSettings> Record={pair} Field="RegressionLine" Label="" Setter={(record) => {
+                                    props.SetSettings({ ...props.Settings, Pairs: [...props.Settings.Pairs.map(p => p.Id === pair.Id ? record : p)] })
+                                }}
+                                />
+                            )
+                    }}
+                >
+                    Regression Line
+                </Column>
+            </Table>
             <Modal
                 Show={showPairSelection}
                 ConfirmBtnClass="btn btn-success mr-auto"
@@ -495,12 +491,8 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any> = {
                 ConfirmToolTipContent={<><p>Please select at least two channels</p></>}
                 ShowCancel={false}
             >
-                <ReactTable.Table<DataSetTypes.IDataSetMetaData>
-                    TableClass="table table-hover"
-                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                <Table<DataSetTypes.IDataSetMetaData>
+                    TableClass="table table-hover h-100"
                     SortKey={sortField}
                     OnClick={({ row }) => {
                         const isChannelSelected = selectedPair?.find(chan => chan.MetaData.ID === row.ID) !== null;
@@ -522,36 +514,36 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any> = {
                     KeySelector={(row) => row.ID}
                     Selected={(row) => selectedPair.find(chan => chan.MetaData.ID === row.ID) != null ? true : false}
                 >
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'ParentName'}
                         AllowSort={true}
                         Field={'ParentName'}
                     >
                         Parent
-                    </ReactTable.Column>
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    </Column>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'Name'}
                         AllowSort={true}
                         Field={'Name'}
                     >
                         Name
-                    </ReactTable.Column>
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    </Column>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'Type'}
                         AllowSort={true}
                         Field={'Type'}
                     >
                         Type
-                    </ReactTable.Column>
+                    </Column>
 
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'Phase'}
                         AllowSort={true}
                         Field={'Phase'}
                     >
                         Phase
-                    </ReactTable.Column>
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    </Column>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'xaxis'}
                         AllowSort={true}
                         Field={'ID'}
@@ -561,8 +553,8 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any> = {
                         }}
                     >
                         X Axis
-                    </ReactTable.Column>
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    </Column>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'yaxis'}
                         AllowSort={true}
                         Field={'ID'}
@@ -572,8 +564,8 @@ export const XvsYWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any> = {
                         }}
                     >
                         Y Axis
-                    </ReactTable.Column>
-                </ReactTable.Table>
+                    </Column>
+                </Table>
             </Modal>
         </>
     }

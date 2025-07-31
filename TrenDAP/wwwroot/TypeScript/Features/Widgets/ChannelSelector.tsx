@@ -24,7 +24,7 @@
 import * as React from 'react';
 import { DataSetTypes } from '../../global';
 import { WidgetTypes } from './Interfaces';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { sort } from './HelperFunctions';
 
 const ChannelSelector: React.FC<WidgetTypes.IChannelSelectionProps<unknown, unknown>> = (props) => {
@@ -33,12 +33,8 @@ const ChannelSelector: React.FC<WidgetTypes.IChannelSelectionProps<unknown, unkn
     const [sortField, setSortField] = React.useState<keyof DataSetTypes.IDataSetMetaData>('Phase');
 
     return (
-        <ReactTable.Table<DataSetTypes.IDataSetMetaData>
-            TableClass="table table-hover"
-            TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-            TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
-            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+        <Table<DataSetTypes.IDataSetMetaData>
+            TableClass="table table-hover h-100"
             SortKey={sortField}
             OnClick={(item) => {
                 props.SelectedChannels.forEach(chan => props.RemoveChannel(chan.MetaData.ID));
@@ -50,35 +46,35 @@ const ChannelSelector: React.FC<WidgetTypes.IChannelSelectionProps<unknown, unkn
             KeySelector={(row) => row.ID}
             Selected={(row) => props.SelectedChannels.find(c => c.MetaData.ID === row.ID) != null ? true : false}
         >
-            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+            <Column<DataSetTypes.IDataSetMetaData>
                 Key={'ParentName'}
                 AllowSort={true}
                 Field={'ParentName'}
             >
                 Parent
-            </ReactTable.Column>
-            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+            </Column>
+            <Column<DataSetTypes.IDataSetMetaData>
                 Key={'Name'}
                 AllowSort={true}
                 Field={'Name'}
             >
                 Name
-            </ReactTable.Column>
-            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+            </Column>
+            <Column<DataSetTypes.IDataSetMetaData>
                 Key={'Type'}
                 AllowSort={true}
                 Field={'Type'}
             >
                 Type
-            </ReactTable.Column>
-            <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+            </Column>
+            <Column<DataSetTypes.IDataSetMetaData>
                 Key={'Phase'}
                 AllowSort={true}
                 Field={'Phase'}
             >
                 Phase
-            </ReactTable.Column>
-        </ReactTable.Table>);
+            </Column>
+        </Table>);
 }
 
 export default ChannelSelector;

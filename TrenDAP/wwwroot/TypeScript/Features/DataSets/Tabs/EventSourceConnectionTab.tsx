@@ -22,8 +22,8 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { ReactTable } from '@gpa-gemstone/react-table';
-import { Plus, TrashCan } from '@gpa-gemstone/gpa-symbols';
+import { Table, Column } from '@gpa-gemstone/react-table';
+import { Plus, ReactIcons, TrashCan } from '@gpa-gemstone/gpa-symbols';
 import { TrenDAP } from '../../../global';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import { FetchEventSources, FetchPublicEventSources, SelectEventSources, SelectEventSourcesStatus, SelectPublicEventSources, SelectPublicEventSourcesStatus } from '../../EventSources/Slices/EventSourcesSlice';
@@ -100,7 +100,7 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                     <div className="col-5">
                         <div className="dropdown">
                             <button className="btn btn-info pull-right dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                {Plus} Add New
+                                <ReactIcons.Plus /> Add New
                             </button>
                             <div className="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
                                 <div className="dropdown-header">Your Event Sources</div>
@@ -113,29 +113,26 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                         </div>
                     </div>
                 </div>
-                <ReactTable.Table<EventSourceTypes.IEventSourceDataSet>
+                <Table<EventSourceTypes.IEventSourceDataSet>
                     Data={props.EventSourceConnections}
                     SortKey={null}
                     Ascending={null}
                     OnSort={() => { }}
                     TableClass="table table-hover"
-                    TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
                     Selected={(_item, index) => currentIndex === index}
                     KeySelector={(_item, index) => index}
                     OnClick={(item) => { setCurrentIndex(item.index); }}
                 >
-                    <ReactTable.Column<EventSourceTypes.IEventSourceDataSet>
+                    <Column<EventSourceTypes.IEventSourceDataSet>
                         Key={'EventSourceName'}
                         AllowSort={true}
                         Field={'EventSourceName'}
                         HeaderStyle={{ width: 'auto' }}
                         RowStyle={{ width: 'auto' }}
-                    > EventSource
-                    </ReactTable.Column>
-                    <ReactTable.Column<EventSourceTypes.IEventSourceDataSet>
+                    >
+                        EventSource
+                    </Column>
+                    <Column<EventSourceTypes.IEventSourceDataSet>
                         Key={'ID'}
                         AllowSort={false}
                         Field={'ID'}
@@ -152,10 +149,15 @@ const EventSourceConnectionTab: React.FC<IProps> = (props) => {
                                     props.SetEventSourceConnections(newConns);
                                     pushErrors();
                                     if (currentIndex === row.index) setCurrentIndex(0);
-                                }}>{TrashCan}</button>
-                            </span>}
-                    ><></></ReactTable.Column>
-                </ReactTable.Table>
+                                }}>
+                                    <ReactIcons.TrashCan Color={'red'} />
+                                </button>
+                            </span>
+                        }
+                    >
+                        <></>
+                    </Column>
+                </Table>
             </div>
             <div className="col-8 h-100" style={{ overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
                 {props.EventSourceConnections[currentIndex] != null ?

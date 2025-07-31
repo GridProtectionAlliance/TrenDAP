@@ -28,7 +28,7 @@ import { useAppDispatch } from '../../hooks';
 import { UpdateDataSource } from './DataSourcesSlice'
 import DataSource from './DataSource';
 import { Modal } from '@gpa-gemstone/react-interactive';
-import { CrossMark, Pencil } from '@gpa-gemstone/gpa-symbols';
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 
 const EditDataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDataSourceView }> = (props) => {
     const dispatch = useAppDispatch();
@@ -39,7 +39,7 @@ const EditDataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDat
 
     return (
         <>
-            <button className="btn" onClick={() => setShow(true)}>{Pencil}</button>
+            <button className="btn" onClick={() => setShow(true)}><ReactIcons.Pencil /></button>
             <Modal
                 ConfirmBtnClass={"btn btn-primary pull-right"}
                 DisableConfirm={errors.length > 0}
@@ -48,7 +48,7 @@ const EditDataSource: React.FunctionComponent<{ DataSource: DataSourceTypes.IDat
                 ShowCancel={false}
                 ConfirmText={'Save'}
                 ConfirmShowToolTip={errors.length > 0}
-                ConfirmToolTipContent={errors.map((e, i) => <p key={2 * i + 1}>{CrossMark} {e} </p>)}
+                ConfirmToolTipContent={errors.map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark Color='red' /> {e} </p>)}
                 Title={'Edit Data Source'}
                 CallBack={conf => {
                     if (conf)

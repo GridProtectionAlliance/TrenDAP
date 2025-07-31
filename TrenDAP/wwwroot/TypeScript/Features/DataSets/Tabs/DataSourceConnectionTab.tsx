@@ -22,13 +22,13 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { DataSourceTypes, TrenDAP } from '../../../global';
 import {
     FetchDataSources, SelectDataSources, SelectDataSourcesStatus,
     SelectPublicDataSources, SelectPublicDataSourcesStatus, FetchPublicDataSources
 } from '../../DataSources/DataSourcesSlice';
-import { Plus, TrashCan } from '@gpa-gemstone/gpa-symbols';
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { useAppSelector, useAppDispatch } from '../../../hooks';
 import DataSourceWrapper from '../../DataSources/DataSourceWrapper';
 import { AllSources } from '../../DataSources/DataSources'
@@ -102,7 +102,7 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                     <div className="col-5">
                         <div className="dropdown">
                             <button className="btn btn-info pull-right dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                {Plus} Add New
+                                <ReactIcons.Plus /> Add New
                             </button>
                             <div className="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
                                 <div className="dropdown-header">Your Data Sources</div>
@@ -113,29 +113,26 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                         </div>
                     </div>
                 </div>
-                <ReactTable.Table<DataSourceTypes.IDataSourceDataSet>
+                <Table<DataSourceTypes.IDataSourceDataSet>
                     Data={props.DataSourceConnections}
                     SortKey={null}
                     Ascending={null}
                     OnSort={() => { }}
                     TableClass="table table-hover"
-                    TableStyle={{ width: 'calc(100%)', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+
                     Selected={(_item, index) => currentIndex === index}
                     KeySelector={(_item, index) => index}
                     OnClick={(item) => { setCurrentIndex(item.index); }}
                 >
-                    <ReactTable.Column<DataSourceTypes.IDataSourceDataSet>
+                    <Column<DataSourceTypes.IDataSourceDataSet>
                         Key={'DataSourceName'}
                         AllowSort={true}
                         Field={'DataSourceName'}
                         HeaderStyle={{ width: 'auto' }}
                         RowStyle={{ width: 'auto' }}
                     > DataSource
-                    </ReactTable.Column>
-                    <ReactTable.Column<DataSourceTypes.IDataSourceDataSet>
+                    </Column>
+                    <Column<DataSourceTypes.IDataSourceDataSet>
                         Key={'ID'}
                         AllowSort={false}
                         Field={'ID'}
@@ -152,10 +149,14 @@ const DataSourceConnectionTab: React.FC<IProps> = (props) => {
                                     props.SetDataSourceConnections(newConns);
                                     pushErrors();
                                     if (currentIndex === row.index) setCurrentIndex(0);
-                                }}>{TrashCan}</button>
+                                }}>
+                                    <ReactIcons.TrashCan Color={'red'} />
+                                </button>
                             </span>}
-                    ><></></ReactTable.Column>
-                </ReactTable.Table>
+                    >
+                        <></>
+                    </Column>
+                </Table>
             </div>
             <div className="col-8 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 {props.DataSourceConnections[currentIndex] != null ?

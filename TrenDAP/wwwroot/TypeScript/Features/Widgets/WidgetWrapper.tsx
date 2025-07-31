@@ -22,11 +22,11 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { ServerErrorIcon, Modal, ToolTip, Warning, TabSelector } from '@gpa-gemstone/react-interactive';
+import { ServerErrorIcon, Modal, Warning, TabSelector } from '@gpa-gemstone/react-interactive';
 import { CreateGuid } from '@gpa-gemstone/helper-functions';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { ErrorBoundary } from '@gpa-gemstone/common-pages';
-import { Input, CheckBox } from '@gpa-gemstone/react-forms';
+import { Input, CheckBox, ToolTip } from '@gpa-gemstone/react-forms';
 
 import { TrenDAP, DataSetTypes } from '../../global';
 import { useAppSelector } from '../../hooks';
@@ -73,7 +73,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
     const guid = React.useRef<string>(CreateGuid());
 
     const editMode = useAppSelector(SelectEditMode);
-    
+
     const [headerOpacity, setHeaderOpacity] = React.useState<number>(1);
     const [showSettingsModal, setShowSettingsModal] = React.useState<boolean>(false);
     const [headerHover, setHeaderHover] = React.useState<boolean>(false);
@@ -175,7 +175,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                 ID: props.ChannelMap.Map.current.get(channel.Key),
                 ChannelKey: channel.Key as TrenDAP.IChannelKey
             })
-        );
+            );
         const readRealPromise: Promise<WidgetTypes.IWidgetData<any>[]> = db.ReadMany(channels).then(data => {
             return Promise.resolve(data.map(item => ({
                 ...item.Data.Data,
@@ -195,7 +195,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                     ChannelSettings: channel.ChannelSettings
                 };
             }
-        );
+            );
         const readVirtualPromise: Promise<WidgetTypes.IWidgetData<any>[]> = db.ReadManyVirtual(virtualChannels, props.ChannelMap.Map.current).then(data => {
             return Promise.resolve(data.map(item => ({
                 ...item.Data,
@@ -228,7 +228,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
     }, [props.Widget.ShowHeader, editMode]);
 
     const allErrors: string[] = React.useMemo(() => {
-        const e = [ ...settingsErrors, ...channelErrors ];
+        const e = [...settingsErrors, ...channelErrors];
         if (!isPercent(localCommonSettings.Width)) e.push("Enter a valid width");
         return e;
     }, [settingsErrors, localCommonSettings, channelErrors]);
@@ -414,7 +414,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                             <div className="col-8 h-100" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                                 <TabSelector CurrentTab={tab} SetTab={setTab} Tabs={
                                     [{ Id: 'channel', Label: 'Channels' },
-                                        { Id: 'evtSrc', Label: 'Event Sources' }]} />
+                                    { Id: 'evtSrc', Label: 'Event Sources' }]} />
                                 {tab === 'channel' ?
                                     Implementation?.ChannelSelectionUI != null ?
                                         <ErrorBoundary ErrorMessage={`Widget ${props.Widget.Label} channel selection UI has encoutered an error.`}>
@@ -465,7 +465,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                                             Settings={localSetting}
                                             SetErrors={setChannelErrors}
                                         />
-                                : <></>}
+                                    : <></>}
                                 {tab === 'evtSrc' ?
                                     Implementation?.EventSourceSelectionUI !== undefined ?
                                         <ErrorBoundary ErrorMessage={`Widget ${props.Widget.Label} event source UI has encoutered an error.`}>
@@ -474,7 +474,7 @@ export const WidgetWrapper: React.FC<IProps> = (props) => {
                                         </ErrorBoundary> :
                                         <EventSelector AddOrEditSource={addOrChangeEventSource} RemoveSource={removeEventSource}
                                             AllEventSources={props.AllEventSources} SelectedSources={localEventSources} DefaultSettings={Implementation.DefaultEventSourceSettings} />
-                                : <></>}
+                                    : <></>}
                             </div>
                         </div>
                     </div>

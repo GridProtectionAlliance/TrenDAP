@@ -25,7 +25,7 @@ import * as React from 'react';
 import _ from 'lodash';
 import { EventSourceTypes, IEventSource } from './Interface';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import {
     RemoveEventSource, SelectPublicEventSourcesStatus, SelectEventSourcesStatus, SelectPublicEventSources, SelectEventSources,
     FetchPublicEventSources, FetchEventSources
@@ -130,15 +130,8 @@ const EventSourceTable = React.memo((props: ITableProps) => {
     }, [sortField, ascending, props.EventSources]);
 
     return (
-        <ReactTable.Table<EventSourceTypes.IEventSourceView>
-            TableClass="table table-hover"
-            TableStyle={{
-                padding: 0, width: 'calc(100%)', height: '100%',
-                tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
-            }}
-            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+        <Table<EventSourceTypes.IEventSourceView>
+            TableClass="table table-hover h-100"
             SortKey={sortField}
             OnClick={() => { }}
             OnSort={data => {
@@ -148,26 +141,26 @@ const EventSourceTable = React.memo((props: ITableProps) => {
             Data={eventSources}
             KeySelector={source => source.ID}
             Ascending={ascending}>
-            <ReactTable.Column<EventSourceTypes.IEventSourceView> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
-            <ReactTable.Column<EventSourceTypes.IEventSourceView> Key={'Type'} Field={'Type'}>Type</ReactTable.Column>
+            <Column<EventSourceTypes.IEventSourceView> Key={'Name'} Field={'Name'}>Name</Column>
+            <Column<EventSourceTypes.IEventSourceView> Key={'Type'} Field={'Type'}>Type</Column>
             {
                 props.OwnedByUser ?
-                    <ReactTable.Column<EventSourceTypes.IEventSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}
-                        Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</ReactTable.Column>
+                    <Column<EventSourceTypes.IEventSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}
+                        Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</Column>
                     : <></>
             }
             {
                 props.OwnedByUser ?
-                    <ReactTable.Column<EventSourceTypes.IEventSourceView> AllowSort={false} Key={'Delete'} Field={'Public'}
+                    <Column<EventSourceTypes.IEventSourceView> AllowSort={false} Key={'Delete'} Field={'Public'}
                         Content={row =>
                             <span>
                                 <button className="btn" onClick={() => { props.SetEventSource(row.item); props.SetShowEdit(true); }}>{Pencil}</button>
                                 <button className="btn" onClick={() => { props.SetEventSource(row.item); props.SetShowDelete(true); }}>{TrashCan}</button>
                             </span>}
-                    ><></></ReactTable.Column>
+                    ><></></Column>
                     : <></>
             }
-        </ReactTable.Table>
+        </Table>
     );
 });
 

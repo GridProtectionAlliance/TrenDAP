@@ -27,7 +27,7 @@
 import * as React from 'react';
 import { TrenDAP, DataSetTypes } from '../../../global';
 import { Input, Select, ColorPicker, CheckBox } from '@gpa-gemstone/react-forms';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { WidgetTypes } from '../Interfaces';
 import { sort } from '../HelperFunctions';
 
@@ -210,12 +210,8 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any>
 
         return <>
             <div className="h-50 p-0 row">
-                <ReactTable.Table<DataSetTypes.IDataSetMetaData>
-                    TableClass="table table-hover"
-                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                <Table<DataSetTypes.IDataSetMetaData>
+                    TableClass="table table-hover h-100"
                     SortKey={sortField}
                     OnClick={(item) => {
                         const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID) != null;
@@ -230,84 +226,80 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any>
                     KeySelector={(row) => row.ID}
                     Selected={(row) => props.SelectedChannels?.find(c => c.MetaData.ID === row.ID) != null ? true : false}
                 >
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'ParentName'}
                         AllowSort={true}
                         Field={'ParentName'}
                     >
                         Parent
-                    </ReactTable.Column>
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    </Column>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'Name'}
                         AllowSort={true}
                         Field={'Name'}
                     >
                         Name
-                    </ReactTable.Column>
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    </Column>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'Type'}
                         AllowSort={true}
                         Field={'Type'}
                     >
                         Type
-                    </ReactTable.Column>
+                    </Column>
 
-                    <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                    <Column<DataSetTypes.IDataSetMetaData>
                         Key={'Phase'}
                         AllowSort={true}
                         Field={'Phase'}
                     >
                         Phase
-                    </ReactTable.Column>
-                </ReactTable.Table>
+                    </Column>
+                </Table>
             </div>
             <div className="row" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
-                <ReactTable.Table<WidgetTypes.ISelectedChannels<IChannelSettings>>
-                    TableClass="table table-hover"
-                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                <Table<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                    TableClass="table table-hover h-100"
                     SortKey={"ChannelKey"}
                     OnSort={() => { }}
                     Data={props.SelectedChannels}
                     Ascending={ascending}
                     KeySelector={(row, idx) => idx as number}
                 >
-                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                    <Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Parent'}
                         AllowSort={true}
                         Field={'MetaData'}
                         Content={(row) => <p>{row.item.MetaData.ParentName}</p>}
                     >
                         Parent
-                    </ReactTable.Column>
-                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                    </Column>
+                    <Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Name'}
                         AllowSort={true}
                         Field={'MetaData'}
                         Content={(row) => <p>{row.item.MetaData.Name}</p>}
                     >
                         Channel
-                    </ReactTable.Column>
+                    </Column>
 
-                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                    <Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Type'}
                         AllowSort={true}
                         Field={'MetaData'}
                         Content={(row) => <p>{row.item.MetaData.Type}</p>}
                     >
                         Type
-                    </ReactTable.Column>
-                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                    </Column>
+                    <Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Phase'}
                         AllowSort={true}
                         Field={'MetaData'}
                         Content={(row) => <p>{row.item.MetaData.Phase}</p>}
                     >
                         Phase
-                    </ReactTable.Column>
-                    <ReactTable.Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
+                    </Column>
+                    <Column<WidgetTypes.ISelectedChannels<IChannelSettings>>
                         Key={'Color'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
@@ -317,8 +309,8 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any>
                         }
                     >
                         Color
-                    </ReactTable.Column>
-                    <ReactTable.Column<TrenDAP.IWidgetChannels<IChannelSettings>>
+                    </Column>
+                    <Column<TrenDAP.IWidgetChannels<IChannelSettings>>
                         Key={'SeriesField'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
@@ -328,16 +320,16 @@ export const HistogramWidget: WidgetTypes.IWidget<IProps, IChannelSettings, any>
                         }
                     >
                         Field
-                    </ReactTable.Column>
-                    <ReactTable.Column<TrenDAP.IWidgetChannels<IChannelSettings>>
+                    </Column>
+                    <Column<TrenDAP.IWidgetChannels<IChannelSettings>>
                         Key={'Profile'}
                         AllowSort={true}
                         Field={'ChannelSettings'}
                         Content={(row) => <CheckBox<IChannelSettings> Record={row.item?.ChannelSettings} Field="Profile" Setter={(item) => props.SetChannelSettings(row.item.Key, item)} />}
                     >
                         Profile
-                    </ReactTable.Column>
-                </ReactTable.Table>
+                    </Column>
+                </Table>
             </div>
         </>
     }

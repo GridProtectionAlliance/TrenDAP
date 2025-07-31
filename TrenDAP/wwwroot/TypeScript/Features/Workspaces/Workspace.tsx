@@ -30,8 +30,8 @@ import { SetEditMode, SelectEditMode } from '../../Store/GeneralSettingsSlice';
 import { AllWidgets } from '../Widgets/WidgetWrapper';
 
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
-import { ToggleSwitch } from '@gpa-gemstone/react-forms';
-import { ToolTip, BtnDropdown, Modal } from '@gpa-gemstone/react-interactive';
+import { ToggleSwitch, ToolTip } from '@gpa-gemstone/react-forms';
+import { BtnDropdown, Modal } from '@gpa-gemstone/react-interactive';
 import Row from './Row';
 import HashTable from './HashTable';
 
@@ -142,21 +142,21 @@ const Workspace: React.FunctionComponent = () => {
 
         // Added all parents to map, not just matches
         let currentKey = 0;
-        const orderedKeys = [...parentMap].sort((a,b) => b[1] - a[1]);
+        const orderedKeys = [...parentMap].sort((a, b) => b[1] - a[1]);
         const newParentMap: [string, number][] = allParents.map(parent => {
             const existingMatch = parentMap.find(match => match[0] === parent.ID);
             if (existingMatch == null) {
-                while(orderedKeys.length > 0 && currentKey === orderedKeys[orderedKeys.length-1][1]) {
+                while (orderedKeys.length > 0 && currentKey === orderedKeys[orderedKeys.length - 1][1]) {
                     currentKey++;
                     orderedKeys.pop();
                 }
                 currentKey++;
-                return [parent.ID, currentKey-1];
+                return [parent.ID, currentKey - 1];
             }
             return existingMatch;
         });
         parentMapping.current = new Map<string, number>(newParentMap);
-        
+
         setLoadedVirtuals(
             workSpaceJSON.VirtualChannels.map(chan => {
                 const parent = allParents.find(currentParent => chan.ParentKey === parentMapping.current.get(currentParent.ID));
@@ -223,7 +223,7 @@ const Workspace: React.FunctionComponent = () => {
                                         .concat([{ Label: 'Row', Callback: () => HandleAddObject('Row'), Group: 1 }, { Label: 'Virtual Channel', Callback: () => setShowVirtual(true), Group: 2 }])}
                                 Callback={() => HandleAddObject('Row')} ShowToolTip={true} TooltipContent={<p>Add Row or Widget</p>} TooltipLocation={'bottom'} />
 
-                            <div className="btn-group align-items-center pl-1">
+                            <div className="btn-group align-items-center mt-3 pl-1">
                                 <ToggleSwitch Record={{ editMode }} Field="editMode" Label={'Edit'} Setter={(item) => dispatch(SetEditMode(item.editMode))} Help="Toggles editing of rows and widgets"
                                     Style={{ color: 'white', display: 'flex', alignItems: 'center' }} />
 

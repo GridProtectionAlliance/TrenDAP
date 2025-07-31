@@ -33,7 +33,6 @@ import { ComputeTimeCenterAndSize } from '../../DataSets/HelperFunctions';
 import { Input } from '@gpa-gemstone/react-forms';
 import { EventCharacteristicFilter, EventTypeFilter, NavBarFilterButton } from '@gpa-gemstone/common-pages';
 import { OpenXDA, SystemCenter } from '@gpa-gemstone/application-typings';
-import { TimeUnit } from '@gpa-gemstone/common-pages/lib/TimeWindowUtils';
 import TrenDAPSelectPopup from '../../OpenXDA/TrenDAPSelectPopup';
 
 const encodedDateFormat = 'MM/DD/YYYY';
@@ -58,7 +57,7 @@ interface IDatasetSetting {
 interface IEventCharacteristicFilter {
     durationMin?: number, durationMax?: number,
     phases: { AN: boolean, BN: boolean, CN: boolean, AB: boolean, BC: boolean, CA: boolean, ABG: boolean, BCG: boolean, ABC: boolean, ABCG: boolean },
-    transientMin?: number, transientMax?: number, transientType: ('LL'|'LN'|'both'),
+    transientMin?: number, transientMax?: number, transientType: ('LL' | 'LN' | 'both'),
     sagMin?: number, sagMax?: number, sagType: ('LL' | 'LN' | 'both'),
     swellMin?: number, swellMax?: number, swellType: ('LL' | 'LN' | 'both'),
     curveID: number, curveInside: boolean, curveOutside: boolean
@@ -273,9 +272,9 @@ const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> =
 
         return (
             <>
-                <div className="row" style={{paddingLeft: "15px", paddingRight: "15px"}}>
+                <div className="row" style={{ paddingLeft: "15px", paddingRight: "15px" }}>
                     <EventCharacteristicFilter setEventFilters={(newCharacteristics, newTypes) => {
-                        const newSettings = {...props.Settings};
+                        const newSettings = { ...props.Settings };
                         newSettings.Types = newTypes ?? OpenXDAEvents.DefaultDataSetSettings.Types;
                         newSettings.EventCharacteristicFilter = newCharacteristics ?? OpenXDAEvents.DefaultDataSetSettings.EventCharacteristicFilter;
                         props.SetSettings(newSettings);
@@ -284,7 +283,7 @@ const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> =
                 <div className="row">
                     <div className="col-6">
                         <EventTypeFilter SetSelectedTypeIDs={(newTypes) => {
-                            const newSettings = {...props.Settings};
+                            const newSettings = { ...props.Settings };
                             newSettings.Types = newTypes;
                             props.SetSettings(newSettings);
                         }} EventTypes={types} SelectedTypeID={props.Settings.Types} />
@@ -311,7 +310,7 @@ const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> =
                                 <div className={'col'}>
                                     <NavBarFilterButton Type={'Station'} OnClick={() => setFilter('Station')} Data={locationList} />
                                 </div>
-                                </div>
+                            </div>
                         </fieldset>
                     </div>
                 </div>
@@ -326,14 +325,14 @@ const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> =
                         }
                     }}
                     TableColumns={[
-                        { key: 'AssetKey', field: 'AssetKey', label: 'Key', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Name', field: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Location', field: 'Location', label: 'Substation', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'MappedAssets', field: 'MappedAssets', label: 'Assets', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Make', field: 'Make', label: 'Make', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Model', field: 'Model', label: 'Model', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Scroll', label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } },
-                    ]} 
+                        { Key: 'AssetKey', Field: 'AssetKey', Label: 'Key', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Name', Field: 'Name', Label: 'Name', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Location', Field: 'Location', Label: 'Substation', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'MappedAssets', Field: 'MappedAssets', Label: 'Assets', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Make', Field: 'Make', Label: 'Make', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Model', Field: 'Model', Label: 'Model', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Scroll', Label: '', HeaderStyle: { width: 17, padding: 0 }, RowStyle: { width: 0, padding: 0 } },
+                    ]}
                     SearchColumns={[
                         { label: 'Key', key: 'AssetKey', type: 'string', isPivotField: false },
                         { label: 'Name', key: 'Name', type: 'string', isPivotField: false },
@@ -342,7 +341,8 @@ const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> =
                         { label: 'Model', key: 'Model', type: 'string', isPivotField: false },
                         { label: 'Number of Assets', key: 'MappedAssets', type: 'number', isPivotField: false },
                         { label: 'Description', key: 'Description', type: 'string', isPivotField: false },
-                    ]} DefaultSearchCol={{ label: 'Name', key: 'Name', type: 'string', isPivotField: false }} Title='Filter by Meter' />
+                    ]}
+                    DefaultSearchCol={{ label: 'Name', key: 'Name', type: 'string', isPivotField: false }} Title='Filter by Meter' />
                 <TrenDAPSelectPopup<SystemCenter.Types.DetailedAsset> Table='DetailedAsset' SourceID={props.EventSource.ID} SourceType='event'
                     Show={filter === 'Asset'} Selection={assetList} Type='multiple'
                     OnClose={(selected, conf) => {
@@ -354,13 +354,13 @@ const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> =
                         }
                     }}
                     TableColumns={[
-                        { key: 'AssetKey', field: 'AssetKey', label: 'Key', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'AssetName', field: 'AssetName', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'AssetType', field: 'AssetType', label: 'Asset Type', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'VoltageKV', field: 'VoltageKV', label: 'Voltage (kV)', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Meters', field: 'Meters', label: 'Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Locations', field: 'Locations', label: 'Substations', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } }
-                    ]} 
+                        { Key: 'AssetKey', Field: 'AssetKey', Label: 'Key', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'AssetName', Field: 'AssetName', Label: 'Name', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'AssetType', Field: 'AssetType', Label: 'Asset Type', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'VoltageKV', Field: 'VoltageKV', Label: 'Voltage (kV)', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Meters', Field: 'Meters', Label: 'Meters', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Locations', Field: 'Locations', Label: 'Substations', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } }
+                    ]}
                     SearchColumns={[
                         { label: 'Key', key: 'AssetKey', type: 'string', isPivotField: false },
                         { label: 'Name', key: 'AssetName', type: 'string', isPivotField: false },
@@ -371,7 +371,8 @@ const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> =
                         { label: 'Number of Meters', key: 'Meters', type: 'integer', isPivotField: false },
                         { label: 'Number of Substations', key: 'Locations', type: 'integer', isPivotField: false },
                         { label: 'Description', key: 'Description', type: 'string', isPivotField: false },
-                    ]} DefaultSearchCol={{ label: 'Name', key: 'AssetName', type: 'string', isPivotField: false }} Title='Filter by Asset' />
+                    ]}
+                    DefaultSearchCol={{ label: 'Name', key: 'AssetName', type: 'string', isPivotField: false }} Title='Filter by Asset' />
                 <TrenDAPSelectPopup<OpenXDA.Types.AssetGroup> Table='AssetGroup' SourceID={props.EventSource.ID} SourceType='event'
                     Show={filter === 'AssetGroup'} Selection={groupList} Type='multiple'
                     OnClose={(selected, conf) => {
@@ -383,13 +384,13 @@ const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> =
                         }
                     }}
                     TableColumns={[
-                        { key: 'Name', field: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Assets', field: 'Assets', label: 'Assets', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Meters', field: 'Meters', label: 'Meters', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Users', field: 'Users', label: 'Users', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'AssetGroups', field: 'AssetGroups', label: 'SubGroups', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'Scroll', label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } }
-                    ]} 
+                        { Key: 'Name', Field: 'Name', Label: 'Name', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Assets', Field: 'Assets', Label: 'Assets', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Meters', Field: 'Meters', Label: 'Meters', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Users', Field: 'Users', Label: 'Users', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'AssetGroups', Field: 'AssetGroups', Label: 'SubGroups', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'Scroll', Label: '', HeaderStyle: { width: 17, padding: 0 }, RowStyle: { width: 0, padding: 0 } }
+                    ]}
                     SearchColumns={[
                         { label: 'Name', key: 'Name', type: 'string', isPivotField: false },
                         { label: 'Number of Meters', key: 'Meters', type: 'integer', isPivotField: false },
@@ -397,7 +398,8 @@ const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> =
                         { label: 'Number of Asset Groups', key: 'AssetGroups', type: 'integer', isPivotField: false },
                         { label: 'Show in PQ Dashboard', key: 'DisplayDashboard', type: 'boolean', isPivotField: false },
                         { label: 'Show in Email Subscription', key: 'DisplayEmail', type: 'boolean', isPivotField: false },
-                    ]} DefaultSearchCol={{ label: 'Name', key: 'Name', type: 'string', isPivotField: false }} Title='Filter by Asset Group' />
+                    ]}
+                    DefaultSearchCol={{ label: 'Name', key: 'Name', type: 'string', isPivotField: false }} Title='Filter by Asset Group' />
                 <TrenDAPSelectPopup<SystemCenter.Types.DetailedLocation> Table='DetailedLocation' SourceID={props.EventSource.ID} SourceType='event'
                     Show={filter === 'Station'} Selection={locationList} Type='multiple'
                     OnClose={(selected, conf) => {
@@ -409,12 +411,12 @@ const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> =
                         }
                     }}
                     TableColumns={[
-                        { key: 'Name', field: 'Name', label: 'Name', headerStyle: { width: 'auto' }, rowStyle: { width: 'auto' } },
-                        { key: 'LocationKey', field: 'LocationKey', label: 'Key', headerStyle: { width: '30%' }, rowStyle: { width: '30%' } },
-                        { key: 'Meters', field: 'Meters', label: 'Meters', headerStyle: { width: '10%' }, rowStyle: { width: '10%' } },
-                        { key: 'Assets', field: 'Assets', label: 'Assets', headerStyle: { width: '10%' }, rowStyle: { width: '10%' } },
-                        { key: 'Scroll', label: '', headerStyle: { width: 17, padding: 0 }, rowStyle: { width: 0, padding: 0 } }
-                    ]} 
+                        { Key: 'Name', Field: 'Name', Label: 'Name', HeaderStyle: { width: 'auto' }, RowStyle: { width: 'auto' } },
+                        { Key: 'LocationKey', Field: 'LocationKey', Label: 'Key', HeaderStyle: { width: '30%' }, RowStyle: { width: '30%' } },
+                        { Key: 'Meters', Field: 'Meters', Label: 'Meters', HeaderStyle: { width: '10%' }, RowStyle: { width: '10%' } },
+                        { Key: 'Assets', Field: 'Assets', Label: 'Assets', HeaderStyle: { width: '10%' }, RowStyle: { width: '10%' } },
+                        { Key: 'Scroll', Label: '', HeaderStyle: { width: 17, padding: 0 }, RowStyle: { width: 0, padding: 0 } }
+                    ]}
                     SearchColumns={[
                         { label: 'Name', key: 'Name', type: 'string', isPivotField: false },
                         { label: 'Key', key: 'LocationKey', type: 'string', isPivotField: false },
@@ -423,7 +425,8 @@ const OpenXDAEvents: IEventSource<IPrivateSettings, ISetting, IDatasetSetting> =
                         { label: 'Number of Transmission Assets', key: 'Assets', type: 'integer', isPivotField: false },
                         { label: 'Number of Meters', key: 'Meters', type: 'integer', isPivotField: false },
                         { label: 'Description', key: 'Description', type: 'string', isPivotField: false },
-                    ]} DefaultSearchCol={{ label: 'Name', key: 'Name', type: 'string', isPivotField: false }} Title='Filter by Substation' />
+                    ]}
+                    DefaultSearchCol={{ label: 'Name', key: 'Name', type: 'string', isPivotField: false }} Title='Filter by Substation' />
             </>
         );
 

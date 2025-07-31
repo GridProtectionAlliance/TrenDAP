@@ -1,7 +1,10 @@
 {
   "root": true,
   "parser": "@typescript-eslint/parser",
-  "plugins": [ "@typescript-eslint" ],
+  "plugins": [
+    "@typescript-eslint",
+    "deprecation"
+  ],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
@@ -16,9 +19,9 @@
     "no-async-promise-executor": "warn", //This needs to be removed after all warnings are clear..
     "no-fallthrough": "warn", //This needs to be removed after all warnings are clear..
     "no-prototype-builtins": "warn", //This needs to be removed after all warnings are clear..
-    "no-useless-escape": "warn" //This needs to be removed after all warnings are clear..
-
-   /* "@typescript-eslint/strict-boolean-expressions": [
+    "no-useless-escape": "warn", //This needs to be removed after all warnings are clear..
+    "deprecation/deprecation": "warn" //This needs to be removed after all warnings are clear..
+    /* "@typescript-eslint/strict-boolean-expressions": [
       "warn", //This needs to switch back to error after warnings have been cleaned up..
       {
         "allowString": false,
@@ -33,8 +36,16 @@
       }
     ]*/
   },
-  "ignorePatterns": [ "package/**/*", "__tests__", "lib", "**/*.d.ts", "obj/**/*" ],
+  "ignorePatterns": [
+    "package/**/*",
+    "__tests__",
+    "lib",
+    "**/*.d.ts",
+    "obj/**/*"
+  ],
   "parserOptions": {
-    "project": [ "./tsconfig.json" ]
+    "project": [
+      "./tsconfig.json"
+    ]
   }
 }

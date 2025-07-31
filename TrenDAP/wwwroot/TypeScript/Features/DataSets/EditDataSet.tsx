@@ -25,7 +25,7 @@ import * as React from 'react';
 import moment from 'moment';
 import * as $ from 'jquery';
 import { useNavigate } from "react-router-dom";
-import { TabSelector, ToolTip } from '@gpa-gemstone/react-interactive';
+import { TabSelector } from '@gpa-gemstone/react-interactive';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
 import { DataSourceTypes, TrenDAP } from '../../global';
 import { useAppDispatch, useAppSelector } from '../../hooks';
@@ -37,6 +37,7 @@ import DataSetSettingsTab from './Tabs/DataSetSettingsTab';
 import DataSourceConnectionTab from './Tabs/DataSourceConnectionTab';
 import EventSourceConnectionTab from './Tabs/EventSourceConnectionTab';
 import { EventSourceTypes } from '../EventSources/Interface';
+import { ToolTip } from '@gpa-gemstone/react-forms';
 
 const EditDataSet: React.FunctionComponent = (props) => {
     const navigate = useNavigate();
@@ -195,7 +196,7 @@ const EditDataSet: React.FunctionComponent = (props) => {
                             >Save</button>
                         </div>
                         <ToolTip Target="newBtn" Show={hover && (warnings.length > 0 || errors.length > 0)} Position={'top'}>
-                            {warnings.map((w, i) => <p key={2 * i}><ReactIcons.Warning/> {w} </p>)}
+                            {warnings.map((w, i) => <p key={2 * i}><ReactIcons.Warning /> {w} </p>)}
                             {errors.map((e, i) => <p key={2 * i + 1}><ReactIcons.CrossMark /> {e} </p>)}
                         </ToolTip>
                     </div>

@@ -24,7 +24,7 @@
 import * as React from 'react';
 import _ from 'lodash';
 import { WidgetTypes } from './Interfaces';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 
 interface IGenericSelector extends WidgetTypes.IEventSourceSelectionProps<unknown> {
     DefaultSettings: unknown
@@ -40,7 +40,7 @@ const EventSelector: React.FC<IGenericSelector> = (props) => {
         // All keys should be unique, positive keys exist in map, negative don't
         const tempSources: WidgetTypes.ISelectedEvents<unknown>[] = props.AllEventSources
             .filter(eventSource => props.SelectedSources.findIndex(selected => selected.ID === eventSource.ID) === -1)
-            .map((src) => ({ ...src, Key: -src.ID, EventSettings: props.DefaultSettings}));
+            .map((src) => ({ ...src, Key: -src.ID, EventSettings: props.DefaultSettings }));
         setAllEventSources(_.orderBy(tempSources.concat(props.SelectedSources), [sortField], [ascending ? 'asc' : 'desc']));
     }, [props.AllEventSources, props.SelectedSources, props.DefaultSettings]);
 
@@ -50,12 +50,8 @@ const EventSelector: React.FC<IGenericSelector> = (props) => {
     }, [ascending, sortField]);
 
     return (
-        <ReactTable.Table<WidgetTypes.ISelectedEvents<unknown>>
-            TableClass="table table-hover"
-            TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+        <Table<WidgetTypes.ISelectedEvents<unknown>>
+            TableClass="table table-hover h-100"
             SortKey={sortField}
             OnClick={(item) => {
                 const ind = props.SelectedSources.findIndex(src => src.ID === item.row.ID);
@@ -74,21 +70,21 @@ const EventSelector: React.FC<IGenericSelector> = (props) => {
             KeySelector={(row) => row.Key}
             Selected={(row) => props.SelectedSources.findIndex(selected => selected.ID === row.ID) !== -1}
         >
-            <ReactTable.Column<WidgetTypes.ISelectedEvents<unknown>>
+            <Column<WidgetTypes.ISelectedEvents<unknown>>
                 Key={'Name'}
                 AllowSort={true}
                 Field={'Name'}
             >
                 Name
-            </ReactTable.Column>
-            <ReactTable.Column<WidgetTypes.ISelectedEvents<unknown>>
+            </Column>
+            <Column<WidgetTypes.ISelectedEvents<unknown>>
                 Key={'Type'}
                 AllowSort={true}
                 Field={'SourceType'}
             >
                 Type
-            </ReactTable.Column>
-        </ReactTable.Table>);
+            </Column>
+        </Table>);
 }
 
 export default EventSelector;

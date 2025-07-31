@@ -29,7 +29,7 @@ import {
     SelectPublicDataSources, SelectPublicDataSourcesStatus,
     FetchDataSources, FetchPublicDataSources, SelectDataSourcesStatus, RemoveDataSource, SelectDataSources
 } from './DataSourcesSlice'
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import EditDataSource from './EditDataSource';
 import { TrashCan, HeavyCheckMark } from './../../Constants';
 import AddNewDataSource from './AddNewDataSource';
@@ -68,7 +68,7 @@ const DataSources: React.FunctionComponent = () => {
                                 <h4>My Data Sources</h4>
                             </div>
                             <div className="d-flex col-6 justify-content-end">
-                                <AddNewDataSource/>
+                                <AddNewDataSource />
                             </div>
                         </div>
                     </div>
@@ -112,15 +112,8 @@ const DataSourceTable = React.memo((props: ITableProps) => {
 
     return (
         <>
-            <ReactTable.Table<DataSourceTypes.IDataSourceView>
-                TableClass="table table-hover"
-                TableStyle={{
-                    padding: 0, width: 'calc(100%)', height: '100%',
-                    tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
-                }}
-                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+            <Table<DataSourceTypes.IDataSourceView>
+                TableClass="table table-hover h-100"
                 // Small note: ReactTable gives the key as sort, but here we wanna use field. This is not an issue if they match.
                 SortKey={sortField}
                 OnClick={() => { }}
@@ -131,26 +124,47 @@ const DataSourceTable = React.memo((props: ITableProps) => {
                 Data={dataSources}
                 KeySelector={source => source.ID}
                 Ascending={ascending}>
-                <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'Name'} Field={'Name'}>Name</ReactTable.Column>
-                <ReactTable.Column<DataSourceTypes.IDataSourceView> Key={'Type'} Field={'Type'}>Type</ReactTable.Column>
+                <Column<DataSourceTypes.IDataSourceView>
+                    Key={'Name'}
+                    Field={'Name'}
+                >
+                    Name
+                </Column>
+                <Column<DataSourceTypes.IDataSourceView>
+                    Key={'Type'}
+                    Field={'Type'}
+                >
+                    Type
+                </Column>
                 {
                     props.OwnedByUser ?
-                        <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Edit'} Field={'Public'}
-                            Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}>Shared</ReactTable.Column>
+                        <Column<DataSourceTypes.IDataSourceView>
+                            AllowSort={false}
+                            Key={'Edit'}
+                            Field={'Public'}
+                            Content={row => <span>{row.item.Public ? HeavyCheckMark : null}</span>}
+                        >
+                            Shared
+                        </Column>
                         : <></>
                 }
                 {
                     props.OwnedByUser ?
-                        <ReactTable.Column<DataSourceTypes.IDataSourceView> AllowSort={false} Key={'Delete'} Field={'Public'}
+                        <Column<DataSourceTypes.IDataSourceView>
+                            AllowSort={false}
+                            Key={'Delete'}
+                            Field={'Public'}
                             Content={row =>
                                 <span>
-                                    <EditDataSource DataSource={row.item}/>
+                                    <EditDataSource DataSource={row.item} />
                                     <button className="btn" onClick={() => setDeleteItem(row.item)}>{TrashCan}</button>
                                 </span>}
-                        ><></></ReactTable.Column>
+                        >
+                            <></>
+                        </Column>
                         : <></>
                 }
-            </ReactTable.Table>
+            </Table>
             <Warning Title={'Delete ' + deleteItem?.Name} Show={deleteItem != null} Message={"This will remove the Data Source and can not be undone."}
                 CallBack={(c) => {
                     if (c)

@@ -25,13 +25,13 @@
 import * as React from 'react';
 import { TrenDAP, Redux } from '../../global';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { ReactTable } from '@gpa-gemstone/react-table'
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { Sort, FetchDataSets, SelectDataSetsStatus, RemoveDataSet, SelectDataSetsForUser, SelectDataSetsAllPublicNotUser, SelectDataSetsSortField, SelectDataSetsAscending, CloneDataSet, New } from './DataSetsSlice';
 import moment from 'moment';
-import { DNA, TrashCan, HeavyCheckMark, Pencil } from '@gpa-gemstone/gpa-symbols';
-import { Warning, ToolTip } from '@gpa-gemstone/react-interactive'
+import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
+import { Warning } from '@gpa-gemstone/react-interactive'
 import { useNavigate } from "react-router-dom";
-
+import { ToolTip } from '@gpa-gemstone/react-forms';
 
 type Hover = ('Pencil' | 'Clone' | 'Delete' | 'None')
 
@@ -74,70 +74,63 @@ const DataSets: React.FC = () => {
                         </div>
                     </div>
                     <div className="card-body p-0" style={{ overflow: "hidden" }}>
-                        <ReactTable.Table<TrenDAP.iDataSet>
-                            TableClass={"table table-hover"}
-                            TableStyle={{
-                                padding: 0, width: 'calc(100%)', height: '100%',
-                                tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
-                            }}
-                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                        <Table<TrenDAP.iDataSet>
+                            TableClass={"table table-hover h-100"}
                             OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             Data={DataSets}
                             Ascending={ascending}
                             SortKey={sortField}
                             KeySelector={item => item.ID}
                         >
-                            <ReactTable.Column<TrenDAP.iDataSet>
+                            <Column<TrenDAP.iDataSet>
                                 Key={'Name'}
                                 AllowSort={true}
                                 Field={'Name'}
                             >
                                 Name
-                            </ReactTable.Column>
-                            <ReactTable.Column<TrenDAP.iDataSet>
+                            </Column>
+                            <Column<TrenDAP.iDataSet>
                                 Key={'Public'}
                                 AllowSort={true}
                                 Field={'Public'}
-                                Content={(d) => <span>{d.item[d.key] ? HeavyCheckMark : null}</span>}
+                                Content={(d) => <span>{d.item[d.key] ? <ReactIcons.CheckMark Color="green" /> : null}</span>}
                             >
                                 Shared
-                            </ReactTable.Column>
-                            <ReactTable.Column<TrenDAP.iDataSet>
+                            </Column>
+                            <Column<TrenDAP.iDataSet>
                                 Key={'UpdatedOn'}
                                 AllowSort={true}
                                 Field={'UpdatedOn'}
                                 Content={(d) => <span>{moment(d.item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span>}
                             >
                                 Updated
-                            </ReactTable.Column>
-                            <ReactTable.Column<TrenDAP.iDataSet>
+                            </Column>
+                            <Column<TrenDAP.iDataSet>
                                 Key={'Status'}
                                 AllowSort={false}
                                 Content={(d) =>
                                     <span>
                                         <button data-toggle="tooltip" data-tooltip="pencil-btn" data-placement="bottom" className="btn" onMouseEnter={() => setHover('Pencil')}
                                             onMouseLeave={() => setHover('None')} onClick={() => navigate(`${homePath}DataSets/EditDataSet/${d.item.ID}`)}>
-                                            {Pencil}
+                                            <ReactIcons.Pencil />
                                         </button>
                                         <ToolTip Show={hover === 'Pencil'} Position={'top'} Target={'pencil-btn'}><p>Edit Data Set Parameters</p></ToolTip>
                                         <a className="btn" data-toggle="tooltip" data-tooltip="clone-btn" data-placement="bottom" onMouseEnter={() => setHover('Clone')}
                                             onClick={() => dispatch(CloneDataSet(d.item))} onMouseLeave={() => setHover('None')}>
-                                            {DNA}
+                                            <ReactIcons.Clone />
                                         </a>
                                         <ToolTip Show={hover === 'Clone'} Position={'top'} Target={'clone-btn'}><p>Clone Data Set</p></ToolTip>
                                         <a className="btn" onClick={() => setDeleteItem(d.item)} data-tooltip="delete-btn" data-toggle="tooltip" data-placement="bottom"
                                             onMouseEnter={() => setHover('Delete')} onMouseLeave={() => setHover('None')}>
-                                            {TrashCan}
+                                            <ReactIcons.TrashCan Color={'red'} />
                                         </a>
                                         <ToolTip Show={hover === 'Delete'} Position={'top'} Target={'delete-btn'}><p>Delete Data Set</p></ToolTip>
                                     </span>
                                 }
                             >
                                 {'\u200B'}
-                            </ReactTable.Column>
-                        </ReactTable.Table>
+                            </Column>
+                        </Table>
                     </div>
                 </div>
             </div>
@@ -149,37 +142,30 @@ const DataSets: React.FC = () => {
                         </h4>
                     </div>
                     <div className="card-body p-0" style={{ overflow: "hidden" }}>
-                        <ReactTable.Table<TrenDAP.iDataSet>
-                            TableClass={"table table-hover"}
-                            TableStyle={{
-                                padding: 0, width: 'calc(100%)', height: '100%',
-                                tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0
-                            }}
-                            TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                            TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                            RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                        <Table<TrenDAP.iDataSet>
+                            TableClass={"table table-hover h-100"}
                             Data={publicDataSets}
                             Ascending={ascending}
                             OnSort={data => dispatch(Sort({ SortField: data.colField, Ascending: data.ascending }))}
                             SortKey={sortField}
                             KeySelector={(item) => item.ID}
                         >
-                            <ReactTable.Column<TrenDAP.iDataSet>
+                            <Column<TrenDAP.iDataSet>
                                 Key={'Name'}
                                 AllowSort={true}
                                 Field={'Name'}
                             >
                                 Name
-                            </ReactTable.Column>
-                            <ReactTable.Column<TrenDAP.iDataSet>
+                            </Column>
+                            <Column<TrenDAP.iDataSet>
                                 Key={'UpdatedOn'}
                                 AllowSort={true}
                                 Field={'UpdatedOn'}
                                 Content={(item) => <span>{moment(item.item.UpdatedOn).subtract(new Date().getTimezoneOffset(), 'minutes').format('MM/DD/YY HH:mm')}</span>}
                             >
                                 Updated
-                            </ReactTable.Column>
-                        </ReactTable.Table>
+                            </Column>
+                        </Table>
                     </div>
                 </div>
             </div>

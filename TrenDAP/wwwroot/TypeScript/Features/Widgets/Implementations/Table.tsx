@@ -26,7 +26,7 @@ import moment from 'moment';
 import _ from 'lodash';
 import { Input } from '@gpa-gemstone/react-forms';
 import { ReactIcons } from '@gpa-gemstone/gpa-symbols';
-import { ReactTable } from '@gpa-gemstone/react-table';
+import { Table, Column } from '@gpa-gemstone/react-table';
 import { WidgetTypes } from '../Interfaces';
 import { DataSetTypes, TrenDAP } from '../../../global';
 import { sort } from '../HelperFunctions';
@@ -137,12 +137,8 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
 
         return (
             <>
-                <ReactTable.Table<ITableData>
-                    TableClass={"table table-hover"}
-                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+                <Table<ITableData>
+                    TableClass={"table table-hover h-100"}
                     SortKey={sortField}
                     OnClick={(data, evt) => {
                         evt.preventDefault();
@@ -165,15 +161,15 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
                     KeySelector={item => item.ID}
                     Selected={item => item.IsInEvent}
                 >
-                    <ReactTable.Column<ITableData>
+                    <Column<ITableData>
                         Key={'Timestamp'}
                         AllowSort={true}
                         Field={'Timestamp'}
                         Content={(item) => moment(item.item.Timestamp).toISOString()}
                     >
                         Timestamp
-                    </ReactTable.Column>
-                    <ReactTable.Column<ITableData>
+                    </Column>
+                    <Column<ITableData>
                         Key={'Chan1Min'}
                         AllowSort={true}
                         Field={'Chan1Minimum'}
@@ -186,8 +182,8 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
                         }}
                     >
                         {props.Data[0]?.Name ?? 'Chan 1'} Min
-                    </ReactTable.Column>
-                    <ReactTable.Column<ITableData>
+                    </Column>
+                    <Column<ITableData>
                         Key={'Chan1Maximum'}
                         AllowSort={true}
                         Field={'Chan1Maximum'}
@@ -200,8 +196,8 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
                         }}
                     >
                         {props.Data[0]?.Name ?? 'Chan 1'} Max
-                    </ReactTable.Column>
-                    <ReactTable.Column<ITableData>
+                    </Column>
+                    <Column<ITableData>
                         Key={'Chan1Avg'}
                         AllowSort={true}
                         Field={'Chan1Average'}
@@ -218,8 +214,8 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
                         }}
                     >
                         {props.Data[0]?.Name ?? 'Chan 1'} Avg
-                    </ReactTable.Column>
-                    <ReactTable.Column<ITableData>
+                    </Column>
+                    <Column<ITableData>
                         Key={'Chan2Min'}
                         AllowSort={true}
                         Field={'Chan2Minimum'}
@@ -231,8 +227,8 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
                         }}
                     >
                         {props.Data[1]?.Name ?? 'Chan 2'} Min
-                    </ReactTable.Column>
-                    <ReactTable.Column<ITableData>
+                    </Column>
+                    <Column<ITableData>
                         Key={'Chan2Maximum'}
                         AllowSort={true}
                         Field={'Chan2Maximum'}
@@ -244,8 +240,8 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
                         }}
                     >
                         {props.Data[1]?.Name ?? 'Chan 2'} Max
-                    </ReactTable.Column>
-                    <ReactTable.Column<ITableData>
+                    </Column>
+                    <Column<ITableData>
                         Key={'Chan2Avg'}
                         AllowSort={true}
                         Field={'Chan2Average'}
@@ -257,8 +253,8 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
                         }}
                     >
                         {props.Data[1]?.Name ?? 'Chan 2'} Avg
-                    </ReactTable.Column>
-                </ReactTable.Table>
+                    </Column>
+                </Table>
             </>
         );
     },
@@ -273,12 +269,8 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
         const [sortField, setSortField] = React.useState<keyof DataSetTypes.IDataSetMetaData>('Phase');
 
         return (
-            <ReactTable.Table<DataSetTypes.IDataSetMetaData>
-                TableClass="table table-hover"
-                TableStyle={{ padding: 0, width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: 0 }}
-                TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
-                TbodyStyle={{ display: 'block', overflowY: 'auto', flex: 1 }}
-                RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
+            <Table<DataSetTypes.IDataSetMetaData>
+                TableClass="table table-hover h-100"
                 SortKey={sortField}
                 OnClick={(item) => {
                     const isSelected = props.SelectedChannels?.find(c => c.MetaData.ID === item.row.ID) != null;
@@ -293,36 +285,36 @@ export const TableWidget: WidgetTypes.IWidget<IProps, null, null> = {
                 KeySelector={(row) => row.ID}
                 Selected={(row) => props.SelectedChannels?.find(c => c.MetaData.ID === row.ID) != null ? true : false}
             >
-                <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                <Column<DataSetTypes.IDataSetMetaData>
                     Key={'ParentName'}
                     AllowSort={true}
                     Field={'ParentName'}
                 >
                     Parent
-                </ReactTable.Column>
-                <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                </Column>
+                <Column<DataSetTypes.IDataSetMetaData>
                     Key={'Name'}
                     AllowSort={true}
                     Field={'Name'}
                 >
                     Name
-                </ReactTable.Column>
-                <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                </Column>
+                <Column<DataSetTypes.IDataSetMetaData>
                     Key={'Type'}
                     AllowSort={true}
                     Field={'Type'}
                 >
                     Type
-                </ReactTable.Column>
+                </Column>
 
-                <ReactTable.Column<DataSetTypes.IDataSetMetaData>
+                <Column<DataSetTypes.IDataSetMetaData>
                     Key={'Phase'}
                     AllowSort={true}
                     Field={'Phase'}
                 >
                     Phase
-                </ReactTable.Column>
+                </Column>
 
-            </ReactTable.Table>);
+            </Table>);
     }
 }
