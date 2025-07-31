@@ -1,8 +1,8 @@
 FROM mcr.microsoft.com/windows/servercore:ltsc2022
 
 ENV User="influx" \
-    Password="openXDA2024" \
-    Token="dqsZWTgF5NOCi-FZ_k79c9iOMMpbFYhIOcr4L03FeRGjZiC-VoakWjNrj20Pwni8PiRgoOv2PgYtGLwPXRo2dw==" \
+    Password="" \
+    Token="" \
     Org="GPA" \
     Bucket="trend" 
 
