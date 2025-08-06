@@ -39,7 +39,7 @@ type Stats = "Mean"| "Median" | "Variance" | "StdDev" | "10th Percentile" | "25t
 
 interface IMultiCheckboxOption {
     Value: number | string,
-    Text: string,
+    Label: string,
     Selected: boolean
 }
 
@@ -132,7 +132,7 @@ export const StatsWidget: WidgetTypes.IWidget<ISettings, null, null> = {
         );
     },
     SettingsUI: (props) => {
-        const selectedStats: IMultiCheckboxOption[] = React.useMemo(() => allStatistics.map(s => ({ Text: s, Value: s, Selected: props.Settings.StatFields.includes(s) })), [props.Settings.StatFields])
+        const selectedStats: IMultiCheckboxOption[] = React.useMemo(() => allStatistics.map(s => ({ Label: s, Value: s, Selected: props.Settings.StatFields.includes(s) })), [props.Settings.StatFields])
 
         const updateSelection = (options: IMultiCheckboxOption[]) => {
             const stats = options.map(s => s.Value as Stats);
@@ -147,7 +147,6 @@ export const StatsWidget: WidgetTypes.IWidget<ISettings, null, null> = {
                 Options={[{ Label: 'Average', Value: 'Average' }, { Label: 'Minimum', Value: 'Minimum' }, { Label: 'Maximum', Value: 'Maximum' }]} Field={'Field'} />
             <Input<ISettings> Record={props.Settings} Field={'Precision'} Setter={(item) => props.SetSettings(item)} Valid={() => true} AllowNull={true} />
             <MultiCheckBoxSelect
-                ItemTooltip={'dark'}
                 Options={selectedStats}
                 Label={'Statistics'}
                 OnChange={(_, options: IMultiCheckboxOption[]) => updateSelection(options)}
