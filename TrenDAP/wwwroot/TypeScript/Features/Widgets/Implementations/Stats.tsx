@@ -22,36 +22,53 @@
 //******************************************************************************************************
 
 import * as React from 'react';
-import { Input, Select } from '@gpa-gemstone/react-forms';
+import { CheckBox, Input, Select } from '@gpa-gemstone/react-forms';
 import stats from 'stats-lite';
 import { Table, Column } from '@gpa-gemstone/react-table';
 import { WidgetTypes } from '../Interfaces'
 import { TrenDAP } from '../../../global';
+import { MultiCheckBoxSelect } from '@gpa-gemstone/react-forms';
 
 
 interface IStatData {
-    Category: string,
+    Category: Stats,
     Statistic: string | number
 }
 
-interface IProps {
-    Field: TrenDAP.SeriesField,
-    Precision: number
+type Stats = "Mean"| "Median" | "Variance" | "StdDev" | "10th Percentile" | "25th Percentile" | "50th Percentile" | "75th Percentile" | "90th Percentile";
+
+interface IMultiCheckboxOption {
+    Value: number | string,
+    Label: string,
+    Selected: boolean
 }
 
-export const StatsWidget: WidgetTypes.IWidget<IProps, null, null> = {
-    DefaultSettings: { Field: 'Average', Precision: 3 },
+interface ISettings {
+    Field: TrenDAP.SeriesField,
+    Precision: number,
+    StatFields: Stats[];
+}
+
+const allStatistics: Stats[] = ["Mean", "Median", "Variance", "StdDev", "10th Percentile", "25th Percentile", "50th Percentile", "75th Percentile", "90th Percentile"]
+export const StatsWidget: WidgetTypes.IWidget<ISettings, null, null> = {
+    DefaultSettings: {
+        Field: 'Average',
+        Precision: 3,
+        StatFields: ["Mean", 'Median', 'StdDev', '90th Percentile']
+    },
     DefaultChannelSettings: null,
     DefaultEventSourceSettings: null,
     Name: "Stats",
     WidgetUI: (props) => {
         const [data, setData] = React.useState<IStatData[]>([])
+        const display = React.useMemo(() => data.filter(d => props.Settings.StatFields.includes(d.Category))
+            , [props.Settings.StatFields, data])
 
         React.useEffect(() => {
             setData(getStats(props));
         }, [props.Data, props.Settings])
 
-        const getStats = (oldstats: WidgetTypes.IWidgetProps<IProps, null, null>): IStatData[] => {
+        const getStats = (oldstats: WidgetTypes.IWidgetProps<ISettings, null, null>): IStatData[] => {
 
             const newStats = { ...oldstats }
             let statData: number[] = []
@@ -86,39 +103,54 @@ export const StatsWidget: WidgetTypes.IWidget<IProps, null, null> = {
             <>
                 <Table<IStatData>
                     TableClass={"table table-hover"}
-                    TheadStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%', height: 50 }}
-                    TbodyStyle={{ display: 'block', overflow: 'hidden', width: '100%' }}
-                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }}
-                    SortKey={"Category"}
+                    TableStyle={{ width: 'calc(100%)', height: '100%', tableLayout: 'fixed', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                    TheadStyle={{ fontSize: 'auto', tableLayout: 'fixed', display: 'table', width: '100%' }}
+                    TbodyStyle={{ display: 'block', overflowY: 'scroll', flex: 1 }}
+                    RowStyle={{ fontSize: 'smaller', display: 'table', tableLayout: 'fixed', width: '100%' }} SortKey={"Category"}
                     OnClick={() => { }}
                     OnSort={() => { }}
-                    Data={data}
+                    Data={display}
                     Ascending={true}
                     KeySelector={(item) => item.Category}
                 >
                     <Column<IStatData>
                         Key={'Category'}
-                        AllowSort={true}
+                        AllowSort={false}
                         Field={'Category'}
                     >
-                        Category
+                        Statistic
                     </Column>
                     <Column<IStatData>
                         Key={'Statistic'}
-                        AllowSort={true}
+                        AllowSort={false}
                         Field={'Statistic'}
                     >
-                        Statistic
+                        Value
                     </Column>
                 </Table>
             </>
         );
     },
     SettingsUI: (props) => {
+        const selectedStats: IMultiCheckboxOption[] = React.useMemo(() => allStatistics.map(s => ({ Label: s, Value: s, Selected: props.Settings.StatFields.includes(s) })), [props.Settings.StatFields])
+
+        const updateSelection = (options: IMultiCheckboxOption[]) => {
+            const stats = options.map(s => s.Value as Stats);
+            const current = props.Settings.StatFields;
+            const add = stats.filter(s => !current.includes(s));
+
+            props.SetSettings({ ...props.Settings, StatFields: current.filter(s => !stats.includes(s)).concat(add) })
+        }
+
         return <>
-            <Select<IProps> Label={'Series Data Field'} Record={props.Settings} Setter={(item) => props.SetSettings(item)}
+            <Select<ISettings> Label={'Series Data Field'} Record={props.Settings} Setter={(item) => props.SetSettings(item)}
                 Options={[{ Label: 'Average', Value: 'Average' }, { Label: 'Minimum', Value: 'Minimum' }, { Label: 'Maximum', Value: 'Maximum' }]} Field={'Field'} />
-            <Input<IProps> Record={props.Settings} Field={'Precision'} Setter={(item) => props.SetSettings(item)} Valid={() => true} AllowNull={true} />
+            <Input<ISettings> Record={props.Settings} Field={'Precision'} Setter={(item) => props.SetSettings(item)} Valid={() => true} AllowNull={true} />
+            <MultiCheckBoxSelect
+                Options={selectedStats}
+                Label={'Statistics'}
+                OnChange={(_, options: IMultiCheckboxOption[]) => updateSelection(options)}
+            />
         </>
     },
 }
